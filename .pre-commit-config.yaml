@@ -16,9 +16,9 @@ repos:
     hooks:
     - id: mypy
       name: mypy
-      entry: mypy spacy_llm
+      include: spacy_llm
       language: python
       types: [python]
       require_serial: true
-      args: [ --ignore_missing_imports --no_implicit_optional]
+      args: [ --ignore-missing-imports, --no-implicit-optional ]
 
