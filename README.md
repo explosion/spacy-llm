@@ -1,2 +1,2 @@
 # spacy-llm
-Integrating spaCy with generative LLM APIs.
+Integrating spaCy with generative LLM APIs. 
