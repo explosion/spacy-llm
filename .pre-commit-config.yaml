@@ -16,7 +16,7 @@ repos:
     hooks:
     - id: mypy
       name: mypy
-      include: spacy_llm
+      entry: mypy -p spacy_llm
       language: python
       types: [python]
       require_serial: true
