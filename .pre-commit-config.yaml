@@ -16,7 +16,7 @@ repos:
     hooks:
     - id: mypy
       name: mypy
-      entry: mypy -p spacy_llm
+      exclude: ^(.github/)
       language: python
       types: [python]
       require_serial: true
