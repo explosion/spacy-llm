@@ -141,7 +141,8 @@ class LLMWrapper(Pipe):
         self._prompt = prompt
         self._batch_prompt = batch_prompt
 
-        Doc.set_extension(self._response_field, default=None)
+        if not Doc.has_extension(self._response_field):
+            Doc.set_extension(self._response_field, default=None)
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc and set the specified elements.
