@@ -21,6 +21,6 @@ jobs:
 
       - name: Run tests
         env:
-          credentials: ${{ secrets.OPENAPI_AI_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAPI_AI_KEY }}
         run: |
           pytest spacy_llm/tests
