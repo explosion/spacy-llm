@@ -37,8 +37,8 @@ def dummy_batch_prompt() -> Callable[
 ]:
     """Returns prompt function accepting specified API and documents, prompting LLM API, mapping response to the doc
     instances and returning those instances.
-    This particular dummy implementation just loops over individual prompts, but real ones could concatenate/chain
-    prompts for performance improvements.
+    This particular dummy implementation loops over individual prompts, but real implementations may use particular API
+    batching functionality for better performance.
     RETURNS (Callable[[minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Prompt function.
     """
     template = "What is {value} times three? Respond with the exact number."

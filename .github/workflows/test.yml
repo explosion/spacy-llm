@@ -20,5 +20,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests
+        env:
+          credentials: ${{ secrets.OPENAPI_AI_KEY }}
         run: |
           pytest spacy_llm/tests
