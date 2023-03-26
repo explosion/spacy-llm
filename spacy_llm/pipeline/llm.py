@@ -1,6 +1,8 @@
-from typing import Callable, Optional, Iterable, Tuple, Iterator, List
+from pathlib import Path
+from typing import Callable, Optional, Iterable, Tuple, Iterator, List, Any, Dict, cast
 
 import minichain
+import spacy
 import srsly
 from spacy import Language, registry
 from spacy.pipeline import Pipe
@@ -98,7 +100,6 @@ def make_llm(
     RETURNS (LLMWrapper): LLM instance.
     """
     return LLMWrapper(
-        nlp=nlp,
         name=name,
         backend=backend,
         response_field=response_field,
@@ -112,8 +113,8 @@ class LLMWrapper(Pipe):
 
     def __init__(
         self,
-        nlp: Language,
-        name: str,
+        name: str = "LLMWrapper",
+        *,
         backend: str,
         response_field: Optional[str],
         prompt: Callable[[minichain.backend.Backend, Optional[str], Doc], Doc],
@@ -124,7 +125,6 @@ class LLMWrapper(Pipe):
         """
         Object managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
-        nlp (Language): Pipeline.
         name (str): The component instance name, used to add entries to the
             losses during training.
         backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
@@ -134,9 +134,11 @@ class LLMWrapper(Pipe):
         batch_prompt (Callable[[minichain.backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Callable generating
             prompt function modifying the specified docs.
         """
-        self._nlp = nlp
         self._name = name
-        self._backend: minichain.backend.Backend = getattr(minichain.backend, backend)
+        self._backend_id = backend
+        self._backend: minichain.backend.Backend = getattr(
+            minichain.backend, self._backend_id
+        )
         self._response_field = response_field
         self._prompt = prompt
         self._batch_prompt = batch_prompt
@@ -182,41 +184,72 @@ class LLMWrapper(Pipe):
         ):
             yield modified_doc
 
-    def to_bytes(self, *, exclude: Tuple = tuple()) -> bytes:
+    def _to_serializable_dict(self, exclude: Tuple[str]) -> Dict[str, Any]:
+        """Returns dict with serializable properties.
+        exclude (Tuple[str]): Names of properties to exclude from serialization.
+        RETURNS (Dict[str, Any]): Dict with serializable properties.
+        """
+        return {
+            k: v
+            for k, v in {
+                "backend_id": self._backend_id,
+                "response_field": self._response_field,
+            }.items()
+            if k not in exclude
+        }
+
+    def _from_deserialized_dict(self, cfg: Dict[str, Any], exclude: Tuple[str]) -> None:
+        """Set instance value from config dict.
+        cfg (Dict[str, Any]): Config dict.
+        exclude (Tuple[str]): Names of properties to exclude from deserialization.
+        """
+        if "backend_id" not in exclude:
+            self._backend_id = cfg["backend_id"]
+        if "backend" not in exclude:
+            self._backend = getattr(minichain.backend, self._backend_id)
+        if "response_field" not in exclude:
+            self._response_field = cfg["response_field"]
+
+    def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
 
+        exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
-        todo
         """
-        return srsly.msgpack_dumps({})
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()):
+        return srsly.msgpack_dumps(self._to_serializable_dict(exclude))
+
+    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
 
         bytes_data (bytes): The data to load.
-        returns (Sentencizer): The loaded object.
-        todo
+        exclude (Tuple): Names of properties to exclude from deserialization.
+        RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        # cfg = srsly.msgpack_loads(bytes_data)
-        # self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
-        # self.overwrite = cfg.get("overwrite", self.overwrite)
+        self._from_deserialized_dict(srsly.msgpack_loads(bytes_data), exclude)
+
         return self
 
-    def to_disk(self, path, *, exclude=tuple()):
+    def to_disk(
+        self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
+    ) -> None:
         """Serialize the LLMWrapper to disk.
-        todo
+        path (Path): A path to a JSON file, which will be created if it doesn’t exist. Paths may be either strings or
+            Path-like objects.
+        exclude (Tuple): Names of properties to exclude from serialization.
         """
-        # path = util.ensure_path(path)
-        # path = path.with_suffix(".json")
-        # srsly.write_json(path, {"punct_chars": list(self.punct_chars), "overwrite": self.overwrite})
+        path = spacy.util.ensure_path(path).with_suffix(".json")
+        srsly.write_json(path, self._to_serializable_dict(exclude))
 
-    def from_disk(self, path, *, exclude=tuple()):
+    def from_disk(
+        self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
+    ) -> "LLMWrapper":
         """Load the LLMWrapper from disk.
-        todo
+        path (Path): A path to a JSON file. Paths may be either strings or Path-like objects.
+        exclude (Tuple): Names of properties to exclude from deserialization.
+        RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        # path = util.ensure_path(path)
-        # path = path.with_suffix(".json")
-        # cfg = srsly.read_json(path)
-        # self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
-        # self.overwrite = cfg.get("overwrite", self.overwrite)
+        path = spacy.util.ensure_path(path).with_suffix(".json")
+        self._from_deserialized_dict(srsly.read_json(path), exclude)
+
         return self
