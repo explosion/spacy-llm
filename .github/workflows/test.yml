@@ -1,12 +1,14 @@
 name: Regression Tests
 
 on:
-  pull_request_target:
+pull_request_target:
     types: [labeled]
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'safe to test' }}
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.9
@@ -16,16 +18,11 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
-        if: contains(github.event.pull_request.labels.*.name, 'safe to test')
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
       - name: Run tests
-        if: contains(github.event.pull_request.labels.*.name, 'safe to test')
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          TEST: ${{ secrets.TEST_SECRET }}
         run: |
           pytest spacy_llm/tests
