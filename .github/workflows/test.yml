@@ -1,6 +1,8 @@
 name: Regression Tests
 
 on: pull_request
+pull_request_target:
+    types: [labeled]
 
 jobs:
   run:
@@ -14,10 +16,12 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install dependencies
+        if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
         run: |
           pip install --upgrade pip
           pip install -r requirement.txt
 
       - name: Run tests
+        if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
         run: |
           pytest spacy_llm/tests
