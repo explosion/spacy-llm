@@ -15,7 +15,7 @@ def dummy_prompt() -> Callable[[minichain.backend.Backend, Optional[str], Doc], 
     instance and this instance.
     RETURNS (Callable[[minichain.backend.Backend, Optional[str], Doc], Doc]): Prompt function.
     """
-    template = "What is {value} times three? Respond with the exact number."
+    template = "What is {value} times three? Respond with the exact number ."
 
     def prompt(
         backend: minichain.backend.Backend, response_field: Optional[str], doc: Doc
