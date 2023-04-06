@@ -7,7 +7,7 @@ pull_request_target:
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    if: ${{ github.event.label.name == 'safe to test' }}
 
     steps:
       - uses: actions/checkout@v3
