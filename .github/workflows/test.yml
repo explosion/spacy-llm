@@ -7,6 +7,8 @@ pull_request_target:
 jobs:
   run:
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.9
@@ -16,12 +18,10 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install dependencies
-        if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
         run: |
           pip install --upgrade pip
           pip install -r requirement.txt
 
       - name: Run tests
-        if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
         run: |
           pytest spacy_llm/tests
