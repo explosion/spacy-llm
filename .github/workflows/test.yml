@@ -16,14 +16,14 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install dependencies
-        if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
+        if: contains(github.event.pull_request.labels.*.name, 'safe to test')
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
       - name: Run tests
-        if: contains(github.event.pull_request.labels.*.name, 'Safe to test')
+        if: contains(github.event.pull_request.labels.*.name, 'safe to test')
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TEST: ${{ secrets.TEST_SECRET }}
