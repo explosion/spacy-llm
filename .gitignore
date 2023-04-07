@@ -138,3 +138,6 @@ dmypy.json
 
 # Pycharm project files
 *.idea
+
+# Misc
+.sqlite.cache

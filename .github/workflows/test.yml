@@ -1,26 +1,25 @@
 name: Regression Tests
 
-on:
-  pull_request_target:
-    types: [labeled]
+on: pull_request
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: ${{ github.event.label.name == 'safe to test' }}
 
     steps:
       - uses: actions/checkout@v3
+        
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-          cache: "pip" # caching pip dependencies
+          cache: "pip"
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirement.txt
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Run tests
         run: |
