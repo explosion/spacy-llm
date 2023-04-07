@@ -54,8 +54,3 @@ def test_llm_serialize_disk():
         ).from_disk(tmp_dir / "llm")
     assert new_llm._backend_id == llm._backend_id
     assert new_llm._response_field == llm._response_field
-
-
-def test_llm_serialization_disk(nlp):
-    """Test disk serialization."""
-    # todo
