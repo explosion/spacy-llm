@@ -8,39 +8,20 @@ from spacy import Language, registry
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
+# todo
+#   - three parts: template, prompt, map
+#   - use .llm registry
+#   - no batch prompt (expect iterable of docs in normal prompt)
+#   - move prompt library arg to prompt function
+#   - flexible prompt library? would require interface / protocol
+
 
 @registry.misc("spacy.DummyPrompt.v1")
-def dummy_prompt() -> Callable[[minichain.backend.Backend, Optional[str], Doc], Doc]:
-    """Returns prompt function accepting specified API and document, prompting LLM API, mapping response to the doc
-    instance and this instance.
-    RETURNS (Callable[[minichain.backend.Backend, Optional[str], Doc], Doc]): Prompt function.
-    """
-    template = "What is {value} times three? Respond with the exact number ."
-
-    def prompt(
-        backend: minichain.backend.Backend, response_field: Optional[str], doc: Doc
-    ) -> Doc:
-        @minichain.prompt(backend())
-        def _prompt(model: minichain.backend) -> str:
-            return model(template.format(value=len(doc)))
-
-        response = _prompt().run()
-        if response_field:
-            setattr(doc._, response_field, response)
-
-        return doc
-
-    return prompt
-
-
-@registry.misc("spacy.DummyBatchPrompt.v1")
-def dummy_batch_prompt() -> Callable[
+def dummy_prompt() -> Callable[
     [minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]
 ]:
     """Returns prompt function accepting specified API and documents, prompting LLM API, mapping response to the doc
-    instances and returning those instances.
-    This particular dummy implementation loops over individual prompts, but real implementations may use particular API
-    batching functionality for better performance.
+    instances and the corresponding instances.
     RETURNS (Callable[[minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Prompt function.
     """
     template = "What is {value} times three? Respond with the exact number."
@@ -51,8 +32,8 @@ def dummy_batch_prompt() -> Callable[
         docs: Iterable[Doc],
     ) -> Iterable[Doc]:
         @minichain.prompt(backend())
-        def _prompt(model: minichain.backend, doc: Doc) -> str:
-            return model(template.format(value=len(doc)))
+        def _prompt(model: minichain.backend, prompt_doc: Doc) -> str:
+            return model(template.format(value=len(prompt_doc)))
 
         for doc in docs:
             response = _prompt(doc).run()
@@ -72,8 +53,9 @@ def dummy_batch_prompt() -> Callable[
     default_config={
         "backend": "OpenAI",
         "response_field": "llm_response",
+        # "template": {"@misc": "spacy.DummyPromptTemplate.v1"},
         "prompt": {"@misc": "spacy.DummyPrompt.v1"},
-        "batch_prompt": {"@misc": "spacy.DummyBatchPrompt.v1"},
+        # "map": {"@misc": "spacy.DummyPromptMap.v1"},
     },
 )
 def make_llm(
@@ -81,8 +63,8 @@ def make_llm(
     name: str,
     backend: str,
     response_field: Optional[str],
-    prompt: Callable[[minichain.backend.Backend, Optional[str], Doc], Doc],
-    batch_prompt: Callable[
+    # template: Callable[[Iterable[Doc]], Iterable[str]],
+    prompt: Callable[
         [minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]
     ],
 ) -> "LLMWrapper":
@@ -93,10 +75,9 @@ def make_llm(
         losses during training.
     backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
     response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
-    prompt (Callable[[minichain.backend.Backend, Optional[str], Doc], Doc]): Callable generating prompt function
-        modifying the specified doc.
-    batch_prompt (Callable[[minichain.backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Callable generating
-        prompt function modifying the specified docs.
+    prompt (Callable[[minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Returns prompt function
+        accepting specified API and documents, prompting LLM API, mapping response to the doc instances and the
+        corresponding instances.
     RETURNS (LLMWrapper): LLM instance.
     """
     return LLMWrapper(
@@ -104,7 +85,6 @@ def make_llm(
         backend=backend,
         response_field=response_field,
         prompt=prompt,
-        batch_prompt=batch_prompt,
     )
 
 
@@ -117,8 +97,7 @@ class LLMWrapper(Pipe):
         *,
         backend: str,
         response_field: Optional[str],
-        prompt: Callable[[minichain.backend.Backend, Optional[str], Doc], Doc],
-        batch_prompt: Callable[
+        prompt: Callable[
             [minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]
         ],
     ) -> None:
@@ -129,10 +108,9 @@ class LLMWrapper(Pipe):
             losses during training.
         backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
         response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
-        prompt (Callable[[Doc, Optional[str]], Doc]): Callable generating prompt function modifying the specified
-            doc.
-        batch_prompt (Callable[[minichain.backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Callable generating
-            prompt function modifying the specified docs.
+        prompt (Callable[[minichain.backend.Backend, Optional[str], Iterable[Doc]], Iterable[Doc]]): Returns prompt
+            function accepting specified API and documents, prompting LLM API, mapping response to the doc instances and
+            the corresponding instances.
         """
         self._name = name
         self._backend_id = backend
@@ -141,18 +119,19 @@ class LLMWrapper(Pipe):
         )
         self._response_field = response_field
         self._prompt = prompt
-        self._batch_prompt = batch_prompt
 
         if not Doc.has_extension(self._response_field):
             Doc.set_extension(self._response_field, default=None)
 
     def __call__(self, doc: Doc) -> Doc:
-        """Apply the LLM wrapper to a Doc and set the specified elements.
+        """Apply the LLM wrapper to a Doc instance.
 
-        doc (Doc): The document to process.
+        doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        return self._prompt(self._backend, self._response_field, doc)
+        docs = list(self._prompt(self._backend, self._response_field, [doc]))
+        assert len(docs) == 1
+        return docs[0]
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
@@ -172,14 +151,14 @@ class LLMWrapper(Pipe):
         for doc in stream:
             doc_batch.append(doc)
             if len(doc_batch) % batch_size == 0:
-                for modified_doc in self._batch_prompt(
+                for modified_doc in self._prompt(
                     self._backend, self._response_field, doc_batch
                 ):
                     yield modified_doc
                 doc_batch = []
 
         # Run prompt for last, incomplete batch.
-        for modified_doc in self._batch_prompt(
+        for modified_doc in self._prompt(
             self._backend, self._response_field, doc_batch
         ):
             yield modified_doc
