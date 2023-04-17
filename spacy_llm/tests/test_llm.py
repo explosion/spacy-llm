@@ -1,6 +1,7 @@
 import pytest
 import spacy
 from ..pipeline import LLMWrapper  # noqa: F401
+from ..api import PromptableMiniChain
 
 
 @pytest.fixture
@@ -29,28 +30,41 @@ def test_llm_pipe(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        backend="OpenAI", response_field="llm_wrapper", template=None, prompt=None, parse=None  # type: ignore
+        response_field="llm_wrapper",
+        template=None,  # type: ignore
+        api=lambda: PromptableMiniChain("OpenAI"),
+        parse=None,  # type: ignore
     )
-    assert llm._backend_id == "OpenAI"
+    assert llm._api._backend_id == "OpenAI"
     assert llm._response_field == "llm_wrapper"
-    bytes_data = llm.to_bytes()
+
     new_llm = LLMWrapper(
-        backend="Google", response_field=None, template=None, prompt=None, parse=None  # type: ignore
-    ).from_bytes(bytes_data)
-    assert new_llm._backend_id == llm._backend_id
+        response_field=None,
+        template=None,  # type: ignore
+        api=lambda: PromptableMiniChain("HuggingFace"),
+        parse=None,  # type: ignore
+    ).from_bytes(llm.to_bytes())
+    assert new_llm._api._backend_id == llm._api._backend_id == "OpenAI"
     assert new_llm._response_field == llm._response_field
 
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        backend="OpenAI", response_field="llm_wrapper", template=None, prompt=None, parse=None  # type: ignore
+        response_field="llm_wrapper",
+        template=None,  # type: ignore
+        api=lambda: PromptableMiniChain("OpenAI"),
+        parse=None,  # type: ignore
     )
-    assert llm._backend_id == "OpenAI"
+    assert llm._api._backend_id == "OpenAI"
     assert llm._response_field == "llm_wrapper"
+
     with spacy.util.make_tempdir() as tmp_dir:
         llm.to_disk(tmp_dir / "llm")
         new_llm = LLMWrapper(
-            backend="Google", response_field=None, template=None, prompt=None, parse=None  # type: ignore
+            response_field=None,
+            template=None,  # type: ignore
+            api=lambda: PromptableMiniChain("HuggingFace"),
+            parse=None,  # type: ignore
         ).from_disk(tmp_dir / "llm")
-    assert new_llm._backend_id == llm._backend_id
+    assert new_llm._api._backend_id == llm._api._backend_id == "OpenAI"
     assert new_llm._response_field == llm._response_field

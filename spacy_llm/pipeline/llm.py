@@ -1,19 +1,14 @@
 from pathlib import Path
 from typing import Callable, Optional, Iterable, Tuple, Iterator, List, Any, Dict, cast
 
-import minichain
 import spacy
 import srsly
 from spacy import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
-from . import prompts  # noqa: F401
-
-
-# todo
-#   - move prompt library arg to prompt Callable
-#   - flexible prompt library? would require interface / protocol
+from .. import factories  # noqa: F401
+from ..api import Promptable
 
 
 @Language.factory(
@@ -22,20 +17,18 @@ from . import prompts  # noqa: F401
     requires=[],
     assigns=[],
     default_config={
-        "backend": "OpenAI",
         "response_field": "llm_response",
         "template": {"@llm": "spacy.DummyTemplate.v1"},
-        "prompt": {"@llm": "spacy.DummyPrompt.v1"},
+        "api": {"@llm": "spacy.API.MiniChain.v1", "backend": "OpenAI"},
         "parse": {"@llm": "spacy.DummyParse.v1"},
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
-    backend: str,
     response_field: Optional[str],
     template: Callable[[Iterable[Doc]], Iterable[str]],
-    prompt: Callable[[minichain.backend.Backend, Iterable[str]], Iterable[str]],
+    api: Callable[[], Promptable],
     parse: Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
@@ -43,22 +36,19 @@ def make_llm(
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
     response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
     template (Callable[[Iterable[Doc]], Iterable[str]]): Returns Callable injecting Doc data into a prompt template and
         returning one fully specified prompt per passed Doc instance.
-    prompt (Callable[[minichain.backend.Backend, Iterable[str]], Iterable[str]]): Returns Callable
-        prompting LLM API and returning responses.
+    api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
     parse (Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]]): Returns Callable parsing LLM
         responses and updating Doc instances with the extracted information.
     RETURNS (LLMWrapper): LLM instance.
     """
     return LLMWrapper(
         name=name,
-        backend=backend,
         response_field=response_field,
         template=template,
-        prompt=prompt,
+        api=api,
         parse=parse,
     )
 
@@ -70,10 +60,9 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        backend: str,
         response_field: Optional[str],
         template: Callable[[Iterable[Doc]], Iterable[str]],
-        prompt: Callable[[minichain.backend.Backend, Iterable[str]], Iterable[str]],
+        api: Callable[[], Promptable],
         parse: Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]],
     ) -> None:
         """
@@ -81,23 +70,17 @@ class LLMWrapper(Pipe):
 
         name (str): The component instance name, used to add entries to the
             losses during training.
-        backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
         response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
         template (Callable[[Iterable[Doc]], Iterable[str]]): Returns Callable injecting Doc data into a prompt template
             and returning one fully specified prompt per passed Doc instance.
-        prompt (Callable[[minichain.backend.Backend, Iterable[str]], Iterable[str]]): Returns Callable
-            prompting LLM API and returning responses.
+        api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
         parse (Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]]): Returns Callable parsing LLM
             responses and updating Doc instances with the extracted information.
         """
         self._name = name
-        self._backend_id = backend
-        self._backend: minichain.backend.Backend = getattr(
-            minichain.backend, self._backend_id
-        )
         self._response_field = response_field
         self._template = template
-        self._prompt = prompt
+        self._api = api()
         self._parse = parse
 
         if not Doc.has_extension(self._response_field):
@@ -112,7 +95,7 @@ class LLMWrapper(Pipe):
         docs = list(
             self._parse(
                 [doc],
-                self._prompt(self._backend, self._template([doc])),
+                self._api.prompt(self._template([doc])),
                 self._response_field,
             )
         )
@@ -139,7 +122,7 @@ class LLMWrapper(Pipe):
             if len(doc_batch) % batch_size == 0:
                 for modified_doc in self._parse(
                     doc_batch,
-                    self._prompt(self._backend, self._template(doc_batch)),
+                    self._api.prompt(self._template(doc_batch)),
                     self._response_field,
                 ):
                     yield modified_doc
@@ -148,7 +131,7 @@ class LLMWrapper(Pipe):
         # Run prompt for last, incomplete batch.
         for modified_doc in self._parse(
             doc_batch,
-            self._prompt(self._backend, self._template(doc_batch)),
+            self._api.prompt(self._template(doc_batch)),
             self._response_field,
         ):
             yield modified_doc
@@ -161,7 +144,6 @@ class LLMWrapper(Pipe):
         return {
             k: v
             for k, v in {
-                "backend_id": self._backend_id,
                 "response_field": self._response_field,
             }.items()
             if k not in exclude
@@ -172,10 +154,6 @@ class LLMWrapper(Pipe):
         cfg (Dict[str, Any]): Config dict.
         exclude (Tuple[str]): Names of properties to exclude from deserialization.
         """
-        if "backend_id" not in exclude:
-            self._backend_id = cfg["backend_id"]
-        if "backend" not in exclude:
-            self._backend = getattr(minichain.backend, self._backend_id)
         if "response_field" not in exclude:
             self._response_field = cfg["response_field"]
 
@@ -185,8 +163,13 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-
-        return srsly.msgpack_dumps(self._to_serializable_dict(exclude))
+        return spacy.util.to_bytes(
+            {
+                "data": lambda: srsly.json_dumps(self._to_serializable_dict(exclude)),
+                "api": self._api.to_bytes,
+            },
+            exclude,
+        )
 
     def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
@@ -195,7 +178,16 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        self._from_deserialized_dict(srsly.msgpack_loads(bytes_data), exclude)
+
+        def _update(b: bytes) -> None:
+            data = srsly.json_loads(b)
+            self._response_field = data["response_field"]
+
+        spacy.util.from_bytes(
+            bytes_data,
+            {"data": lambda b: _update(b), "api": lambda b: self._api.from_bytes(b)},
+            exclude,
+        )
 
         return self
 
@@ -207,8 +199,16 @@ class LLMWrapper(Pipe):
             Path-like objects.
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-        path = spacy.util.ensure_path(path).with_suffix(".json")
-        srsly.write_json(path, self._to_serializable_dict(exclude))
+        spacy.util.to_disk(
+            spacy.util.ensure_path(path).with_suffix(".json"),
+            {
+                "data": lambda p: srsly.write_json(
+                    p, self._to_serializable_dict(exclude)
+                ),
+                "api": lambda p: self._api.to_disk(p),
+            },
+            exclude,
+        )
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
@@ -218,7 +218,15 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        path = spacy.util.ensure_path(path).with_suffix(".json")
-        self._from_deserialized_dict(srsly.read_json(path), exclude)
+
+        def _update(p: Path) -> None:
+            data = srsly.read_json(p)
+            self._response_field = data["response_field"]
+
+        spacy.util.from_disk(
+            spacy.util.ensure_path(path).with_suffix(".json"),
+            {"data": lambda p: _update(p), "api": lambda p: self._api.from_disk(p)},
+            exclude,
+        )
 
         return self
