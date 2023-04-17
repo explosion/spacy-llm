@@ -4,72 +4,16 @@ from typing import Callable, Optional, Iterable, Tuple, Iterator, List, Any, Dic
 import minichain
 import spacy
 import srsly
-from spacy import Language, registry
+from spacy import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
+from . import prompts  # noqa: F401
+
+
 # todo
-#   - use .llm registry
-#   - move prompts into separate file
 #   - move prompt library arg to prompt Callable
 #   - flexible prompt library? would require interface / protocol
-
-
-@registry.misc("spacy.DummyTemplate.v1")
-def dummy_template() -> Callable[[Iterable[Doc]], Iterable[str]]:
-    """Returns Callable injecting Doc data into a prompt template and returning one fully specified prompt per passed
-        Doc instance.
-    RETURNS (Callable[[Iterable[Doc]], Iterable[str]]): Callable producing prompt strings.
-    """
-    template = "What is {value} times three? Respond with the exact number."
-
-    def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
-        return [template.format(value=len(doc)) for doc in docs]
-
-    return prompt_template
-
-
-@registry.misc("spacy.DummyPrompt.v1")
-def dummy_prompt() -> Callable[
-    [minichain.backend.Backend, Iterable[str]], Iterable[str]
-]:
-    """Returns Callable prompting LLM API and returning responses.
-    RETURNS (Callable[[minichain.backend.Backend, Iterable[str]], Iterable[str]]): Prompts LLM and returns responses.
-    """
-
-    def prompt(
-        backend: minichain.backend.Backend, prompts: Iterable[str]
-    ) -> Iterable[str]:
-        @minichain.prompt(backend())
-        def _prompt(model: minichain.backend, prompt_text: str) -> str:
-            return model(prompt_text)
-
-        return [_prompt(pr).run() for pr in prompts]
-
-    return prompt
-
-
-@registry.misc("spacy.DummyParse.v1")
-def dummy_parse() -> Callable[
-    [Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]
-]:
-    """Returns Callable parsing LLM responses and updating Doc instances with the extracted information.
-    RETURNS (Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]]): Callable parsing LLM responses and
-        mapping them to Doc instances.
-    """
-
-    def prompt_parse(
-        docs: Iterable[Doc],
-        prompt_responses: Iterable[str],
-        response_field: Optional[str],
-    ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, prompt_responses):
-            if response_field:
-                setattr(doc._, response_field, prompt_response)
-
-        return docs
-
-    return prompt_parse
 
 
 @Language.factory(
@@ -80,9 +24,9 @@ def dummy_parse() -> Callable[
     default_config={
         "backend": "OpenAI",
         "response_field": "llm_response",
-        "template": {"@misc": "spacy.DummyTemplate.v1"},
-        "prompt": {"@misc": "spacy.DummyPrompt.v1"},
-        "parse": {"@misc": "spacy.DummyParse.v1"},
+        "template": {"@llm": "spacy.DummyTemplate.v1"},
+        "prompt": {"@llm": "spacy.DummyPrompt.v1"},
+        "parse": {"@llm": "spacy.DummyParse.v1"},
     },
 )
 def make_llm(
