@@ -1,2 +1,81 @@
 # spacy-llm
-Integrating spaCy with generative LLM APIs. 
+This package integrates various LLM APIs into spaCy. It adds a `llm` pipeline component to spaCy, allowing to prompt 
+LLMs as part of your spaCy pipeline. Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadmap.
+
+`spacy-llm` assumes three functionalities to be implemented for a use case:
+- _Templating_, i. e. defining a prompt template and injecting the relevant data from your `Doc` instances into this 
+  template to generate fully formed prompts.
+- _Prompting_, i. e. executing the prompt. A minimal wrapper layer for compatibility is provided, but you are
+  free to use whatever tooling (`langchain`, `minichain`, a hand-rolled backend connecting to the API of your choice, 
+  ...) your prefer for connecting to the LLM API and executing the prompt(s) underneath. 
+
+  Adhering with the compatibility wrapper ensures that the LLM pipeline component (1) can deal with the backend of your 
+  choice and (2) can be (de-)serialized like any other spaCy pipeline component.
+- _Parsing_, i. e. parsing the LLM response(s), extracting the useful bits from it and mapping these back onto your 
+  documents.
+
+## 🖊️ Usage
+
+### Configuration
+
+The code for templating, prompting and parsing has to be supplied to the `llm` pipeline component using spaCy's config 
+system. The default configuration is as follows:
+```ini
+[components.llm]
+# Doc attribute in Doc._ to store LLM response in.
+response_field = “llm_response” 
+# Factory function for Callable generating prompts from prompt template.
+template = {“@misc”: “spacy.DummyTemplate.v1”}
+# Factory function for Callable generating instance of API to use. In this case: the MiniChain wrapper that is already 
+# implemented, with its OpenAI backend. This corresponds to the "prompting" step and includes managing the connection
+# to the LLM API.
+api = {"@llm": "spacy.API.MiniChain.v1", "backend": "OpenAI"}
+# Factory fuction for Callable parsing LLM responses.
+parse = {"@llm": "spacy.DummyParse.v1"},
+```
+
+### Minimal example
+
+The `llm` component behaves as any other spaCy component does, so adding it to an existing pipeline follows the same 
+pattern:
+```python
+import spacy
+
+nlp = spacy.load("blank:en")
+nlp.add_pipe("llm")
+doc = nlp("This is a test")
+```
+Note however that this won't make much sense without configuring your `llm` component properly (see 
+section above) - otherwise the default configuration is run, which runs a dummy prompt. 
+
+For more details on spaCy's configuration system consult the [spaCy docs](https://spacy.io/api/data-formats#config).  
+
+### Authentication
+
+This package does not explicitly implement any kind of credential management or storage. Please refer to the 
+documentation of the libraries you are using to find out how to set your credentials.
+
+## 🔨 Supported tools
+
+`spacy-llm` facilitates working with arbitrary prompting tools or libraries. Out of the box the following are supported:
+- [`MiniChain`](https://github.com/srush/MiniChain)
+
+## ⚙️ Supported use cases
+
+- TODO
+
+## ⚠️ Warning: experimental package
+
+This package is experimental and it is possible that changes made to the interface will be breaking.
+
+## ⏳ Install
+
+```bash
+pip install spacy-llm
+```
+
+## 📝️ Reporting issues
+
+Please report all issues with `spacy-llm` in the [spaCy issue tracker](https://github.com/explosion/spaCy/issues). If
+you have questions regarding the usage of `spacy-llm`, use the 
+[discussion board](https://github.com/explosion/spaCy/discussions). Thank you! 
