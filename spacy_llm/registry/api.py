@@ -20,3 +20,20 @@ def api_minichain(
         return PromptableMiniChain(backend, prompt)
 
     return init
+
+
+# @spacy.registry.llm("spacy.api.LangChain.v1")
+# def api_langchain(
+#     backend: str, prompt: Callable[[minichain.Backend, Iterable[str]], Iterable[str]]
+# ) -> Callable[[], Promptable]:
+#     """Returns Promptable wrapper for Minichain.
+#     backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
+#     prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
+#     RETURNS (Promptable): Promptable wrapper for Minichain.
+#     """
+#     langchain.llms
+#
+#     def init() -> Promptable:
+#         return PromptableMiniChain(backend, prompt)
+#
+#     return init
