@@ -12,7 +12,7 @@ class LangChain:
     def __init__(
         self,
         backend: str,
-        prompt: Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]],
+        prompt: Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]],
         backend_config: Dict[Any, Any],
     ):
         """Initialize wrapper for LangChain.
@@ -23,32 +23,30 @@ class LangChain:
         """
         self._backend_id = backend
         self._backend_config = backend_config
-        self._backend: langchain.llms.BaseLLM = self._load_backend()
+        self._backend = self._load_backend()
         self._prompt = prompt
 
-    def _load_backend(self) -> langchain.llms.BaseLLM:
-        """Loads LangChain backend."""
-        self._backend = langchain.llms.type_to_cls_dict[self._backend_id](
-            **self._backend_config
-        )
-
-        return self._backend
+    def _load_backend(self) -> "langchain.llms.BaseLLM":
+        """Loads LangChain backend.
+        RETURNS (langchain.llms.BaseLLM): LangChain backend.
+        """
+        return langchain.llms.type_to_cls_dict[self._backend_id](**self._backend_config)
 
     def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         return self._prompt(self._backend, prompts)
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         return srsly.msgpack_dumps(
-            {"backend": self._backend_id, "llm_config": self._backend_config}
+            {"backend_id": self._backend_id, "llm_config": self._backend_config}
         )
 
     def from_bytes(
         self, bytes_data: bytes, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
     ) -> "LangChain":
         data = srsly.msgpack_loads(bytes_data)
-        self._backend_id = data["backend"]
+        self._backend_id = data["backend_id"]
         self._backend_config = data["llm_config"]
-        self._load_backend()
+        self._backend = self._load_backend()
 
         return self
 
@@ -57,7 +55,7 @@ class LangChain:
     ) -> None:
         path = spacy.util.ensure_path(path).with_suffix(".json")
         srsly.write_json(
-            path, {"backend": self._backend_id, "llm_config": self._backend_config}
+            path, {"backend_id": self._backend_id, "llm_config": self._backend_config}
         )
 
     def from_disk(
@@ -67,6 +65,6 @@ class LangChain:
         data = srsly.read_json(path)
         self._backend_id = data["backend_id"]
         self._backend_config = data["llm_config"]
-        self._load_backend()
+        self._backend = self._load_backend()
 
         return self

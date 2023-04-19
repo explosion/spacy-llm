@@ -9,7 +9,7 @@ from ..compat import langchain, minichain
 @spacy.registry.llm("spacy.api.MiniChain.v1")
 def api_minichain(
     backend: str,
-    prompt: Callable[[minichain.Backend, Iterable[Any]], Iterable[Any]],
+    prompt: Callable[["minichain.Backend", Iterable[Any]], Iterable[Any]],
     backend_config: Dict[Any, Any],
 ) -> Callable[[], api.Promptable]:
     """Returns Promptable wrapper for Minichain.

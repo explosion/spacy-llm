@@ -12,29 +12,43 @@ class MiniChain:
     def __init__(
         self,
         backend: str,
-        prompt: Callable[[minichain.Backend, Iterable[str]], Iterable[str]],
+        prompt: Callable[["minichain.Backend", Iterable[str]], Iterable[str]],
         backend_config: Dict[Any, Any],
     ):
         """Initialize wrapper for MiniChain.
         backend (str): Name of any backend class in minichain.backend, e. g. "OpenAI".
         prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
-        backend_config (Dict[Any, Any]): Not used.
+        backend_config (Dict[Any, Any]): Unused. This is intentional, as the config system requires a Promptable
+            to receive a `backend_config` argument, but `minichain` doesn't .
         """
         self._backend_id = backend
-        self._backend: minichain.backend.Backend = getattr(minichain.backend, backend)
+        self._backend_config = backend_config
+        self._backend = self._load_backend()
         self._prompt = prompt
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         return self._prompt(self._backend, prompts)
 
+    def _load_backend(self) -> "minichain.Backend":
+        """Loads MiniChain backend.
+        RETURNS (minichain.Backend): Loaded backend
+        """
+        return getattr(minichain.backend, self._backend_id)(
+            **(self._backend_config if self._backend_config else {})
+        )
+
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
-        return srsly.msgpack_dumps({"backend": self._backend_id})
+        return srsly.msgpack_dumps(
+            {"backend_id": self._backend_id, "backend_config": self._backend_config}
+        )
 
     def from_bytes(
         self, bytes_data: bytes, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
     ) -> "MiniChain":
-        self._backend_id = srsly.msgpack_loads(bytes_data)["backend"]
-        self._backend = getattr(minichain.backend, self._backend_id)
+        data = srsly.msgpack_loads(bytes_data)
+        self._backend_id = data["backend_id"]
+        self._backend_config = data["backend_config"]
+        self._backend = self._load_backend()
 
         return self
 
@@ -42,13 +56,18 @@ class MiniChain:
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         path = spacy.util.ensure_path(path).with_suffix(".json")
-        srsly.write_json(path, {"backend_id": self._backend_id})
+        srsly.write_json(
+            path,
+            {"backend_id": self._backend_id, "backend_config": self._backend_config},
+        )
 
     def from_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "MiniChain":
         path = spacy.util.ensure_path(path).with_suffix(".json")
-        self._backend_id = srsly.read_json(path)["backend_id"]
-        self._backend = getattr(minichain.backend, self._backend_id)
+        data = srsly.read_json(path)
+        self._backend_id = data["backend_id"]
+        self._backend_config = data["backend_config"]
+        self._backend = self._load_backend()
 
         return self
