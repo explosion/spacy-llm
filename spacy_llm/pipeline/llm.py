@@ -27,9 +27,9 @@ def make_llm(
     nlp: Language,
     name: str,
     response_field: Optional[str],
-    template: Callable[[Iterable[Doc]], Iterable[str]],
+    template: Callable[[Iterable[Doc]], Iterable[Any]],
     api: Callable[[], Promptable],
-    parse: Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]],
+    parse: Callable[[Iterable[Doc], Iterable[Any], Optional[str]], Iterable[Doc]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -37,10 +37,10 @@ def make_llm(
     name (str): The component instance name, used to add entries to the
         losses during training.
     response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
-    template (Callable[[Iterable[Doc]], Iterable[str]]): Returns Callable injecting Doc data into a prompt template and
+    template (Callable[[Iterable[Doc]], Iterable[Any]]): Returns Callable injecting Doc data into a prompt template and
         returning one fully specified prompt per passed Doc instance.
     api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
-    parse (Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]]): Returns Callable parsing LLM
+    parse (Callable[[Iterable[Doc], Iterable[Any], Optional[str]], Iterable[Doc]]): Returns Callable parsing LLM
         responses and updating Doc instances with the extracted information.
     RETURNS (LLMWrapper): LLM instance.
     """
@@ -61,9 +61,9 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         response_field: Optional[str],
-        template: Callable[[Iterable[Doc]], Iterable[str]],
+        template: Callable[[Iterable[Doc]], Iterable[Any]],
         api: Callable[[], Promptable],
-        parse: Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]],
+        parse: Callable[[Iterable[Doc], Iterable[Any], Optional[str]], Iterable[Doc]],
     ) -> None:
         """
         Object managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -71,10 +71,10 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
-        template (Callable[[Iterable[Doc]], Iterable[str]]): Returns Callable injecting Doc data into a prompt template
+        template (Callable[[Iterable[Doc]], Iterable[Any]]): Returns Callable injecting Doc data into a prompt template
             and returning one fully specified prompt per passed Doc instance.
         api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
-        parse (Callable[[Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]]): Returns Callable parsing LLM
+        parse (Callable[[Iterable[Doc], Iterable[Any], Optional[str]], Iterable[Doc]]): Returns Callable parsing LLM
             responses and updating Doc instances with the extracted information.
         """
         self._name = name

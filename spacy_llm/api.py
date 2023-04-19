@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Protocol, Iterable, Tuple, cast, Union
+from typing import Protocol, Iterable, Tuple, cast, Union, Any
 
 import minichain
 import spacy
@@ -10,9 +10,9 @@ from spacy.util import SimpleFrozenList
 class Promptable(Protocol):
     """Promptable objects should implement a prompt() method executing multiple prompts and returning the responses."""
 
-    def prompt(self, prompts: Iterable[str]) -> Iterable[str]:
+    def prompt(self, prompts: Iterable[Any]) -> Iterable[Any]:
         """Prompt LLM.
-        prompts (Iterable[str]): List of prompts to execute without modifications.
+        prompts (Iterable[Any]): List of prompts to execute without modifications.
         """
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
