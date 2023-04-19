@@ -12,12 +12,12 @@ class MiniChain:
         self,
         backend: str,
         prompt: Callable[[minichain.Backend, Iterable[str]], Iterable[str]],
-        core_config: Dict[Any, Any],
+        backend_config: Dict[Any, Any],
     ):
         """Initialize wrapper for MiniChain.
         backend (str): Name of any backend class in minichain.backend, e. g. "OpenAI".
         prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
-        core_config (Dict[Any, Any]): Not used.
+        backend_config (Dict[Any, Any]): Not used.
         """
         self._backend_id = backend
         self._backend: minichain.backend.Backend = getattr(minichain.backend, backend)
