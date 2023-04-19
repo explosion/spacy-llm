@@ -1,2 +1,1 @@
 spacy>=3.5.0,<4.0.0
-minichain @ git+https://github.com/srush/MiniChain/
