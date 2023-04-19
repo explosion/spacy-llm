@@ -7,7 +7,7 @@ from spacy import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
-from .. import factories  # noqa: F401
+from .. import registry  # noqa: F401
 from ..api import Promptable
 
 
