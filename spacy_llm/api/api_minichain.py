@@ -7,14 +7,14 @@ import srsly
 from spacy.util import SimpleFrozenList
 
 
-class PromptableMiniChain:
+class MiniChain:
     def __init__(
         self,
         backend: str,
         prompt: Callable[[minichain.Backend, Iterable[str]], Iterable[str]],
     ):
         """Initialize wrapper for MiniChain.
-        backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
+        backend (str): Name of any backend class in minichain.backend, e. g. "OpenAI".
         prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
         """
         self._backend_id = backend
@@ -29,7 +29,7 @@ class PromptableMiniChain:
 
     def from_bytes(
         self, bytes_data: bytes, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
-    ) -> "PromptableMiniChain":
+    ) -> "MiniChain":
         self._backend_id = srsly.msgpack_loads(bytes_data)["backend"]
         self._backend = getattr(minichain.backend, self._backend_id)
 
@@ -43,7 +43,7 @@ class PromptableMiniChain:
 
     def from_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
-    ) -> "PromptableMiniChain":
+    ) -> "MiniChain":
         path = spacy.util.ensure_path(path).with_suffix(".json")
         self._backend_id = srsly.read_json(path)["backend_id"]
         self._backend = getattr(minichain.backend, self._backend_id)

@@ -59,6 +59,7 @@ documentation of the libraries you are using to find out how to set your credent
 
 `spacy-llm` facilitates working with arbitrary prompting tools or libraries. Out of the box the following are supported:
 - [`MiniChain`](https://github.com/srush/MiniChain)
+- [`LangChain`](https://github.com/hwchase17/langchain)
 
 ## ⚙️ Supported use cases
 
