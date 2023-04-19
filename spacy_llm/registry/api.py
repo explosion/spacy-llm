@@ -20,11 +20,9 @@ def api_minichain(
         instance.
     RETURNS (Promptable): Promptable wrapper for Minichain.
     """
-
-    def init() -> api.Promptable:
-        return api.MiniChain(backend=backend, prompt=prompt, core_config=core_config)
-
-    return init
+    return lambda: api.MiniChain(
+        backend=backend, prompt=prompt, core_config=core_config
+    )
 
 
 @spacy.registry.llm("spacy.api.LangChain.v1")
@@ -40,8 +38,6 @@ def api_langchain(
         instance.
     RETURNS (Promptable): Promptable wrapper for LangChain.
     """
-
-    def init() -> api.Promptable:
-        return api.LangChain(backend=backend, prompt=prompt, core_config=core_config)
-
-    return init
+    return lambda: api.LangChain(
+        backend=backend, prompt=prompt, core_config=core_config
+    )
