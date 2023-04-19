@@ -23,6 +23,7 @@ from ..api import Promptable
             "@llm": "spacy.api.MiniChain.v1",
             "backend": "OpenAI",
             "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
+            "core_config": {},
         },
         "parse": {"@llm": "spacy.parse.Dummy.v1"},
     },

@@ -6,7 +6,7 @@ if "llm" not in spacy.registry.get_registry_names():
 
 from .template import dummy_template
 from .api import api_minichain
-from .prompt import minichain_simple_prompt
+from .prompt import minichain_simple_prompt, langchain_simple_prompt
 from .parse import dummy_parse
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "api_minichain",
     # prompt
     "minichain_simple_prompt",
+    "langchain_simple_prompt",
     # parse
     "dummy_parse",
 ]

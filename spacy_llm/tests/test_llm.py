@@ -32,7 +32,7 @@ def test_llm_serialize_bytes():
     llm = LLMWrapper(
         response_field="llm_wrapper",
         template=None,  # type: ignore
-        api=lambda: MiniChain("OpenAI", prompt=None),  # type: ignore
+        api=lambda: MiniChain("OpenAI", prompt=None, core_config=None),  # type: ignore
         parse=None,  # type: ignore
     )
     assert llm._api._backend_id == "OpenAI"
@@ -41,7 +41,7 @@ def test_llm_serialize_bytes():
     new_llm = LLMWrapper(
         response_field=None,
         template=None,  # type: ignore
-        api=lambda: MiniChain("HuggingFace", prompt=None),  # type: ignore
+        api=lambda: MiniChain("HuggingFace", prompt=None, core_config=None),  # type: ignore
         parse=None,  # type: ignore
     ).from_bytes(llm.to_bytes())
     assert new_llm._api._backend_id == llm._api._backend_id == "OpenAI"
@@ -52,7 +52,7 @@ def test_llm_serialize_disk():
     llm = LLMWrapper(
         response_field="llm_wrapper",
         template=None,  # type: ignore
-        api=lambda: MiniChain("OpenAI", prompt=None),  # type: ignore
+        api=lambda: MiniChain("OpenAI", prompt=None, core_config=None),  # type: ignore
         parse=None,  # type: ignore
     )
     assert llm._api._backend_id == "OpenAI"
@@ -63,7 +63,7 @@ def test_llm_serialize_disk():
         new_llm = LLMWrapper(
             response_field=None,
             template=None,  # type: ignore
-            api=lambda: MiniChain("HuggingFace", prompt=None),  # type: ignore
+            api=lambda: MiniChain("HuggingFace", prompt=None, core_config=None),  # type: ignore
             parse=None,  # type: ignore
         ).from_disk(tmp_dir / "llm")
     assert new_llm._api._backend_id == llm._api._backend_id == "OpenAI"
@@ -79,6 +79,7 @@ def test_llm_langchain():
             "api": {
                 "@llm": "spacy.api.LangChain.v1",
                 "backend": "openai",
+                "core_config": {"temperature": 0.3},
                 "prompt": {"@llm": "spacy.prompt.LangChainSimple.v1"},
             }
         },
