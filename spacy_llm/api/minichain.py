@@ -18,8 +18,8 @@ class MiniChain:
         """Initialize wrapper for MiniChain.
         backend (str): Name of any backend class in minichain.backend, e. g. "OpenAI".
         prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
-        backend_config (Dict[Any, Any]): Unused. This is intentional, as the config system requires a Promptable
-            to receive a `backend_config` argument, but `minichain` doesn't .
+        backend_config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the
+            minichain.Backend instance.
         """
         self._backend_id = backend
         self._backend_config = backend_config
