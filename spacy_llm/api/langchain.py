@@ -3,9 +3,9 @@ from typing import Callable, Iterable, Any, Tuple, cast, Union, Dict
 
 import spacy
 import srsly
-import langchain
-
 from spacy.util import SimpleFrozenList
+
+from ..compat import langchain
 
 
 class LangChain:
@@ -22,11 +22,17 @@ class LangChain:
             langchain.llms.BaseLLM instance.
         """
         self._backend_id = backend
-        self._backend: langchain.llms.BaseLLM = langchain.llms.type_to_cls_dict[
-            backend
-        ](**backend_config)
-        self._prompt = prompt
         self._backend_config = backend_config
+        self._backend: langchain.llms.BaseLLM = self._load_backend()
+        self._prompt = prompt
+
+    def _load_backend(self) -> langchain.llms.BaseLLM:
+        """Loads LangChain backend."""
+        self._backend = langchain.llms.type_to_cls_dict[self._backend_id](
+            **self._backend_config
+        )
+
+        return self._backend
 
     def prompt(self, prompts: Iterable[Any]) -> Iterable[Any]:
         return self._prompt(self._backend, prompts)
@@ -42,9 +48,7 @@ class LangChain:
         data = srsly.msgpack_loads(bytes_data)
         self._backend_id = data["backend"]
         self._backend_config = data["llm_config"]
-        self._backend = langchain.llms.type_to_cls_dict[self._backend_id](
-            **self._backend_config
-        )
+        self._load_backend()
 
         return self
 
@@ -63,8 +67,6 @@ class LangChain:
         data = srsly.read_json(path)
         self._backend_id = data["backend_id"]
         self._backend_config = data["llm_config"]
-        self._backend = langchain.llms.type_to_cls_dict[self._backend_id](
-            **self._backend_config
-        )
+        self._load_backend()
 
         return self

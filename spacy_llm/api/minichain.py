@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Iterable, Tuple, cast, Union, Callable, Any, Dict
 
-import minichain
 import spacy
 import srsly
 from spacy.util import SimpleFrozenList
+
+from ..compat import minichain
 
 
 class MiniChain:

@@ -71,7 +71,7 @@ class LLMWrapper(Pipe):
         parse: Callable[[Iterable[Doc], Iterable[Any], Optional[str]], Iterable[Doc]],
     ) -> None:
         """
-        Object managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
+        Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
         name (str): The component instance name, used to add entries to the
             losses during training.

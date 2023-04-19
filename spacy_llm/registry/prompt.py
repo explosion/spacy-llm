@@ -1,7 +1,6 @@
 from typing import Callable, Iterable
 
-import langchain.llms
-import minichain
+from ..compat import langchain, minichain
 import spacy
 
 

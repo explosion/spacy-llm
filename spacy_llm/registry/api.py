@@ -1,10 +1,9 @@
 from typing import Callable, Iterable, Any, Dict
 
-import langchain.llms
-import minichain
 import spacy
 
 from .. import api
+from ..compat import langchain, minichain
 
 
 @spacy.registry.llm("spacy.api.MiniChain.v1")
