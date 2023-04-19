@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Optional, Iterable, Tuple, Iterator, List, Any, Dict, cast
+from typing import Callable, Optional, Iterable, Tuple, Iterator, Any, Dict, cast
 
 import spacy
 import srsly
@@ -75,7 +75,8 @@ class LLMWrapper(Pipe):
 
         name (str): The component instance name, used to add entries to the
             losses during training.
-        response_field (Optional[str]): Doc extension field in which to store the full LLM response. If None, responses are not stored.
+        response_field (Optional[str]): Doc extension field in which to store the full LLM response. If None, responses
+            are not stored.
         template (Callable[[Iterable[Doc]], Iterable[Any]]): Returns Callable injecting Doc data into a prompt template
             and returning one fully specified prompt per passed Doc instance.
         api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
@@ -121,25 +122,13 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#pipe
         """
-        doc_batch: List[Doc] = []
-        for doc in stream:
-            doc_batch.append(doc)
-            if len(doc_batch) % batch_size == 0:
-                for modified_doc in self._parse(
-                    doc_batch,
-                    self._api.prompt(self._template(doc_batch)),
-                    self._response_field,
-                ):
-                    yield modified_doc
-                doc_batch = []
-
-        # Run prompt for last, incomplete batch.
-        for modified_doc in self._parse(
-            doc_batch,
-            self._api.prompt(self._template(doc_batch)),
-            self._response_field,
-        ):
-            yield modified_doc
+        for doc_batch in spacy.util.minibatch(stream, batch_size):
+            for modified_doc in self._parse(
+                doc_batch,
+                self._api.prompt(self._template(doc_batch)),
+                self._response_field,
+            ):
+                yield modified_doc
 
     def _to_serializable_dict(self, exclude: Tuple[str]) -> Dict[str, Any]:
         """Returns dict with serializable properties.
