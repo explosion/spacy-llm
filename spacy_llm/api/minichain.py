@@ -24,7 +24,7 @@ class MiniChain:
         self._backend: minichain.backend.Backend = getattr(minichain.backend, backend)
         self._prompt = prompt
 
-    def prompt(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         return self._prompt(self._backend, prompts)
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:

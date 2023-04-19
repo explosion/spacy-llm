@@ -101,7 +101,7 @@ class LLMWrapper(Pipe):
         docs = list(
             self._parse(
                 [doc],
-                self._api.prompt(self._template([doc])),
+                self._api(self._template([doc])),
                 self._response_field,
             )
         )
@@ -125,7 +125,7 @@ class LLMWrapper(Pipe):
         for doc_batch in spacy.util.minibatch(stream, batch_size):
             for modified_doc in self._parse(
                 doc_batch,
-                self._api.prompt(self._template(doc_batch)),
+                self._api(self._template(doc_batch)),
                 self._response_field,
             ):
                 yield modified_doc

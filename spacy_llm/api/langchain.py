@@ -34,7 +34,7 @@ class LangChain:
 
         return self._backend
 
-    def prompt(self, prompts: Iterable[Any]) -> Iterable[Any]:
+    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         return self._prompt(self._backend, prompts)
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
