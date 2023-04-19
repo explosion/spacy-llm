@@ -122,13 +122,17 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#pipe
         """
+        error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
-            for modified_doc in self._parse(
-                doc_batch,
-                self._api(self._template(doc_batch)),
-                self._response_field,
-            ):
-                yield modified_doc
+            try:
+                for modified_doc in self._parse(
+                    doc_batch,
+                    self._api(self._template(doc_batch)),
+                    self._response_field,
+                ):
+                    yield modified_doc
+            except Exception as e:
+                error_handler(self._name, self, doc_batch, e)
 
     def _to_serializable_dict(self, exclude: Tuple[str]) -> Dict[str, Any]:
         """Returns dict with serializable properties.
