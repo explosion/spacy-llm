@@ -75,7 +75,7 @@ class LLMWrapper(Pipe):
 
         name (str): The component instance name, used to add entries to the
             losses during training.
-        response_field (Optional[str]): Field in which to store full LLM response. If None, responses are not stored.
+        response_field (Optional[str]): Doc extension field in which to store the full LLM response. If None, responses are not stored.
         template (Callable[[Iterable[Doc]], Iterable[Any]]): Returns Callable injecting Doc data into a prompt template
             and returning one fully specified prompt per passed Doc instance.
         api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
