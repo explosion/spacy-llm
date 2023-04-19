@@ -1,5 +1,5 @@
 from .promptable import Promptable
-from .api_minichain import MiniChain
-from .api_langchain import LangChain
+from .minichain import MiniChain
+from .langchain import LangChain
 
 __all__ = ["Promptable", "MiniChain", "LangChain"]
