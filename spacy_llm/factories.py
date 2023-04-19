@@ -1,5 +1,6 @@
 from typing import Callable, Optional, Iterable
 
+import minichain
 import spacy
 from spacy.tokens import Doc
 
@@ -10,20 +11,23 @@ if "llm" not in spacy.registry.get_registry_names():
     spacy.registry.create("llm", entry_points=True)
 
 
-@spacy.registry.llm("spacy.API.MiniChain.v1")
-def api_minichain(backend: str) -> Callable[[], Promptable]:
+@spacy.registry.llm("spacy.api.MiniChain.v1")
+def api_minichain(
+    backend: str, prompt: Callable[[minichain.Backend, Iterable[str]], Iterable[str]]
+) -> Callable[[], Promptable]:
     """Returns Promptable wrapper for Minichain.
     backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
+    prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
     RETURNS (Promptable): Promptable wrapper for Minichain.
     """
 
     def init() -> Promptable:
-        return PromptableMiniChain(backend)
+        return PromptableMiniChain(backend, prompt)
 
     return init
 
 
-@spacy.registry.llm("spacy.DummyTemplate.v1")
+@spacy.registry.llm("spacy.template.Dummy.v1")
 def dummy_template() -> Callable[[Iterable[Doc]], Iterable[str]]:
     """Returns Callable injecting Doc data into a prompt template and returning one fully specified prompt per passed
     Doc instance.
@@ -37,7 +41,26 @@ def dummy_template() -> Callable[[Iterable[Doc]], Iterable[str]]:
     return prompt_template
 
 
-@spacy.registry.llm("spacy.DummyParse.v1")
+@spacy.registry.llm("spacy.prompt.MiniChainSimple.v1")
+def minichain_simple_prompt() -> Callable[
+    [minichain.Backend, Iterable[str]], Iterable[str]
+]:
+    """Returns Promptable wrapper for Minichain.
+    RETURNS (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]:): Callable executing simple prompts on a
+        MiniChain backend.
+    """
+
+    def prompt(backend: minichain.Backend, prompts: Iterable[str]) -> Iterable[str]:
+        @minichain.prompt(backend())
+        def _prompt(model: minichain.backend, prompt_text: str) -> str:
+            return model(prompt_text)
+
+        return [_prompt(pr).run() for pr in prompts]
+
+    return prompt
+
+
+@spacy.registry.llm("spacy.parse.Dummy.v1")
 def dummy_parse() -> Callable[
     [Iterable[Doc], Iterable[str], Optional[str]], Iterable[Doc]
 ]:

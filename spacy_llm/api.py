@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Protocol, Iterable, Tuple, cast, Union, Any
+from typing import Protocol, Iterable, Tuple, cast, Union, Any, Callable
 
 import minichain
 import spacy
@@ -48,19 +48,21 @@ class Promptable(Protocol):
 
 
 class PromptableMiniChain:
-    def __init__(self, backend: str):
+    def __init__(
+        self,
+        backend: str,
+        prompt: Callable[[minichain.Backend, Iterable[str]], Iterable[str]],
+    ):
         """Initialize wrapper for MiniChain.
         backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
+        prompt (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]): Callable executing prompts.
         """
         self._backend_id = backend
         self._backend: minichain.backend.Backend = getattr(minichain.backend, backend)
+        self._prompt = prompt
 
     def prompt(self, prompts: Iterable[str]) -> Iterable[str]:
-        @minichain.prompt(self._backend())
-        def _prompt(model: minichain.backend, prompt_text: str) -> str:
-            return model(prompt_text)
-
-        return [_prompt(pr).run() for pr in prompts]
+        return self._prompt(self._backend, prompts)
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         return srsly.msgpack_dumps({"backend": self._backend_id})

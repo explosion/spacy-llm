@@ -18,9 +18,13 @@ from ..api import Promptable
     assigns=[],
     default_config={
         "response_field": "llm_response",
-        "template": {"@llm": "spacy.DummyTemplate.v1"},
-        "api": {"@llm": "spacy.API.MiniChain.v1", "backend": "OpenAI"},
-        "parse": {"@llm": "spacy.DummyParse.v1"},
+        "template": {"@llm": "spacy.template.Dummy.v1"},
+        "api": {
+            "@llm": "spacy.api.MiniChain.v1",
+            "backend": "OpenAI",
+            "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
+        },
+        "parse": {"@llm": "spacy.parse.Dummy.v1"},
     },
 )
 def make_llm(
