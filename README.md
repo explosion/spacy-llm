@@ -1,15 +1,14 @@
 # spacy-llm
 This package supports integration of LLM APIs into spaCy. It adds a `llm` pipeline component to spaCy, allowing to prompt 
-LLMs as part of your spaCy pipeline. Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadmap.
+LLMs as part of your spaCy pipeline. `llm` behaves like any other pipeline component and is (de-)serializable. 
+Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadmap.
 
 `spacy-llm` assumes three functionalities to be implemented for a use case:
 - _Templating_, i. e. defining a prompt template and injecting the relevant data from your `Doc` instances into this 
   template to generate fully formed prompts.
 - _Prompting_, i. e. executing the prompt. A minimal wrapper layer for compatibility is provided, but you are
   free to use whatever tooling (`langchain`, `minichain`, a hand-rolled backend connecting to the API of your choice, 
-  ...) your prefer for connecting to the LLM API and executing the prompt(s) underneath. 
-  Adhering with the compatibility wrapper ensures that the LLM pipeline component (1) can deal with the backend of your 
-  choice and (2) can be (de-)serialized like any other spaCy pipeline component.
+  ...) your prefer for connecting to the LLM API and executing the prompt(s) underneath.
 - _Parsing_, i. e. parsing the LLM response(s), extracting the useful bits from it and mapping these back onto your 
   documents.
 
