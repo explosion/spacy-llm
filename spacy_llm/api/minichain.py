@@ -33,9 +33,7 @@ class MiniChain:
         """Loads MiniChain backend.
         RETURNS (minichain.Backend): Loaded backend
         """
-        return getattr(minichain.backend, self._backend_id)(
-            **(self._backend_config if self._backend_config else {})
-        )
+        return getattr(minichain.backend, self._backend_id)(**self._backend_config)
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         return srsly.msgpack_dumps(
