@@ -65,7 +65,7 @@ documentation of the libraries you are using to find out how to set your credent
 
 ## ⚠️ Warning: experimental package
 
-This package is experimental and it is possible that changes made to the interface will be breaking.
+This package is experimental and it is possible that changes made to the interface will be breaking in minor version updates.
 
 ## ⏳ Install
 
