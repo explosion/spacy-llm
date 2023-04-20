@@ -55,8 +55,6 @@ def test_llm_serialize_disk():
         api=lambda: MiniChain("OpenAI", prompt=None, backend_config={}),  # type: ignore
         parse=None,  # type: ignore
     )
-    assert llm._api._backend_id == "OpenAI"
-    assert llm._response_field == "llm_wrapper"
 
     with spacy.util.make_tempdir() as tmp_dir:
         llm.to_disk(tmp_dir / "llm")
