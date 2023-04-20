@@ -13,7 +13,6 @@ from ..api import Promptable
 
 @Language.factory(
     "llm",
-    # todo requires and assigns isn't possible to know beforehand. Acceptable to leave empty? Way to set it from config?
     requires=[],
     assigns=[],
     default_config={
