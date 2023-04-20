@@ -7,3 +7,5 @@ try:
     import minichain
 except (ImportError, AttributeError):
     minichain = None
+
+has = {"minichain": minichain is not None, "langchain": langchain is not None}
