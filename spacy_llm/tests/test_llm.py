@@ -72,7 +72,7 @@ def test_llm_serialize_disk():
 
 def test_llm_langchain():
     """Test configuration with LangChain."""
-    nlp = spacy.load("blank:en")
+    nlp = spacy.blank("en")
     nlp.add_pipe(
         "llm",
         config={
