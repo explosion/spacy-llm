@@ -8,7 +8,7 @@ Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadm
   template to generate fully formed prompts.
 - _API access and prompting_, i. e. connecting to the LLM API and executing the prompt. A minimal wrapper layer for 
    compatibility is provided, but you are free to use whatever tooling (`langchain`, `minichain`, a hand-rolled backend 
-   connecting to the API of your choice,  ...) your prefer for connecting to the LLM API and executing the prompt(s) 
+   connecting to the API of your choice,  ...) you prefer for connecting to the LLM API and executing the prompt(s) 
    underneath.
 - _Parsing_, i. e. parsing the LLM response(s), extracting the useful bits from it and mapping these back onto your 
   documents.
