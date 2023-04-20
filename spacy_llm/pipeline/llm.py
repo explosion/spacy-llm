@@ -109,15 +109,11 @@ class LLMWrapper(Pipe):
         return docs[0]
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
+        """Apply the LLM prompt to a stream of documents.
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://spacy.io/api/pipe#pipe
         """
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
