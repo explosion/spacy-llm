@@ -28,7 +28,6 @@ def test_llm_pipe(nlp):
     assert all([doc._.llm_response for doc in docs])
 
 
-@pytest.mark.parametrize("backend_ids", [("OpenAI", "HuggingFace"), False])
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
         response_field="llm_wrapper",
