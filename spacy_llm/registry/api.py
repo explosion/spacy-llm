@@ -30,7 +30,7 @@ def api_langchain(
     prompt: Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]],
     backend_config: Dict[Any, Any],
 ) -> Callable[[], api.Promptable]:
-    """Returns Promptable wrapper for Minichain.
+    """Returns Promptable wrapper for Langchain.
     backend (str): Name of any backend class in langchain.llms, e. g. OpenAI.
     prompt (Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]]): Callable executing prompts.
     backend_config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the langchain.llms.BaseLLM
