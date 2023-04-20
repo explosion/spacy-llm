@@ -6,7 +6,7 @@ from ..api import MiniChain
 
 @pytest.fixture
 def nlp() -> spacy.Language:
-    nlp = spacy.load("blank:en")
+    nlp = spacy.blank("en")
     nlp.add_pipe("llm")
     return nlp
 
