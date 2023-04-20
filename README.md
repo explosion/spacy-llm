@@ -1,5 +1,5 @@
 # spacy-llm
-This package integrates various LLM APIs into spaCy. It adds a `llm` pipeline component to spaCy, allowing to prompt 
+This package supports integration of LLM APIs into spaCy. It adds a `llm` pipeline component to spaCy, allowing to prompt 
 LLMs as part of your spaCy pipeline. Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadmap.
 
 `spacy-llm` assumes three functionalities to be implemented for a use case:
