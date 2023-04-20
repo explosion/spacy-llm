@@ -39,7 +39,7 @@ pattern:
 ```python
 import spacy
 
-nlp = spacy.load("blank:en")
+nlp = spacy.blank("en")
 nlp.add_pipe("llm")
 doc = nlp("This is a test")
 ```
