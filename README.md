@@ -28,7 +28,7 @@ template = {“@misc”: “spacy.DummyTemplate.v1”}
 # implemented, with its OpenAI backend. This corresponds to the "prompting" step and includes managing the connection
 # to the LLM API.
 api = {"@llm": "spacy.API.MiniChain.v1", "backend": "OpenAI"}
-# Factory fuction for Callable parsing LLM responses.
+# Factory function for Callable parsing LLM responses.
 parse = {"@llm": "spacy.DummyParse.v1"},
 ```
 
