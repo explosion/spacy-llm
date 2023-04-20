@@ -33,12 +33,12 @@ class MiniChain:
         """Loads MiniChain backend.
         RETURNS (minichain.Backend): Loaded backend
         """
-        try:
+        if hasattr(minichain.backend, self._backend_id):
             return getattr(minichain.backend, self._backend_id)(**self._backend_config)
-        except KeyError as err:
+        else:
             raise KeyError(
                 f"The requested backend {self._backend_id} is not available in `minichain.backend`."
-            ) from err
+            )
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         return srsly.msgpack_dumps(
