@@ -6,9 +6,10 @@ Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadm
 `spacy-llm` assumes three functionalities to be implemented for a use case:
 - _Templating_, i. e. defining a prompt template and injecting the relevant data from your `Doc` instances into this 
   template to generate fully formed prompts.
-- _Prompting_, i. e. executing the prompt. A minimal wrapper layer for compatibility is provided, but you are
-  free to use whatever tooling (`langchain`, `minichain`, a hand-rolled backend connecting to the API of your choice, 
-  ...) your prefer for connecting to the LLM API and executing the prompt(s) underneath.
+- _API access and prompting_, i. e. connecting to the LLM API and executing the prompt. A minimal wrapper layer for 
+   compatibility is provided, but you are free to use whatever tooling (`langchain`, `minichain`, a hand-rolled backend 
+   connecting to the API of your choice,  ...) your prefer for connecting to the LLM API and executing the prompt(s) 
+   underneath.
 - _Parsing_, i. e. parsing the LLM response(s), extracting the useful bits from it and mapping these back onto your 
   documents.
 
