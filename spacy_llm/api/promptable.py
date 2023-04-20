@@ -5,7 +5,7 @@ from spacy.util import SimpleFrozenList
 
 
 class Promptable(Protocol):
-    """Promptable objects should implement a prompt() method executing multiple prompts and returning the responses."""
+    """Promptable objects should be callable, executing multiple prompts and returning the responses."""
 
     def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         """Prompt LLM.
