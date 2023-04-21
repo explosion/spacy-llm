@@ -7,7 +7,10 @@ from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
 from .. import registry  # noqa: F401
-from ..api import Promptable
+
+_Prompt = Any
+_API = Any
+_Response = Any
 
 
 @Language.factory(
@@ -16,31 +19,29 @@ from ..api import Promptable
     assigns=[],
     default_config={
         "template": {"@llm": "spacy.template.Dummy.v1"},
-        "api": {
-            "@llm": "spacy.api.MiniChain.v1",
-            "backend": "OpenAI",
-            "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
-            "backend_config": {},
-        },
+        "api": {"@llm": "spacy.api.MiniChain.v1", "backend": "OpenAI", "config": {}},
+        "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
         "parse": {"@llm": "spacy.parse.Dummy.v1"},
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
-    template: Callable[[Iterable[Doc]], Iterable[Any]],
-    api: Callable[[], Promptable],
-    parse: Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]],
+    template: Callable[[Iterable[Doc]], Iterable[_Prompt]],
+    api: Callable[[], _API],
+    prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
+    parse: Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    template (Callable[[Iterable[Doc]], Iterable[Any]]): Returns Callable injecting Doc data into a prompt template and
+    template (Callable[[Iterable[Doc]], Iterable[Any]]): Callable injecting Doc data into a prompt template and
         returning one fully specified prompt per passed Doc instance.
-    api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
-    parse (Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]]): Returns Callable parsing LLM
+    api (Callable[[], _API]): Callable generating a promptable, API-like object.
+    prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
+    parse (Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]]): Callable parsing LLM
         responses and updating Doc instances with the extracted information.
     RETURNS (LLMWrapper): LLM instance.
     """
@@ -48,6 +49,7 @@ def make_llm(
         name=name,
         template=template,
         api=api,
+        prompt=prompt,
         parse=parse,
     )
 
@@ -60,7 +62,8 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         template: Callable[[Iterable[Doc]], Iterable[Any]],
-        api: Callable[[], Promptable],
+        api: Callable[[], _API],
+        prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
         parse: Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]],
     ) -> None:
         """
@@ -68,15 +71,17 @@ class LLMWrapper(Pipe):
 
         name (str): The component instance name, used to add entries to the
             losses during training.
-        template (Callable[[Iterable[Doc]], Iterable[Any]]): Returns Callable injecting Doc data into a prompt template
-            and returning one fully specified prompt per passed Doc instance.
-        api (Callable[[], Promptable]): Returns Callable generating a Promptable object.
-        parse (Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]]): Returns Callable parsing LLM
+        template (Callable[[Iterable[Doc]], Iterable[Any]]): Callable injecting Doc data into a prompt template and
+            returning one fully specified prompt per passed Doc instance.
+        api (Callable[[], _API]): Callable generating a promptable, API-like object.
+        prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
+        parse (Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]]): Callable parsing LLM
             responses and updating Doc instances with the extracted information.
         """
         self._name = name
         self._template = template
         self._api = api()
+        self._prompt = prompt
         self._parse = parse
 
     def __call__(self, doc: Doc) -> Doc:
@@ -88,7 +93,7 @@ class LLMWrapper(Pipe):
         docs = list(
             self._parse(
                 [doc],
-                self._api(self._template([doc])),
+                self._prompt(self._api, self._template([doc])),
             )
         )
         assert len(docs) == 1
@@ -106,7 +111,7 @@ class LLMWrapper(Pipe):
             try:
                 for modified_doc in self._parse(
                     doc_batch,
-                    self._api(self._template(doc_batch)),
+                    self._prompt(self._api, self._template(doc_batch)),
                 ):
                     yield modified_doc
             except Exception as e:
@@ -119,9 +124,7 @@ class LLMWrapper(Pipe):
         RETURNS (bytes): The serialized object.
         """
         return spacy.util.to_bytes(
-            {
-                "api": self._api.to_bytes,
-            },
+            {},
             exclude,
         )
 
@@ -135,7 +138,7 @@ class LLMWrapper(Pipe):
 
         spacy.util.from_bytes(
             bytes_data,
-            {"api": lambda b: self._api.from_bytes(b)},
+            {},
             exclude,
         )
 
@@ -151,9 +154,7 @@ class LLMWrapper(Pipe):
         """
         spacy.util.to_disk(
             spacy.util.ensure_path(path).with_suffix(".json"),
-            {
-                "api": lambda p: self._api.to_disk(p),
-            },
+            {},
             exclude,
         )
 
@@ -167,7 +168,7 @@ class LLMWrapper(Pipe):
         """
         spacy.util.from_disk(
             spacy.util.ensure_path(path).with_suffix(".json"),
-            {"api": lambda p: self._api.from_disk(p)},
+            {},
             exclude,
         )
 

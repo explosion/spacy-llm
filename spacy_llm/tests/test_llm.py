@@ -1,7 +1,9 @@
+from typing import Any, Dict
+
+import minichain
 import pytest
 import spacy
 from ..pipeline import LLMWrapper  # noqa: F401
-from ..api import MiniChain
 
 
 @pytest.fixture
@@ -16,11 +18,6 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
-def test_llm_call(nlp):
-    """Test call with single Doc instance."""
-    nlp("This is a test")
-
-
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
@@ -30,47 +27,54 @@ def test_llm_pipe(nlp):
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
         template=None,  # type: ignore
-        api=lambda: MiniChain("OpenAI", prompt=None, backend_config={}),  # type: ignore
+        api=lambda: minichain.OpenAI(),
+        prompt=None,  # type: ignore
         parse=None,  # type: ignore
     )
-    assert llm._api._backend_id == "OpenAI"
-
-    new_llm = LLMWrapper(
-        template=None,  # type: ignore
-        api=lambda: MiniChain("HuggingFace", prompt=None, backend_config={}),  # type: ignore
-        parse=None,  # type: ignore
-    ).from_bytes(llm.to_bytes())
-    assert new_llm._api._backend_id == llm._api._backend_id == "OpenAI"
+    llm.from_bytes(llm.to_bytes())
 
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
         template=None,  # type: ignore
-        api=lambda: MiniChain("OpenAI", prompt=None, backend_config={}),  # type: ignore
+        api=lambda: minichain.OpenAI(),
+        prompt=None,  # type: ignore
         parse=None,  # type: ignore
     )
 
     with spacy.util.make_tempdir() as tmp_dir:
         llm.to_disk(tmp_dir / "llm")
-        new_llm = LLMWrapper(
-            template=None,  # type: ignore
-            api=lambda: MiniChain("HuggingFace", prompt=None, backend_config={}),  # type: ignore
-            parse=None,  # type: ignore
-        ).from_disk(tmp_dir / "llm")
-    assert new_llm._api._backend_id == llm._api._backend_id == "OpenAI"
+        llm.from_disk(tmp_dir / "llm")
 
 
-def test_llm_langchain():
-    """Test configuration with LangChain."""
+@pytest.mark.parametrize(
+    "config",
+    (
+        {
+            "api": "spacy.api.MiniChain.v1",
+            "backend": "OpenAI",
+            "config": {},
+            "prompt": "spacy.prompt.MiniChainSimple.v1",
+        },
+        {
+            "api": "spacy.api.LangChain.v1",
+            "backend": "openai",
+            "config": {"temperature": 0.3},
+            "prompt": "spacy.prompt.LangChainSimple.v1",
+        },
+    ),
+)
+def test_integrations(config: Dict[str, Any]):
+    """Test simple runs with all supported integrations."""
     nlp = spacy.blank("en")
     nlp.add_pipe(
         "llm",
         config={
             "api": {
-                "@llm": "spacy.api.LangChain.v1",
-                "backend": "openai",
-                "backend_config": {"temperature": 0.3},
-                "prompt": {"@llm": "spacy.prompt.LangChainSimple.v1"},
-            }
+                "@llm": config["api"],
+                "backend": config["backend"],
+                "config": config["config"],
+            },
+            "prompt": {"@llm": config["prompt"]},
         },
     )
