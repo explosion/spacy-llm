@@ -3,7 +3,7 @@ from typing import Any, Dict
 import minichain
 import pytest
 import spacy
-from ..pipeline import LLMWrapper  # noqa: F401
+from ..pipeline import LLMWrapper
 
 
 @pytest.fixture
