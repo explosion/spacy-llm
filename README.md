@@ -20,17 +20,15 @@ Self-hosted LLMs (LLaMa, Dolly, ...) are not supported yet, but are on our roadm
 The code for templating, prompting and parsing has to be supplied to the `llm` pipeline component using spaCy's config 
 system. The default configuration is as follows:
 ```ini
-[components.llm]
-# Doc attribute in Doc._ to store LLM response in.
-response_field = “llm_response” 
+[components.llm] 
 # Factory function for Callable generating prompts from prompt template.
-template = {“@misc”: “spacy.DummyTemplate.v1”}
+template = {“@misc”: “spacy.template.Dummy.v1”}
 # Factory function for Callable generating instance of API to use. In this case: the MiniChain wrapper that is already 
 # implemented, with its OpenAI backend. This corresponds to the "prompting" step and includes managing the connection
 # to the LLM API.
 api = {"@llm": "spacy.API.MiniChain.v1", "backend": "OpenAI"}
 # Factory function for Callable parsing LLM responses.
-parse = {"@llm": "spacy.DummyParse.v1"},
+parse = {"@llm": "spacy.parse.Dummy.v1"},
 ```
 
 ### Minimal example
