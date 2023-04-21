@@ -4,8 +4,8 @@ import spacy
 from spacy.tokens import Doc
 
 
-@spacy.registry.llm("spacy.parse.Dummy.v1")
-def dummy_parse() -> Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]:
+@spacy.registry.llm("spacy.parse.NoOp.v1")
+def noop_parse() -> Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]:
     """Returns Callable parsing LLM responses and updating Doc instances with the extracted information.
     RETURNS (Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]): Callable parsing LLM responses and
         mapping them to Doc instances.
