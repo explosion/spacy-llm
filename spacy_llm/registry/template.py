@@ -13,6 +13,6 @@ def noop_template() -> Callable[[Iterable[Doc]], Iterable[str]]:
     template = ""
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
-        return template
+        return [template]
 
     return prompt_template
