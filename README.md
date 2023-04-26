@@ -22,7 +22,7 @@ system. The default configuration is as follows:
 ```ini
 [components.llm] 
 # Factory function for Callable generating prompts from prompt template.
-template = {“@misc”: “spacy.template.Dummy.v1”}
+template = {“@misc”: “spacy.template.NoOp.v1”}
 # Factory function for Callable generating instance of API to use. In this case: the MiniChain wrapper that is already 
 # implemented, with its OpenAI backend. This corresponds to the "prompting" step and includes managing the connection
 # to the LLM API.
@@ -30,7 +30,7 @@ api = {"@llm": "spacy.API.MiniChain.v1", "backend": "OpenAI", "config": {}}
 # Function running prompts.
 prompt = {"@llm": "spacy.prompt.MiniChainSimple.v1"}
 # Factory function for Callable parsing LLM responses.
-parse = {"@llm": "spacy.parse.Dummy.v1"},
+parse = {"@llm": "spacy.parse.NoOp.v1"},
 ```
 
 ### Minimal example
