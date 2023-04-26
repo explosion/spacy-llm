@@ -10,7 +10,7 @@ def noop_template() -> Callable[[Iterable[Doc]], Iterable[str]]:
     Doc instance.
     RETURNS (Callable[[Iterable[Doc]], Iterable[str]]): Callable producing prompt strings.
     """
-    template = ""
+    template = "Don't do anything."
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         return [template]
