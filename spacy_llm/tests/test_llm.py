@@ -5,6 +5,10 @@ import pytest
 import spacy
 from ..pipeline import LLMWrapper
 
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env.
+
 
 @pytest.fixture
 def nlp() -> spacy.Language:
