@@ -18,39 +18,41 @@ _Response = Any
     requires=[],
     assigns=[],
     default_config={
-        "template": {"@llm": "spacy.template.NoOp.v1"},
+        "task": {"@llm": "spacy.task.NoOp.v1"},
         "api": {"@llm": "spacy.api.MiniChain.v1", "backend": "OpenAI", "config": {}},
         "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
-        "parse": {"@llm": "spacy.parse.NoOp.v1"},
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
-    template: Callable[[Iterable[Doc]], Iterable[_Prompt]],
+    task: Tuple[
+        Callable[[Iterable[Doc]], Iterable[str]],
+        Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
+    ],
     api: Callable[[], _API],
     prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
-    parse: Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    template (Callable[[Iterable[Doc]], Iterable[Any]]): Callable injecting Doc data into a prompt template and
-        returning one fully specified prompt per passed Doc instance.
+    task (Tuple[
+        Callable[[Iterable[Doc]], Iterable[str]],
+        Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]
+    ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
+        prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
+        the extracted information).
     api (Callable[[], _API]): Callable generating a promptable, API-like object.
     prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
-    parse (Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]]): Callable parsing LLM
-        responses and updating Doc instances with the extracted information.
     RETURNS (LLMWrapper): LLM instance.
     """
     return LLMWrapper(
         name=name,
-        template=template,
+        task=task,
         api=api,
         prompt=prompt,
-        parse=parse,
     )
 
 
@@ -61,28 +63,31 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        template: Callable[[Iterable[Doc]], Iterable[Any]],
+        task: Tuple[
+            Callable[[Iterable[Doc]], Iterable[str]],
+            Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
+        ],
         api: Callable[[], _API],
         prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
-        parse: Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]],
     ) -> None:
         """
-        Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
+            Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
-        name (str): The component instance name, used to add entries to the
-            losses during training.
-        template (Callable[[Iterable[Doc]], Iterable[Any]]): Callable injecting Doc data into a prompt template and
-            returning one fully specified prompt per passed Doc instance.
-        api (Callable[[], _API]): Callable generating a promptable, API-like object.
-        prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
-        parse (Callable[[Iterable[Doc], Iterable[Any]], Iterable[Doc]]): Callable parsing LLM
-            responses and updating Doc instances with the extracted information.
+            name (str): The component instance name, used to add entries to the
+                losses during training.
+        task (Tuple[
+            Callable[[Iterable[Doc]], Iterable[str]],
+            Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]
+        ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
+            prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
+            the extracted information).
+            api (Callable[[], _API]): Callable generating a promptable, API-like object.
+            prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
         """
         self._name = name
-        self._template = template
+        self._template, self._parse = task
         self._api = api()
         self._prompt = prompt
-        self._parse = parse
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.

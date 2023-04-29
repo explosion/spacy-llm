@@ -26,20 +26,18 @@ def test_llm_pipe(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        template=None,  # type: ignore
+        task=(None, None),  # type: ignore
         api=lambda: minichain.OpenAI(),
         prompt=None,  # type: ignore
-        parse=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
 
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        template=None,  # type: ignore
+        task=(None, None),  # type: ignore
         api=lambda: minichain.OpenAI(),
         prompt=None,  # type: ignore
-        parse=None,  # type: ignore
     )
 
     with spacy.util.make_tempdir() as tmp_dir:
