@@ -18,7 +18,8 @@ def noop_task() -> Tuple[
     template = "Don't do anything."
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
-        return [template]
+        for doc in docs:
+            yield template
 
     def prompt_parse(
         docs: Iterable[Doc],
