@@ -27,8 +27,8 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Tuple[
-        Callable[[Iterable[Doc]], Iterable[str]],
-        Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
+        Callable[[Iterable[Doc]], Iterable[_Prompt]],
+        Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
     ],
     api: Callable[[], _API],
     prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
@@ -39,8 +39,8 @@ def make_llm(
     name (str): The component instance name, used to add entries to the
         losses during training.
     task (Tuple[
-        Callable[[Iterable[Doc]], Iterable[str]],
-        Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]
+        Callable[[Iterable[Doc]], Iterable[_Prompt]],
+        Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
     ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
@@ -64,8 +64,8 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         task: Tuple[
-            Callable[[Iterable[Doc]], Iterable[str]],
-            Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
+            Callable[[Iterable[Doc]], Iterable[_Prompt]],
+            Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
         ],
         api: Callable[[], _API],
         prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
@@ -76,8 +76,8 @@ class LLMWrapper(Pipe):
             name (str): The component instance name, used to add entries to the
                 losses during training.
         task (Tuple[
-            Callable[[Iterable[Doc]], Iterable[str]],
-            Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]
+            Callable[[Iterable[Doc]], Iterable[_Prompt]],
+            Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
         ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
             prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
             the extracted information).
