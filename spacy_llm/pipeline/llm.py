@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Iterable, Tuple, Iterator, Any, cast
+from typing import Callable, Iterable, Tuple, Iterator, Any, cast, TypeVar
 
 import spacy
 from spacy import Language
@@ -8,9 +8,9 @@ from spacy.tokens import Doc
 
 from ..util import registry  # noqa: F401
 
-_Prompt = Any
-_API = Any
-_Response = Any
+_Prompt = TypeVar("_Prompt")
+_API = TypeVar("_API")
+_Response = TypeVar("_Response")
 
 
 @Language.factory(
