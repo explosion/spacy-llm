@@ -1,10 +1,11 @@
 from typing import Callable, Any, Dict
 
-from ..util import registry
+import spacy
+
 from ..compat import langchain, minichain
 
 
-@registry.apis("spacy-llm.MiniChain.v1")
+@spacy.registry.llm("spacy.api.MiniChain.v1")
 def api_minichain(
     backend: str,
     config: Dict[Any, Any],
@@ -27,7 +28,7 @@ def api_minichain(
     return init
 
 
-@registry.apis("spacy-llm.LangChain.v1")
+@spacy.registry.llm("spacy.api.LangChain.v1")
 def api_langchain(
     backend: str,
     config: Dict[Any, Any],
