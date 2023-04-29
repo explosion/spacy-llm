@@ -1,10 +1,10 @@
 from typing import Callable, Iterable
 
+from ..util import registry
 from ..compat import langchain, minichain
-import spacy
 
 
-@spacy.registry.llm("spacy.prompt.MiniChainSimple.v1")
+@registry.prompts("spacy-llm.MiniChainSimple.v1")
 def minichain_simple_prompt() -> Callable[
     ["minichain.Backend", Iterable[str]], Iterable[str]
 ]:
@@ -23,7 +23,7 @@ def minichain_simple_prompt() -> Callable[
     return prompt
 
 
-@spacy.registry.llm("spacy.prompt.LangChainSimple.v1")
+@registry.prompts("spacy-llm.LangChainSimple.v1")
 def langchain_simple_prompt() -> Callable[
     ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
 ]:

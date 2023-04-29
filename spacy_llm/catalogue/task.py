@@ -1,10 +1,11 @@
 from typing import Callable, Iterable, Tuple
 
-import spacy
 from spacy.tokens import Doc
 
+from .. import registry
 
-@spacy.registry.llm("spacy.task.NoOp.v1")
+
+@registry.tasks("spacy-llm.NoOp.v1")
 def noop_task() -> Tuple[
     Callable[[Iterable[Doc]], Iterable[str]],
     Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],

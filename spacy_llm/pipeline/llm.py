@@ -6,7 +6,7 @@ from spacy import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
-from .. import registry  # noqa: F401
+from ..util import registry  # noqa: F401
 
 _Prompt = Any
 _API = Any
@@ -18,9 +18,9 @@ _Response = Any
     requires=[],
     assigns=[],
     default_config={
-        "task": {"@llm": "spacy.task.NoOp.v1"},
-        "api": {"@llm": "spacy.api.MiniChain.v1", "backend": "OpenAI", "config": {}},
-        "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
+        "task": {"@tasks": "spacy-llm.NoOp.v1"},
+        "api": {"@apis": "spacy-llm.MiniChain.v1", "backend": "OpenAI", "config": {}},
+        "prompt": {"@prompts": "spacy-llm.MiniChainSimple.v1"},
     },
 )
 def make_llm(
