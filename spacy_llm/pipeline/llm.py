@@ -31,7 +31,7 @@ def make_llm(
         Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
     ],
     api: Callable[[], _API],
-    prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
+    prompt: Callable[[_API, Iterable[_Prompt]], Iterable[_Response]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
