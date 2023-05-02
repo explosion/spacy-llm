@@ -5,12 +5,13 @@ from .util import registry
 
 
 @registry.prompts("spacy-llm.MiniChainSimple.v1")
-def minichain_simple_prompt() -> Callable[
-    ["minichain.Backend", Iterable[str]], Iterable[str]
-]:
+def minichain_simple_prompt(
+    api: Callable[[], "minichain.Backend"]
+) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns prompt Callable for MiniChain.
-    RETURNS (Callable[[minichain.Backend, Iterable[str]], Iterable[str]]:): Callable executing simple prompts on a
-        MiniChain backend.
+    api (Callable[[], "minichain.Backend"]): Callable generating a minichain.Backend instance.
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing simple prompts on the specified MiniChain
+        backend.
     """
 
     def prompt(backend: "minichain.Backend", prompts: Iterable[str]) -> Iterable[str]:
@@ -20,16 +21,17 @@ def minichain_simple_prompt() -> Callable[
 
         return [_prompt(pr).run() for pr in prompts]
 
-    return prompt
+    _api = api()
+    return lambda prompts: prompt(_api, prompts)
 
 
 @registry.prompts("spacy-llm.LangChainSimple.v1")
-def langchain_simple_prompt() -> Callable[
-    ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
-]:
+def langchain_simple_prompt(
+    api: Callable[[], "langchain.llms.BaseLLM"]
+) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns prompt Callable for LangChain.
-    RETURNS (Callable[[langchain.llms.BaseLLM, Iterable[str]], Iterable[str]]:): Callable executing simple prompts on a
-        LangChain backend.
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]:): Callable executing simple prompts on the specified LangChain
+        backend.
     """
 
     def prompt(
@@ -37,4 +39,5 @@ def langchain_simple_prompt() -> Callable[
     ) -> Iterable[str]:
         return [backend(pr) for pr in prompts]
 
-    return prompt
+    _api = api()
+    return lambda prompts: prompt(_api, prompts)

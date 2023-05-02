@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Iterable, Tuple, Iterator, Any, cast, TypeVar
+from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar
 
 import spacy
 from spacy import Language
@@ -9,7 +9,6 @@ from spacy.tokens import Doc
 from .. import registry  # noqa: F401
 
 _Prompt = TypeVar("_Prompt")
-_API = TypeVar("_API")
 _Response = TypeVar("_Response")
 
 
@@ -19,10 +18,13 @@ _Response = TypeVar("_Response")
     assigns=[],
     default_config={
         "task": {"@llm_tasks": "spacy-llm.NoOp.v1"},
-        "api": {
-            "@llm_apis": "spacy-llm.MiniChain.v1",
-            "backend": "OpenAI",
-            "config": {},
+        "prompt": {
+            "@llm_prompts": "spacy-llm.MiniChainSimple.v1",
+            "api": {
+                "@llm_apis": "spacy-llm.MiniChain.v1",
+                "backend": "OpenAI",
+                "config": {},
+            },
         },
     },
 )
@@ -33,7 +35,7 @@ def make_llm(
         Callable[[Iterable[Doc]], Iterable[_Prompt]],
         Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
     ],
-    api: Tuple[Callable[[], _API], Callable[[_API, Iterable[Any]], Iterable[Any]]],
+    prompt: Callable[[Iterable[_Prompt]], Iterable[_Response]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -46,12 +48,9 @@ def make_llm(
     ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
-    api (Tuple[Callable[[], _API], Callable[[_API, Iterable[Any]], Iterable[Any]]]): (1) Callable generating a
-        promptable API-like object, (2) Callable executing prompts using this API instance.
+    prompt (Callable[[Iterable[Any]], Iterable[Any]]]): Callable executing prompts using the specified API instance.
     """
-    return LLMWrapper(
-        name=name, template=task[0], parse=task[1], api=api[0](), prompt=api[1]
-    )
+    return LLMWrapper(name=name, template=task[0], parse=task[1], prompt=prompt)
 
 
 class LLMWrapper(Pipe):
@@ -63,8 +62,7 @@ class LLMWrapper(Pipe):
         *,
         template: Callable[[Iterable[Doc]], Iterable[_Prompt]],
         parse: Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
-        api: _API,
-        prompt: Callable[[_API, Iterable[_Prompt]], Iterable[_Response]],
+        prompt: Callable[[Iterable[_Prompt]], Iterable[_Response]],
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -75,13 +73,12 @@ class LLMWrapper(Pipe):
             returning one fully specified prompt per passed Doc instance.
         parse (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable parsing LLM responses and
             updating Doc instances with the extracted information.
-        api (Callable[[], _API]): Callable generating a promptable, API-like object.
-        prompt (Callable[[_API, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
+        prompt (Callable[[Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts using the specified API
+            instance.
         """
         self._name = name
         self._template = template
         self._parse = parse
-        self._api = api
         self._prompt = prompt
 
     def __call__(self, doc: Doc) -> Doc:
@@ -93,7 +90,7 @@ class LLMWrapper(Pipe):
         docs = list(
             self._parse(
                 [doc],
-                self._prompt(self._api, self._template([doc])),
+                self._prompt(self._template([doc])),
             )
         )
         assert len(docs) == 1
@@ -111,7 +108,7 @@ class LLMWrapper(Pipe):
             try:
                 for modified_doc in self._parse(
                     doc_batch,
-                    self._prompt(self._api, self._template(doc_batch)),
+                    self._prompt(self._template(doc_batch)),
                 ):
                     yield modified_doc
             except Exception as e:
