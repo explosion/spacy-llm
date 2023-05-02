@@ -24,7 +24,6 @@ _Response = TypeVar("_Response")
             "backend": "OpenAI",
             "config": {},
         },
-        "prompt": {"@llm_prompts": "spacy-llm.MiniChainSimple.v1"},
     },
 )
 def make_llm(
@@ -34,8 +33,7 @@ def make_llm(
         Callable[[Iterable[Doc]], Iterable[_Prompt]],
         Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
     ],
-    api: Callable[[], _API],
-    prompt: Callable[[_API, Iterable[_Prompt]], Iterable[_Response]],
+    api: Tuple[Callable[[], _API], Callable[[_API, Iterable[Any]], Iterable[Any]]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -48,15 +46,11 @@ def make_llm(
     ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
-    api (Callable[[], _API]): Callable generating a promptable, API-like object.
-    prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
-    RETURNS (LLMWrapper): LLM instance.
+    api (Tuple[Callable[[], _API], Callable[[_API, Iterable[Any]], Iterable[Any]]]): (1) Callable generating a
+        promptable API-like object, (2) Callable executing prompts using this API instance.
     """
     return LLMWrapper(
-        name=name,
-        task=task,
-        api=api,
-        prompt=prompt,
+        name=name, template=task[0], parse=task[1], api=api[0](), prompt=api[1]
     )
 
 
@@ -67,30 +61,27 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        task: Tuple[
-            Callable[[Iterable[Doc]], Iterable[_Prompt]],
-            Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
-        ],
-        api: Callable[[], _API],
-        prompt: Callable[[Any, Iterable[_Prompt]], Iterable[_Response]],
+        template: Callable[[Iterable[Doc]], Iterable[_Prompt]],
+        parse: Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
+        api: _API,
+        prompt: Callable[[_API, Iterable[_Prompt]], Iterable[_Response]],
     ) -> None:
         """
-            Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
+        Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
-            name (str): The component instance name, used to add entries to the
-                losses during training.
-        task (Tuple[
-            Callable[[Iterable[Doc]], Iterable[_Prompt]],
-            Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
-        ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
-            prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
-            the extracted information).
-            api (Callable[[], _API]): Callable generating a promptable, API-like object.
-            prompt (Callable[[Any, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
+        name (str): The component instance name, used to add entries to the
+            losses during training.
+        template (Callable[[Iterable[Doc]], Iterable[_Prompt]]): Callable injecting Doc data into a prompt template and
+            returning one fully specified prompt per passed Doc instance.
+        parse (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable parsing LLM responses and
+            updating Doc instances with the extracted information.
+        api (Callable[[], _API]): Callable generating a promptable, API-like object.
+        prompt (Callable[[_API, Iterable[_Prompt]], Iterable[_Response]]): Callable executing prompts.
         """
         self._name = name
-        self._template, self._parse = task
-        self._api = api()
+        self._template = template
+        self._parse = parse
+        self._api = api
         self._prompt = prompt
 
     def __call__(self, doc: Doc) -> Doc:

@@ -22,6 +22,11 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
+def test_llm_run(nlp):
+    """Test call .pipe()."""
+    nlp("This is a test")
+
+
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
@@ -30,7 +35,8 @@ def test_llm_pipe(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        task=(None, None),  # type: ignore
+        template=None,  # type: ignore
+        parse=None,  # type: ignore
         api=lambda: minichain.OpenAI(),
         prompt=None,  # type: ignore
     )
@@ -39,7 +45,8 @@ def test_llm_serialize_bytes():
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        task=(None, None),  # type: ignore
+        template=None,  # type: ignore
+        parse=None,  # type: ignore
         api=lambda: minichain.OpenAI(),
         prompt=None,  # type: ignore
     )
@@ -56,13 +63,11 @@ def test_llm_serialize_disk():
             "api": "spacy-llm.MiniChain.v1",
             "backend": "OpenAI",
             "config": {},
-            "prompt": "spacy-llm.MiniChainSimple.v1",
         },
         {
             "api": "spacy-llm.LangChain.v1",
             "backend": "openai",
             "config": {"temperature": 0.3},
-            "prompt": "spacy-llm.LangChainSimple.v1",
         },
     ),
 )
@@ -77,6 +82,6 @@ def test_integrations(config: Dict[str, Any]):
                 "backend": config["backend"],
                 "config": config["config"],
             },
-            "prompt": {"@llm_prompts": config["prompt"]},
         },
     )
+    nlp("This is a test")
