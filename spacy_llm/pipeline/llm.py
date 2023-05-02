@@ -10,6 +10,8 @@ from .. import registry  # noqa: F401
 
 _Prompt = TypeVar("_Prompt")
 _Response = TypeVar("_Response")
+_TemplateCallable = Callable[[Iterable[Doc]], Iterable[_Prompt]]
+_ParseCallable = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
 
 
 @Language.factory(
@@ -31,10 +33,7 @@ _Response = TypeVar("_Response")
 def make_llm(
     nlp: Language,
     name: str,
-    task: Tuple[
-        Callable[[Iterable[Doc]], Iterable[_Prompt]],
-        Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
-    ],
+    task: Tuple[_TemplateCallable, _ParseCallable],
     prompt: Callable[[Iterable[_Prompt]], Iterable[_Response]],
 ) -> "LLMWrapper":
     """Construct an LLM component.
