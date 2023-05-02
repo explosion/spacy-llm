@@ -11,6 +11,7 @@ from .. import registry  # noqa: F401
 _Prompt = TypeVar("_Prompt")
 _Response = TypeVar("_Response")
 _TemplateCallable = Callable[[Iterable[Doc]], Iterable[_Prompt]]
+_PromptCallable = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 _ParseCallable = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
 
 
@@ -34,7 +35,7 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Tuple[_TemplateCallable, _ParseCallable],
-    prompt: Callable[[Iterable[_Prompt]], Iterable[_Response]],
+    prompt: _PromptCallable,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -59,9 +60,9 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        template: Callable[[Iterable[Doc]], Iterable[_Prompt]],
-        parse: Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]],
-        prompt: Callable[[Iterable[_Prompt]], Iterable[_Response]],
+        template: _TemplateCallable,
+        parse: _ParseCallable,
+        prompt: _PromptCallable
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
