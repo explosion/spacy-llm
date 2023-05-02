@@ -18,10 +18,14 @@ _Response = Any
     requires=[],
     assigns=[],
     default_config={
-        "template": {"@llm": "spacy.template.NoOp.v1"},
-        "api": {"@llm": "spacy.api.MiniChain.v1", "backend": "OpenAI", "config": {}},
-        "prompt": {"@llm": "spacy.prompt.MiniChainSimple.v1"},
-        "parse": {"@llm": "spacy.parse.NoOp.v1"},
+        "template": {"@llm_templates": "spacy-llm.NoOp.v1"},
+        "api": {
+            "@llm_apis": "spacy-llm.MiniChain.v1",
+            "backend": "OpenAI",
+            "config": {},
+        },
+        "prompt": {"@llm_prompts": "spacy-llm.MiniChainSimple.v1"},
+        "parse": {"@llm_parses": "spacy-llm.NoOp.v1"},
     },
 )
 def make_llm(

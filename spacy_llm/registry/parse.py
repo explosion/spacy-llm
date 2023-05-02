@@ -1,10 +1,11 @@
 from typing import Callable, Iterable
 
-import spacy
 from spacy.tokens import Doc
 
+from .util import registry
 
-@spacy.registry.llm("spacy.parse.NoOp.v1")
+
+@registry.parses("spacy-llm.NoOp.v1")
 def noop_parse() -> Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]:
     """Returns Callable parsing LLM responses and updating Doc instances with the extracted information.
     RETURNS (Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]]): Callable parsing LLM responses and

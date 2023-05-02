@@ -55,16 +55,16 @@ def test_llm_serialize_disk():
     "config",
     (
         {
-            "api": "spacy.api.MiniChain.v1",
+            "api": "spacy-llm.MiniChain.v1",
             "backend": "OpenAI",
             "config": {},
-            "prompt": "spacy.prompt.MiniChainSimple.v1",
+            "prompt": "spacy-llm.MiniChainSimple.v1",
         },
         {
-            "api": "spacy.api.LangChain.v1",
+            "api": "spacy-llm.LangChain.v1",
             "backend": "openai",
             "config": {"temperature": 0.3},
-            "prompt": "spacy.prompt.LangChainSimple.v1",
+            "prompt": "spacy-llm.LangChainSimple.v1",
         },
     ),
 )
@@ -75,10 +75,11 @@ def test_integrations(config: Dict[str, Any]):
         "llm",
         config={
             "api": {
-                "@llm": config["api"],
+                "@llm_apis": config["api"],
                 "backend": config["backend"],
                 "config": config["config"],
             },
-            "prompt": {"@llm": config["prompt"]},
+            "prompt": {"@llm_prompts": config["prompt"]},
         },
     )
+    nlp("This is a test.")
