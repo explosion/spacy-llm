@@ -11,6 +11,6 @@ __all__ = [
     # prompt
     "minichain_simple_prompt",
     "langchain_simple_prompt",
-    # registry
+    # registry,
     "registry",
 ]
