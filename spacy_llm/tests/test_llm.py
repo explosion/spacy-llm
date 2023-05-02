@@ -79,4 +79,4 @@ def test_integrations(config: Dict[str, Any]):
             },
         },
     )
-    nlp("This is a test")
+    nlp("This is a test.")
