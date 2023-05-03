@@ -50,7 +50,6 @@ def api_minichain(
     backend (str): Name of any backend class in minichain.backend, e. g. OpenAI.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the minichain.Backend
         instance.
-    prompt (Callable[[minichain.backend, Iterable[Any]], Iterable[Any]]): Callable executing prompts.
     RETURNS ([Callable[[], "minichain.Backend"]): Callable generating a minichain.Backend instance.
     """
 
