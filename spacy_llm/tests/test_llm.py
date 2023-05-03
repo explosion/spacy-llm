@@ -72,9 +72,9 @@ def test_integrations(config: Dict[str, Any]):
         "llm",
         config={
             "prompt": {
-                "@llm_prompts": config["prompt"],
+                "@llm.prompts": config["prompt"],
                 "api": {
-                    "@llm_apis": config["api"],
+                    "@llm.apis": config["api"],
                     "backend": config["backend"],
                     "config": config["config"],
                 },

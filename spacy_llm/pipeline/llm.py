@@ -20,11 +20,11 @@ _ParseCallable = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
     requires=[],
     assigns=[],
     default_config={
-        "task": {"@llm_tasks": "spacy-llm.NoOp.v1"},
+        "task": {"@llm.tasks": "spacy-llm.NoOp.v1"},
         "prompt": {
-            "@llm_prompts": "spacy-llm.MiniChainSimple.v1",
+            "@llm.prompts": "spacy-llm.MiniChainSimple.v1",
             "api": {
-                "@llm_apis": "spacy-llm.MiniChain.v1",
+                "@llm.apis": "spacy-llm.MiniChain.v1",
                 "backend": "OpenAI",
                 "config": {},
             },
