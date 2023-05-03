@@ -50,7 +50,7 @@ def make_llm(
     ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
-    api (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable using the querying the specified API using the
+    api (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified API using the
         specified backend.
     """
     # Warn if types don't match.
