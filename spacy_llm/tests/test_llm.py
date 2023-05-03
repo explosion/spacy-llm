@@ -55,13 +55,13 @@ def test_llm_serialize_disk():
     "config",
     (
         {
-            "query": "spacy.llm_queries.MiniChain.v1",
+            "query": "spacy.MiniChain.v1",
             "backend": "spacy.llm_backends.MiniChain.v1",
             "name": "OpenAI",
             "config": {},
         },
         {
-            "query": "spacy.llm_queries.LangChain.v1",
+            "query": "spacy.LangChain.v1",
             "backend": "spacy.llm_backends.LangChain.v1",
             "name": "openai",
             "config": {"temperature": 0.3},
@@ -88,7 +88,7 @@ def test_integrations(config: Dict[str, Any]):
 def test_type_checking() -> None:
     """Tests type checking for consistency between functions."""
 
-    @spacy.registry.llm_tasks("spacy.llm_tasks.TestIncorrect.v1")
+    @spacy.registry.llm_tasks("spacy.TestIncorrect.v1")
     def noop_task_incorrect() -> Tuple[
         Callable[[Iterable[Doc]], Iterable[int]],
         Callable[[Iterable[Doc], Iterable[int]], Iterable[Doc]],
@@ -113,7 +113,7 @@ def test_type_checking() -> None:
     with pytest.warns(UserWarning) as record:
         nlp.add_pipe(
             "llm",
-            config={"task": {"@llm_tasks": "spacy.llm_tasks.TestIncorrect.v1"}},
+            config={"task": {"@llm_tasks": "spacy.TestIncorrect.v1"}},
         )
     assert len(record) == 2
     assert (

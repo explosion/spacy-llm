@@ -12,9 +12,9 @@ from .. import registry  # noqa: F401
 
 _Prompt = TypeVar("_Prompt")
 _Response = TypeVar("_Response")
-_TemplateCallable = Callable[[Iterable[Doc]], Iterable[_Prompt]]
-_APICallable = Callable[[Iterable[_Prompt]], Iterable[_Response]]
-_ParseCallable = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
+_PromptGenerator = Callable[[Iterable[Doc]], Iterable[_Prompt]]
+_PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
+_ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
 
 
 @Language.factory(
@@ -22,22 +22,22 @@ _ParseCallable = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
     requires=[],
     assigns=[],
     default_config={
-        "task": {"@llm_tasks": "spacy.llm_tasks.NoOp.v1"},
+        "task": {"@llm_tasks": "spacy.NoOp.v1"},
         "api": {
             "name": "OpenAI",
             # optional/default in next PR
             "@llm_backends": "spacy.llm_backends.MiniChain.v1",
             # optional/default in this PR
             "config": {},
-            "query": {"@llm_queries": "spacy.llm_queries.MiniChain.v1"},
+            "query": {"@llm_queries": "spacy.MiniChain.v1"},
         },
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
-    task: Tuple[_TemplateCallable, _ParseCallable],
-    api: _APICallable,
+    task: Tuple[_PromptGenerator, _ResponseParser],
+    api: _PromptExecutor,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -79,9 +79,9 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        template: _TemplateCallable,
-        parse: _ParseCallable,
-        api: _APICallable,
+        template: _PromptGenerator,
+        parse: _ResponseParser,
+        api: _PromptExecutor,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
