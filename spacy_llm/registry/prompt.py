@@ -73,7 +73,6 @@ def api_langchain(
     backend (str): Name of any backend class in langchain.llms, e. g. OpenAI.
     backend_config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the langchain.llms.BaseLLM
         instance.
-    prompt (Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]]): Callable executing prompts.
     RETURNS (Callable[[], "langchain.llms.BaseLLM"]): Callable generating a langchain.Backend instance.
     """
 

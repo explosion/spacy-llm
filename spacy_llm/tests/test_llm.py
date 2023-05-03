@@ -1,8 +1,12 @@
-from typing import Any, Dict
+import warnings
+from typing import Any, Dict, Tuple, Iterable, Callable
 
 import pytest
 import spacy
+from spacy.tokens import Doc
+
 from ..pipeline import LLMWrapper
+from ..registry import registry
 
 from dotenv import load_dotenv
 
@@ -82,3 +86,46 @@ def test_integrations(config: Dict[str, Any]):
         },
     )
     nlp("This is a test.")
+
+
+def test_type_checking() -> None:
+    """Tests type checking for consistency between functions."""
+
+    @registry.tasks("spacy-llm.TestIncorrect.v1")
+    def noop_task_incorrect() -> Tuple[
+        Callable[[Iterable[Doc]], Iterable[int]],
+        Callable[[Iterable[Doc], Iterable[int]], Iterable[Doc]],
+    ]:
+        def prompt_template(docs: Iterable[Doc]) -> Iterable[int]:
+            return [0] * len(list(docs))
+
+        def prompt_parse(
+            docs: Iterable[Doc], prompt_responses: Iterable[int]
+        ) -> Iterable[Doc]:
+            return docs
+
+        return prompt_template, prompt_parse
+
+    # Ensure default config doesn't raise warnings.
+    nlp = spacy.blank("en")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        nlp.add_pipe("llm")
+
+    nlp = spacy.blank("en")
+    with pytest.warns(UserWarning) as record:
+        nlp.add_pipe(
+            "llm",
+            config={"task": {"@llm.tasks": "spacy-llm.TestIncorrect.v1"}},
+        )
+    assert len(record) == 2
+    assert (
+        str(record[0].message)
+        == "Type returned from `template()` (`typing.Iterable[int]`) doesn't match type "
+        "expected by `prompt()` (`typing.Iterable[str]`)."
+    )
+    assert (
+        str(record[1].message)
+        == "Type returned from `prompt()` (`typing.Iterable[str]`) doesn't match type "
+        "expected by `parse()` (`typing.Iterable[int]`)."
+    )
