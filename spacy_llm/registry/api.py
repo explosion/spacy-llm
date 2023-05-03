@@ -58,7 +58,7 @@ def api_minichain(
         API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the minichain.Backend
         instance.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using the
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable querying the specified API using the
         specified backend.
     """
 
