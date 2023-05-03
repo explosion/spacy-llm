@@ -44,7 +44,7 @@ def query_langchain() -> Callable[
     return prompt
 
 
-@spacy.registry.llm_backends("spacy.llm_backends.MiniChain.v1")
+@spacy.registry.llm_backends("spacy.MiniChain.v1")
 def api_minichain(
     name: str,
     query: Callable[
@@ -75,7 +75,7 @@ def api_minichain(
         )
 
 
-@spacy.registry.llm_backends("spacy.llm_backends.LangChain.v1")
+@spacy.registry.llm_backends("spacy.LangChain.v1")
 def api_langchain(
     name: str,
     query: Callable[

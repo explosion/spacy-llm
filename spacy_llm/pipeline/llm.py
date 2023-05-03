@@ -26,7 +26,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
         "api": {
             "name": "OpenAI",
             # optional/default in next PR
-            "@llm_backends": "spacy.llm_backends.MiniChain.v1",
+            "@llm_backends": "spacy.MiniChain.v1",
             # optional/default in this PR
             "config": {},
             "query": {"@llm_queries": "spacy.MiniChain.v1"},

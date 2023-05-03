@@ -56,13 +56,13 @@ def test_llm_serialize_disk():
     (
         {
             "query": "spacy.MiniChain.v1",
-            "backend": "spacy.llm_backends.MiniChain.v1",
+            "backend": "spacy.MiniChain.v1",
             "name": "OpenAI",
             "config": {},
         },
         {
             "query": "spacy.LangChain.v1",
-            "backend": "spacy.llm_backends.LangChain.v1",
+            "backend": "spacy.LangChain.v1",
             "name": "openai",
             "config": {"temperature": 0.3},
         },
