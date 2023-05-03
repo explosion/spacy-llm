@@ -1,3 +1,5 @@
+import typing
+import warnings
 from pathlib import Path
 from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar
 
@@ -50,6 +52,23 @@ def make_llm(
         the extracted information).
     prompt (Callable[[Iterable[Any]], Iterable[Any]]]): Callable executing prompts using the specified API instance.
     """
+    # Warn if types don't match.
+    type_hints = {
+        "template": typing.get_type_hints(task[0]),
+        "parse": typing.get_type_hints(task[1]),
+        "prompt": typing.get_type_hints(prompt),
+    }
+    if not type_hints["template"]["return"] == type_hints["prompt"]["prompts"]:
+        warnings.warn(
+            f"Type returned from `template()` ({type_hints['template']['return']}) doesn't match type expected by "
+            f"`prompt()` (type_hints['prompt']['prompts'])"
+        )
+    if not type_hints["prompt"]["return"] == type_hints["parse"]["prompt_responses"]:
+        warnings.warn(
+            f"Type returned from `prompt()` ({type_hints['prompt']['return']}) doesn't match type expected by "
+            f"`parse()` (type_hints['parse']['prompts'])"
+        )
+
     return LLMWrapper(name=name, template=task[0], parse=task[1], prompt=prompt)
 
 
@@ -62,7 +81,7 @@ class LLMWrapper(Pipe):
         *,
         template: _TemplateCallable,
         parse: _ParseCallable,
-        prompt: _PromptCallable
+        prompt: _PromptCallable,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.

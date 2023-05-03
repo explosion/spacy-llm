@@ -13,16 +13,16 @@ def minichain_simple_prompt(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing simple prompts on the specified MiniChain
         backend.
     """
+    _api = api()
 
-    def prompt(backend: "minichain.Backend", prompts: Iterable[str]) -> Iterable[str]:
-        @minichain.prompt(backend)
+    def prompt(prompts: Iterable[str]) -> Iterable[str]:
+        @minichain.prompt(_api)
         def _prompt(model: "minichain.backend", prompt_text: str) -> str:
             return model(prompt_text)
 
         return [_prompt(pr).run() for pr in prompts]
 
-    _api = api()
-    return lambda prompts: prompt(_api, prompts)
+    return prompt
 
 
 @registry.prompts("spacy-llm.LangChainSimple.v1")
@@ -33,14 +33,12 @@ def langchain_simple_prompt(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]:): Callable executing simple prompts on the specified LangChain
         backend.
     """
-
-    def prompt(
-        backend: "langchain.llms.BaseLLM", prompts: Iterable[str]
-    ) -> Iterable[str]:
-        return [backend(pr) for pr in prompts]
-
     _api = api()
-    return lambda prompts: prompt(_api, prompts)
+
+    def prompt(prompts: Iterable[str]) -> Iterable[str]:
+        return [_api(pr) for pr in prompts]
+
+    return prompt
 
 
 @registry.apis("spacy-llm.MiniChain.v1")
