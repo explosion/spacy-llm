@@ -58,12 +58,12 @@ def make_llm(
         "parse": typing.get_type_hints(task[1]),
         "prompt": typing.get_type_hints(prompt),
     }
-    if not type_hints["template"]["return"] == type_hints["prompt"]["prompts"]:
+    if type_hints["template"]["return"] != type_hints["prompt"]["prompts"]:
         warnings.warn(
             f"Type returned from `template()` ({type_hints['template']['return']}) doesn't match type expected by "
             f"`prompt()` (type_hints['prompt']['prompts'])"
         )
-    if not type_hints["prompt"]["return"] == type_hints["parse"]["prompt_responses"]:
+    if type_hints["prompt"]["return"] != type_hints["parse"]["prompt_responses"]:
         warnings.warn(
             f"Type returned from `prompt()` ({type_hints['prompt']['return']}) doesn't match type expected by "
             f"`parse()` (type_hints['parse']['prompts'])"
