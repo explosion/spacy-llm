@@ -83,7 +83,7 @@ class LLMWrapper(Pipe):
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
-        api (str): The component instance api, used to add entries to the
+        name (str): The component instance name, used to add entries to the
             losses during training.
         template (Callable[[Iterable[Doc]], Iterable[_Prompt]]): Callable injecting Doc data into a prompt template and
             returning one fully specified prompt per passed Doc instance.
