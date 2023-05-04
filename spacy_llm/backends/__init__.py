@@ -1,5 +1,5 @@
-from .minichain import query_minichain, backend_minichain
 from .langchain import backend_langchain, query_langchain
+from .minichain import backend_minichain, query_minichain
 
 __all__ = [
     "query_minichain",
