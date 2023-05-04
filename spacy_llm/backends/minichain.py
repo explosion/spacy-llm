@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, Iterable
 import spacy
 from spacy.util import SimpleFrozenDict
 
-from spacy_llm.compat import minichain
+from ..compat import minichain
 
 
 @spacy.registry.llm_queries("spacy.RunMiniChain.v1")
