@@ -1,22 +1,15 @@
-import spacy
-
-# Create new registry.
-if "llm" not in spacy.registry.get_registry_names():
-    spacy.registry.create("llm", entry_points=True)
-
-from .template import noop_template
-from .api import api_minichain
-from .prompt import minichain_simple_prompt, langchain_simple_prompt
-from .parse import noop_parse
+from . import util  # noqa: F401
+from .task import noop_task
+from .backend import query_minichain, query_langchain
+from .backend import backend_minichain, backend_langchain
 
 __all__ = [
-    # template
-    "noop_template",
-    # api
-    "api_minichain",
-    # prompt
-    "minichain_simple_prompt",
-    "langchain_simple_prompt",
-    # parse
-    "noop_parse",
+    # task
+    "noop_task",
+    # query
+    "query_minichain",
+    "query_langchain",
+    # backend
+    "backend_minichain",
+    "backend_langchain",
 ]

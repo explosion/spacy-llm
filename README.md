@@ -7,11 +7,14 @@ Self-hosted LLMs (e. g. Dolly) are not supported yet, but are on our roadmap.
 - _Templating_, i. e. defining a prompt template and injecting the relevant data from your `Doc` instances into this 
   template to generate fully formed prompts.
 - _API access and prompting_, i. e. connecting to the LLM API and executing the prompt. A minimal wrapper layer for 
-   compatibility is provided, but you are free to use whatever tooling (`langchain`, `minichain`, a hand-rolled backend 
+   compatibility is provided, but you are free to use whatever backend (`langchain`, `minichain`, a hand-rolled backend 
    connecting to the API of your choice,  ...) you prefer for connecting to the LLM API and executing the prompt(s) 
    underneath.
 - _Parsing_, i. e. parsing the LLM response(s), extracting the useful bits from it and mapping these back onto your 
   documents.
+
+As parsing an LLM response very much depends on how the prompt for this response looked like, templating and parsing are
+packaged together as _tasks_.
 
 ## 🖊️ Usage
 
@@ -22,16 +25,15 @@ system. The default configuration is as follows:
 ```ini
 [components.llm] 
 factory = "llm"
-# Factory function for Callable generating prompts from prompt template.
-template = {"@llm": "spacy.template.NoOp.v1"}
-# Factory function for Callable generating instance of API to use. In this case: the MiniChain wrapper that is already 
-# implemented, with its OpenAI backend. This corresponds to the "prompting" step and includes managing the connection
-# to the LLM API.
-api = {"@llm": "spacy.api.MiniChain.v1", "backend": "OpenAI", "config": {}}
-# Function running prompts.
-prompt = {"@llm": "spacy.prompt.MiniChainSimple.v1"}
-# Factory function for Callable parsing LLM responses.
-parse = {"@llm": "spacy.parse.NoOp.v1"}
+# Factory function for Callable returning the templating and parsing functions. 
+task = {"@llm_tasks": "spacy.NoOp.v1"}
+# Factory function for Callable generating instance of backend to use. In this case: the MiniChain wrapper that is already 
+# implemented. This corresponds to the "prompting" step and includes managing the connection to the LLM API.
+backend = {
+    "@llm_backends": "spacy.MiniChain.v1",
+    "api": "OpenAI",
+    "config": {}
+}
 ```
 
 ### Minimal example

@@ -1,8 +1,10 @@
-from typing import Any, Dict
+import warnings
+from typing import Any, Dict, Tuple, Iterable, Callable
 
-import minichain
 import pytest
 import spacy
+from spacy.tokens import Doc
+
 from ..pipeline import LLMWrapper
 
 from dotenv import load_dotenv
@@ -31,9 +33,8 @@ def test_llm_pipe(nlp):
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
         template=None,  # type: ignore
-        api=lambda: minichain.OpenAI(),
-        prompt=None,  # type: ignore
         parse=None,  # type: ignore
+        backend=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
 
@@ -41,9 +42,8 @@ def test_llm_serialize_bytes():
 def test_llm_serialize_disk():
     llm = LLMWrapper(
         template=None,  # type: ignore
-        api=lambda: minichain.OpenAI(),
-        prompt=None,  # type: ignore
         parse=None,  # type: ignore
+        backend=None,  # type: ignore
     )
 
     with spacy.util.make_tempdir() as tmp_dir:
@@ -55,16 +55,16 @@ def test_llm_serialize_disk():
     "config",
     (
         {
-            "api": "spacy.api.MiniChain.v1",
-            "backend": "OpenAI",
+            "query": "spacy.RunMiniChain.v1",
+            "backend": "spacy.MiniChain.v1",
+            "api": "OpenAI",
             "config": {},
-            "prompt": "spacy.prompt.MiniChainSimple.v1",
         },
         {
-            "api": "spacy.api.LangChain.v1",
-            "backend": "openai",
+            "query": "spacy.CallLangChain.v1",
+            "backend": "spacy.LangChain.v1",
+            "api": "openai",
             "config": {"temperature": 0.3},
-            "prompt": "spacy.prompt.LangChainSimple.v1",
         },
     ),
 )
@@ -74,11 +74,55 @@ def test_integrations(config: Dict[str, Any]):
     nlp.add_pipe(
         "llm",
         config={
-            "api": {
-                "@llm": config["api"],
-                "backend": config["backend"],
-                "config": config["config"],
+            "backend": {
+                "api": config["api"],
+                "@llm_backends": config["backend"],
+                "config": {},
+                "query": {"@llm_queries": config["query"]},
             },
-            "prompt": {"@llm": config["prompt"]},
         },
+    )
+    nlp("This is a test.")
+
+
+def test_type_checking() -> None:
+    """Tests type checking for consistency between functions."""
+
+    @spacy.registry.llm_tasks("spacy.TestIncorrect.v1")
+    def noop_task_incorrect() -> Tuple[
+        Callable[[Iterable[Doc]], Iterable[int]],
+        Callable[[Iterable[Doc], Iterable[int]], Iterable[Doc]],
+    ]:
+        def template(docs: Iterable[Doc]) -> Iterable[int]:
+            return [0] * len(list(docs))
+
+        def parse(
+            docs: Iterable[Doc], prompt_responses: Iterable[int]
+        ) -> Iterable[Doc]:
+            return docs
+
+        return template, parse
+
+    # Ensure default config doesn't raise warnings.
+    nlp = spacy.blank("en")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        nlp.add_pipe("llm")
+
+    nlp = spacy.blank("en")
+    with pytest.warns(UserWarning) as record:
+        nlp.add_pipe(
+            "llm",
+            config={"task": {"@llm_tasks": "spacy.TestIncorrect.v1"}},
+        )
+    assert len(record) == 2
+    assert (
+        str(record[0].message)
+        == "Type returned from `template()` (`typing.Iterable[int]`) doesn't match type "
+        "expected by `backend()` (`typing.Iterable[str]`)."
+    )
+    assert (
+        str(record[1].message)
+        == "Type returned from `backend()` (`typing.Iterable[str]`) doesn't match type "
+        "expected by `parse()` (`typing.Iterable[int]`)."
     )
