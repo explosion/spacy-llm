@@ -30,8 +30,8 @@ task = {"@llm_tasks": "spacy.NoOp.v1"}
 # Factory function for Callable generating instance of backend to use. In this case: the MiniChain wrapper that is already 
 # implemented. This corresponds to the "prompting" step and includes managing the connection to the LLM API.
 backend = {
-    "api": "OpenAI",
     "@llm_backends": "spacy.MiniChain.v1",
+    "api": "OpenAI",
     "config": {}
 }
 ```
