@@ -24,9 +24,7 @@ def noop_task() -> Tuple[
         docs: Iterable[Doc],
         prompt_responses: Iterable[str],
     ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, prompt_responses):
-            pass
-
+        # Not doing anything
         return docs
 
     return prompt_template, prompt_parse
