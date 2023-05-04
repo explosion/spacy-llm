@@ -75,7 +75,7 @@ def _validate_types(task, backend):
             backend_input = type_hints["backend"][k]
 
     # validate the 'parse' object
-    if not (len(type_hints["parse"]) == 3 and "return" in type_hints["backend"]):
+    if not (len(type_hints["parse"]) == 3 and "return" in type_hints["parse"]):
         raise ValueError(
             "The 'parse' function should have two input arguments and one return value."
         )
