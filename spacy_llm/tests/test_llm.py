@@ -35,6 +35,8 @@ def test_llm_serialize_bytes():
         template=None,  # type: ignore
         parse=None,  # type: ignore
         backend=None,  # type: ignore
+        cache={"path": None, "force": False},
+        vocab=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
 
@@ -44,6 +46,8 @@ def test_llm_serialize_disk():
         template=None,  # type: ignore
         parse=None,  # type: ignore
         backend=None,  # type: ignore
+        cache={"path": None, "force": False},
+        vocab=None,  # type: ignore
     )
 
     with spacy.util.make_tempdir() as tmp_dir:

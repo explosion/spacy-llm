@@ -1,20 +1,32 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar
+from typing import (
+    Callable,
+    Iterable,
+    Tuple,
+    Iterator,
+    cast,
+    TypeVar,
+    Union,
+    Dict,
+    Optional,
+)
 
 import spacy
-from spacy import Language
+from spacy import Language, Vocab
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
 from .. import registry  # noqa: F401
+from ..cache import Cache
 
 _Prompt = TypeVar("_Prompt")
 _Response = TypeVar("_Response")
 _PromptGenerator = Callable[[Iterable[Doc]], Iterable[_Prompt]]
 _PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
+_CacheConfigType = Dict[str, Union[Optional[str], Optional[Path], bool, int]]
 
 
 @Language.factory(
@@ -29,6 +41,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
             "config": {},
             "query": {"@llm_queries": "spacy.RunMiniChain.v1"},
         },
+        "cache": {"path": None, "batch_size": 64, "force": False, "max_n_batches": 4},
     },
 )
 def make_llm(
@@ -36,6 +49,7 @@ def make_llm(
     name: str,
     task: Tuple[_PromptGenerator, _ResponseParser],
     backend: _PromptExecutor,
+    cache: _CacheConfigType,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -49,6 +63,10 @@ def make_llm(
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
     backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
+    cache (Dict[str, Union[Optional[str], Optional[Path], bool, int]]): Cache config. If the cache directory
+        `cache["path"]` is None, no data will be cached. If a path is set, processed docs will be serialized in the
+        cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed (if `force` is
+        False).
     """
     # Warn if types don't match.
     type_hints = {
@@ -66,7 +84,14 @@ def make_llm(
                 f"`{dest[0]}()` (`{type_hints[dest[0]][dest[1]]}`)."
             )
 
-    return LLMWrapper(name=name, template=task[0], parse=task[1], backend=backend)
+    return LLMWrapper(
+        name=name,
+        vocab=nlp.vocab,
+        template=task[0],
+        parse=task[1],
+        backend=backend,
+        cache=cache,
+    )
 
 
 class LLMWrapper(Pipe):
@@ -76,25 +101,44 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
+        vocab: Vocab,
         template: _PromptGenerator,
         parse: _ResponseParser,
         backend: _PromptExecutor,
+        cache: _CacheConfigType,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
         name (str): The component instance name, used to add entries to the
             losses during training.
+        vocab (Vocab): Pipeline vocabulary.
         template (Callable[[Iterable[Doc]], Iterable[_Prompt]]): Callable injecting Doc data into a prompt template and
             returning one fully specified prompt per passed Doc instance.
         parse (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable parsing LLM responses and
             updating Doc instances with the extracted information.
         backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
+        cache (Dict[str, Union[Optional[str], Optional[Path], bool, int]]): Cache config. If the cache directory
+            `cache["path"]` is None, no data will be cached. If a path is set, processed docs will be serialized in the
+            cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed (if `force`
+            is False).
         """
         self._name = name
         self._template = template
         self._parse = parse
         self._backend = backend
+        self._cache = (
+            Cache(
+                path=cache["path"],  # type: ignore
+                batch_size=cache["batch_size"],  # type: ignore
+                max_n_batches=cache["max_n_batches"],  # type: ignore
+                vocab=vocab,
+            )
+            if cache["path"]
+            else None
+        )
+        # Whether to reprocess Docs even when they are in the cache.
+        self._force = cache["force"]
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -102,6 +146,8 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
+        # todo integrate Cache
+        # todo how to deal with not knowing when the last doc is being written? don't care?
         docs = list(
             self._parse(
                 [doc],
@@ -118,6 +164,8 @@ class LLMWrapper(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
         """
+        # todo integrate Cache
+        # todo how to deal with not knowing when the last doc is being written? don't care?
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
             try:
