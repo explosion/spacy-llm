@@ -80,7 +80,7 @@ def backend_langchain(
     api: str,
     query: Callable[
         ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
-    ] = query_minichain(),
+    ] = query_langchain(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Any]], Iterable[Any]]:
     """Returns Callable using MiniChain backend to prompt specified API.
