@@ -67,9 +67,9 @@ class Cache:
         """
         self._docs_to_be_cached.append(doc)
         if len(self._docs_to_be_cached) == self._batch_size:
-            self.persist()
+            self._persist()
 
-    def persist(self) -> None:
+    def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
         batch_hash = self._hash(self._docs_to_be_cached)
         DocBin(docs=self._docs_to_be_cached, store_user_data=True).to_disk(

@@ -41,7 +41,7 @@ _CacheConfigType = Dict[str, Union[Optional[str], Optional[Path], bool, int]]
             "config": {},
             "query": {"@llm_queries": "spacy.RunMiniChain.v1"},
         },
-        "cache": {"path": None, "batch_size": 64, "force": False, "max_n_batches": 4},
+        "cache": {"path": None, "batch_size": 64, "max_n_batches": 4},
     },
 )
 def make_llm(
@@ -65,8 +65,7 @@ def make_llm(
     backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
     cache (Dict[str, Union[Optional[str], Optional[Path], bool, int]]): Cache config. If the cache directory
         `cache["path"]` is None, no data will be cached. If a path is set, processed docs will be serialized in the
-        cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed (if `force` is
-        False).
+        cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed.
     """
     # Warn if types don't match.
     type_hints = {
@@ -120,8 +119,7 @@ class LLMWrapper(Pipe):
         backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
         cache (Dict[str, Union[Optional[str], Optional[Path], bool, int]]): Cache config. If the cache directory
             `cache["path"]` is None, no data will be cached. If a path is set, processed docs will be serialized in the
-            cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed (if `force`
-            is False).
+            cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
         self._template = template
@@ -137,8 +135,6 @@ class LLMWrapper(Pipe):
             if cache["path"]
             else None
         )
-        # Whether to reprocess Docs even when they are in the cache.
-        self._force = cache["force"]
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
