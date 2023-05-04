@@ -143,7 +143,6 @@ class LLMWrapper(Pipe):
         RETURNS (Doc): The processed Doc.
         """
         # todo integrate Cache
-        # todo how to deal with not knowing when the last doc is being written? don't care?
         docs = list(
             self._parse(
                 [doc],
@@ -161,7 +160,6 @@ class LLMWrapper(Pipe):
         YIELDS (Doc): Processed documents in order.
         """
         # todo integrate Cache
-        # todo how to deal with not knowing when the last doc is being written? don't care?
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
             try:
