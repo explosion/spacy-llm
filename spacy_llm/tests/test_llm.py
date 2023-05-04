@@ -34,7 +34,7 @@ def test_llm_serialize_bytes():
     llm = LLMWrapper(
         template=None,  # type: ignore
         parse=None,  # type: ignore
-        api=None,  # type: ignore
+        backend=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
 
@@ -43,7 +43,7 @@ def test_llm_serialize_disk():
     llm = LLMWrapper(
         template=None,  # type: ignore
         parse=None,  # type: ignore
-        api=None,  # type: ignore
+        backend=None,  # type: ignore
     )
 
     with spacy.util.make_tempdir() as tmp_dir:
@@ -57,13 +57,13 @@ def test_llm_serialize_disk():
         {
             "query": "spacy.MiniChain.v1",
             "backend": "spacy.MiniChain.v1",
-            "name": "OpenAI",
+            "api": "OpenAI",
             "config": {},
         },
         {
             "query": "spacy.LangChain.v1",
             "backend": "spacy.LangChain.v1",
-            "name": "openai",
+            "api": "openai",
             "config": {"temperature": 0.3},
         },
     ),
@@ -74,8 +74,8 @@ def test_integrations(config: Dict[str, Any]):
     nlp.add_pipe(
         "llm",
         config={
-            "api": {
-                "name": config["name"],
+            "backend": {
+                "api": config["api"],
                 "@llm_backends": config["backend"],
                 "config": {},
                 "query": {"@llm_queries": config["query"]},
@@ -119,10 +119,10 @@ def test_type_checking() -> None:
     assert (
         str(record[0].message)
         == "Type returned from `template()` (`typing.Iterable[int]`) doesn't match type "
-        "expected by `api()` (`typing.Iterable[str]`)."
+        "expected by `backend()` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)
-        == "Type returned from `api()` (`typing.Iterable[str]`) doesn't match type "
+        == "Type returned from `backend()` (`typing.Iterable[str]`) doesn't match type "
         "expected by `parse()` (`typing.Iterable[int]`)."
     )

@@ -23,8 +23,8 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
     assigns=[],
     default_config={
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
-        "api": {
-            "name": "OpenAI",
+        "backend": {
+            "api": "OpenAI",
             # optional/default in next PR
             "@llm_backends": "spacy.MiniChain.v1",
             # optional/default in this PR
@@ -37,12 +37,12 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Tuple[_PromptGenerator, _ResponseParser],
-    api: _PromptExecutor,
+    backend: _PromptExecutor,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
     nlp (Language): Pipeline.
-    name (str): The component instance name, used to add entries to the
+    api (str): The component instance api, used to add entries to the
         losses during training.
     task (Tuple[
         Callable[[Iterable[Doc]], Iterable[_Prompt]],
@@ -50,18 +50,17 @@ def make_llm(
     ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
-    api (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified API using the
-        specified backend.
+    backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
     """
     # Warn if types don't match.
     type_hints = {
         "template": typing.get_type_hints(task[0]),
         "parse": typing.get_type_hints(task[1]),
-        "api": typing.get_type_hints(api),
+        "backend": typing.get_type_hints(backend),
     }
     for source, dest in (
-        ("template", ("api", "prompts")),
-        ("api", ("parse", "prompt_responses")),
+        ("template", ("backend", "prompts")),
+        ("backend", ("parse", "prompt_responses")),
     ):
         if type_hints[source]["return"] != type_hints[dest[0]][dest[1]]:
             warnings.warn(
@@ -69,7 +68,7 @@ def make_llm(
                 f"`{dest[0]}()` (`{type_hints[dest[0]][dest[1]]}`)."
             )
 
-    return LLMWrapper(name=name, template=task[0], parse=task[1], api=api)
+    return LLMWrapper(name=name, template=task[0], parse=task[1], backend=backend)
 
 
 class LLMWrapper(Pipe):
@@ -81,23 +80,23 @@ class LLMWrapper(Pipe):
         *,
         template: _PromptGenerator,
         parse: _ResponseParser,
-        api: _PromptExecutor,
+        backend: _PromptExecutor,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
-        name (str): The component instance name, used to add entries to the
+        api (str): The component instance api, used to add entries to the
             losses during training.
         template (Callable[[Iterable[Doc]], Iterable[_Prompt]]): Callable injecting Doc data into a prompt template and
             returning one fully specified prompt per passed Doc instance.
         parse (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable parsing LLM responses and
             updating Doc instances with the extracted information.
-        api (Callable[[Iterable[_Prompt]], Iterable[_Response]]): Callable using the specified API to execute prompts.
+        backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
         """
         self._name = name
         self._template = template
         self._parse = parse
-        self._api = api
+        self._backend = backend
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -108,7 +107,7 @@ class LLMWrapper(Pipe):
         docs = list(
             self._parse(
                 [doc],
-                self._api(self._template([doc])),
+                self._backend(self._template([doc])),
             )
         )
         assert len(docs) == 1
@@ -126,7 +125,7 @@ class LLMWrapper(Pipe):
             try:
                 for modified_doc in self._parse(
                     doc_batch,
-                    self._api(self._template(doc_batch)),
+                    self._backend(self._template(doc_batch)),
                 ):
                     yield modified_doc
             except Exception as e:

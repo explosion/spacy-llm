@@ -45,15 +45,15 @@ def query_langchain() -> Callable[
 
 
 @spacy.registry.llm_backends("spacy.MiniChain.v1")
-def api_minichain(
-    name: str,
+def backend_minichain(
+    api: str,
     query: Callable[
         ["minichain.backend.Backend", Iterable[str]], Iterable[str]
     ] = query_minichain(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using MiniChain backend to prompt specified API.
-    name (str): Name of any API/class in minichain.backend, e. g. "OpenAI".
+    api (str): Name of any API/class in minichain.backend, e. g. "OpenAI".
     query (Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]): Callable implementing querying this
         API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the minichain.Backend
@@ -62,8 +62,8 @@ def api_minichain(
         specified backend.
     """
 
-    if hasattr(minichain.backend, name):
-        backend = getattr(minichain.backend, name)(**config)
+    if hasattr(minichain.backend, api):
+        backend = getattr(minichain.backend, api)(**config)
 
         def _query(prompts: Iterable[str]) -> Iterable[str]:
             return query(backend, prompts)
@@ -71,20 +71,20 @@ def api_minichain(
         return _query
     else:
         raise KeyError(
-            f"The requested API {name} is not available in `minichain.backend`."
+            f"The requested API {api} is not available in `minichain.backend`."
         )
 
 
 @spacy.registry.llm_backends("spacy.LangChain.v1")
-def api_langchain(
-    name: str,
+def backend_langchain(
+    api: str,
     query: Callable[
         ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
     ] = query_minichain(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Any]], Iterable[Any]]:
     """Returns Callable using MiniChain backend to prompt specified API.
-    name (str): Name of any API/class in langchain.llms.type_to_cls_dict, e. g. "openai".
+    api (str): Name of any API/class in langchain.llms.type_to_cls_dict, e. g. "openai".
     query (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]): Callable implementing querying this
         API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the langchain.llms.BaseLLM
@@ -92,10 +92,10 @@ def api_langchain(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using the
         specified backend.
     """
-    name = name.lower()
+    api = api.lower()
 
-    if name in langchain.llms.type_to_cls_dict:
-        backend = langchain.llms.type_to_cls_dict[name](**config)
+    if api in langchain.llms.type_to_cls_dict:
+        backend = langchain.llms.type_to_cls_dict[api](**config)
 
         def _query(prompts: Iterable[Any]) -> Iterable[Any]:
             return query(backend, prompts)
@@ -103,5 +103,5 @@ def api_langchain(
         return _query
     else:
         raise KeyError(
-            f"The requested API {name} is not available in `langchain.llms.type_to_cls_dict`."
+            f"The requested API {api} is not available in `langchain.llms.type_to_cls_dict`."
         )
