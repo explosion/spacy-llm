@@ -6,7 +6,7 @@ from spacy.util import SimpleFrozenDict
 from ..compat import langchain, minichain
 
 
-@spacy.registry.llm_queries("spacy.MiniChain.v1")
+@spacy.registry.llm_queries("spacy.RunMiniChain.v1")
 def query_minichain() -> Callable[
     ["minichain.backend.Backend", Iterable[str]], Iterable[str]
 ]:
@@ -27,7 +27,7 @@ def query_minichain() -> Callable[
     return prompt
 
 
-@spacy.registry.llm_queries("spacy.LangChain.v1")
+@spacy.registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> Callable[
     ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
 ]:
