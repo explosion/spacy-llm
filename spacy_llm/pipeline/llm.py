@@ -8,8 +8,6 @@ from spacy import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
-from .. import registry  # noqa: F401
-
 _Prompt = TypeVar("_Prompt")
 _Response = TypeVar("_Response")
 _PromptGenerator = Callable[[Iterable[Doc]], Iterable[_Prompt]]
