@@ -40,7 +40,7 @@ def make_llm(
     """Construct an LLM component.
 
     nlp (Language): Pipeline.
-    api (str): The component instance api, used to add entries to the
+    name (str): The component instance name, used to add entries to the
         losses during training.
     task (Tuple[
         Callable[[Iterable[Doc]], Iterable[_Prompt]],
