@@ -1,17 +1,8 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import (
-    Callable,
-    Iterable,
-    Tuple,
-    Iterator,
-    cast,
-    TypeVar,
-    Union,
-    Dict,
-    Optional,
-)
+from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar
+from typing import Union, Dict, Optional
 
 import spacy
 from spacy import Language, Vocab
@@ -67,30 +58,66 @@ def make_llm(
         data will be cached. If a path is set, processed docs will be serialized in the cache directory as binary .spacy
         files. Docs found in the cache directory won't be reprocessed.
     """
-    # Warn if types don't match.
+    _validate_types(task, backend)
+
+    return LLMWrapper(
+        name=name,
+        template=task[0],
+        parse=task[1],
+        backend=backend,
+        cache=cache,
+        vocab=nlp.vocab,
+    )
+
+
+def _validate_types(
+    task: Tuple[_PromptGenerator, _ResponseParser], backend: _PromptExecutor
+) -> None:
+    # Inspect the types of the three main parameters to ensure they match internally
+    # Raises an error or prints a warning if something looks wrong/odd.
     type_hints = {
         "template": typing.get_type_hints(task[0]),
         "parse": typing.get_type_hints(task[1]),
         "backend": typing.get_type_hints(backend),
     }
-    for source, dest in (
-        ("template", ("backend", "prompts")),
-        ("backend", ("parse", "prompt_responses")),
-    ):
-        if type_hints[source]["return"] != type_hints[dest[0]][dest[1]]:
-            warnings.warn(
-                f"Type returned from `{source}()` (`{type_hints[source]['return']}`) doesn't match type expected by "
-                f"`{dest[0]}()` (`{type_hints[dest[0]][dest[1]]}`)."
-            )
 
-    return LLMWrapper(
-        name=name,
-        vocab=nlp.vocab,
-        template=task[0],
-        parse=task[1],
-        backend=backend,
-        cache=cache,
-    )
+    # Validate the 'backend' object
+    if not (len(type_hints["backend"]) == 2 and "return" in type_hints["backend"]):
+        raise ValueError(
+            "The 'backend' function should have one input argument and one return value."
+        )
+    for k in type_hints["backend"]:
+        if k == "return":
+            backend_output = type_hints["backend"][k]
+        else:
+            backend_input = type_hints["backend"][k]
+
+    # validate the 'parse' object
+    if not (len(type_hints["parse"]) == 3 and "return" in type_hints["parse"]):
+        raise ValueError(
+            "The 'parse' function should have two input arguments and one return value."
+        )
+    for k in type_hints["parse"]:
+        # find the 'prompt_responses' var without assuming its name
+        type_k = type_hints["parse"][k]
+        if type_k is not typing.Iterable[spacy.tokens.doc.Doc]:
+            parse_input = type_hints["parse"][k]
+
+    template_output = type_hints["template"]["return"]
+
+    # Ensure that the template returns the same type as expected by the backend
+    if template_output != backend_input:
+        warnings.warn(
+            f"Type returned from `task[0]` (`{template_output}`) doesn't match type expected by "
+            f"`backend` (`{backend_input}`)."
+        )
+
+    # Ensure that the parser expects the same type as returned by the backend
+    if parse_input != backend_output:
+        warnings.warn(
+            f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
+            f"`parse` (`{parse_input}`)."
+        )
 
 
 class LLMWrapper(Pipe):
