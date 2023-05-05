@@ -6,6 +6,15 @@ from spacy.util import SimpleFrozenDict
 from ..compat import minichain
 
 
+def _check_installation() -> None:
+    """Checks whether `minichain` is installed. Raises an error otherwise."""
+    if minichain is None:
+        raise ValueError(
+            "The MiniChain backend requires `minichain` to be installed, which it is not. See "
+            "https://github.com/srush/MiniChain for installation instructions."
+        )
+
+
 @spacy.registry.llm_queries("spacy.RunMiniChain.v1")
 def query_minichain() -> Callable[
     ["minichain.backend.Backend", Iterable[str]], Iterable[str]
@@ -14,6 +23,7 @@ def query_minichain() -> Callable[
     RETURNS (Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]): Callable executing simple prompts
         on the specified MiniChain backend.
     """
+    _check_installation()
 
     def prompt(
         backend: "minichain.backend.Backend", prompts: Iterable[str]
@@ -44,6 +54,7 @@ def backend_minichain(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable querying the specified API using the
         specified backend.
     """
+    _check_installation()
 
     if hasattr(minichain.backend, api):
         backend = getattr(minichain.backend, api)(**config)

@@ -6,6 +6,15 @@ from spacy.util import SimpleFrozenDict
 from spacy_llm.compat import langchain
 
 
+def _check_installation() -> None:
+    """Checks whether `minichain` is installed. Raises an error otherwise."""
+    if langchain is None:
+        raise ValueError(
+            "The LangChain backend requires `langchain` to be installed, which it is not. See "
+            "https://github.com/hwchase17/langchain for installation instructions."
+        )
+
+
 @spacy.registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> Callable[
     ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
@@ -14,6 +23,7 @@ def query_langchain() -> Callable[
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]:): Callable executing simple prompts on
         the specified LangChain backend.
     """
+    _check_installation()
 
     def prompt(
         backend: "langchain.llms.BaseLLM", prompts: Iterable[str]
@@ -40,6 +50,10 @@ def backend_langchain(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using the
         specified backend.
     """
+    _check_installation()
+
+    # langchain.llms.type_to_cls_dict contains all API names in lowercase, so this allows to be more forgiving and make
+    # "OpenAI" work as well "openai".
     api = api.lower()
 
     if api in langchain.llms.type_to_cls_dict:

@@ -9,4 +9,4 @@ pyright==1.1.267
 types-requests==2.28.11.16
 # Prompting libraries needed for testing
 langchain==0.0.144
-minichain @ https://github.com/srush/MiniChain/archive/refs/tags/v0.2.tar.gz
+minichain==0.3.3
