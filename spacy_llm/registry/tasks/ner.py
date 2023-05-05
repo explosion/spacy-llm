@@ -5,7 +5,7 @@ import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from .normalizer import noop_normalizer
+from ..normalizer import noop_normalizer
 
 
 def find_substrings(
@@ -52,7 +52,7 @@ def find_substrings(
 
 
 @spacy.registry.llm_tasks("spacy.NERZeroShot.v1")
-def ner_task(
+def ner_zeroshot_task(
     labels: Iterable[str], normalizer: Callable[[str], str] = noop_normalizer()
 ) -> Tuple[
     Callable[[Iterable[Doc]], Iterable[str]],

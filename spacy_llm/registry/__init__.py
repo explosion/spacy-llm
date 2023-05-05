@@ -3,6 +3,7 @@ from .task import noop_task
 from .backend import query_minichain, query_langchain
 from .backend import backend_minichain, backend_langchain
 from .normalizer import noop_normalizer, lowercase_normalizer, uppercase_normalizer
+from .tasks.ner import ner_zeroshot_task
 
 __all__ = [
     # task
@@ -17,4 +18,7 @@ __all__ = [
     "noop_normalizer",
     "lowercase_normalizer",
     "uppercase_normalizer",
+    # tasks
+    ## ner
+    "ner_zeroshot_task",
 ]
