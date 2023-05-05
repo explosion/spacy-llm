@@ -55,8 +55,9 @@ def make_llm(
     return LLMWrapper(name=name, template=task[0], parse=task[1], backend=backend)
 
 
-def _validate_types(task, backend):
+def _validate_types(task: Tuple[_PromptGenerator, _ResponseParser], backend: _PromptExecutor) -> None:
     # Inspect the types of the three main parameters to ensure they match internally
+    # Raises an error or prints a warning if something looks wrong/odd.
     type_hints = {
         "template": typing.get_type_hints(task[0]),
         "parse": typing.get_type_hints(task[1]),
