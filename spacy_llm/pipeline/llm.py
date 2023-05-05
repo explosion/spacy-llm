@@ -1,8 +1,10 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar
-from typing import Union, Dict, Optional
+
+# fmt: off
+from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar, Union, Dict, Optional
+# fmt: on
 
 import spacy
 from spacy import Language, Vocab
