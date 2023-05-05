@@ -6,7 +6,7 @@ import spacy
 from dotenv import load_dotenv
 from spacy.tokens import Doc
 
-from ..pipeline import LLMWrapper
+from spacy_llm.pipeline import LLMWrapper
 
 load_dotenv()  # take environment variables from .env.
 
