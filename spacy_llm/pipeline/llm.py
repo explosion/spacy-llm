@@ -26,7 +26,7 @@ _Response = TypeVar("_Response")
 _PromptGenerator = Callable[[Iterable[Doc]], Iterable[_Prompt]]
 _PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
-_CacheConfigType = Dict[str, Union[Optional[str], Optional[Path], bool, int]]
+_CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
 
 
 @Language.factory(
@@ -63,9 +63,9 @@ def make_llm(
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
         the extracted information).
     backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
-    cache (Dict[str, Union[Optional[str], Optional[Path], bool, int]]): Cache config. If the cache directory
-        `cache["path"]` is None, no data will be cached. If a path is set, processed docs will be serialized in the
-        cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed.
+    cache (Dict[str, Union[Optional[str], bool, int]]): Cache config. If the cache directory `cache["path"]` is None, no
+        data will be cached. If a path is set, processed docs will be serialized in the cache directory as binary .spacy
+        files. Docs found in the cache directory won't be reprocessed.
     """
     # Warn if types don't match.
     type_hints = {
@@ -117,9 +117,9 @@ class LLMWrapper(Pipe):
         parse (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable parsing LLM responses and
             updating Doc instances with the extracted information.
         backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
-        cache (Dict[str, Union[Optional[str], Optional[Path], bool, int]]): Cache config. If the cache directory
-            `cache["path"]` is None, no data will be cached. If a path is set, processed docs will be serialized in the
-            cache directory as binary .spacy files. Docs found in the cache directory won't be reprocessed.
+        cache (Dict[str, Union[Optional[str], bool, int]]): Cache config. If the cache directory `cache["path"]` is
+            None, no data will be cached. If a path is set, processed docs will be serialized in the cache directory as
+            binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
         self._template = template
@@ -127,8 +127,8 @@ class LLMWrapper(Pipe):
         self._backend = backend
         self._cache = Cache(
             path=cache["path"],  # type: ignore
-            batch_size=cache["batch_size"],  # type: ignore
-            max_n_batches=cache["max_n_batches"],  # type: ignore
+            batch_size=int(cache["batch_size"]),  # type: ignore
+            max_n_batches=int(cache["max_n_batches"]),  # type: ignore
             vocab=vocab,
         )
 
