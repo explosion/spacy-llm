@@ -69,9 +69,7 @@ class Cache:
         doc (Doc): Doc to add to persistence queue.
         """
         if self._path is None:
-            raise ValueError(
-                "Cache directory path was not configured. Documents can't be cached."
-            )
+            return
 
         self._docs_to_be_cached.append(doc)
         self._stats["added"] += 1
@@ -108,10 +106,6 @@ class Cache:
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
         """
-        if self._path is None:
-            raise ValueError(
-                "Cache directory path was not configured. Documents can't be cached."
-            )
         doc_hash = self._id([doc])
         batch_hash = self._index.get(doc_hash, None)
 
@@ -123,7 +117,11 @@ class Cache:
 
         # Doc's batch is currently not loaded.
         if batch_hash not in self._cached_docs:
-            # Discard batch, if necessary.
+            if self._path is None:
+                raise ValueError(
+                    "Cache directory path was not configured. Documents can't be read from cache."
+                )
+            # Discard batch, if maximal number of batches would be exceeded otherwise.
             if len(self._cached_docs) == self._max_n_batches:
                 self._cached_docs.pop(self._batch_hashes[0])
                 self._batch_hashes = self._batch_hashes[1:]
