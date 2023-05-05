@@ -76,7 +76,9 @@ def ner_zeroshot_task(
     {{ text }}
     """
 
-    label_list = [normalizer(l) if normalizer else l for l in labels.split(",")]
+    label_list = [
+        normalizer(label) if normalizer else label for label in labels.split(",")
+    ]
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
