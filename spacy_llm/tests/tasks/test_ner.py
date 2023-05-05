@@ -39,7 +39,7 @@ def test_ner_predict():
     """
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
-    text = "Marc and Bob both leave in Ireland."
+    text = "Marc and Bob both live in Ireland."
     doc = nlp(text)
     assert len(doc.ents) > 0
     for ent in doc.ents:
@@ -47,4 +47,17 @@ def test_ner_predict():
 
 
 def test_ner_io():
-    pass
+    orig_config = Config().from_str(cfg_string)
+    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    assert nlp.pipe_names == ["llm"]
+    # ensure you can save a pipeline to disk and run it after loading
+    with make_tempdir() as tmpdir:
+        nlp.to_disk(tmpdir)
+        nlp2 = spacy.load(tmpdir)
+    assert nlp2.pipe_names == ["llm"]
+    text = "Marc and Bob both live in Ireland."
+    doc = nlp2(text)
+    assert len(doc.ents) > 0
+    for ent in doc.ents:
+        print(ent.text, ent.label_)
+

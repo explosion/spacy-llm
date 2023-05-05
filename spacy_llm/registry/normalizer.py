@@ -3,19 +3,6 @@ from typing import Callable
 import spacy
 
 
-@spacy.registry.llm_misc("spacy.NoOpNormalizer.v1")
-def noop_normalizer() -> Callable[[str], str]:
-    """Return the labels as-is
-
-    RETURNS (Callable[[str], str])
-    """
-
-    def noop(s: str) -> str:
-        return s
-
-    return noop
-
-
 @spacy.registry.llm_misc("spacy.UppercaseNormalizer.v1")
 def uppercase_normalizer() -> Callable[[str], str]:
     """Return uppercase versions of the labels
