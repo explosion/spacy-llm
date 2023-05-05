@@ -60,4 +60,3 @@ def test_ner_io():
     assert len(doc.ents) > 0
     for ent in doc.ents:
         assert ent.label_ in ["PER", "ORG", "LOC"]
-

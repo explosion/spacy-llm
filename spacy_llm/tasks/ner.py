@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Tuple, Optional
+from typing import Callable, Iterable, Optional, Tuple
 
 import jinja2
 import spacy
