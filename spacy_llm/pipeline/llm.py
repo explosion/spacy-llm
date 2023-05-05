@@ -125,15 +125,11 @@ class LLMWrapper(Pipe):
         self._template = template
         self._parse = parse
         self._backend = backend
-        self._cache = (
-            Cache(
-                path=cache["path"],  # type: ignore
-                batch_size=cache["batch_size"],  # type: ignore
-                max_n_batches=cache["max_n_batches"],  # type: ignore
-                vocab=vocab,
-            )
-            if cache["path"]
-            else None
+        self._cache = Cache(
+            path=cache["path"],  # type: ignore
+            batch_size=cache["batch_size"],  # type: ignore
+            max_n_batches=cache["max_n_batches"],  # type: ignore
+            vocab=vocab,
         )
 
     def __call__(self, doc: Doc) -> Doc:
@@ -142,14 +138,17 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        # todo integrate Cache
-        docs = list(
-            self._parse(
-                [doc],
-                self._backend(self._template([doc])),
+        docs = [self._cache[doc]]
+        if docs[0] is None:
+            docs = list(
+                self._parse(
+                    [doc],
+                    self._backend(self._template([doc])),
+                )
             )
-        )
-        assert len(docs) == 1
+            assert len(docs) == 1
+            self._cache.add(docs[0])
+
         return docs[0]
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
@@ -159,15 +158,24 @@ class LLMWrapper(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
         """
-        # todo integrate Cache
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
+            is_cached = [doc in self._cache for doc in doc_batch]
+            noncached_doc_batch = [
+                doc for i, doc in enumerate(doc_batch) if not is_cached[i]
+            ]
+
             try:
-                for modified_doc in self._parse(
-                    doc_batch,
-                    self._backend(self._template(doc_batch)),
-                ):
-                    yield modified_doc
+                modified_docs = iter(
+                    self._parse(
+                        doc_batch, self._backend(self._template(noncached_doc_batch))
+                    )
+                )
+                for i, doc in enumerate(doc_batch):
+                    if is_cached[i]:
+                        yield self._cache[doc]
+                    else:
+                        yield next(modified_docs)
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
 

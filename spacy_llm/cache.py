@@ -40,7 +40,11 @@ class Cache:
         self._init_cache_index()
 
     def _init_cache_index(self) -> None:
-        """Init cache index."""
+        """Init cache index and directory."""
+        if self._path is None:
+            self._index = {}
+            return
+
         if self._path.exists() and not os.path.isdir(self._path):
             raise ValueError("Cache directory exists and is not a directory.")
         self._path.mkdir(parents=True, exist_ok=True)
@@ -53,7 +57,7 @@ class Cache:
             }
 
     @staticmethod
-    def _hash(docs: Iterable[Doc]) -> int:
+    def _batch_id(docs: Iterable[Doc]) -> int:
         """Hash docs.
         docs (Iterable[Doc]): Docs to hash.
         RETURN (int): Hash for this collection of docs.
@@ -71,7 +75,7 @@ class Cache:
 
     def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
-        batch_hash = self._hash(self._docs_to_be_cached)
+        batch_hash = self._batch_id(self._docs_to_be_cached)
         DocBin(docs=self._docs_to_be_cached, store_user_data=True).to_disk(
             self._path / f"{batch_hash}.spacy"
         )
@@ -82,13 +86,21 @@ class Cache:
         )
         self._docs_to_be_cached = []
 
+    def __contains__(self, doc: Doc) -> bool:
+        """Checks whether doc has been processed and cached.
+        doc (Doc): Doc to check for.
+        RETURNS (bool): Whether doc has been processed and cached.
+        """
+        return self._batch_id([doc]) in self._index
+
     def __getitem__(self, doc: Doc) -> Optional[Doc]:
         """Returns processed doc, if available in cache. Note that if doc is not in the set of currently loaded
         documents, its batch will be loaded (and an older batch potentially discarded from memory).
         If doc is not in cache, None is returned.
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
+        RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
         """
-        doc_hash = self._hash([doc])
+        doc_hash = self._batch_id([doc])
         batch_hash = self._index.get(doc_hash, None)
 
         # Doc is not in cache.
@@ -105,7 +117,7 @@ class Cache:
             # Load target batch.
             self._batch_hashes.append(batch_hash)
             self._cached_docs[batch_hash] = {
-                self._hash([proc_doc]): proc_doc
+                self._batch_id([proc_doc]): proc_doc
                 for proc_doc in DocBin()
                 .from_disk(self._path / f"{batch_hash}.spacy")
                 .get_docs(self._vocab)
