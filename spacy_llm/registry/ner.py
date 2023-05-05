@@ -5,9 +5,7 @@ import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-
-def normalize_label(label: str) -> str:
-    return label.lower()
+from .normalizer import noop_normalizer
 
 
 def find_substrings(
@@ -55,7 +53,7 @@ def find_substrings(
 
 @spacy.registry.llm_tasks("spacy.NERZeroShot.v1")
 def ner_task(
-    labels: Iterable[str],
+    labels: Iterable[str], normalizer: Callable[[str], str] = noop_normalizer()
 ) -> Tuple[
     Callable[[Iterable[Doc]], Iterable[str]],
     Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
@@ -78,7 +76,7 @@ def ner_task(
     {{ text }}
     """
 
-    labels = [normalize_label(label) for label in labels]
+    labels = [normalizer(label) for label in labels]
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
