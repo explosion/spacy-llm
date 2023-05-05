@@ -5,7 +5,7 @@ import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from ..normalizer import noop_normalizer
+from spacy_llm.registry.normalizer import noop_normalizer
 
 
 def find_substrings(

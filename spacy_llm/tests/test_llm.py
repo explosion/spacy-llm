@@ -1,13 +1,12 @@
 import warnings
-from typing import Any, Dict, Tuple, Iterable, Callable
+from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
 import spacy
+from dotenv import load_dotenv
 from spacy.tokens import Doc
 
 from ..pipeline import LLMWrapper
-
-from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env.
 
@@ -118,11 +117,11 @@ def test_type_checking() -> None:
     assert len(record) == 2
     assert (
         str(record[0].message)
-        == "Type returned from `template()` (`typing.Iterable[int]`) doesn't match type "
-        "expected by `backend()` (`typing.Iterable[str]`)."
+        == "Type returned from `task[0]` (`typing.Iterable[int]`) doesn't match type "
+        "expected by `backend` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)
-        == "Type returned from `backend()` (`typing.Iterable[str]`) doesn't match type "
-        "expected by `parse()` (`typing.Iterable[int]`)."
+        == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
+        "expected by `parse` (`typing.Iterable[int]`)."
     )
