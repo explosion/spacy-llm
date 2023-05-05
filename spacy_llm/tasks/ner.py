@@ -76,18 +76,16 @@ def ner_zeroshot_task(
     {{ text }}
     """
 
-    labels = [normalizer(l) if normalizer else l for l in labels.split(",")]
+    label_list = [normalizer(l) if normalizer else l for l in labels.split(",")]
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(template)
         for doc in docs:
-            prompt = _template.render(text=doc.text, labels=labels)
+            prompt = _template.render(text=doc.text, labels=label_list)
             yield prompt
 
-    def _format_response(
-        response: str, labels: Iterable[str]
-    ) -> Iterable[Tuple[str, Iterable[str]]]:
+    def _format_response(response: str) -> Iterable[Tuple[str, Iterable[str]]]:
         """Parse raw string response into a structured format"""
         output = []
         for line in response.strip().split("\n"):
@@ -95,7 +93,7 @@ def ner_zeroshot_task(
             # <entity label>: ent1, ent2
             if line and ":" in line:
                 label, phrases = line.split(":", 1)
-                if label in labels:
+                if label in label_list:
                     # Get the phrases / spans for each entity
                     if phrases.strip():
                         _phrases = [p.strip() for p in phrases.strip().split(",")]
@@ -107,8 +105,8 @@ def ner_zeroshot_task(
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, prompt_responses):
             spans = []
-            for label, phrases in _format_response(prompt_response, labels):
-                if label in labels:
+            for label, phrases in _format_response(prompt_response):
+                if label in label_list:
                     # For each phrase, find the substrings in the text
                     # and create a Span
                     offsets = find_substrings(doc.text, phrases)
