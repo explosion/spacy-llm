@@ -1,14 +1,12 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar
+from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast
 
 import spacy
 from spacy import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
-
-from .. import registry  # noqa: F401
 
 _Prompt = TypeVar("_Prompt")
 _Response = TypeVar("_Response")
