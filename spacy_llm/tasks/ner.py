@@ -51,7 +51,7 @@ def find_substrings(
 
 @spacy.registry.llm_tasks("spacy.NERZeroShot.v1")
 def ner_zeroshot_task(
-    labels: Iterable[str],
+    labels: str,
     normalizer: Optional[Callable[[str], str]] = None,
 ) -> Tuple[
     Callable[[Iterable[Doc]], Iterable[str]],
@@ -59,7 +59,7 @@ def ner_zeroshot_task(
 ]:
     """Default template where English is used for the task instruction
 
-    labels (Iterable[str]): list of labels to pass to the template.
+    labels (str): list of labels to pass to the template, as comma-separated list.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function
     RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
     """
@@ -76,7 +76,7 @@ def ner_zeroshot_task(
     {{ text }}
     """
 
-    labels = [normalizer(l) if normalizer else l for l in labels]
+    labels = [normalizer(l) if normalizer else l for l in labels.split(",")]
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()

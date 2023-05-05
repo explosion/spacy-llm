@@ -15,7 +15,7 @@ factory = "llm"
 
 [components.llm.task]
 @llm_tasks: "spacy.NERZeroShot.v1"
-labels: ["PER", "ORG", "LOC"]}
+labels: PER,ORG,LOC
 
 [components.llm.backend]
 @llm_backends: "spacy.MiniChain.v1"
@@ -43,7 +43,7 @@ def test_ner_predict():
     doc = nlp(text)
     assert len(doc.ents) > 0
     for ent in doc.ents:
-        print(ent.text, ent.label_)
+        assert ent.label_ in ["PER", "ORG", "LOC"]
 
 
 def test_ner_io():
@@ -59,5 +59,5 @@ def test_ner_io():
     doc = nlp2(text)
     assert len(doc.ents) > 0
     for ent in doc.ents:
-        print(ent.text, ent.label_)
+        assert ent.label_ in ["PER", "ORG", "LOC"]
 
