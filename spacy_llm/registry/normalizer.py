@@ -3,7 +3,7 @@ from typing import Callable
 import spacy
 
 
-@spacy.registry.llm_misc("spacy.UppercaseNormalizer.v1")
+@spacy.registry.misc("spacy.UppercaseNormalizer.v1")
 def uppercase_normalizer() -> Callable[[str], str]:
     """Return uppercase versions of the labels
 
@@ -16,7 +16,7 @@ def uppercase_normalizer() -> Callable[[str], str]:
     return uppercase
 
 
-@spacy.registry.llm_misc("spacy.LowercaseNormalizer.v1")
+@spacy.registry.misc("spacy.LowercaseNormalizer.v1")
 def lowercase_normalizer() -> Callable[[str], str]:
     """Return lowercase versions of the labels
 
