@@ -14,8 +14,7 @@ def find_substrings(
     single_match: bool = False
 ) -> Iterable[Tuple[int, int]]:
     """Given a list of substrings, find their character start and end positions
-    in a text. The substrings are assumed to be sorted by the order of their
-    occurrence in the text."""
+    in a text"""
 
     def _unique(items: Iterable[str]) -> Iterable[str]:
         """Remove duplicates without changing order"""
