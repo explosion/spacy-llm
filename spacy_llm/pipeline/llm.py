@@ -3,7 +3,7 @@ import warnings
 from pathlib import Path
 
 from typing import Callable, Iterable, Tuple, Iterator
-from typing import cast, TypeVar, Union, Dict, Optional, Any
+from typing import cast, TypeVar, Union, Dict, Optional
 
 import spacy
 from spacy import Language, Vocab
