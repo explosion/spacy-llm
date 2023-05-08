@@ -92,6 +92,7 @@ def ner_zeroshot_task(
     def _format_response(response: str) -> Iterable[Tuple[str, Iterable[str]]]:
         """Parse raw string response into a structured format"""
         output = []
+        assert normalizer is not None
         for line in response.strip().split("\n"):
             # Check if the formatting we want exists
             # <entity label>: ent1, ent2
