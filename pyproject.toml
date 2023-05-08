@@ -13,10 +13,5 @@ select = [
     "W",    # pycodestyle warnings
     "F",    # Pyflakes
     "Q",    # flake8-quotes
-    "I001", # isort
     "T201"  # flake8-print
 ]
-
-[tool.ruff.isort]
-extra-standard-library = ["typing_extensions"]
-known-first-party = ["spacy_llm"]
