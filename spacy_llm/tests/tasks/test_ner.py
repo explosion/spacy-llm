@@ -75,13 +75,13 @@ def test_ner_io():
             "Felipe and Jaime went to the library.",
             ["Felipe", "Jaime", "library"],
             ["Felipe", "Jaime", "library"],
-            [(0, 6), (11, 16), (29, 36)]
+            [(0, 6), (11, 16), (29, 36)],
         ),  # simple
         (
             "The Manila Observatory was founded in 1865 in Manila.",
             ["Manila", "The Manila Observatory"],
             ["Manila", "Manila", "The Manila Observatory"],
-            [(4, 10), (46, 52), (0, 22)]
+            [(4, 10), (46, 52), (0, 22)],
         ),  # overlapping and duplicated
         (
             "Take the road from downtown and turn left at the public market.",
@@ -92,7 +92,9 @@ def test_ner_io():
         ),
     ],
 )
-def test_ensure_offsets_correspond_to_substrings(text, input_strings, result_strings, result_offsets):
+def test_ensure_offsets_correspond_to_substrings(
+    text, input_strings, result_strings, result_offsets
+):
     offsets = find_substrings(text, input_strings)
     # Compare strings instead of offsets, but we need to get
     # those strings first from the text
