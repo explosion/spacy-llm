@@ -4,10 +4,9 @@ from typing import Any, Callable, Dict, Iterable
 import spacy
 from thinc.compat import has_torch_cuda_gpu
 
-from ..compat import (has_accelerate, has_torch, has_transformers, torch,
-                      transformers)
+from ..compat import has_accelerate, has_torch, has_transformers, torch, transformers
 
-DEFAULT_HF_DICT = {
+DEFAULT_HF_DICT: Dict[str, Any] = {
     "trust_remote_code": True,
 }
 
