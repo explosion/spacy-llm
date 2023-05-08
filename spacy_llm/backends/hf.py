@@ -1,16 +1,28 @@
+import warnings
 from typing import Any, Callable, Dict, Iterable
 
 import spacy
+from thinc.compat import has_torch_cuda_gpu
 
 from ..compat import has_torch, has_transformers, torch, transformers
 
 DEFAULT_HF_DICT = {
     "trust_remote_code": True,
-    "device": "cuda:0",
 }
 
 if has_torch:
     DEFAULT_HF_DICT["torch_dtype"] = torch.bfloat16
+    if has_torch_cuda_gpu:
+        # this ensures it fails explicitely when GPU is not enabled or sufficient
+        DEFAULT_HF_DICT["device"] = "cuda:0"
+    else:
+        # accelerate will distribute the layers depending on availability on GPU/CPU/hard drive
+        DEFAULT_HF_DICT["device_map"] = "auto"
+        warnings.warn(
+            f"Couldn't find a CUDA GPU, so the setting 'device_map:auto' will be used, which may result "
+            f"in the LLM being loaded (partly) on the CPU or even the hard disk, which may be slow. "
+            f"Install cuda to be able to load and run the LLM on the GPU instead."
+        )
 
 
 def _check_installation() -> None:
