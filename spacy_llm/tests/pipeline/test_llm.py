@@ -47,6 +47,7 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
+@pytest.mark.external
 @pytest.mark.parametrize(
     "config",
     (

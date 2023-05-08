@@ -13,7 +13,6 @@ def backend_rest(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
     api (str): Name of any API. Currently supported: "OpenAI".
-    query (Callable[[Backend, Iterable[str]], Iterable[str]]): Callable implementing querying this API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the Backend instance.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
