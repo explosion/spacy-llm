@@ -65,6 +65,12 @@ def test_llm_serialize_disk():
             "api": "openai",
             "config": {"temperature": 0.3},
         },
+        {
+            "query": "spacy.CallMinimal.v1",
+            "backend": "spacy.Minimal.v1",
+            "api": "OpenAI",
+            "config": {"temperature": 0.3, "model": "text-davinci-003"},
+        },
     ),
 )
 def test_integrations(config: Dict[str, Any]):
