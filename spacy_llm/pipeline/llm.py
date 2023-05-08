@@ -39,7 +39,7 @@ _CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
 def make_llm(
     nlp: Language,
     name: str,
-    task: Tuple[_PromptGenerator, _ResponseParser],
+    task: Optional[Tuple[_PromptGenerator, _ResponseParser]],
     backend: _PromptExecutor,
     cache: _CacheConfigType,
 ) -> "LLMWrapper":
