@@ -148,13 +148,12 @@ def test_minimal_backend_error_handling(strict: bool):
     )
 
     if strict:
-        with pytest.raises(ValueError) as error:
+        with pytest.raises(
+            ValueError,
+            match="API call failed: {'error': {'message': 'The model `x-text-davinci-003` does not exist', 'type': "
+            "'invalid_request_error', 'param': None, 'code': None}}.",
+        ):
             nlp("this is a test")
-        assert (
-            str(error.value)
-            == "API call failed: {'error': {'message': 'The model `x-text-davinci-003` does not "
-            "exist', 'type': 'invalid_request_error', 'param': None, 'code': None}}."
-        )
     else:
         response = nlp.get_pipe("llm")._backend(["this is a test"])
         assert len(response) == 1
