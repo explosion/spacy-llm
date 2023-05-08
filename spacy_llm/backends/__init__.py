@@ -1,5 +1,6 @@
 from .langchain import backend_langchain, query_langchain
 from .minichain import backend_minichain, query_minichain
+from .rest import backend_rest
 
 from dotenv import load_dotenv
 
@@ -10,4 +11,5 @@ __all__ = [
     "query_langchain",
     "backend_minichain",
     "backend_langchain",
+    "backend_rest",
 ]
