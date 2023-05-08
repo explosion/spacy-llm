@@ -10,7 +10,7 @@ from spacy.tokens import Doc, DocBin
 class Cache:
     """Utility class handling caching functionality for the `llm` component."""
 
-    _index_name: str = "index.jsonl"
+    _INDEX_NAME: str = "index.jsonl"
 
     def __init__(
         self, path: Union[str, Path], batch_size: int, max_n_batches: int, vocab: Vocab
@@ -25,11 +25,11 @@ class Cache:
         # Number of Docs in one batch.
         self._batch_size = batch_size
         # Max. number of batches to keep in memory.
-        self._max_n_batches = max_n_batches
+        self._max_n_batches_in_mem = max_n_batches
         self._vocab = vocab
 
         # Stores doc hash -> batch hash to allow efficient lookup of available Docs.
-        self._index: Dict[str, str] = {}
+        self._doc2batch: Dict[str, str] = {}
         # Hashes of batches loaded into memory.
         self._batch_hashes: List[str] = []
         # Container for currently loaded batch of Docs (batch hash -> doc hash -> Doc).
@@ -50,10 +50,18 @@ class Cache:
             raise ValueError("Cache directory exists and is not a directory.")
         self._path.mkdir(parents=True, exist_ok=True)
 
-        index_path = self._path / Cache._index_name
+        index_path = self._index_path
         if index_path.exists():
             for rec in srsly.read_jsonl(index_path):
-                self._index |= rec
+                self._doc2batch = {**self._doc2batch, **rec}
+
+    @property
+    def _index_path(self) -> Path:
+        """Returns full path to index file.
+        RETURNS (Path): Full path to index file.
+        """
+        assert self._path is not None
+        return self._path / Cache._INDEX_NAME
 
     @staticmethod
     def _id(docs: Iterable[Doc]) -> str:
@@ -84,7 +92,7 @@ class Cache:
             self._path / f"{batch_hash}.spacy"
         )
         srsly.write_jsonl(
-            self._path / Cache._index_name,
+            self._index_path,
             lines=[{self._id([doc]): batch_hash} for doc in self._docs_to_be_cached],
             append=True,
             append_new_line=False,
@@ -97,7 +105,7 @@ class Cache:
         doc (Doc): Doc to check for.
         RETURNS (bool): Whether doc has been processed and cached.
         """
-        return self._id([doc]) in self._index
+        return self._id([doc]) in self._doc2batch
 
     def __getitem__(self, doc: Doc) -> Optional[Doc]:
         """Returns processed doc, if available in cache. Note that if doc is not in the set of currently loaded
@@ -107,7 +115,7 @@ class Cache:
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
         """
         doc_hash = self._id([doc])
-        batch_hash = self._index.get(doc_hash, None)
+        batch_hash = self._doc2batch.get(doc_hash, None)
 
         # Doc is not in cache.
         if not batch_hash:
@@ -122,7 +130,7 @@ class Cache:
                     "Cache directory path was not configured. Documents can't be read from cache."
                 )
             # Discard batch, if maximal number of batches would be exceeded otherwise.
-            if len(self._cached_docs) == self._max_n_batches:
+            if len(self._cached_docs) == self._max_n_batches_in_mem:
                 self._cached_docs.pop(self._batch_hashes[0])
                 self._batch_hashes = self._batch_hashes[1:]
 
