@@ -20,8 +20,9 @@ packaged together as _tasks_.
 
 ### Configuration
 
-The code for templating, prompting and parsing has to be supplied to the `llm` pipeline component using spaCy's config 
-system. The default configuration is as follows:
+The code for templating, prompting and parsing has to be supplied to the `llm` pipeline component using [spaCy's config 
+system](https://explosion.ai/blog/spacy-v3-project-config-systems). The default configuration is as follows:
+
 ```ini
 [components.llm] 
 factory = "llm"

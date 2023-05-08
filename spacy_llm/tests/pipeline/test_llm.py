@@ -3,12 +3,9 @@ from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
 import spacy
-from dotenv import load_dotenv
 from spacy.tokens import Doc
 
-from ..pipeline import LLMWrapper
-
-load_dotenv()  # take environment variables from .env.
+from spacy_llm.pipeline import LLMWrapper
 
 
 @pytest.fixture
