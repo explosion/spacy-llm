@@ -224,5 +224,3 @@ def test_caching() -> None:
             },
         )
         assert (tmpdir / "new_dir").exists()
-
-        # todo Documents can't be added if not path was configured.
