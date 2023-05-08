@@ -27,12 +27,12 @@ _CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
     requires=[],
     assigns=[],
     default_config={
-        "task": {"@llm_tasks": "spacy.NoOp.v1"},
+        "task": None,
         "backend": {
-            "@llm_backends": "spacy.MiniChain.v1",
+            "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
-            "config": {},
-            "query": {"@llm_queries": "spacy.RunMiniChain.v1"},
+            "config": {"model": "text-davinci-003"},
+            "strict": True,
         },
         "cache": {"path": None, "batch_size": 64, "max_n_batches_in_mem": 4},
     },
@@ -60,6 +60,11 @@ def make_llm(
         data will be cached. If a path is set, processed docs will be serialized in the cache directory as binary .spacy
         files. Docs found in the cache directory won't be reprocessed.
     """
+    if task is None:
+        raise ValueError(
+            "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
+            "'spacy.NER.v1'})."
+        )
     _validate_types(task, backend)
 
     return LLMWrapper(
