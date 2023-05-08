@@ -108,9 +108,9 @@ def test_ensure_offsets_correspond_to_substrings(
     [
         # simple
         (
-            "Felipe and Jaime went to the library.",
-            "PER: Felipe, Jaime\nLOC: library",
-            [("Felipe", "PER"), ("Jaime", "PER"), ("library", "LOC")],
+            "Jean Jacques and Jaime went to the library.",
+            "PER: Jean Jacques, Jaime\nLOC: library",
+            [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "LOC")],
         ),
         # overlapping: should only return the longest span
         (
@@ -143,44 +143,44 @@ def test_ner_zero_shot_task(text, response, gold_ents):
     "response,normalizer,gold_ents",
     [
         (
-            "PER: Felipe, Jaime",
+            "PER: Jean Jacques, Jaime",
             None,
-            [("Felipe", "PER"), ("Jaime", "PER")],
+            [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "PER: Felipe, Jaime",
+            "PER: Jean Jacques, Jaime",
             noop_normalizer(),
-            [("Felipe", "PER"), ("Jaime", "PER")],
+            [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "PER: Felipe, Jaime",
+            "PER: Jean Jacques, Jaime",
             lowercase_normalizer(),
-            [("Felipe", "PER"), ("Jaime", "PER")],
+            [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Felipe, Jaime",
+            "per: Jean Jacques, Jaime",
             None,
             [],
         ),
         (
-            "per: Felipe\nPER: Jaime",
+            "per: Jean Jacques\nPER: Jaime",
             lowercase_normalizer(),
-            [("Felipe", "PER"), ("Jaime", "PER")],
+            [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Felipe, Jaime\nOrg: library",
+            "per: Jean Jacques, Jaime\nOrg: library",
             lowercase_normalizer(),
-            [("Felipe", "PER"), ("Jaime", "PER"), ("library", "ORG")],
+            [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "ORG")],
         ),
         (
-            "per: Felipe, Jaime\nRANDOM: library",
+            "per: Jean Jacques, Jaime\nRANDOM: library",
             lowercase_normalizer(),
-            [("Felipe", "PER"), ("Jaime", "PER")],
+            [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
     ],
 )
 def test_ner_labels(response, normalizer, gold_ents):
-    text = "Felipe and Jaime went to the library."
+    text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
     _, parser = ner_zeroshot_task(labels=labels, normalizer=normalizer)
     # Prepare doc
@@ -193,4 +193,32 @@ def test_ner_labels(response, normalizer, gold_ents):
     assert pred_ents == gold_ents
 
 
-# TODO: out of token boundary
+@pytest.mark.parametrize(
+    "response,gold_ents",
+    [
+        (
+            "PER: Jacq",
+            [],
+        ),
+        (
+            "PER: Jean Jacques, aim",
+            [("Jean Jacques", "PER")],
+        ),
+        (
+            "PER: random",
+            [],
+        ),
+    ],
+)
+def test_ner_unaligned_response(response, gold_ents):
+    text = "Jean Jacques and Jaime went to the library."
+    labels = "PER,ORG,LOC"
+    _, parser = ner_zeroshot_task(labels=labels, normalizer=lowercase_normalizer())
+    # Prepare doc
+    nlp = spacy.blank("xx")
+    doc_in = nlp.make_doc(text)
+    # Pass to the parser
+    # Note: parser() returns a list
+    doc_out = list(parser([doc_in], [response]))[0]
+    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
+    assert pred_ents == gold_ents
