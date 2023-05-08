@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
 import spacy
-import srsly
 from dotenv import load_dotenv
 from spacy.tokens import Doc
 
@@ -66,12 +65,6 @@ def test_llm_serialize_disk():
             "api": "openai",
             "config": {"temperature": 0.3},
         },
-        {
-            "query": "spacy.CallREST.v1",
-            "backend": "spacy.REST.v1",
-            "api": "OpenAI",
-            "config": {"temperature": 0.3, "model": "text-davinci-003"},
-        },
     ),
 )
 def test_backends(config: Dict[str, Any]):
@@ -133,34 +126,3 @@ def test_type_checking() -> None:
         == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
         "expected by `parse` (`typing.Iterable[int]`)."
     )
-
-
-@pytest.mark.parametrize("strict", (False, True))
-def test_rest_backend_error_handling(strict: bool):
-    """Test error handling for default/minimal REST backend.
-    strict (bool): Whether to use strict mode.
-    """
-    nlp = spacy.blank("en")
-    nlp.add_pipe(
-        "llm",
-        config={
-            "task": {"@llm_tasks": "spacy.NoOp.v1"},
-            "backend": {"config": {"model": "x-text-davinci-003"}, "strict": strict},
-        },
-    )
-
-    if strict:
-        with pytest.raises(
-            ValueError,
-            match="API call failed: {'error': {'message': 'The model `x-text-davinci-003` does not exist', 'type': "
-            "'invalid_request_error', 'param': None, 'code': None}}.",
-        ):
-            nlp("this is a test")
-    else:
-        response = nlp.get_pipe("llm")._backend(["this is a test"])
-        assert len(response) == 1
-        response = srsly.json_loads(response[0])
-        assert (
-            response["error"]["message"]
-            == "The model `x-text-davinci-003` does not exist"
-        )
