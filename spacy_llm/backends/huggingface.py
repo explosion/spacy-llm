@@ -6,18 +6,18 @@ from thinc.compat import has_torch_cuda_gpu
 
 from ..compat import has_accelerate, has_torch, has_transformers, torch, transformers
 
-DEFAULT_HF_DICT: Dict[str, Any] = {
+DEFAULT_HF_CONFIG: Dict[str, Any] = {
     "trust_remote_code": True,
 }
 
 if has_torch:
-    DEFAULT_HF_DICT["torch_dtype"] = torch.bfloat16
+    DEFAULT_HF_CONFIG["torch_dtype"] = torch.bfloat16
     if has_torch_cuda_gpu:
         # this ensures it fails explicitely when GPU is not enabled or sufficient
-        DEFAULT_HF_DICT["device"] = "cuda:0"
+        DEFAULT_HF_CONFIG["device"] = "cuda:0"
     elif has_accelerate:
         # accelerate will distribute the layers depending on availability on GPU/CPU/hard drive
-        DEFAULT_HF_DICT["device_map"] = "auto"
+        DEFAULT_HF_CONFIG["device_map"] = "auto"
         warnings.warn(
             "Couldn't find a CUDA GPU, so the setting 'device_map:auto' will be used, which may result "
             "in the LLM being loaded (partly) on the CPU or even the hard disk, which may be slow. "
@@ -47,7 +47,7 @@ def _check_installation() -> None:
 @spacy.registry.llm_backends("spacy.HuggingFace.v1")
 def backend_hf(
     model: str,
-    config: Dict[Any, Any] = DEFAULT_HF_DICT,
+    config: Dict[Any, Any] = DEFAULT_HF_CONFIG,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable that can execute a set of prompts and return the raw responses.
     model (str): Name of the HF model.
