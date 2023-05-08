@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, Iterable
 import spacy
 from spacy.util import SimpleFrozenDict
 
-from ..compat import minichain, has_minichain
+from ..compat import has_minichain, minichain
 
 
 def _check_installation() -> None:

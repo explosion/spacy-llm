@@ -1,5 +1,6 @@
 try:
     import langchain
+
     has_langchain = True
 except (ImportError, AttributeError):
     langchain = None
@@ -7,6 +8,7 @@ except (ImportError, AttributeError):
 
 try:
     import minichain
+
     has_minichain = True
 except (ImportError, AttributeError):
     minichain = None
