@@ -163,7 +163,17 @@ def test_ner_zero_shot_task(text, response, gold_ents):
             [],
         ),
         (
-            "per: Felipe, Jaime",
+            "per: Felipe\nPER: Jaime",
+            lowercase_normalizer(),
+            [("Felipe", "PER"), ("Jaime", "PER")],
+        ),
+        (
+            "per: Felipe, Jaime\nOrg: library",
+            lowercase_normalizer(),
+            [("Felipe", "PER"), ("Jaime", "PER"), ("library", "ORG")],
+        ),
+        (
+            "per: Felipe, Jaime\nRANDOM: library",
             lowercase_normalizer(),
             [("Felipe", "PER"), ("Jaime", "PER")],
         ),
@@ -177,13 +187,10 @@ def test_ner_labels(response, normalizer, gold_ents):
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
-    # Note: parser() returns a list so we get what's inside
+    # Note: parser() returns a list
     doc_out = list(parser([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
 
 # TODO: out of token boundary
-
-
-# TODO: unknown labels
