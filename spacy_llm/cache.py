@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Dict, Union, Optional, Iterable, List
 
-import srsly
+import srsly  # noqa: F401
 from spacy import Vocab
 from spacy.tokens import Doc, DocBin
 
@@ -42,7 +42,12 @@ class Cache:
         # Queue for processed, not yet persisted docs.
         self._cache_queue: List[Doc] = []
         # Statistics.
-        self._stats = {"hit": 0, "missed": 0, "added": 0, "persisted": 0}
+        self._stats: Dict[str, int] = {
+            "hit": 0,
+            "missed": 0,
+            "added": 0,
+            "persisted": 0,
+        }
 
         self._init_cache_index()
 

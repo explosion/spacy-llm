@@ -43,7 +43,7 @@ def test_caching() -> None:
         for rec in index:
             index_dict = {**index_dict, **{int(k): int(v) for k, v in rec.items()}}
         assert len(index) == len(index_dict) == n
-        cache = nlp.get_pipe("llm")._cache
+        cache = nlp.get_pipe("llm")._cache  # type: ignore
         assert cache._stats["hit"] == 0
         assert cache._stats["missed"] == n
         assert cache._stats["added"] == n
@@ -67,7 +67,7 @@ def test_caching() -> None:
         config["cache"]["path"] = str(tmpdir)  # type: ignore
         nlp_2.add_pipe("llm", config=config)
         [nlp_2(text) for text in texts]
-        cache = nlp_2.get_pipe("llm")._cache
+        cache = nlp_2.get_pipe("llm")._cache  # type: ignore
         assert cache._stats["hit"] == n
         assert cache._stats["missed"] == 0
         assert cache._stats["added"] == 0
