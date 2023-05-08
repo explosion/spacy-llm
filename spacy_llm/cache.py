@@ -27,8 +27,6 @@ class Cache:
         """
         self._path = Path(path) if path else None
 
-        print("path", self._path)
-
         # Number of Docs in one batch.
         self._batch_size = batch_size
         # Max. number of batches to keep in memory.
@@ -74,12 +72,20 @@ class Cache:
         return self._path / Cache._INDEX_NAME
 
     @staticmethod
-    def _id(docs: Iterable[Doc]) -> int:
-        """Generate unique ID for docs.
-        docs (Iterable[Doc]): Docs to generate a unique ID for.
-        RETURN (int): Unique ID for this collection of docs.
+    def _doc_id(doc: Doc) -> int:
+        """Generate a unique ID for one doc.
+        doc (Doc): Doc to generate a unique ID for.
+        RETURN (int): Unique ID for this doc.
         """
-        return sum(sum(token.orth for token in doc) for doc in docs)
+        return sum(token.orth for token in doc)
+
+    @staticmethod
+    def _batch_id(doc_ids: Iterable[int]) -> int:
+        """Generate a unique ID for a batch, given a set of doc ids
+        doc_ids (Iterable[int]): doc ids
+        RETURN (int): Unique ID for this batch.
+        """
+        return sum(doc_id for doc_id in doc_ids)
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc. Note: Adding a doc does _not_ mean that this doc is immediately persisted to disk. This
@@ -97,8 +103,8 @@ class Cache:
     def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
         assert self._path
-        doc_hashes = [self._id([doc]) for doc in self._cache_queue]
-        batch_id = sum(doc_hashes)
+        doc_hashes = [self._doc_id(doc) for doc in self._cache_queue]
+        batch_id = self._batch_id(doc_hashes)
         DocBin(docs=self._cache_queue, store_user_data=True).to_disk(
             self._path / f"{batch_id}.spacy"
         )
@@ -116,7 +122,7 @@ class Cache:
         doc (Doc): Doc to check for.
         RETURNS (bool): Whether doc has been processed and cached.
         """
-        return self._id([doc]) in self._doc2batch
+        return self._doc_id(doc) in self._doc2batch
 
     def __getitem__(self, doc: Doc) -> Optional[Doc]:
         """Returns processed doc, if available in cache. Note that if doc is not in the set of currently loaded
@@ -125,7 +131,7 @@ class Cache:
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
         """
-        doc_id = self._id([doc])
+        doc_id = self._doc_id(doc)
         batch_id = self._doc2batch.get(doc_id, None)
 
         # Doc is not in cache.
@@ -148,7 +154,7 @@ class Cache:
             # Load target batch.
             self._batch_hashes.append(batch_id)
             self._cached_docs[batch_id] = {
-                self._id([proc_doc]): proc_doc
+                self._doc_id(proc_doc): proc_doc
                 for proc_doc in DocBin()
                 .from_disk(self._path / f"{batch_id}.spacy")
                 .get_docs(self._vocab)

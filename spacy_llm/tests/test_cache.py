@@ -49,13 +49,14 @@ def test_caching() -> None:
         assert cache._stats["persisted"] == n
         # Check whether docs are in the batch files they are supposed to be in.
         for doc in docs:
-            doc_id = Cache._id([doc])
+            doc_id = Cache._doc_id(doc)
             batch_id = index_dict[doc_id]
-            batch_docs = list(
+            batch_docs = (
                 DocBin().from_disk(tmpdir / f"{batch_id}.spacy").get_docs(nlp.vocab)
             )
-            assert Cache._id(batch_docs) == batch_id
-            assert doc_id in {Cache._id([batch_doc]) for batch_doc in batch_docs}
+            doc_ids = [Cache._doc_id(d) for d in batch_docs]
+            assert Cache._batch_id(doc_ids) == batch_id
+            assert doc_id in doc_ids
 
         #######################################################
         # Test cache reading
