@@ -47,7 +47,6 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
-@pytest.mark.external
 @pytest.mark.parametrize(
     "config",
     (
@@ -65,8 +64,8 @@ def test_llm_serialize_disk():
         },
     ),
 )
-def test_backends(config: Dict[str, Any]):
-    """Test simple runs with all supported backends."""
+def test_integrations(config: Dict[str, Any]):
+    """Test simple runs with all supported integrations."""
     nlp = spacy.blank("en")
     nlp.add_pipe(
         "llm",
