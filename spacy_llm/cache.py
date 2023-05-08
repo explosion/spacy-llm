@@ -33,11 +33,11 @@ class Cache:
         self._vocab = vocab
 
         # Stores doc hash -> batch hash to allow efficient lookup of available Docs.
-        self._doc2batch: Dict[str, str] = {}
+        self._doc2batch: Dict[int, int] = {}
         # Hashes of batches loaded into memory.
-        self._batch_hashes: List[str] = []
+        self._batch_hashes: List[int] = []
         # Container for currently loaded batch of Docs (batch hash -> doc hash -> Doc).
-        self._cached_docs: Dict[str, Dict[str, Doc]] = {}
+        self._cached_docs: Dict[int, Dict[int, Doc]] = {}
         # Queue for processed, not yet persisted docs.
         self._cache_queue: List[Doc] = []
         # Statistics.
@@ -57,7 +57,10 @@ class Cache:
         index_path = self._index_path
         if index_path.exists():
             for rec in srsly.read_jsonl(index_path):
-                self._doc2batch = {**self._doc2batch, **rec}
+                self._doc2batch = {
+                    **self._doc2batch,
+                    **{int(k): int(v) for k, v in rec.items()},
+                }
 
     @property
     def _index_path(self) -> Path:
@@ -68,12 +71,12 @@ class Cache:
         return self._path / Cache._INDEX_NAME
 
     @staticmethod
-    def _id(docs: Iterable[Doc]) -> str:
+    def _id(docs: Iterable[Doc]) -> int:
         """Generate unique ID for docs.
         docs (Iterable[Doc]): Docs to generate a unique ID for.
-        RETURN (str): Unique ID for this collection of docs.
+        RETURN (int): Unique ID for this collection of docs.
         """
-        return str(sum(sum(token.orth for token in doc) for doc in docs))
+        return sum(sum(token.orth for token in doc) for doc in docs)
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc. Note: Adding a doc does _not_ mean that this doc is immediately persisted to disk. This
@@ -91,13 +94,14 @@ class Cache:
     def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
         assert self._path
-        batch_hash = self._id(self._cache_queue)
+        doc_hashes = [self._id([doc]) for doc in self._cache_queue]
+        batch_id = sum(doc_hashes)
         DocBin(docs=self._cache_queue, store_user_data=True).to_disk(
-            self._path / f"{batch_hash}.spacy"
+            self._path / f"{batch_id}.spacy"
         )
         srsly.write_jsonl(
             self._index_path,
-            lines=[{self._id([doc]): batch_hash} for doc in self._cache_queue],
+            lines=[{str(doc_hash): str(batch_id)} for doc_hash in doc_hashes],
             append=True,
             append_new_line=False,
         )
@@ -118,17 +122,17 @@ class Cache:
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
         """
-        doc_hash = self._id([doc])
-        batch_hash = self._doc2batch.get(doc_hash, None)
+        doc_id = self._id([doc])
+        batch_id = self._doc2batch.get(doc_id, None)
 
         # Doc is not in cache.
-        if not batch_hash:
+        if not batch_id:
             self._stats["missed"] += 1
             return None
         self._stats["hit"] += 1
 
         # Doc's batch is currently not loaded.
-        if batch_hash not in self._cached_docs:
+        if batch_id not in self._cached_docs:
             if self._path is None:
                 raise ValueError(
                     "Cache directory path was not configured. Documents can't be read from cache."
@@ -139,12 +143,12 @@ class Cache:
                 self._batch_hashes = self._batch_hashes[1:]
 
             # Load target batch.
-            self._batch_hashes.append(batch_hash)
-            self._cached_docs[batch_hash] = {
+            self._batch_hashes.append(batch_id)
+            self._cached_docs[batch_id] = {
                 self._id([proc_doc]): proc_doc
                 for proc_doc in DocBin()
-                .from_disk(self._path / f"{batch_hash}.spacy")
+                .from_disk(self._path / f"{batch_id}.spacy")
                 .get_docs(self._vocab)
             }
 
-        return self._cached_docs[batch_hash][doc_hash]
+        return self._cached_docs[batch_id][doc_id]
