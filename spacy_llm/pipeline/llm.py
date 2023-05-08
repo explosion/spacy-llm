@@ -161,7 +161,7 @@ class LLMWrapper(Pipe):
         self._cache = Cache(
             path=cache["path"],  # type: ignore
             batch_size=int(cache["batch_size"]),  # type: ignore
-            max_n_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
+            max_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
             vocab=vocab,
         )
 
