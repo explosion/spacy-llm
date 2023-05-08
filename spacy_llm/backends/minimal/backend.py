@@ -50,17 +50,23 @@ class Backend:
         }
         api_responses: List[str] = []
 
-        for prompt in prompts:
-            json_data = {"prompt": prompt, **self._config}
-            response = requests.post(
-                "https://api.openai.com/v1/completions", headers=headers, json=json_data
-            ).json()
-            if "error" in response:
-                if self._strict:
-                    raise ValueError(f"API call failed: {response}.")
-                else:
-                    api_responses.append(srsly.json_dumps(response))
+        prompts = list(prompts)
+        json_data = {"prompt": prompts, **self._config}
+        responses = requests.post(
+            "https://api.openai.com/v1/completions", headers=headers, json=json_data
+        ).json()
+
+        if "error" in responses:
+            if self._strict:
+                raise ValueError(f"API call failed: {responses}.")
             else:
-                api_responses.append(response["choices"][0]["text"])
+                return [srsly.json_dumps(responses)] * len(prompts)
+        assert len(responses["choices"]) == len(prompts)
+
+        for prompt, response in zip(prompts, responses["choices"]):
+            if "text" in response:
+                api_responses.append(response["text"])
+            else:
+                api_responses.append(srsly.json_dumps(response))
 
         return api_responses
