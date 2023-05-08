@@ -38,9 +38,9 @@ def test_caching() -> None:
         #######################################################
 
         index = list(srsly.read_jsonl(tmpdir / "index.jsonl"))
-        index_dict: Dict[str, str] = {}
+        index_dict: Dict[int, int] = {}
         for rec in index:
-            index_dict |= rec
+            index_dict = {**index_dict, **{int(k): int(v) for k, v in rec.items()}}
         assert len(index) == len(index_dict) == n
         cache = nlp.get_pipe("llm")._cache
         assert cache._stats["hit"] == 0
