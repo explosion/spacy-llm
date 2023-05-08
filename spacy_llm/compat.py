@@ -37,5 +37,3 @@ try:
 except ImportError:
     accelerate = None
     has_accelerate = False
-
-has = {"minichain": minichain is not None, "langchain": langchain is not None}
