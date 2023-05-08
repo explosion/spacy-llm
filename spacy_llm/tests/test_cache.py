@@ -5,11 +5,20 @@ import srsly
 from dotenv import load_dotenv
 import spacy
 from spacy.tokens import DocBin
+import copy
 
 from ..cache import Cache
 
 
 load_dotenv()  # take environment variables from .env.
+
+DEFAULT_CONFIG = {
+    "task": {"@llm_tasks": "spacy.NoOp.v1"},
+    "cache": {
+        "batch_size": 2,
+        "max_batches_in_mem": 3,
+    },
+}
 
 
 def test_caching() -> None:
@@ -18,17 +27,9 @@ def test_caching() -> None:
 
     with spacy.util.make_tempdir() as tmpdir:
         nlp = spacy.blank("en")
-        nlp.add_pipe(
-            "llm",
-            config={
-                "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "cache": {
-                    "path": str(tmpdir),
-                    "batch_size": 2,
-                    "max_batches_in_mem": 3,
-                },
-            },
-        )
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config["cache"]["path"] = str(tmpdir)
+        nlp.add_pipe("llm", config=config)
         texts = [f"Test {i}" for i in range(n)]
         # Test writing to cache dir.
         docs = [nlp(text) for text in texts]
@@ -61,56 +62,35 @@ def test_caching() -> None:
         # Test cache reading
         #######################################################
 
-        nlp = spacy.blank("en")
-        nlp.add_pipe(
-            "llm",
-            config={
-                "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "cache": {
-                    "path": str(tmpdir),
-                    "batch_size": 2,
-                    "max_batches_in_mem": 3,
-                },
-            },
-        )
-        [nlp(text) for text in texts]
-        cache = nlp.get_pipe("llm")._cache
+        nlp_2 = spacy.blank("en")
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config["cache"]["path"] = str(tmpdir)
+        nlp_2.add_pipe("llm", config=config)
+        [nlp_2(text) for text in texts]
+        cache = nlp_2.get_pipe("llm")._cache
         assert cache._stats["hit"] == n
         assert cache._stats["missed"] == 0
         assert cache._stats["added"] == 0
         assert cache._stats["persisted"] == 0
 
-        #######################################################
-        # Test path handling
-        #######################################################
 
+def test_path_file_invalid():
+    with spacy.util.make_tempdir() as tmpdir:
         # File path instead of directory path.
         open(tmpdir / "empty_file", "a").close()
         with pytest.raises(
             ValueError, match="Cache directory exists and is not a directory."
         ):
-            spacy.blank("en").add_pipe(
-                "llm",
-                config={
-                    "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                    "cache": {
-                        "path": str(tmpdir / "empty_file"),
-                        "batch_size": 2,
-                        "max_batches_in_mem": 3,
-                    },
-                },
-            )
+            config = copy.deepcopy(DEFAULT_CONFIG)
+            config["cache"]["path"] = str(tmpdir / "empty_file")
+            spacy.blank("en").add_pipe("llm", config=config)
 
+
+def test_path_dir_created():
+    with spacy.util.make_tempdir() as tmpdir:
         # Non-existing cache directory should be created.
-        spacy.blank("en").add_pipe(
-            "llm",
-            config={
-                "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "cache": {
-                    "path": str(tmpdir / "new_dir"),
-                    "batch_size": 2,
-                    "max_batches_in_mem": 3,
-                },
-            },
-        )
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        assert not (tmpdir / "new_dir").exists()
+        config["cache"]["path"] = str(tmpdir / "new_dir")
+        spacy.blank("en").add_pipe("llm", config=config)
         assert (tmpdir / "new_dir").exists()
