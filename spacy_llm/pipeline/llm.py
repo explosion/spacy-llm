@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast
 
 import spacy
-from spacy import Language
+from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 
@@ -69,6 +69,10 @@ def _validate_types(
         "backend": typing.get_type_hints(backend),
     }
 
+    parse_input = None
+    backend_input = None
+    backend_output = None
+
     # Validate the 'backend' object
     if not (len(type_hints["backend"]) == 2 and "return" in type_hints["backend"]):
         raise ValueError(
@@ -88,7 +92,7 @@ def _validate_types(
     for k in type_hints["parse"]:
         # find the 'prompt_responses' var without assuming its name
         type_k = type_hints["parse"][k]
-        if type_k is not typing.Iterable[spacy.tokens.doc.Doc]:
+        if type_k is not typing.Iterable[Doc]:
             parse_input = type_hints["parse"][k]
 
     template_output = type_hints["template"]["return"]
@@ -186,13 +190,7 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-
-        spacy.util.from_bytes(
-            bytes_data,
-            {},
-            exclude,
-        )
-
+        spacy.util.from_bytes(bytes_data, {}, exclude)
         return self
 
     def to_disk(

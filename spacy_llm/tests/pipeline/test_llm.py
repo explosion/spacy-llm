@@ -3,13 +3,15 @@ from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
 import spacy
+from spacy.language import Language
 from spacy.tokens import Doc
 
 from spacy_llm.pipeline import LLMWrapper
+from spacy_llm.registry import registry
 
 
 @pytest.fixture
-def nlp() -> spacy.Language:
+def nlp() -> Language:
     nlp = spacy.blank("en")
     nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
     return nlp
@@ -85,7 +87,7 @@ def test_integrations(config: Dict[str, Any]):
 def test_type_checking() -> None:
     """Tests type checking for consistency between functions."""
 
-    @spacy.registry.llm_tasks("spacy.TestIncorrect.v1")
+    @registry.llm_tasks("spacy.TestIncorrect.v1")
     def noop_task_incorrect() -> Tuple[
         Callable[[Iterable[Doc]], Iterable[int]],
         Callable[[Iterable[Doc], Iterable[int]], Iterable[Doc]],
