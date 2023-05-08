@@ -1,7 +1,8 @@
-from typing import Callable, Iterable, Dict, Any
+from typing import Any, Callable, Dict, Iterable
 
 import spacy
 from spacy.util import SimpleFrozenDict
+
 from .backend import Backend
 
 
