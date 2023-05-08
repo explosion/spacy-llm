@@ -36,6 +36,7 @@ def test_ner_config():
     assert nlp.pipe_names == ["llm"]
 
 
+@pytest.mark.external
 def test_ner_predict():
     """Use OpenAI to get zero-shot NER results.
 
@@ -52,6 +53,7 @@ def test_ner_predict():
         assert ent.label_ in ["PER", "ORG", "LOC"]
 
 
+@pytest.mark.external
 def test_ner_io():
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
