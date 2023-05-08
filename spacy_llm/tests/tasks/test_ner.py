@@ -3,6 +3,8 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
+from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
+
 cfg_string = """
 [nlp]
 lang = "en"
@@ -63,3 +65,30 @@ def test_ner_io():
     assert len(doc.ents) > 0
     for ent in doc.ents:
         assert ent.label_ in ["PER", "ORG", "LOC"]
+
+
+@pytest.mark.parametrize(
+    "text,substrings",
+    [
+        (
+            "Felipe and Jaime went to the library.",
+            ["Felipe", "Jaime", "library"],
+        ),  # simple
+        (
+            "The Manila Observatory was founded in 1865.",
+            ["Manila", "The Manila Observatory"],
+        ),  # overlapping
+        (
+            "Take the road from Downtown and turn left at the public market.",
+            ["public market", "Downtown"],
+            # flipped
+        ),
+        # flipped
+    ],
+)
+def test_ensure_offsets_correspond_to_substrings(text, substrings):
+    offsets = find_substrings(text, substrings)
+    # Compare strings instead of offsets, but we need to get
+    # those strings first from the text
+    found_substrings = [text[start:end] for start, end in offsets]
+    assert substrings == found_substrings
