@@ -22,11 +22,11 @@ batch_size = 128
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks: "spacy.NoOp.v1"
+@llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends: "spacy.HuggingFace.v1"
-model: "databricks/dolly-v2-3b"
+@llm_backends = "spacy.HuggingFace.v1"
+model = "databricks/dolly-v2-3b"
 """
 
 

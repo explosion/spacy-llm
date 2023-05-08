@@ -49,8 +49,8 @@ def backend_hf(
     model: str,
     config: Dict[Any, Any] = DEFAULT_HF_DICT,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Returns Pipeline instance.
-    model (str): Name of the HF model
+    """Returns Callable that can execute a set of prompts and return the raw responses.
+    model (str): Name of the HF model.
     config (Dict[Any, Any]): config arguments passed on to the initialization of transformers.pipeline instance.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
