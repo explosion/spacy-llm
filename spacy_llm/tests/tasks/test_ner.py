@@ -1,3 +1,4 @@
+import pytest
 import spacy
 from confection import Config
 from spacy.util import make_tempdir
@@ -30,11 +31,12 @@ def test_ner_config():
     assert nlp.pipe_names == ["llm"]
 
 
+@pytest.mark.skip
 def test_ner_predict():
     """Use OpenAI to get zero-shot NER results.
 
     Issues with this test:
-     - behaviour is ungaranteed to be consistent/predictable
+     - behaviour is unguaranteed to be consistent/predictable
      - on every run, a cost is occurred with OpenAI.
     """
     orig_config = Config().from_str(cfg_string)
@@ -46,6 +48,7 @@ def test_ner_predict():
         assert ent.label_ in ["PER", "ORG", "LOC"]
 
 
+@pytest.mark.skip
 def test_ner_io():
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
