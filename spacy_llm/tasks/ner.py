@@ -56,9 +56,9 @@ def ner_zeroshot_task(
     Callable[[Iterable[Doc]], Iterable[str]],
     Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
 ]:
-    """Default template where English is used for the task instruction
+    """Default NER template for zero-shot annotation
 
-    labels (str): list of labels to pass to the template, as comma-separated list.
+    labels (str): comma-separated list of labels to pass to the template
     normalizer (Optional[Callable[[str], str]]): optional normalizer function
     RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
     """
