@@ -1,5 +1,7 @@
 import spacy
+import pytest
 from confection import Config
+from thinc.compat import has_torch_cuda_gpu
 
 PIPE_CFG = {
     "backend": {
@@ -30,6 +32,7 @@ model = "databricks/dolly-v2-3b"
 """
 
 
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
@@ -37,6 +40,7 @@ def test_init():
     nlp("This is a test.")
 
 
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
     orig_config = Config().from_str(NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)

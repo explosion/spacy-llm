@@ -25,7 +25,7 @@ if has_torch:
         )
     else:
         raise ValueError(
-            "Install Torch and CUDA to load and run the LLM on the GPU, or install 'accelerate' to dynamically "
+            "Install CUDA to load and run the LLM on the GPU, or install 'accelerate' to dynamically "
             "distribute the LLM on the CPU or even the hard disk. The latter may be slow."
         )
 
