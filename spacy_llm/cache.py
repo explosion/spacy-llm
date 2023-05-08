@@ -58,7 +58,7 @@ class Cache:
     @staticmethod
     def _id(docs: Iterable[Doc]) -> str:
         """Generate unique ID for docs.
-        docs (Iterable[Doc]): Docs to generate an unique ID for.
+        docs (Iterable[Doc]): Docs to generate a unique ID for.
         RETURN (str): Unique ID for this collection of docs.
         """
         return str(sum(sum(token.orth for token in doc) for doc in docs))
