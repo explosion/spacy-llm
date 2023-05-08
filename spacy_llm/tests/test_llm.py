@@ -184,6 +184,7 @@ def test_caching() -> None:
         nlp.add_pipe(
             "llm",
             config={
+                "task": {"@llm_tasks": "spacy.NoOp.v1"},
                 "cache": {"path": str(tmpdir), "batch_size": 2, "max_n_batches": 3},
             },
         )
