@@ -112,14 +112,14 @@ def _validate_types(
     template_output = type_hints["template"]["return"]
 
     # Ensure that the template returns the same type as expected by the backend
-    if template_output != backend_input and backend_input != Iterable[Any]:
+    if template_output != backend_input:
         warnings.warn(
             f"Type returned from `task[0]` (`{template_output}`) doesn't match type expected by "
             f"`backend` (`{backend_input}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the backend
-    if parse_input != backend_output and backend_output != Iterable[Any]:
+    if parse_input != backend_output:
         warnings.warn(
             f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
             f"`parse` (`{parse_input}`)."
