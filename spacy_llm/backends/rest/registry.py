@@ -5,23 +5,9 @@ from spacy.util import SimpleFrozenDict
 from .backend import Backend
 
 
-@spacy.registry.llm_queries("spacy.CallREST.v1")
-def query_rest() -> Callable[[Backend, Iterable[str]], Iterable[str]]:
-    """Returns query Callable for minimal REST backend.
-    RETURNS (Callable[[Backend, Iterable[str]], Iterable[str]]:): Callable executing simple prompts using a Backend
-        instance.
-    """
-
-    def prompt(backend: Backend, prompts: Iterable[str]) -> Iterable[str]:
-        return backend(prompts)
-
-    return prompt
-
-
 @spacy.registry.llm_backends("spacy.REST.v1")
 def backend_rest(
     api: str,
-    query: Callable[[Backend, Iterable[str]], Iterable[str]] = query_rest(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
@@ -40,6 +26,6 @@ def backend_rest(
     backend = Backend(api=api, config=config, strict=strict)
 
     def _query(prompts: Iterable[str]) -> Iterable[str]:
-        return query(backend, prompts)
+        return backend(prompts)
 
     return _query
