@@ -2,6 +2,7 @@ import typing
 import warnings
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast
+from typing_extensions import Self
 
 import spacy
 from spacy.language import Language
@@ -178,12 +179,9 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-        return spacy.util.to_bytes(
-            {},
-            exclude,
-        )
+        return spacy.util.to_bytes({}, exclude)
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
+    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> Self:
         """Load the LLMWrapper from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -220,5 +218,4 @@ class LLMWrapper(Pipe):
             {},
             exclude,
         )
-
         return self
