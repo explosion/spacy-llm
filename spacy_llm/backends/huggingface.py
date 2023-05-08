@@ -24,7 +24,7 @@ if has_torch:
             "Install cuda to be able to load and run the LLM on the GPU instead."
         )
     else:
-        warnings.warn(
+        raise ValueError(
             "Install CUDA to load and run the LLM on the GPU, or install 'accelerate' to dynamically "
             "distribute the LLM on the CPU or even the hard disk. The latter may be slow."
         )
