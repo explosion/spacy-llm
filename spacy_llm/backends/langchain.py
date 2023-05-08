@@ -7,7 +7,7 @@ from spacy_llm.compat import langchain
 
 
 def _check_installation() -> None:
-    """Checks whether `minichain` is installed. Raises an error otherwise."""
+    """Checks whether `langchain` is installed. Raises an error otherwise."""
     if langchain is None:
         raise ValueError(
             "The LangChain backend requires `langchain` to be installed, which it is not. See "
