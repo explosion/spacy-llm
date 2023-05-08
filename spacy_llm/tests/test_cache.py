@@ -25,7 +25,7 @@ def test_caching() -> None:
                 "cache": {
                     "path": str(tmpdir),
                     "batch_size": 2,
-                    "max_n_batches_in_mem": 3,
+                    "max_batches_in_mem": 3,
                 },
             },
         )
@@ -69,7 +69,7 @@ def test_caching() -> None:
                 "cache": {
                     "path": str(tmpdir),
                     "batch_size": 2,
-                    "max_n_batches_in_mem": 3,
+                    "max_batches_in_mem": 3,
                 },
             },
         )
@@ -96,7 +96,7 @@ def test_caching() -> None:
                     "cache": {
                         "path": str(tmpdir / "empty_file"),
                         "batch_size": 2,
-                        "max_n_batches_in_mem": 3,
+                        "max_batches_in_mem": 3,
                     },
                 },
             )
@@ -109,7 +109,7 @@ def test_caching() -> None:
                 "cache": {
                     "path": str(tmpdir / "new_dir"),
                     "batch_size": 2,
-                    "max_n_batches_in_mem": 3,
+                    "max_batches_in_mem": 3,
                 },
             },
         )

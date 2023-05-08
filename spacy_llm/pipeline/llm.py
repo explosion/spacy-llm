@@ -33,7 +33,7 @@ _CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
             "config": {"model": "text-davinci-003"},
             "strict": True,
         },
-        "cache": {"path": None, "batch_size": 64, "max_n_batches_in_mem": 4},
+        "cache": {"path": None, "batch_size": 64, "max_batches_in_mem": 4},
     },
 )
 def make_llm(
@@ -161,7 +161,7 @@ class LLMWrapper(Pipe):
         self._cache = Cache(
             path=cache["path"],  # type: ignore
             batch_size=int(cache["batch_size"]),  # type: ignore
-            max_n_batches_in_mem=int(cache["max_n_batches_in_mem"]),  # type: ignore
+            max_n_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
             vocab=vocab,
         )
 

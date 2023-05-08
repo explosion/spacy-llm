@@ -34,7 +34,7 @@ def test_llm_serialize_bytes():
         template=None,  # type: ignore
         parse=None,  # type: ignore
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_n_batches_in_mem": 0},
+        cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
@@ -45,7 +45,7 @@ def test_llm_serialize_disk():
         template=None,  # type: ignore
         parse=None,  # type: ignore
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_n_batches_in_mem": 0},
+        cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
     )
 

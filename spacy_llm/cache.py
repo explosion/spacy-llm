@@ -26,6 +26,9 @@ class Cache:
         vocab (Vocab): Vocab object.
         """
         self._path = Path(path) if path else None
+
+        print("path", self._path)
+
         # Number of Docs in one batch.
         self._batch_size = batch_size
         # Max. number of batches to keep in memory.
