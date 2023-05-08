@@ -11,7 +11,7 @@ from spacy_llm.pipeline import LLMWrapper
 @pytest.fixture
 def nlp() -> spacy.Language:
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm")
+    nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
     return nlp
 
 
@@ -70,6 +70,7 @@ def test_integrations(config: Dict[str, Any]):
     nlp.add_pipe(
         "llm",
         config={
+            "task": {"@llm_tasks": "spacy.NoOp.v1"},
             "backend": {
                 "api": config["api"],
                 "@llm_backends": config["backend"],
@@ -103,7 +104,7 @@ def test_type_checking() -> None:
     nlp = spacy.blank("en")
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        nlp.add_pipe("llm")
+        nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:
