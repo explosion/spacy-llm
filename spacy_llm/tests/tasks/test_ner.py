@@ -83,7 +83,6 @@ def test_ner_io():
             ["public market", "Downtown"],
             # flipped
         ),
-        # flipped
     ],
 )
 def test_ensure_offsets_correspond_to_substrings(text, substrings):
@@ -92,3 +91,39 @@ def test_ensure_offsets_correspond_to_substrings(text, substrings):
     # those strings first from the text
     found_substrings = [text[start:end] for start, end in offsets]
     assert substrings == found_substrings
+
+
+@pytest.mark.parametrize(
+    "text,response,gold_ents",
+    [
+        # simple
+        (
+            "Felipe and Jaime went to the library.",
+            "PER: Felipe, Jaime\nLOC: library",
+            [("Felipe", "PER"), ("Jaime", "PER"), ("library", "LOC")],
+        ),
+        # overlapping: should only return the longest span
+        (
+            "The Manila Observatory was founded in 1865.",
+            "LOC: The Manila Observatory, Manila, Manila Observatory",
+            [("The Manila Observatory", "LOC")],
+        ),
+        # flipped: order shouldn't matter
+        (
+            "Take the road from Downtown and turn left at the public market.",
+            "LOC: public market, Downtown",
+            [("Downtown", "LOC"), ("public market", "LOC")],
+        ),
+    ],
+)
+def test_ner_zero_shot_task(text, response, gold_ents):
+    labels = "PER,ORG,LOC"
+    _, parser = ner_zeroshot_task(labels=labels)
+    # Prepare doc
+    nlp = spacy.blank("xx")
+    doc_in = nlp(text)
+    # Pass to the parser
+    # Note: parser() returns a list so we get what's inside
+    doc_out = list(parser([doc_in], [response]))[0]
+    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
+    assert pred_ents == gold_ents
