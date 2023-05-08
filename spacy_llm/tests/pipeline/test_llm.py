@@ -84,29 +84,32 @@ def test_integrations(config: Dict[str, Any]):
     nlp("This is a test.")
 
 
-def test_type_checking() -> None:
-    """Tests type checking for consistency between functions."""
-
-    @registry.llm_tasks("spacy.TestIncorrect.v1")
-    def noop_task_incorrect() -> Tuple[
-        Callable[[Iterable[Doc]], Iterable[int]],
-        Callable[[Iterable[Doc], Iterable[int]], Iterable[Doc]],
-    ]:
-        def template(docs: Iterable[Doc]) -> Iterable[int]:
-            return [0] * len(list(docs))
-
-        def parse(
-            docs: Iterable[Doc], prompt_responses: Iterable[int]
-        ) -> Iterable[Doc]:
-            return docs
-
-        return template, parse
-
+def test_type_checking_valid() -> None:
+    """Test type checking for consistency between functions."""
     # Ensure default config doesn't raise warnings.
     nlp = spacy.blank("en")
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
+
+
+def test_type_checking_invalid() -> None:
+    """Test type checking for consistency between functions."""
+
+    @registry.llm_tasks("spacy.TestIncorrect.v1")
+    def noop_task_incorrect() -> Tuple[
+        Callable[[Iterable[Doc]], Iterable[int]],
+        Callable[[Iterable[Doc], Iterable[float]], Iterable[Doc]],
+    ]:
+        def template(docs: Iterable[Doc]) -> Iterable[int]:
+            return [0] * len(list(docs))
+
+        def parse(
+            docs: Iterable[Doc], prompt_responses: Iterable[float]
+        ) -> Iterable[Doc]:
+            return docs
+
+        return template, parse
 
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:
@@ -123,5 +126,5 @@ def test_type_checking() -> None:
     assert (
         str(record[1].message)
         == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
-        "expected by `parse` (`typing.Iterable[int]`)."
+        "expected by `parse` (`typing.Iterable[float]`)."
     )
