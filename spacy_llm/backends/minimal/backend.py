@@ -10,7 +10,7 @@ class Backend:
 
     _SUPPORTED_APIS = ("OpenAI",)
 
-    def __init__(self, api: str, config: Dict[Any, Any], strict: bool = True):
+    def __init__(self, api: str, config: Dict[Any, Any], strict: bool):
         """Initializes new Backend instance.
         api (str): Name of LLM API.
         config (Dict[Any, Any]): Config passed on to LLM API.

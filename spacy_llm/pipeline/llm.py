@@ -25,6 +25,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
             "@llm_backends": "spacy.Minimal.v1",
             "api": "OpenAI",
             "config": {"model": "text-davinci-003"},
+            "strict": True,
         },
     },
 )
