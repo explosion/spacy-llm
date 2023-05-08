@@ -198,7 +198,9 @@ def test_caching() -> None:
 
         # File path instead of directory path.
         open(tmpdir / "empty_file", "a").close()
-        with pytest.raises(ValueError) as err:
+        with pytest.raises(
+            ValueError, match="Cache directory exists and is not a directory."
+        ):
             spacy.blank("en").add_pipe(
                 "llm",
                 config={
@@ -209,7 +211,6 @@ def test_caching() -> None:
                     },
                 },
             )
-        assert str(err.value) == "Cache directory exists and is not a directory."
 
         # Non-existing cache directory should be created.
         spacy.blank("en").add_pipe(
