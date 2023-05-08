@@ -1,4 +1,5 @@
 import spacy
+import pytest
 
 PIPE_CFG = {
     "backend": {
@@ -11,6 +12,7 @@ PIPE_CFG = {
 }
 
 
+@pytest.mark.external
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
