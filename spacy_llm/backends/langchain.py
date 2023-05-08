@@ -8,7 +8,7 @@ from spacy_llm.compat import langchain
 
 @spacy.registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> Callable[
-    ["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]
+    ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
 ]:
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]:): Callable executing simple prompts on
@@ -16,8 +16,8 @@ def query_langchain() -> Callable[
     """
 
     def prompt(
-        backend: "langchain.llms.BaseLLM", prompts: Iterable[Any]
-    ) -> Iterable[Any]:
+        backend: "langchain.llms.BaseLLM", prompts: Iterable[str]
+    ) -> Iterable[str]:
         return [backend(pr) for pr in prompts]
 
     return prompt
