@@ -21,9 +21,9 @@ def query_rest() -> Callable[[Backend, Iterable[str]], Iterable[str]]:
 @spacy.registry.llm_backends("spacy.REST.v1")
 def backend_rest(
     api: str,
-    strict: bool,
     query: Callable[[Backend, Iterable[str]], Iterable[str]] = query_rest(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    strict: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
     api (str): Name of any API. Currently supported: "OpenAI".
