@@ -54,6 +54,7 @@ def find_substrings(
 def ner_zeroshot_task(
     labels: str,
     normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: str = "contract",
 ) -> Tuple[
     Callable[[Iterable[Doc]], Iterable[str]],
     Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
@@ -62,6 +63,7 @@ def ner_zeroshot_task(
 
     labels (str): comma-separated list of labels to pass to the template
     normalizer (Optional[Callable[[str], str]]): optional normalizer function
+    alignment_mode (str): "strict", "contract" or "expand"
     RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
     """
 
@@ -117,7 +119,7 @@ def ner_zeroshot_task(
                 offsets = find_substrings(doc.text, phrases)
                 for start, end in offsets:
                     span = doc.char_span(
-                        start, end, alignment_mode="contract", label=label
+                        start, end, alignment_mode=alignment_mode, label=label
                     )
                     if span is not None:
                         spans.append(span)

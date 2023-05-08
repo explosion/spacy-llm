@@ -194,26 +194,46 @@ def test_ner_labels(response, normalizer, gold_ents):
 
 
 @pytest.mark.parametrize(
-    "response,gold_ents",
+    "response,alignment_mode,gold_ents",
     [
         (
             "PER: Jacq",
+            "strict",
             [],
         ),
         (
+            "PER: Jacq",
+            "contract",
+            [],
+        ),
+        (
+            "PER: Jacq",
+            "expand",
+            [("Jacques", "PER")],
+        ),
+        (
+            "PER: Jean J",
+            "contract",
+            [("Jean", "PER")],
+        ),
+        (
             "PER: Jean Jacques, aim",
+            "strict",
             [("Jean Jacques", "PER")],
         ),
         (
             "PER: random",
+            "expand",
             [],
         ),
     ],
 )
-def test_ner_unaligned_response(response, gold_ents):
+def test_ner_alignment(response, alignment_mode, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    _, parser = ner_zeroshot_task(labels=labels, normalizer=lowercase_normalizer())
+    _, parser = ner_zeroshot_task(
+        labels=labels, alignment_mode=alignment_mode, normalizer=lowercase_normalizer()
+    )
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
