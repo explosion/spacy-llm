@@ -66,14 +66,14 @@ class Cache:
     @staticmethod
     def _id(docs: Iterable[Doc]) -> str:
         """Generate unique ID for docs.
-        docs (Iterable[Doc]): Docs to generate an unique ID for.
+        docs (Iterable[Doc]): Docs to generate a unique ID for.
         RETURN (str): Unique ID for this collection of docs.
         """
         return str(sum(sum(token.orth for token in doc) for doc in docs))
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc. Note: Adding a doc does _not_ mean that this doc is immediately persisted to disk. This
-        happens only after the specified batch size has been reached or persist() has been called explicitly.
+        happens only after the specified batch size has been reached or _persist() has been called explicitly.
         doc (Doc): Doc to add to persistence queue.
         """
         if self._path is None:
