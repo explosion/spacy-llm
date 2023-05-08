@@ -71,6 +71,14 @@ class Cache:
         assert self._path is not None
         return self._path / Cache._INDEX_NAME
 
+    def _batch_path(self, batch_id: int) -> Path:
+        """Returns full path to batch file.
+        batch_id (int): Batch id/hash
+        RETURNS (Path): Full path to batch file.
+        """
+        assert self._path is not None
+        return self._path / f"{batch_id}.spacy"
+
     @staticmethod
     def _doc_id(doc: Doc) -> int:
         """Generate a unique ID for one doc.
@@ -105,9 +113,8 @@ class Cache:
         assert self._path
         doc_hashes = [self._doc_id(doc) for doc in self._cache_queue]
         batch_id = self._batch_id(doc_hashes)
-        DocBin(docs=self._cache_queue, store_user_data=True).to_disk(
-            self._path / f"{batch_id}.spacy"
-        )
+        batch_path = self._batch_path(batch_id)
+        DocBin(docs=self._cache_queue, store_user_data=True).to_disk(batch_path)
         srsly.write_jsonl(
             self._index_path,
             lines=[{str(doc_hash): str(batch_id)} for doc_hash in doc_hashes],
@@ -156,7 +163,7 @@ class Cache:
             self._cached_docs[batch_id] = {
                 self._doc_id(proc_doc): proc_doc
                 for proc_doc in DocBin()
-                .from_disk(self._path / f"{batch_id}.spacy")
+                .from_disk(self._batch_path(batch_id))
                 .get_docs(self._vocab)
             }
 

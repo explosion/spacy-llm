@@ -51,9 +51,8 @@ def test_caching() -> None:
         for doc in docs:
             doc_id = Cache._doc_id(doc)
             batch_id = index_dict[doc_id]
-            batch_docs = (
-                DocBin().from_disk(tmpdir / f"{batch_id}.spacy").get_docs(nlp.vocab)
-            )
+            batch_path = cache._batch_path(batch_id)
+            batch_docs = DocBin().from_disk(batch_path).get_docs(nlp.vocab)
             doc_ids = [Cache._doc_id(d) for d in batch_docs]
             assert Cache._batch_id(doc_ids) == batch_id
             assert doc_id in doc_ids
