@@ -13,7 +13,7 @@ def find_substrings(
     substrings: Iterable[str],
     *,
     case_sensitive: bool = False,
-    single_match: bool = False
+    single_match: bool = False,
 ) -> Iterable[Tuple[int, int]]:
     """Given a list of substrings, find their character start and end positions
     in a text"""
@@ -69,6 +69,13 @@ def ner_zeroshot_task(
 
     if not normalizer:
         normalizer = noop_normalizer()
+
+    # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
+    alignment_modes = ("strict", "contract", "expand")
+    if alignment_mode not in alignment_modes:
+        raise ValueError(
+            f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
+        )
 
     template = """
     From the text below, extract the following entities in the following format:

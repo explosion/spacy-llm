@@ -242,3 +242,9 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
     doc_out = list(parser([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
+
+
+def test_invalid_alignment_mode():
+    labels = "PER,ORG,LOC"
+    with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
+        ner_zeroshot_task(labels=labels, alignment_mode="invalid")
