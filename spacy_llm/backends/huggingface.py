@@ -44,7 +44,7 @@ def _check_installation() -> None:
         )
 
 
-@spacy.registry.llm_backends("spacy.HF.v1")
+@spacy.registry.llm_backends("spacy.HuggingFace.v1")
 def backend_hf(
     model: str,
     config: Dict[Any, Any] = DEFAULT_HF_DICT,

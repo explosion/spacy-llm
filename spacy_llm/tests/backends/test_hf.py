@@ -3,7 +3,7 @@ from confection import Config
 
 PIPE_CFG = {
     "backend": {
-        "@llm_backends": "spacy.HF.v1",
+        "@llm_backends": "spacy.HuggingFace.v1",
         "model": "databricks/dolly-v2-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -25,7 +25,7 @@ factory = "llm"
 @llm_tasks: "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends: "spacy.HF.v1"
+@llm_backends: "spacy.HuggingFace.v1"
 model: "databricks/dolly-v2-3b"
 """
 
