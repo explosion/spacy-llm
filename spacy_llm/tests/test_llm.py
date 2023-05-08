@@ -14,7 +14,7 @@ load_dotenv()  # take environment variables from .env.
 @pytest.fixture
 def nlp() -> spacy.Language:
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm")
+    nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
     return nlp
 
 
@@ -72,7 +72,7 @@ def test_type_checking() -> None:
     nlp = spacy.blank("en")
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        nlp.add_pipe("llm")
+        nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:

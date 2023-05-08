@@ -1,11 +1,12 @@
 import spacy
 from confection import Config
 
-BACKEND_CFG = {
+PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.HF.v1",
         "model": "databricks/dolly-v2-3b",
     },
+    "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
 
 NLP_CONFIG = """
@@ -32,7 +33,7 @@ model: "databricks/dolly-v2-3b"
 def test_init():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=BACKEND_CFG)
+    nlp.add_pipe("llm", config=PIPE_CFG)
     nlp("This is a test.")
 
 

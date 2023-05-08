@@ -1,7 +1,7 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast
+from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast, Optional
 
 import spacy
 from spacy import Language
@@ -20,7 +20,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
     requires=[],
     assigns=[],
     default_config={
-        "task": {"@llm_tasks": "spacy.NoOp.v1"},
+        "task": None,
         "backend": {
             "@llm_backends": "spacy.MiniChain.v1",
             "api": "OpenAI",
@@ -32,7 +32,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
 def make_llm(
     nlp: Language,
     name: str,
-    task: Tuple[_PromptGenerator, _ResponseParser],
+    task: Optional[Tuple[_PromptGenerator, _ResponseParser]],
     backend: _PromptExecutor,
 ) -> "LLMWrapper":
     """Construct an LLM component.
@@ -48,6 +48,11 @@ def make_llm(
         the extracted information).
     backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
     """
+    if task is None:
+        raise ValueError(
+            "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
+            "'spacy.NER.v1'})."
+        )
     _validate_types(task, backend)
 
     return LLMWrapper(name=name, template=task[0], parse=task[1], backend=backend)
