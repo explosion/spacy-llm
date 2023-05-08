@@ -53,7 +53,11 @@ class Backend:
         prompts = list(prompts)
         json_data = {"prompt": prompts, **self._config}
         responses = requests.post(
-            "https://api.openai.com/v1/completions", headers=headers, json=json_data
+            self._config.pop("url")
+            if "url" in self._config
+            else "https://api.openai.com/v1/completions",
+            headers=headers,
+            json=json_data,
         ).json()
 
         if "error" in responses:
