@@ -12,6 +12,22 @@ from ..cache import Cache
 load_dotenv()  # take environment variables from .env.
 
 
+def test_cache_invalid():
+    nlp = spacy.blank("en")
+    with pytest.raises(ValueError, match="needs a valid path"):
+        nlp.add_pipe(
+            "llm",
+            config={
+                "task": {"@llm_tasks": "spacy.NoOp.v1"},
+                "cache": {
+                    "path": "",
+                    "batch_size": 2,
+                    "max_batches_in_mem": 3,
+                },
+            },
+        )
+
+
 def test_caching() -> None:
     """Test pipeline with caching."""
     n = 10

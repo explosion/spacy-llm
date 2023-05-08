@@ -25,9 +25,9 @@ class Cache:
         max_batches_in_mem (int): Max. number of batches to hold in memory.
         vocab (Vocab): Vocab object.
         """
-        self._path = Path(path) if path else None
-
-        print("path", self._path)
+        if not path:
+            raise ValueError(f"The cache needs a valid path, but received '{path}'")
+        self._path = Path(path)
 
         # Number of Docs in one batch.
         self._batch_size = batch_size
@@ -50,9 +50,6 @@ class Cache:
 
     def _init_cache_index(self) -> None:
         """Init cache index and directory."""
-        if self._path is None:
-            return
-
         if self._path.exists() and not os.path.isdir(self._path):
             raise ValueError("Cache directory exists and is not a directory.")
         self._path.mkdir(parents=True, exist_ok=True)
@@ -70,7 +67,6 @@ class Cache:
         """Returns full path to index file.
         RETURNS (Path): Full path to index file.
         """
-        assert self._path is not None
         return self._path / Cache._INDEX_NAME
 
     @staticmethod
@@ -86,9 +82,6 @@ class Cache:
         happens only after the specified batch size has been reached or _persist() has been called explicitly.
         doc (Doc): Doc to add to persistence queue.
         """
-        if self._path is None:
-            return
-
         self._cache_queue.append(doc)
         self._stats["added"] += 1
         if len(self._cache_queue) == self._batch_size:
@@ -96,7 +89,6 @@ class Cache:
 
     def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
-        assert self._path
         doc_hashes = [self._id([doc]) for doc in self._cache_queue]
         batch_id = sum(doc_hashes)
         DocBin(docs=self._cache_queue, store_user_data=True).to_disk(
@@ -136,10 +128,6 @@ class Cache:
 
         # Doc's batch is currently not loaded.
         if batch_id not in self._cached_docs:
-            if self._path is None:
-                raise ValueError(
-                    "Cache directory path was not configured. Documents can't be read from cache."
-                )
             # Discard batch, if maximal number of batches would be exceeded otherwise.
             if len(self._cached_docs) == self.max_batches_in_mem:
                 self._cached_docs.pop(self._batch_hashes[0])
