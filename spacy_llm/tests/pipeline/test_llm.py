@@ -1,14 +1,14 @@
+from spacy_llm.pipeline import LLMWrapper
+
 import warnings
 from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
-from dotenv import load_dotenv
 import spacy
+from dotenv import load_dotenv
 from spacy.tokens import Doc
 
 load_dotenv()  # take environment variables from .env.
-
-from spacy_llm.pipeline import LLMWrapper
 
 
 @pytest.fixture
@@ -54,6 +54,7 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
+@pytest.mark.external
 @pytest.mark.parametrize(
     "config",
     (
