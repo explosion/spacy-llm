@@ -65,7 +65,7 @@ class Cache:
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc. Note: Adding a doc does _not_ mean that this doc is immediately persisted to disk. This
-        happens only after the specified batch size has been reached or persist() has been called explicitly.
+        happens only after the specified batch size has been reached or _persist() has been called explicitly.
         doc (Doc): Doc to add to persistence queue.
         """
         if self._path is None:
