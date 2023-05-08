@@ -3,12 +3,12 @@ from typing import Any, Callable, Dict, Iterable
 import spacy
 from spacy.util import SimpleFrozenDict
 
-from spacy_llm.compat import langchain
+from spacy_llm.compat import has_langchain, langchain
 
 
 def _check_installation() -> None:
-    """Checks whether `minichain` is installed. Raises an error otherwise."""
-    if langchain is None:
+    """Checks whether `langchain` is installed. Raises an error otherwise."""
+    if not has_langchain:
         raise ValueError(
             "The LangChain backend requires `langchain` to be installed, which it is not. See "
             "https://github.com/hwchase17/langchain for installation instructions."

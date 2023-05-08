@@ -3,12 +3,12 @@ from typing import Any, Callable, Dict, Iterable
 import spacy
 from spacy.util import SimpleFrozenDict
 
-from ..compat import minichain
+from ..compat import has_minichain, minichain
 
 
 def _check_installation() -> None:
     """Checks whether `minichain` is installed. Raises an error otherwise."""
-    if minichain is None:
+    if not has_minichain:
         raise ValueError(
             "The MiniChain backend requires `minichain` to be installed, which it is not. See "
             "https://github.com/srush/MiniChain for installation instructions."
