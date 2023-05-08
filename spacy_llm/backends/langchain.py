@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Type, cast
+from typing import Any, Callable, Dict, Iterable, Type
+from typing import TYPE_CHECKING, cast
 
 from spacy.util import SimpleFrozenDict
 
