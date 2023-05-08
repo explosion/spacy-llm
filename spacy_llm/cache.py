@@ -35,7 +35,7 @@ class Cache:
         # Container for currently loaded batch of Docs (batch hash -> doc hash -> Doc).
         self._cached_docs: Dict[str, Dict[str, Doc]] = {}
         # Queue for processed, not yet persisted docs.
-        self._docs_to_be_cached: List[Doc] = []
+        self._cache_queue: List[Doc] = []
         # Statistics.
         self._stats = {"hit": 0, "missed": 0, "added": 0, "persisted": 0}
 
@@ -79,26 +79,26 @@ class Cache:
         if self._path is None:
             return
 
-        self._docs_to_be_cached.append(doc)
+        self._cache_queue.append(doc)
         self._stats["added"] += 1
-        if len(self._docs_to_be_cached) == self._batch_size:
+        if len(self._cache_queue) == self._batch_size:
             self._persist()
 
     def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
         assert self._path
-        batch_hash = self._id(self._docs_to_be_cached)
-        DocBin(docs=self._docs_to_be_cached, store_user_data=True).to_disk(
+        batch_hash = self._id(self._cache_queue)
+        DocBin(docs=self._cache_queue, store_user_data=True).to_disk(
             self._path / f"{batch_hash}.spacy"
         )
         srsly.write_jsonl(
             self._index_path,
-            lines=[{self._id([doc]): batch_hash} for doc in self._docs_to_be_cached],
+            lines=[{self._id([doc]): batch_hash} for doc in self._cache_queue],
             append=True,
             append_new_line=False,
         )
-        self._stats["persisted"] += len(self._docs_to_be_cached)
-        self._docs_to_be_cached = []
+        self._stats["persisted"] += len(self._cache_queue)
+        self._cache_queue = []
 
     def __contains__(self, doc: Doc) -> bool:
         """Checks whether doc has been processed and cached.
