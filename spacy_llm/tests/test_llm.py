@@ -17,7 +17,7 @@ load_dotenv()  # take environment variables from .env.
 @pytest.fixture
 def nlp() -> spacy.Language:
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm")
+    nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
     return nlp
 
 
@@ -80,6 +80,7 @@ def test_integrations(config: Dict[str, Any]):
     nlp.add_pipe(
         "llm",
         config={
+            "task": {"@llm_tasks": "spacy.NoOp.v1"},
             "backend": {
                 "api": config["api"],
                 "@llm_backends": config["backend"],
@@ -113,9 +114,9 @@ def test_type_checking() -> None:
     nlp = spacy.blank("en")
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        nlp.add_pipe("llm")
+        nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
-    nlp = spacy.blank("en")
+    nlp = spacy.blank("en", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
     with pytest.warns(UserWarning) as record:
         nlp.add_pipe(
             "llm",
@@ -143,6 +144,7 @@ def test_caching() -> None:
         nlp.add_pipe(
             "llm",
             config={
+                "task": {"@llm_tasks": "spacy.NoOp.v1"},
                 "cache": {"path": str(tmpdir), "batch_size": 2, "max_n_batches": 3},
             },
         )
@@ -204,6 +206,7 @@ def test_caching() -> None:
             spacy.blank("en").add_pipe(
                 "llm",
                 config={
+                    "task": {"@llm_tasks": "spacy.NoOp.v1"},
                     "cache": {
                         "path": str(tmpdir / "empty_file"),
                         "batch_size": 2,
@@ -216,6 +219,7 @@ def test_caching() -> None:
         spacy.blank("en").add_pipe(
             "llm",
             config={
+                "task": {"@llm_tasks": "spacy.NoOp.v1"},
                 "cache": {
                     "path": str(tmpdir / "new_dir"),
                     "batch_size": 2,
