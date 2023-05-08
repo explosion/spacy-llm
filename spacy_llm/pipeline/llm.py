@@ -22,7 +22,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
     default_config={
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
         "backend": {
-            "@llm_backends": "spacy.Minimal.v1",
+            "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
             "config": {"model": "text-davinci-003"},
             "strict": True,

@@ -67,8 +67,8 @@ def test_llm_serialize_disk():
             "config": {"temperature": 0.3},
         },
         {
-            "query": "spacy.CallMinimal.v1",
-            "backend": "spacy.Minimal.v1",
+            "query": "spacy.CallREST.v1",
+            "backend": "spacy.REST.v1",
             "api": "OpenAI",
             "config": {"temperature": 0.3, "model": "text-davinci-003"},
         },
@@ -135,8 +135,8 @@ def test_type_checking() -> None:
 
 
 @pytest.mark.parametrize("strict", (False, True))
-def test_minimal_backend_error_handling(strict: bool):
-    """Test error handling for default/minimal backend.
+def test_rest_backend_error_handling(strict: bool):
+    """Test error handling for default/minimal REST backend.
     strict (bool): Whether to use strict mode.
     """
     nlp = spacy.blank("en")

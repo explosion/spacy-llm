@@ -1,12 +1,12 @@
 from .langchain import backend_langchain, query_langchain
 from .minichain import backend_minichain, query_minichain
-from .minimal import backend_minimal, query_minimal
+from .rest import backend_rest, query_rest
 
 __all__ = [
     "query_minichain",
     "query_langchain",
-    "query_minimal",
+    "query_rest",
     "backend_minichain",
     "backend_langchain",
-    "backend_minimal",
+    "backend_rest",
 ]

@@ -5,9 +5,9 @@ from spacy.util import SimpleFrozenDict
 from .backend import Backend
 
 
-@spacy.registry.llm_queries("spacy.CallMinimal.v1")
-def query_minimal() -> Callable[[Backend, Iterable[str]], Iterable[str]]:
-    """Returns query Callable for minimal backend.
+@spacy.registry.llm_queries("spacy.CallREST.v1")
+def query_rest() -> Callable[[Backend, Iterable[str]], Iterable[str]]:
+    """Returns query Callable for minimal REST backend.
     RETURNS (Callable[[Backend, Iterable[str]], Iterable[str]]:): Callable executing simple prompts using a Backend
         instance.
     """
@@ -18,14 +18,14 @@ def query_minimal() -> Callable[[Backend, Iterable[str]], Iterable[str]]:
     return prompt
 
 
-@spacy.registry.llm_backends("spacy.Minimal.v1")
-def backend_minimal(
+@spacy.registry.llm_backends("spacy.REST.v1")
+def backend_rest(
     api: str,
     strict: bool,
-    query: Callable[[Backend, Iterable[str]], Iterable[str]] = query_minimal(),
+    query: Callable[[Backend, Iterable[str]], Iterable[str]] = query_rest(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Returns Callable using minimal backend to prompt specified API.
+    """Returns Callable using minimal REST backend to prompt specified API.
     api (str): Name of any API. Currently supported: "OpenAI".
     query (Callable[[Backend, Iterable[str]], Iterable[str]]): Callable implementing querying this API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the Backend instance.
@@ -33,8 +33,8 @@ def backend_minimal(
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
         be raised.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using a Backend
-        instance.
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using a
+        Backend instance.
     """
 
     backend = Backend(api=api, config=config, strict=strict)
