@@ -4,6 +4,7 @@ from confection import Config
 from spacy.util import make_tempdir
 
 from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
+from spacy_llm.registry import noop_normalizer, lowercase_normalizer
 
 cfg_string = """
 [nlp]
@@ -21,7 +22,7 @@ factory = "llm"
 labels: PER,ORG,LOC
 
 [components.llm.task.normalizer]
-@misc: "spacy.UppercaseNormalizer.v1"
+@misc: "spacy.LowercaseNormalizer.v1"
 
 [components.llm.backend]
 @llm_backends: "spacy.MiniChain.v1"
@@ -39,10 +40,7 @@ def test_ner_config():
 @pytest.mark.external
 def test_ner_predict():
     """Use OpenAI to get zero-shot NER results.
-
-    Issues with this test:
-     - behaviour is unguaranteed to be consistent/predictable
-     - on every run, a cost is occurred with OpenAI.
+    Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
@@ -131,9 +129,59 @@ def test_ner_zero_shot_task(text, response, gold_ents):
     _, parser = ner_zeroshot_task(labels=labels)
     # Prepare doc
     nlp = spacy.blank("xx")
-    doc_in = nlp(text)
+    doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
     doc_out = list(parser([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
+
+
+@pytest.mark.parametrize(
+    "response,normalizer,gold_ents",
+    [
+        (
+            "PER: Felipe, Jaime",
+            None,
+            [("Felipe", "PER"), ("Jaime", "PER")],
+        ),
+        (
+            "PER: Felipe, Jaime",
+            noop_normalizer(),
+            [("Felipe", "PER"), ("Jaime", "PER")],
+        ),
+        (
+            "PER: Felipe, Jaime",
+            lowercase_normalizer(),
+            [("Felipe", "PER"), ("Jaime", "PER")],
+        ),
+        (
+            "per: Felipe, Jaime",
+            None,
+            [],
+        ),
+        (
+            "per: Felipe, Jaime",
+            lowercase_normalizer(),
+            [("Felipe", "PER"), ("Jaime", "PER")],
+        ),
+    ],
+)
+def test_ner_labels(response, normalizer, gold_ents):
+    text = "Felipe and Jaime went to the library."
+    labels = "PER,ORG,LOC"
+    _, parser = ner_zeroshot_task(labels=labels, normalizer=normalizer)
+    # Prepare doc
+    nlp = spacy.blank("xx")
+    doc_in = nlp.make_doc(text)
+    # Pass to the parser
+    # Note: parser() returns a list so we get what's inside
+    doc_out = list(parser([doc_in], [response]))[0]
+    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
+    assert pred_ents == gold_ents
+
+
+# TODO: out of token boundary
+
+
+# TODO: unknown labels

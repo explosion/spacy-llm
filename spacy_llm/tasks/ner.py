@@ -5,6 +5,8 @@ import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
+from ..registry import noop_normalizer
+
 
 def find_substrings(
     text: str,
@@ -63,6 +65,9 @@ def ner_zeroshot_task(
     RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
     """
 
+    if not normalizer:
+        normalizer = noop_normalizer()
+
     template = """
     From the text below, extract the following entities in the following format:
     {# whitespace #}
@@ -75,15 +80,13 @@ def ner_zeroshot_task(
     {{ text }}
     """
 
-    label_list = [
-        normalizer(label) if normalizer else label for label in labels.split(",")
-    ]
+    label_dict = {normalizer(label): label for label in labels.split(",")}
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(template)
         for doc in docs:
-            prompt = _template.render(text=doc.text, labels=label_list)
+            prompt = _template.render(text=doc.text, labels=list(label_dict.values()))
             yield prompt
 
     def _format_response(response: str) -> Iterable[Tuple[str, Iterable[str]]]:
@@ -94,11 +97,12 @@ def ner_zeroshot_task(
             # <entity label>: ent1, ent2
             if line and ":" in line:
                 label, phrases = line.split(":", 1)
-                if label in label_list:
+                norm_label = normalizer(label)
+                if norm_label in label_dict:
                     # Get the phrases / spans for each entity
                     if phrases.strip():
                         _phrases = [p.strip() for p in phrases.strip().split(",")]
-                        output.append((label, _phrases))
+                        output.append((label_dict[norm_label], _phrases))
         return output
 
     def prompt_parse(
@@ -107,16 +111,15 @@ def ner_zeroshot_task(
         for doc, prompt_response in zip(docs, prompt_responses):
             spans = []
             for label, phrases in _format_response(prompt_response):
-                if label in label_list:
-                    # For each phrase, find the substrings in the text
-                    # and create a Span
-                    offsets = find_substrings(doc.text, phrases)
-                    for start, end in offsets:
-                        span = doc.char_span(
-                            start, end, alignment_mode="contract", label=label
-                        )
-                        if span is not None:
-                            spans.append(span)
+                # For each phrase, find the substrings in the text
+                # and create a Span
+                offsets = find_substrings(doc.text, phrases)
+                for start, end in offsets:
+                    span = doc.char_span(
+                        start, end, alignment_mode="contract", label=label
+                    )
+                    if span is not None:
+                        spans.append(span)
             doc.set_ents(filter_spans(spans))
             yield doc
 

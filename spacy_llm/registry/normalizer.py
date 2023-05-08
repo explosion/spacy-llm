@@ -3,17 +3,17 @@ from typing import Callable
 import spacy
 
 
-@spacy.registry.misc("spacy.UppercaseNormalizer.v1")
-def uppercase_normalizer() -> Callable[[str], str]:
-    """Return uppercase versions of the labels
+@spacy.registry.misc("spacy.NoopNormalizer.v1")
+def noop_normalizer() -> Callable[[str], str]:
+    """Return the labels as-is
 
     RETURNS (Callable[[str], str])
     """
 
-    def uppercase(s: str) -> str:
-        return s.upper()
+    def noop(s: str) -> str:
+        return s
 
-    return uppercase
+    return noop
 
 
 @spacy.registry.misc("spacy.LowercaseNormalizer.v1")
