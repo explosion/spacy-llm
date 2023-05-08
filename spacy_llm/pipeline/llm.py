@@ -1,7 +1,7 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast, Any
+from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast
 
 import spacy
 from spacy import Language
