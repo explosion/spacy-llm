@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, Iterable, Tuple
+from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
 import spacy
@@ -47,6 +47,41 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
+@pytest.mark.parametrize(
+    "config",
+    (
+        {
+            "query": "spacy.RunMiniChain.v1",
+            "backend": "spacy.MiniChain.v1",
+            "api": "OpenAI",
+            "config": {},
+        },
+        {
+            "query": "spacy.CallLangChain.v1",
+            "backend": "spacy.LangChain.v1",
+            "api": "openai",
+            "config": {"temperature": 0.3},
+        },
+    ),
+)
+def test_integrations(config: Dict[str, Any]):
+    """Test simple runs with all supported integrations."""
+    nlp = spacy.blank("en")
+    nlp.add_pipe(
+        "llm",
+        config={
+            "task": {"@llm_tasks": "spacy.NoOp.v1"},
+            "backend": {
+                "api": config["api"],
+                "@llm_backends": config["backend"],
+                "config": {},
+                "query": {"@llm_queries": config["query"]},
+            },
+        },
+    )
+    nlp("This is a test.")
+
+
 def test_type_checking_valid() -> None:
     """Test type checking for consistency between functions."""
     # Ensure default config doesn't raise warnings.
@@ -57,7 +92,7 @@ def test_type_checking_valid() -> None:
 
 
 def test_type_checking_invalid() -> None:
-    """Tests type checking for consistency between functions."""
+    """Test type checking for consistency between functions."""
 
     @spacy.registry.llm_tasks("spacy.TestIncorrect.v1")
     def noop_task_incorrect() -> Tuple[

@@ -1,7 +1,7 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast, Optional
+from typing import Callable, Iterable, Iterator, Tuple, TypeVar, cast
 
 import spacy
 from spacy import Language
@@ -32,7 +32,7 @@ _ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[Tuple[_PromptGenerator, _ResponseParser]],
+    task: Tuple[_PromptGenerator, _ResponseParser],
     backend: _PromptExecutor,
 ) -> "LLMWrapper":
     """Construct an LLM component.
