@@ -28,7 +28,7 @@ def test_caching() -> None:
     with spacy.util.make_tempdir() as tmpdir:
         nlp = spacy.blank("en")
         config = copy.deepcopy(DEFAULT_CONFIG)
-        config["cache"]["path"] = str(tmpdir)
+        config["cache"]["path"] = str(tmpdir)  # type: ignore
         nlp.add_pipe("llm", config=config)
         texts = [f"Test {i}" for i in range(n)]
         # Test writing to cache dir.
@@ -64,7 +64,7 @@ def test_caching() -> None:
 
         nlp_2 = spacy.blank("en")
         config = copy.deepcopy(DEFAULT_CONFIG)
-        config["cache"]["path"] = str(tmpdir)
+        config["cache"]["path"] = str(tmpdir)  # type: ignore
         nlp_2.add_pipe("llm", config=config)
         [nlp_2(text) for text in texts]
         cache = nlp_2.get_pipe("llm")._cache
