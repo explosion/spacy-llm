@@ -24,4 +24,12 @@ except ImportError:
     transformers = None
     has_transformers = False
 
+try:
+    import accelerate
+
+    has_accelerate = True
+except ImportError:
+    accelerate = None
+    has_accelerate = False
+
 has = {"minichain": minichain is not None, "langchain": langchain is not None}
