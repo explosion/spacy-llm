@@ -38,7 +38,7 @@ class Cache:
         # Hashes of batches loaded into memory.
         self._batch_hashes: List[int] = []
         # Container for currently loaded batch of Docs (batch hash -> doc hash -> Doc).
-        self._cached_docs: Dict[int, Dict[int, Doc]] = {}
+        self._loaded_docs: Dict[int, Dict[int, Doc]] = {}
         # Queue for processed, not yet persisted docs.
         self._cache_queue: List[Doc] = []
         # Statistics.
@@ -148,23 +148,23 @@ class Cache:
         self._stats["hit"] += 1
 
         # Doc's batch is currently not loaded.
-        if batch_id not in self._cached_docs:
+        if batch_id not in self._loaded_docs:
             if self._path is None:
                 raise ValueError(
                     "Cache directory path was not configured. Documents can't be read from cache."
                 )
             # Discard batch, if maximal number of batches would be exceeded otherwise.
-            if len(self._cached_docs) == self.max_batches_in_mem:
-                self._cached_docs.pop(self._batch_hashes[0])
+            if len(self._loaded_docs) == self.max_batches_in_mem:
+                self._loaded_docs.pop(self._batch_hashes[0])
                 self._batch_hashes = self._batch_hashes[1:]
 
             # Load target batch.
             self._batch_hashes.append(batch_id)
-            self._cached_docs[batch_id] = {
+            self._loaded_docs[batch_id] = {
                 self._doc_id(proc_doc): proc_doc
                 for proc_doc in DocBin()
                 .from_disk(self._batch_path(batch_id))
                 .get_docs(self._vocab)
             }
 
-        return self._cached_docs[batch_id][doc_id]
+        return self._loaded_docs[batch_id][doc_id]
