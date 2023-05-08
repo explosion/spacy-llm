@@ -20,6 +20,9 @@ factory = "llm"
 @llm_tasks: "spacy.NERZeroShot.v1"
 labels: PER,ORG,LOC
 
+[components.llm.task.normalizer]
+@misc: "spacy.UppercaseNormalizer.v1"
+
 [components.llm.backend]
 @llm_backends: "spacy.MiniChain.v1"
 api: "OpenAI"
