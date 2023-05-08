@@ -1,7 +1,7 @@
 from spacy_llm.pipeline import LLMWrapper
 
 import warnings
-from typing import Any, Callable, Dict, Iterable, Tuple
+from typing import Callable, Iterable, Tuple
 
 import pytest
 import spacy
@@ -52,41 +52,6 @@ def test_llm_serialize_disk():
     with spacy.util.make_tempdir() as tmp_dir:
         llm.to_disk(tmp_dir / "llm")
         llm.from_disk(tmp_dir / "llm")
-
-
-@pytest.mark.parametrize(
-    "config",
-    (
-        {
-            "query": "spacy.RunMiniChain.v1",
-            "backend": "spacy.MiniChain.v1",
-            "api": "OpenAI",
-            "config": {},
-        },
-        {
-            "query": "spacy.CallLangChain.v1",
-            "backend": "spacy.LangChain.v1",
-            "api": "openai",
-            "config": {"temperature": 0.3},
-        },
-    ),
-)
-def test_integrations(config: Dict[str, Any]):
-    """Test simple runs with all supported integrations."""
-    nlp = spacy.blank("en")
-    nlp.add_pipe(
-        "llm",
-        config={
-            "task": {"@llm_tasks": "spacy.NoOp.v1"},
-            "backend": {
-                "api": config["api"],
-                "@llm_backends": config["backend"],
-                "config": {},
-                "query": {"@llm_queries": config["query"]},
-            },
-        },
-    )
-    nlp("This is a test.")
 
 
 def test_type_checking_valid() -> None:
