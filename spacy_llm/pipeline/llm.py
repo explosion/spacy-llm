@@ -3,7 +3,7 @@ import warnings
 from pathlib import Path
 
 # fmt: off
-from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar, Union, Dict, Optional
+from typing import Callable, Iterable, Tuple, Iterator, cast, TypeVar, Union, Dict, Optional, Any
 # fmt: on
 
 import spacy
@@ -34,7 +34,7 @@ _CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
             "config": {},
             "query": {"@llm_queries": "spacy.RunMiniChain.v1"},
         },
-        "cache": {"path": None, "batch_size": 64, "max_n_batches": 4},
+        "cache": {"path": None, "batch_size": 64, "max_n_batches_in_mem": 4},
     },
 )
 def make_llm(
@@ -108,14 +108,14 @@ def _validate_types(
     template_output = type_hints["template"]["return"]
 
     # Ensure that the template returns the same type as expected by the backend
-    if template_output != backend_input:
+    if template_output != backend_input and backend_input != Iterable[Any]:
         warnings.warn(
             f"Type returned from `task[0]` (`{template_output}`) doesn't match type expected by "
             f"`backend` (`{backend_input}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the backend
-    if parse_input != backend_output:
+    if parse_input != backend_output and backend_output != Iterable[Any]:
         warnings.warn(
             f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
             f"`parse` (`{parse_input}`)."
@@ -157,7 +157,7 @@ class LLMWrapper(Pipe):
         self._cache = Cache(
             path=cache["path"],  # type: ignore
             batch_size=int(cache["batch_size"]),  # type: ignore
-            max_n_batches=int(cache["max_n_batches"]),  # type: ignore
+            max_n_batches_in_mem=int(cache["max_n_batches_in_mem"]),  # type: ignore
             vocab=vocab,
         )
 

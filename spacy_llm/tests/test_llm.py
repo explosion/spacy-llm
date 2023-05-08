@@ -37,7 +37,7 @@ def test_llm_serialize_bytes():
         template=None,  # type: ignore
         parse=None,  # type: ignore
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_n_batches": 0},
+        cache={"path": None, "batch_size": 0, "max_n_batches_in_mem": 0},
         vocab=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
@@ -48,7 +48,7 @@ def test_llm_serialize_disk():
         template=None,  # type: ignore
         parse=None,  # type: ignore
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_n_batches": 0},
+        cache={"path": None, "batch_size": 0, "max_n_batches_in_mem": 0},
         vocab=None,  # type: ignore
     )
 
@@ -145,7 +145,11 @@ def test_caching() -> None:
             "llm",
             config={
                 "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "cache": {"path": str(tmpdir), "batch_size": 2, "max_n_batches": 3},
+                "cache": {
+                    "path": str(tmpdir),
+                    "batch_size": 2,
+                    "max_n_batches_in_mem": 3,
+                },
             },
         )
         texts = [f"Test {i}" for i in range(n)]
@@ -185,7 +189,11 @@ def test_caching() -> None:
             "llm",
             config={
                 "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "cache": {"path": str(tmpdir), "batch_size": 2, "max_n_batches": 3},
+                "cache": {
+                    "path": str(tmpdir),
+                    "batch_size": 2,
+                    "max_n_batches_in_mem": 3,
+                },
             },
         )
         [nlp(text) for text in texts]
@@ -211,7 +219,7 @@ def test_caching() -> None:
                     "cache": {
                         "path": str(tmpdir / "empty_file"),
                         "batch_size": 2,
-                        "max_n_batches": 3,
+                        "max_n_batches_in_mem": 3,
                     },
                 },
             )
@@ -224,7 +232,7 @@ def test_caching() -> None:
                 "cache": {
                     "path": str(tmpdir / "new_dir"),
                     "batch_size": 2,
-                    "max_n_batches": 3,
+                    "max_n_batches_in_mem": 3,
                 },
             },
         )

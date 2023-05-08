@@ -13,19 +13,23 @@ class Cache:
     _INDEX_NAME: str = "index.jsonl"
 
     def __init__(
-        self, path: Union[str, Path], batch_size: int, max_n_batches: int, vocab: Vocab
+        self,
+        path: Union[str, Path],
+        batch_size: int,
+        max_n_batches_in_mem: int,
+        vocab: Vocab,
     ):
         """Initialize Cache instance.
         path (Path): Cache directory.
         batch_size (int): Number of docs in one batch (file).
-        max_n_batches (int): Max. number of batches to hold in memory.
+        max_n_batches_in_mem (int): Max. number of batches to hold in memory.
         vocab (Vocab): Vocab object.
         """
         self._path = Path(path) if path else None
         # Number of Docs in one batch.
         self._batch_size = batch_size
         # Max. number of batches to keep in memory.
-        self._max_n_batches_in_mem = max_n_batches
+        self._max_n_batches_in_mem = max_n_batches_in_mem
         self._vocab = vocab
 
         # Stores doc hash -> batch hash to allow efficient lookup of available Docs.
