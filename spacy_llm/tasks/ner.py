@@ -55,15 +55,20 @@ def ner_zeroshot_task(
     labels: str,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: str = "contract",
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
 ) -> Tuple[
     Callable[[Iterable[Doc]], Iterable[str]],
     Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
 ]:
     """Default NER template for zero-shot annotation
 
-    labels (str): comma-separated list of labels to pass to the template
-    normalizer (Optional[Callable[[str], str]]): optional normalizer function
-    alignment_mode (str): "strict", "contract" or "expand"
+    labels (str): comma-separated list of labels to pass to the template.
+    normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+    alignment_mode (str): "strict", "contract" or "expand".
+    case_sensitive: Whether to search without case sensitivity.
+    single_match: If False, allow one substring to match multiple times in the text. If True, returns the first hit.
+
     RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
     """
 
@@ -123,7 +128,12 @@ def ner_zeroshot_task(
             for label, phrases in _format_response(prompt_response):
                 # For each phrase, find the substrings in the text
                 # and create a Span
-                offsets = find_substrings(doc.text, phrases)
+                offsets = find_substrings(
+                    doc.text,
+                    phrases,
+                    case_sensitive=case_sensitive_matching,
+                    single_match=single_match,
+                )
                 for start, end in offsets:
                     span = doc.char_span(
                         start, end, alignment_mode=alignment_mode, label=label

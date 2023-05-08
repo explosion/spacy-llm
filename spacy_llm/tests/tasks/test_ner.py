@@ -231,9 +231,7 @@ def test_ner_labels(response, normalizer, gold_ents):
 def test_ner_alignment(response, alignment_mode, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    _, parser = ner_zeroshot_task(
-        labels=labels, alignment_mode=alignment_mode, normalizer=lowercase_normalizer()
-    )
+    _, parser = ner_zeroshot_task(labels=labels, alignment_mode=alignment_mode)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -248,3 +246,48 @@ def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
         ner_zeroshot_task(labels=labels, alignment_mode="invalid")
+
+
+@pytest.mark.parametrize(
+    "response,case_sensitive,single_match,gold_ents",
+    [
+        (
+            "PER: Jean",
+            False,
+            False,
+            [("jean", "PER"), ("Jean", "PER"), ("Jean", "PER")],
+        ),
+        (
+            "PER: Jean",
+            False,
+            True,
+            [("jean", "PER")],
+        ),
+        (
+            "PER: Jean",
+            True,
+            False,
+            [("Jean", "PER"), ("Jean", "PER")],
+        ),
+        (
+            "PER: Jean",
+            True,
+            True,
+            [("Jean", "PER")],
+        ),
+    ],
+)
+def test_ner_matching(response, case_sensitive, single_match, gold_ents):
+    text = "This guy jean (or Jean) is the president of the Jean Foundation."
+    labels = "PER,ORG,LOC"
+    _, parser = ner_zeroshot_task(
+        labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
+    )
+    # Prepare doc
+    nlp = spacy.blank("xx")
+    doc_in = nlp.make_doc(text)
+    # Pass to the parser
+    # Note: parser() returns a list
+    doc_out = list(parser([doc_in], [response]))[0]
+    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
+    assert pred_ents == gold_ents
