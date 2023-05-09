@@ -1,8 +1,8 @@
 import os
-from typing import Set, Dict, Iterable, List, Any
+from typing import Set, Dict, Iterable, List
 
-import requests
-import srsly
+import requests  # type: ignore[import]
+import srsly  # type: ignore[import]
 
 from .base import Backend
 

@@ -1,7 +1,6 @@
 import abc
-import os
 import time
-from typing import Any, Dict, Iterable, List, Callable, Tuple, Set
+from typing import Any, Dict, Iterable, Callable, Tuple, Set
 
 import requests  # type: ignore
 import srsly  # type: ignore[import]
@@ -32,9 +31,7 @@ class Backend(abc.ABC):
         self._max_tries = max_tries
         self._timeout = timeout
         self._url = (
-            self._config.pop("url")
-            if "url" in self._config
-            else self._default_endpoint
+            self._config.pop("url") if "url" in self._config else self._default_endpoint
         )
         self._credentials = self.credentials
 
@@ -77,7 +74,8 @@ class Backend(abc.ABC):
         """
 
     def retry(
-        self, call_api: Callable[[], requests.Response],
+        self,
+        call_api: Callable[[], requests.Response],
     ) -> requests.Response:
         """Retry a call to an API if we get a non-ok status code.
         This function automatically retries a request if it catches a response

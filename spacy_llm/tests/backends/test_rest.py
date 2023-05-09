@@ -1,7 +1,6 @@
 # mypy: ignore-errors
 import pytest
 import spacy
-import srsly  # type: ignore[import]
 
 PIPE_CFG = {
     "backend": {
@@ -31,4 +30,6 @@ def test_rest_backend_error_handling():
                 "backend": {"config": {"model": "x-text-davinci-003"}},
             },
         )
-    assert "The specified model 'x-text-davinci-003' is not available." in str(err.value)
+    assert "The specified model 'x-text-davinci-003' is not available." in str(
+        err.value
+    )
