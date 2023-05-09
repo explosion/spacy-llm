@@ -95,7 +95,7 @@ def textcat_zeroshot_task(
     def prompt_parse(
         docs: Iterable[Doc], prompt_responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, prompt_response):
+        for doc, prompt_response in zip(docs, prompt_responses):
             cats = _format_response(prompt_response)
             doc.cats = cats
             yield doc
