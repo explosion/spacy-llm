@@ -25,7 +25,6 @@ def query_langchain() -> Callable[["BaseLLM", Iterable[str]], Iterable[str]]:
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]:): Callable executing simple prompts on
         the specified LangChain backend.
     """
-    _check_installation()
 
     def prompt(backend: "BaseLLM", prompts: Iterable[str]) -> Iterable[str]:
         return [backend(pr) for pr in prompts]
