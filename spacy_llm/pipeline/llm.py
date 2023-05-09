@@ -205,10 +205,7 @@ class LLMWrapper(Pipe):
                     )
                 )
                 for i, doc in enumerate(doc_batch):
-                    if is_cached[i]:
-                        yield self._cache[doc]
-                    else:
-                        yield next(modified_docs)
+                    yield self._cache[doc] if is_cached[i] else next(modified_docs)
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
 
