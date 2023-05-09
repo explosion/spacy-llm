@@ -251,7 +251,7 @@ class LLMWrapper(Pipe):
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
-    ) -> "LLMWrapper":
+    ) -> Self:
         """Load the LLMWrapper from disk.
         path (Path): A path to a JSON file. Paths may be either strings or Path-like objects.
         exclude (Tuple): Names of properties to exclude from deserialization.
