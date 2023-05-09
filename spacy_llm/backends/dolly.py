@@ -1,11 +1,11 @@
 import warnings
 from typing import Any, Callable, Dict, Iterable
 
-import spacy
 from spacy.util import SimpleFrozenList
 from thinc.compat import has_torch_cuda_gpu
 
 from ..compat import has_accelerate, has_torch, has_transformers, torch, transformers
+from ..registry.util import registry
 
 
 supported_models = SimpleFrozenList(
@@ -59,7 +59,7 @@ def _check_model(model: str) -> None:
         )
 
 
-@spacy.registry.llm_backends("spacy.DollyHF.v1")
+@registry.llm_backends("spacy.DollyHF.v1")
 def backend_dolly_hf(
     model: str,
     config: Dict[Any, Any] = _DEFAULT_CFG,

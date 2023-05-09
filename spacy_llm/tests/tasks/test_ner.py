@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import pytest
 import spacy
 from confection import Config
@@ -14,7 +15,7 @@ batch_size = 128
 
 [components]
 
-[components.llm] 
+[components.llm]
 factory = "llm"
 
 [components.llm.task]

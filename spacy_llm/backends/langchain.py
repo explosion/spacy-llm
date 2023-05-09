@@ -1,9 +1,13 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Type
+from typing import TYPE_CHECKING
 
-import spacy
 from spacy.util import SimpleFrozenDict
 
-from spacy_llm.compat import has_langchain, langchain
+from ..compat import has_langchain, langchain
+from ..registry import registry
+
+if TYPE_CHECKING and has_langchain:
+    from langchain.llms.base import BaseLLM  # type: ignore[import]
 
 
 def _check_installation() -> None:
@@ -15,30 +19,24 @@ def _check_installation() -> None:
         )
 
 
-@spacy.registry.llm_queries("spacy.CallLangChain.v1")
-def query_langchain() -> Callable[
-    ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
-]:
+@registry.llm_queries("spacy.CallLangChain.v1")
+def query_langchain() -> Callable[["BaseLLM", Iterable[str]], Iterable[str]]:
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]:): Callable executing simple prompts on
         the specified LangChain backend.
     """
     _check_installation()
 
-    def prompt(
-        backend: "langchain.llms.BaseLLM", prompts: Iterable[str]
-    ) -> Iterable[str]:
+    def prompt(backend: "BaseLLM", prompts: Iterable[str]) -> Iterable[str]:
         return [backend(pr) for pr in prompts]
 
     return prompt
 
 
-@spacy.registry.llm_backends("spacy.LangChain.v1")
+@registry.llm_backends("spacy.LangChain.v1")
 def backend_langchain(
     api: str,
-    query: Callable[
-        ["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]
-    ] = query_langchain(),
+    query: Callable[["BaseLLM", Iterable[str]], Iterable[str]] = query_langchain(),
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Any]], Iterable[Any]]:
     """Returns Callable using MiniChain backend to prompt specified API.
@@ -55,9 +53,10 @@ def backend_langchain(
     # langchain.llms.type_to_cls_dict contains all API names in lowercase, so this allows to be more forgiving and make
     # "OpenAI" work as well "openai".
     api = api.lower()
+    type_to_cls_dict: Dict[str, Type[BaseLLM]] = langchain.llms.type_to_cls_dict
 
-    if api in langchain.llms.type_to_cls_dict:
-        backend = langchain.llms.type_to_cls_dict[api](**config)
+    if api in type_to_cls_dict:
+        backend = type_to_cls_dict[api](**config)
 
         def _query(prompts: Iterable[Any]) -> Iterable[Any]:
             return query(backend, prompts)

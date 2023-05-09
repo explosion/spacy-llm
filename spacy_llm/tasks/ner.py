@@ -1,11 +1,10 @@
 from typing import Callable, Iterable, Optional, Tuple
 
 import jinja2
-import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from ..registry import noop_normalizer
+from ..registry import noop_normalizer, registry
 from ..ty import LLMTask
 
 
@@ -64,7 +63,7 @@ Text:
 """
 
 
-@spacy.registry.llm_tasks("spacy.NERZeroShot.v1")
+@registry.llm_tasks("spacy.NERZeroShot.v1")
 class LLM_NER(LLMTask):
     def __init__(
         self,

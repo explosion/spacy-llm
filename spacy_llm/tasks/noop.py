@@ -1,12 +1,13 @@
 from typing import Iterable
 
-import spacy
 from spacy.tokens import Doc
 
 from spacy_llm.ty import LLMTask
 
+from ..registry import registry
 
-@spacy.registry.llm_tasks("spacy.NoOp.v1")
+
+@registry.llm_tasks("spacy.NoOp.v1")
 class LLM_NoOp(LLMTask):
     def __init__(self):
         """Returns (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
@@ -20,6 +21,8 @@ class LLM_NoOp(LLMTask):
         for doc in docs:
             yield "Don't do anything."
 
-    def parse_responses(self, docs: Iterable[Doc], responses: Iterable[str]) -> Iterable[Doc]:
+    def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[str]
+    ) -> Iterable[Doc]:
         # Not doing anything
         return docs

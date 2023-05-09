@@ -1,9 +1,9 @@
 from typing import Callable
 
-import spacy
+from .util import registry
 
 
-@spacy.registry.misc("spacy.NoopNormalizer.v1")
+@registry.misc("spacy.NoopNormalizer.v1")
 def noop_normalizer() -> Callable[[str], str]:
     """Return the labels as-is
 
@@ -16,7 +16,7 @@ def noop_normalizer() -> Callable[[str], str]:
     return noop
 
 
-@spacy.registry.misc("spacy.LowercaseNormalizer.v1")
+@registry.misc("spacy.LowercaseNormalizer.v1")
 def lowercase_normalizer() -> Callable[[str], str]:
     """Return lowercase versions of the labels
 
