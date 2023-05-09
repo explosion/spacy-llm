@@ -5,8 +5,10 @@ import jinja2
 import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
+from srsly import read_yaml, read_jsonl
 
 from ..registry import noop_normalizer
+from ..registry.util import read_examples_file
 
 
 def find_substrings(
@@ -53,6 +55,18 @@ def find_substrings(
 
 # {"Jack and Jill went up the hill": [{"PER": ["Jack", "Jill"]}, {"LOC": ["hill"]}]}
 TaskExample = Dict[str, Iterable[Dict[str, Any]]]
+
+
+@spacy.registry.misc("spacy.NERExampleReader.v1")
+def ner_example_reader() -> Callable[[Path], Iterable[TaskExample]]:
+    """Return a list of examples from a .yml or .jsonl file
+
+    RETURNS (Callable[[Path], Iterable[TaskExample]])
+    """
+
+    def reader(path: Path) -> Iterable[TaskExample]:
+        task_examples = read_examples_file(path)
+        return task_examples
 
 
 @spacy.registry.llm_tasks("spacy.NER.v1")
@@ -104,6 +118,7 @@ def ner_zeroshot_task(
     Text:
     ''' 
     {{ text }}
+    '''
     """
 
     label_dict = {normalizer(label): label for label in labels.split(",")}
@@ -112,7 +127,11 @@ def ner_zeroshot_task(
         environment = jinja2.Environment()
         _template = environment.from_string(template)
         for doc in docs:
-            prompt = _template.render(text=doc.text, labels=list(label_dict.values()))
+            prompt = _template.render(
+                text=doc.text,
+                labels=list(label_dict.values()),
+                examples=task_examples,
+            )
             yield prompt
 
     def _format_response(response: str) -> Iterable[Tuple[str, Iterable[str]]]:
