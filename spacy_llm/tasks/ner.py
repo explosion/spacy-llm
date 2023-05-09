@@ -94,39 +94,40 @@ def ner_zeroshot_task(
         )
 
     # Get task examples if the user supplied any
-    if examples:
-        task_examples = cast(Iterable[TaskExample], examples())
+    task_examples = cast(Iterable[TaskExample], examples()) if examples else None
 
     template = """
-    From the text below, extract the following entities in the following format:
-    {# whitespace #}
-    {%- for label in labels -%}
-    {{ label }}: <comma delimited list of strings>
-    {# whitespace #}
-    {%- endfor -%}
-    {# whitespace #}
-    {%- if examples -%}
-    {# whitespace #}
-    Below are some examples (only use these as a guide):
-    {# whitespace #}
-    {# whitespace #}
-    {%- for example in examples -%}
-    Text:
-    ''' 
-    {{ example['text'] }}
-    '''
-    {# whitespace #}
-    {%- for label, substrings in example['entities'].items() -%}
-    {{ label }}: {{ ', '.join(substrings) }}
-    {%- endfor -%}
-    {# whitespace #}
-    {%- endfor -%}
-    Here is the text that needs labeling
-    {# whitespace #}
-    Text:
-    '''
-    {{ text }}
-    '''
+From the text below, extract the following entities in the following format:
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}: <comma delimited list of strings>
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+Text:
+''' 
+{{ example['text'] }}
+'''
+{# whitespace #}
+{%- for label, substrings in example['entities'].items() -%}
+{{ label }}: {{ ', '.join(substrings) }}
+{%- endfor -%}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''
     """
 
     label_dict = {normalizer(label): label for label in labels.split(",")}
