@@ -40,7 +40,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python_version }}
-          cache: "pip"
 
       - name: Build sdist
         run: |
@@ -67,6 +66,7 @@ jobs:
       - name: Test import
         shell: bash
         run: |
+          echo $MODULE_NAME
           python -c "import $MODULE_NAME" -Werror
 
       - name: Install test requirements
