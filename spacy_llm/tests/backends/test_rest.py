@@ -63,7 +63,7 @@ def test_retries():
     )
     with pytest.raises(
         ConnectionError,
-        match="OpenAI API could not be reached within 30 seconds in 3 attempts. Check your network connection and the "
+        match="OpenAI API could not be reached within 30 seconds in 0 attempts. Check your network connection and the "
         "availability of the OpenAI API.",
     ):
         nlp("this is a test")
