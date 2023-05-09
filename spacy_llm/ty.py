@@ -1,12 +1,12 @@
-from typing import Callable, Iterable, TypeVar
+from typing import Any, Callable, Iterable
 
 from spacy.tokens import Doc
 
 from .compat import Protocol, runtime_checkable
 
 
-_Prompt = TypeVar("_Prompt")
-_Response = TypeVar("_Response")
+_Prompt = Any
+_Response = Any
 
 PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 
