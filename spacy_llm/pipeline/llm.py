@@ -171,8 +171,9 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        docs = [self._cache[doc]]
-        if docs[0] is None:
+        if doc in self._cache:
+            docs = [self._cache[doc]]
+        else:
             docs = list(
                 self._parse(
                     [doc],

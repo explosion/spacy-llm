@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Dict, Union, Optional, Iterable, List
 
 import srsly  # noqa: F401
-from spacy import Vocab
 from spacy.tokens import Doc, DocBin
+from spacy.vocab import Vocab
 
 
 class Cache:
@@ -63,6 +63,7 @@ class Cache:
         index_path = self._index_path
         if index_path.exists():
             for rec in srsly.read_jsonl(index_path):
+                assert isinstance(rec, dict)
                 self._doc2batch = {
                     **self._doc2batch,
                     **{int(k): int(v) for k, v in rec.items()},
@@ -136,7 +137,13 @@ class Cache:
         """
         return self._doc_id(doc) in self._doc2batch
 
-    def __getitem__(self, doc: Doc) -> Optional[Doc]:
+    def __getitem__(self, doc: Doc) -> Doc:
+        processed = self.get(doc)
+        if processed is None:
+            raise KeyError(f"Doc not in cache. Doc: {doc}")
+        return processed
+
+    def get(self, doc: Doc) -> Optional[Doc]:
         """Returns processed doc, if available in cache. Note that if doc is not in the set of currently loaded
         documents, its batch will be loaded (and an older batch potentially discarded from memory).
         If doc is not in cache, None is returned.
