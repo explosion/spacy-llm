@@ -97,8 +97,8 @@ class Backend(abc.ABC):
 
         if response.status_code in self._retry_error_codes:
             raise ConnectionError(
-                f"OpenAI API could not be reached within {self._timeout} seconds in {self._max_tries} attempts. Check "
-                f"your network connection and the availability of the OpenAI API."
+                f"API could not be reached within {self._timeout} seconds in {self._max_tries} attempts. Check your "
+                f"network connection and the API's availability."
             )
 
         return response

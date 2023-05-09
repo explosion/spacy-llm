@@ -33,8 +33,8 @@ class OpenAIBackend(Backend):
         api_key = os.getenv("OPENAI_API_KEY")
         if api_key is None:
             raise ValueError(
-                "Could not find the API key to access the openai API. Ensure you have an API key "
-                "set up via https://beta.openai.com/account/api-keys, then make it available as "
+                "Could not find the API key to access the OpenAI API. Ensure you have an API key "
+                "set up via https://platform.openai.com/account/api-keys, then make it available as "
                 "an environment variable 'PRODIGY_OPENAI_KEY', for instance in a .env file."
             )
 
@@ -50,7 +50,7 @@ class OpenAIBackend(Backend):
         if r.status_code == 422:
             raise ValueError(
                 "Could not access api.openai.com -- 422 permission denied."
-                "Visit https://beta.openai.com/account/api-keys to check your API keys."
+                "Visit https://platform.openai.com/account/api-keys to check your API keys."
             )
         elif r.status_code != 200:
             raise ValueError(
