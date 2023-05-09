@@ -12,20 +12,20 @@ supported_models = SimpleFrozenList(
     ["databricks/dolly-v2-3b", "databricks/dolly-v2-7b", "databricks/dolly-v2-12b"]
 )
 
-DEFAULT_CONFIG: Dict[str, Any] = {
+_DEFAULT_CFG: Dict[str, Any] = {
     # Loads a custom pipeline from https://huggingface.co/databricks/dolly-v2-3b/blob/main/instruct_pipeline.py
     # cf also https://huggingface.co/databricks/dolly-v2-12b
     "trust_remote_code": True,
 }
 
 if has_torch:
-    DEFAULT_CONFIG["torch_dtype"] = torch.bfloat16
+    _DEFAULT_CFG["torch_dtype"] = torch.bfloat16
     if has_torch_cuda_gpu:
         # this ensures it fails explicitely when GPU is not enabled or sufficient
-        DEFAULT_CONFIG["device"] = "cuda:0"
+        _DEFAULT_CFG["device"] = "cuda:0"
     elif has_accelerate:
         # accelerate will distribute the layers depending on availability on GPU/CPU/hard drive
-        DEFAULT_CONFIG["device_map"] = "auto"
+        _DEFAULT_CFG["device_map"] = "auto"
         warnings.warn(
             "Couldn't find a CUDA GPU, so the setting 'device_map:auto' will be used, which may result "
             "in the LLM being loaded (partly) on the CPU or even the hard disk, which may be slow. "
@@ -62,7 +62,7 @@ def _check_model(model: str) -> None:
 @spacy.registry.llm_backends("spacy.DollyHF.v1")
 def backend_dolly_hf(
     model: str,
-    config: Dict[Any, Any] = DEFAULT_CONFIG,
+    config: Dict[Any, Any] = _DEFAULT_CFG,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable that can execute a set of prompts and return the raw responses.
     model (str): Name of the HF model.

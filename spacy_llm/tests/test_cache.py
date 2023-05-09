@@ -12,7 +12,7 @@ from ..cache import Cache
 
 load_dotenv()  # take environment variables from .env.
 
-DEFAULT_CONFIG = {
+_DEFAULT_CFG = {
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
     "cache": {
         "batch_size": 2,
@@ -27,7 +27,7 @@ def test_caching() -> None:
 
     with spacy.util.make_tempdir() as tmpdir:
         nlp = spacy.blank("en")
-        config = copy.deepcopy(DEFAULT_CONFIG)
+        config = copy.deepcopy(_DEFAULT_CFG)
         config["cache"]["path"] = str(tmpdir)  # type: ignore
         nlp.add_pipe("llm", config=config)
         texts = [f"Test {i}" for i in range(n)]
@@ -63,7 +63,7 @@ def test_caching() -> None:
         #######################################################
 
         nlp_2 = spacy.blank("en")
-        config = copy.deepcopy(DEFAULT_CONFIG)
+        config = copy.deepcopy(_DEFAULT_CFG)
         config["cache"]["path"] = str(tmpdir)  # type: ignore
         nlp_2.add_pipe("llm", config=config)
         [nlp_2(text) for text in texts]
@@ -81,7 +81,7 @@ def test_path_file_invalid():
         with pytest.raises(
             ValueError, match="Cache directory exists and is not a directory."
         ):
-            config = copy.deepcopy(DEFAULT_CONFIG)
+            config = copy.deepcopy(_DEFAULT_CFG)
             config["cache"]["path"] = str(tmpdir / "empty_file")
             spacy.blank("en").add_pipe("llm", config=config)
 
@@ -89,7 +89,7 @@ def test_path_file_invalid():
 def test_path_dir_created():
     with spacy.util.make_tempdir() as tmpdir:
         # Non-existing cache directory should be created.
-        config = copy.deepcopy(DEFAULT_CONFIG)
+        config = copy.deepcopy(_DEFAULT_CFG)
         assert not (tmpdir / "new_dir").exists()
         config["cache"]["path"] = str(tmpdir / "new_dir")
         spacy.blank("en").add_pipe("llm", config=config)
