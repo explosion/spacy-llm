@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, cast
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 import jinja2
 from spacy.tokens import Doc
@@ -103,7 +103,7 @@ Below are some examples (only use these as a guide):
 {%- for example in examples -%}
 {# whitespace #}
 Text:
-''' 
+'''
 {{ example['text'] }}
 '''
 {# whitespace #}

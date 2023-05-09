@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable
 
 import spacy
 import srsly

@@ -398,7 +398,7 @@ Below are some examples (only use these as a guide):
 
 
 Text:
-''' 
+'''
 Jack and Jill went up the hill.
 '''
 PER: Jack, Jill
@@ -406,14 +406,14 @@ LOC: hill
 
 
 Text:
-''' 
+'''
 Jack fell down and broke his crown.
 '''
 PER: Jack
 
 
 Text:
-''' 
+'''
 Jill came tumbling after.
 '''
 PER: Jill
