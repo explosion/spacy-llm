@@ -58,7 +58,7 @@ def test_retries():
         "llm",
         config={
             "task": {"@llm_tasks": "spacy.NoOp.v1"},
-            "backend": {"config": {"model": "text-davinci-003"}, "n_max_tries": 0},
+            "backend": {"config": {"model": "text-davinci-003"}, "max_tries": 0},
         },
     )
     with pytest.raises(

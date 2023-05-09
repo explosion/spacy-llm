@@ -9,13 +9,14 @@ class Backend:
     """Queries LLMs via their REST APIs."""
 
     _SUPPORTED_APIS = ("OpenAI",)
+    _DEFAULT_URLS = {"OpenAI": "https://api.openai.com/v1/completions"}
 
     def __init__(
         self,
         api: str,
         config: Dict[Any, Any],
         strict: bool,
-        n_max_tries: int,
+        max_tries: int,
         timeout: int,
     ):
         """Initializes new Backend instance.
@@ -26,7 +27,7 @@ class Backend:
             this API should look like). If False, the API error responses are returned by __call__(), but no error will
             be raised.
             Note that only response object structure will be checked, not the prompt response text per se.
-        n_max_tries (int): Max. number of tries for API request.
+        max_tries (int): Max. number of tries for API request.
         timeout (int): Timeout for API request in seconds.
         """
         if api not in Backend._SUPPORTED_APIS:
@@ -36,9 +37,13 @@ class Backend:
         self._api = api
         self._config = config
         self._strict = strict
-        self._n_max_tries = n_max_tries
+        self._max_tries = max_tries
         self._timeout = timeout
         self._calls = {"OpenAI": self._call_openai}
+
+        # Ensure that config has an "url" entry.
+        if "url" not in self._config:
+            self._config["url"] = Backend._DEFAULT_URLS[self._api]
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         """Executes prompts on specified API.
@@ -62,16 +67,14 @@ class Backend:
         api_responses: List[str] = []
         prompts = list(prompts)
         json_data = {"prompt": prompts, **self._config}
-        n_request_tries = 0
+        request_tries = 0
         responses: Dict[str, Any] = {}
 
         # Query API.
-        for n_request_tries in range(self._n_max_tries):
+        for request_tries in range(self._max_tries):
             try:
                 responses = requests.post(
-                    self._config.pop("url")
-                    if "url" in self._config
-                    else "https://api.openai.com/v1/completions",
+                    self._config.pop("url"),
                     headers=headers,
                     json=json_data,
                     timeout=self._timeout,
@@ -79,10 +82,10 @@ class Backend:
                 break
             except ConnectionError:
                 pass
-        if n_request_tries == self._n_max_tries:
+        if request_tries == self._max_tries:
             raise ConnectionError(
                 f"OpenAI API could not be reached within {self._timeout} seconds in "
-                f"{self._n_max_tries} attempts. Check your network connection and the availability "
+                f"{self._max_tries} attempts. Check your network connection and the availability "
                 f"of the OpenAI API."
             )
 
