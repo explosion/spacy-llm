@@ -7,7 +7,6 @@ from spacy.language import Language
 from spacy.tokens import Doc
 
 from spacy_llm.tasks import NoopTask
-from spacy_llm.ty import LLMTask
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
@@ -72,7 +71,7 @@ def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
     @registry.llm_tasks("IncorrectTypes.v1")
-    class NoopTask_Incorrect(LLMTask):
+    class NoopTask_Incorrect:
         def __init__(self):
             pass
 
