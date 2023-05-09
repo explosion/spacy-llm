@@ -5,7 +5,6 @@ from spacy.tokens import Doc
 from spacy.util import filter_spans
 
 from ..registry import noop_normalizer, registry
-from ..ty import LLMTask
 
 
 def find_substrings(
@@ -51,7 +50,7 @@ def find_substrings(
 
 
 @registry.llm_tasks("spacy.NERZeroShot.v1")
-class NerTask(LLMTask):
+class NerTask:
 
     _TEMPLATE_STR = """
     From the text below, extract the following entities in the following format:
