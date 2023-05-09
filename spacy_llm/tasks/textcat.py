@@ -50,35 +50,19 @@ def textcat_zeroshot_task(
         )
 
     # Set up the template and its sub-components
-    _tpl_binary = """
-    Classify whether the text below belongs to the {{ label }} category or not.
-    If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer
-    `NEG`.
-    """
-
-    _tpl_multilabel = """
-    Classify the text below to any of the following labels: {{ labels|join(", ") }}
-    """
-
-    _tpl_exclusive = """
-    The task is exclusive, so only choose one label from what I provided
-    """
-
-    _tpl_nonexclusive = """
-    The task is non-exclusive, so you can provide more than one label as long as
-    they're comma-delimited. For example: Label1, Label2, Label3
-    """
-
     template = """
     {% if labels|length == 1 %}    
     {% set label = labels[0] %}
-    {binary}
+    Classify whether the text below belongs to the {{ label }} category or not.
+    If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer
+    `NEG`.
     {% else %}
-    {multilabel}
+    Classify the text below to any of the following labels: {{ labels|join(", ") }}
     {% if exclusive_classes %}
-    {exclusive}
+    The task is exclusive, so only choose one label from what I provided
     {% else %}
-    {nonexclusive}
+    The task is non-exclusive, so you can provide more than one label as long as
+    they're comma-delimited. For example: Label1, Label2, Label3
     {% endif %}
     {% endif %}
     {# whitespace #}
@@ -86,12 +70,7 @@ def textcat_zeroshot_task(
     '''
     {{ text }}
     '''
-    """.format(
-        binary=_tpl_binary,
-        multilabel=_tpl_multilabel,
-        exlusive=_tpl_exclusive,
-        nonexclusive=_tpl_nonexclusive,
-    )
+    """
 
     def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
