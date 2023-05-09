@@ -19,7 +19,7 @@ jobs:
   run:
     strategy:
       fail-fast: true
-      max-parallel: 1
+      max-parallel: 2
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python_version: ["3.11"]
