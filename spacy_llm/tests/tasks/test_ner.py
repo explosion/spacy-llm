@@ -3,7 +3,7 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
-from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
+from spacy_llm.tasks.ner import find_substrings, LLM_NER
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer
 
 cfg_string = """
@@ -128,13 +128,13 @@ def test_ensure_offsets_correspond_to_substrings(
 )
 def test_ner_zero_shot_task(text, response, gold_ents):
     labels = "PER,ORG,LOC"
-    _, parser = ner_zeroshot_task(labels=labels)
+    llm_ner = LLM_NER(labels=labels)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
-    doc_out = list(parser([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -182,13 +182,13 @@ def test_ner_zero_shot_task(text, response, gold_ents):
 def test_ner_labels(response, normalizer, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    _, parser = ner_zeroshot_task(labels=labels, normalizer=normalizer)
+    llm_ner = LLM_NER(labels=labels, normalizer=normalizer)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(parser([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -231,13 +231,13 @@ def test_ner_labels(response, normalizer, gold_ents):
 def test_ner_alignment(response, alignment_mode, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    _, parser = ner_zeroshot_task(labels=labels, alignment_mode=alignment_mode)
+    llm_ner = LLM_NER(labels=labels, alignment_mode=alignment_mode)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(parser([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -245,7 +245,7 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        ner_zeroshot_task(labels=labels, alignment_mode="invalid")
+        LLM_NER(labels=labels, alignment_mode="invalid")
 
 
 @pytest.mark.parametrize(
@@ -280,7 +280,7 @@ def test_invalid_alignment_mode():
 def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
-    _, parser = ner_zeroshot_task(
+    llm_ner = LLM_NER(
         labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
     )
     # Prepare doc
@@ -288,6 +288,6 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(parser([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents

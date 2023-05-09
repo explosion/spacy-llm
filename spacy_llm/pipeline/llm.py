@@ -2,8 +2,8 @@ import typing
 import warnings
 from pathlib import Path
 
-from typing import Callable, Iterable, Tuple, Iterator
-from typing import cast, TypeVar, Union, Dict, Optional
+from typing import Iterable, Tuple, Iterator
+from typing import cast, Union, Dict, Optional
 
 import spacy
 from spacy import Language, Vocab
@@ -12,13 +12,10 @@ from spacy.tokens import Doc
 
 from .. import registry  # noqa: F401
 from ..cache import Cache
+from ..ty import LLMTask, PromptExecutor
 
-_Prompt = TypeVar("_Prompt")
-_Response = TypeVar("_Response")
-_PromptGenerator = Callable[[Iterable[Doc]], Iterable[_Prompt]]
-_PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
-_ResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
-_CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
+
+CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
 
 
 @Language.factory(
@@ -39,22 +36,18 @@ _CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[Tuple[_PromptGenerator, _ResponseParser]],
-    backend: _PromptExecutor,
-    cache: _CacheConfigType,
+    task: Optional[LLMTask],
+    backend: PromptExecutor,
+    cache: CacheConfigType,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    task (Tuple[
-        Callable[[Iterable[Doc]], Iterable[_Prompt]],
-        Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
-    ]): Tuple of (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
-        prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with
-        the extracted information).
-    backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
+    task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+        structured information and set that back on the docs.
+    backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Dict[str, Union[Optional[str], bool, int]]): Cache config. If the cache directory `cache["path"]` is None, no
         data will be cached. If a path is set, processed docs will be serialized in the cache directory as binary .spacy
         files. Docs found in the cache directory won't be reprocessed.
@@ -68,22 +61,33 @@ def make_llm(
 
     return LLMWrapper(
         name=name,
-        template=task[0],
-        parse=task[1],
+        task=task,
         backend=backend,
         cache=cache,
         vocab=nlp.vocab,
     )
 
 
-def _validate_types(
-    task: Tuple[_PromptGenerator, _ResponseParser], backend: _PromptExecutor
-) -> None:
+def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
     # Inspect the types of the three main parameters to ensure they match internally
     # Raises an error or prints a warning if something looks wrong/odd.
+    if not isinstance(task, LLMTask):
+        raise ValueError(
+            f"A task needs to be of type 'LLMTask' but found {type(task)} instead"
+        )
+    if not hasattr(task, "generate_prompts"):
+        raise ValueError(
+            "A task needs to have the following method: generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]"
+        )
+    if not hasattr(task, "parse_responses"):
+        raise ValueError(
+            "A task needs to have the following method: "
+            "parse_responses(self, docs: Iterable[Doc], responses: Iterable[Any]) -> Iterable[Doc]"
+        )
+
     type_hints = {
-        "template": typing.get_type_hints(task[0]),
-        "parse": typing.get_type_hints(task[1]),
+        "template": typing.get_type_hints(task.generate_prompts),
+        "parse": typing.get_type_hints(task.parse_responses),
         "backend": typing.get_type_hints(backend),
     }
 
@@ -101,7 +105,7 @@ def _validate_types(
     # validate the 'parse' object
     if not (len(type_hints["parse"]) == 3 and "return" in type_hints["parse"]):
         raise ValueError(
-            "The 'parse' function should have two input arguments and one return value."
+            "The 'task.parse_responses()' function should have two input arguments and one return value."
         )
     for k in type_hints["parse"]:
         # find the 'prompt_responses' var without assuming its name
@@ -114,7 +118,7 @@ def _validate_types(
     # Ensure that the template returns the same type as expected by the backend
     if template_output != backend_input:
         warnings.warn(
-            f"Type returned from `task[0]` (`{template_output}`) doesn't match type expected by "
+            f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
             f"`backend` (`{backend_input}`)."
         )
 
@@ -122,7 +126,7 @@ def _validate_types(
     if parse_input != backend_output:
         warnings.warn(
             f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
-            f"`parse` (`{parse_input}`)."
+            f"`task.parse_responses()` (`{parse_input}`)."
         )
 
 
@@ -134,10 +138,9 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         vocab: Vocab,
-        template: _PromptGenerator,
-        parse: _ResponseParser,
-        backend: _PromptExecutor,
-        cache: _CacheConfigType,
+        task: LLMTask,
+        backend: PromptExecutor,
+        cache: CacheConfigType,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -145,18 +148,16 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         vocab (Vocab): Pipeline vocabulary.
-        template (Callable[[Iterable[Doc]], Iterable[_Prompt]]): Callable injecting Doc data into a prompt template and
-            returning one fully specified prompt per passed Doc instance.
-        parse (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable parsing LLM responses and
-            updating Doc instances with the extracted information.
-        backend (Callable[[Iterable[_Prompt]], Iterable[_Response]]]): Callable querying the specified LLM API.
+        task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+            structured information and set that back on the docs.
+        backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Dict[str, Union[Optional[str], bool, int]]): Cache config. If the cache directory `cache["path"]` is
             None, no data will be cached. If a path is set, processed docs will be serialized in the cache directory as
             binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
-        self._template = template
-        self._parse = parse
+        self._template = task.generate_prompts
+        self._parse = task.parse_responses
         self._backend = backend
         self._cache = Cache(
             path=cache["path"],  # type: ignore
