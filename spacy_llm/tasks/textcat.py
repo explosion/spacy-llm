@@ -3,7 +3,6 @@ from typing import Callable, Dict, Iterable, Optional, Tuple
 import jinja2
 import spacy
 from spacy.tokens import Doc
-from wasabi import msg
 
 from ..registry import noop_normalizer
 
@@ -44,13 +43,11 @@ def textcat_zeroshot_task(
     binary_textcat = True if len(labels.split(",")) == 1 else False
     label_dict = {normalizer(label): label for label in labels.split(",")}
     if binary_textcat and not exclusive_classes:
-        # This doesn't really affect the template since exclusivity only
-        # matters for multilabel. But it's good to call out this via a warning.
-        msg.warn(
-            "Binary classification should always be exclusive. Setting "
-            "`exclusive_classes` parameter to True"
+        raise ValueError(
+            "Binary classification should always be exclusive. Set"
+            " `exclusive_classes` parameter to True or pass a list of labels if you"
+            " intend to do multilabel classification."
         )
-        exclusive_classes = True
 
     # Set up the template and its sub-components
     _tpl_binary = """
