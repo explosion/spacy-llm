@@ -1,11 +1,10 @@
 from typing import Callable, Iterable, Optional, Tuple
 
 import jinja2
-import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from ..registry import noop_normalizer
+from ..registry import noop_normalizer, registry
 
 
 def find_substrings(
@@ -50,7 +49,7 @@ def find_substrings(
     return offsets
 
 
-@spacy.registry.llm_tasks("spacy.NERZeroShot.v1")
+@registry.llm_tasks("spacy.NERZeroShot.v1")
 def ner_zeroshot_task(
     labels: str,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -90,7 +89,7 @@ def ner_zeroshot_task(
     {# whitespace #}
     {%- endfor -%}
     Text:
-    ''' 
+    '''
     {{ text }}
     """
 

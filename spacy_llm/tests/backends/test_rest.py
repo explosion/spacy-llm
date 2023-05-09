@@ -1,6 +1,7 @@
+# mypy: ignore-errors
 import pytest
 import spacy
-import srsly
+import srsly  # type: ignore[import]
 
 PIPE_CFG = {
     "backend": {

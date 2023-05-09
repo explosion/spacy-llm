@@ -1,9 +1,9 @@
 from typing import Any, Callable, Dict, Iterable
 
-import spacy
 from spacy.util import SimpleFrozenDict
 
 from ..compat import has_minichain, minichain
+from ..registry import registry
 
 
 def _check_installation() -> None:
@@ -15,7 +15,7 @@ def _check_installation() -> None:
         )
 
 
-@spacy.registry.llm_queries("spacy.RunMiniChain.v1")
+@registry.llm_queries("spacy.RunMiniChain.v1")
 def query_minichain() -> Callable[
     ["minichain.backend.Backend", Iterable[str]], Iterable[str]
 ]:
@@ -29,15 +29,15 @@ def query_minichain() -> Callable[
         backend: "minichain.backend.Backend", prompts: Iterable[str]
     ) -> Iterable[str]:
         @minichain.prompt(backend)
-        def _prompt(mc_backend: "minichain.backend", prompt_text: str) -> str:
-            return mc_backend(prompt_text)
+        def _prompt(model: "minichain.base.Prompt.Model", prompt_text: str) -> str:
+            return model(prompt_text)
 
         return [_prompt(pr).run() for pr in prompts]
 
     return prompt
 
 
-@spacy.registry.llm_backends("spacy.MiniChain.v1")
+@registry.llm_backends("spacy.MiniChain.v1")
 def backend_minichain(
     api: str,
     query: Callable[

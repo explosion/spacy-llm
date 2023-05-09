@@ -21,3 +21,6 @@ jobs:
 
       - name: Run all pre-commit checks
         run: pre-commit run --all-files --hook-stage manual -c .pre-commit-config.yaml
+
+      - name: Run mypy
+        run: mypy spacy_llm
