@@ -1,8 +1,8 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, Tuple, TypeVar
-from typing import Optional, Union, cast
+from typing import Callable, Iterable, Tuple, Iterator
+from typing import cast, TypeVar, Union, Dict, Optional
 from typing_extensions import Self
 
 import spacy

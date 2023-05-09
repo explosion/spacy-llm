@@ -9,10 +9,6 @@ from spacy.tokens import Doc
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 @pytest.fixture
 def nlp() -> Language:
