@@ -88,9 +88,9 @@ def _validate_types(
         "backend": typing.get_type_hints(backend),
     }
 
-    parse_input = None
-    backend_input = None
-    backend_output = None
+    parse_input: Optional[Type] = None
+    backend_input: Optional[Type] = None
+    backend_output: Optional[Type] = None
 
     # Validate the 'backend' object
     if not (len(type_hints["backend"]) == 2 and "return" in type_hints["backend"]):
