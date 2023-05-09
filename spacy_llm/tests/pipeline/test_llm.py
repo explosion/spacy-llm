@@ -6,7 +6,7 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
 
-from spacy_llm.tasks import LLM_NoOp
+from spacy_llm.tasks import NoopTask
 from spacy_llm.ty import LLMTask
 
 from spacy_llm.pipeline import LLMWrapper
@@ -33,7 +33,7 @@ def test_llm_pipe(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        task=LLM_NoOp,
+        task=NoopTask,
         backend=None,  # type: ignore
         cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
@@ -43,7 +43,7 @@ def test_llm_serialize_bytes():
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        task=LLM_NoOp,
+        task=NoopTask,
         backend=None,  # type: ignore
         cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
@@ -67,7 +67,7 @@ def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
     @registry.llm_tasks("IncorrectTypes.v1")
-    class LLM_NoOp_Incorrect(LLMTask):
+    class NoopTask_Incorrect(LLMTask):
         def __init__(self):
             pass
 

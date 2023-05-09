@@ -51,7 +51,7 @@ def find_substrings(
 
 
 @registry.llm_tasks("spacy.NERZeroShot.v1")
-class LLM_NER(LLMTask):
+class NerTask(LLMTask):
 
     _TEMPLATE_STR = """
     From the text below, extract the following entities in the following format:

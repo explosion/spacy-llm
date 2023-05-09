@@ -8,7 +8,7 @@ from ..registry import registry
 
 
 @registry.llm_tasks("spacy.NoOp.v1")
-class LLM_NoOp(LLMTask):
+class NoopTask(LLMTask):
     def __init__(self):
         """Returns (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified
         prompt per passed Doc instance) and (2) parsing callable (parsing LLM responses and updating Doc instances with the
