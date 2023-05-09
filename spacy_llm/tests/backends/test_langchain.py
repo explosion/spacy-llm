@@ -1,6 +1,8 @@
 import spacy
 import pytest
 
+from ...compat import has_langchain
+
 PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.LangChain.v1",
@@ -13,6 +15,7 @@ PIPE_CFG = {
 
 
 @pytest.mark.external
+@pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
