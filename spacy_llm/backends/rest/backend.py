@@ -66,6 +66,7 @@ class Backend:
         }
         api_responses: List[str] = []
         prompts = list(prompts)
+        url = self._config.pop("url")
         json_data = {"prompt": prompts, **self._config}
         request_tries = 0
         responses: Dict[str, Any] = {}
@@ -74,7 +75,7 @@ class Backend:
         for request_tries in range(self._max_tries):
             try:
                 responses = requests.post(
-                    self._config.pop("url"),
+                    url,
                     headers=headers,
                     json=json_data,
                     timeout=self._timeout,
