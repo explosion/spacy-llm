@@ -1,10 +1,11 @@
-from typing import Callable, Iterable, Optional, Tuple, Literal
+from typing import Callable, Iterable, Optional, Tuple
 
 import jinja2
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
 from ..registry import noop_normalizer, registry
+from ..compat import Literal
 
 
 def find_substrings(
@@ -68,7 +69,9 @@ class NERTask:
         self,
         labels: str,
         normalizer: Optional[Callable[[str], str]] = None,
-        alignment_mode: Literal["strict", "contract", "expand"] = "contract",
+        alignment_mode: Literal[
+            "strict", "contract", "expand"  # noqa: F821
+        ] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
