@@ -2,11 +2,15 @@ import warnings
 from typing import Any, Callable, Dict, Iterable
 
 import spacy
+from spacy.util import SimpleFrozenList
 from thinc.compat import has_torch_cuda_gpu
 
 from ..compat import has_accelerate, has_torch, has_transformers, torch, transformers
 
-MODELS = ["databricks/dolly-v2-3b", "databricks/dolly-v2-7b", "databricks/dolly-v2-12b"]
+
+supported_models = SimpleFrozenList(
+    ["databricks/dolly-v2-3b", "databricks/dolly-v2-7b", "databricks/dolly-v2-12b"]
+)
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "trust_remote_code": True,
@@ -47,9 +51,9 @@ def _check_installation() -> None:
 
 
 def _check_model(model: str) -> None:
-    if model not in MODELS:
+    if model not in supported_models:
         raise ValueError(
-            f"Model '{model}' is not supported - select one of {MODELS} instead"
+            f"Model '{model}' is not supported - select one of {supported_models} instead"
         )
 
 
