@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable, Optional, Tuple, Literal
 
 import jinja2
 from spacy.tokens import Doc
@@ -50,21 +50,21 @@ def find_substrings(
     return offsets
 
 
-_TEMPLATE_STR = """
-From the text below, extract the following entities in the following format:
-{# whitespace #}
-{%- for label in labels -%}
-{{ label }}: <comma delimited list of strings>
-{# whitespace #}
-{%- endfor -%}
-Text:
-'''
-{{ text }}
-"""
-
-
 @registry.llm_tasks("spacy.NERZeroShot.v1")
 class LLM_NER(LLMTask):
+
+    _TEMPLATE_STR = """
+    From the text below, extract the following entities in the following format:
+    {# whitespace #}
+    {%- for label in labels -%}
+    {{ label }}: <comma delimited list of strings>
+    {# whitespace #}
+    {%- endfor -%}
+    Text:
+    '''
+    {{ text }}
+    """
+
     def __init__(
         self,
         labels: str,
@@ -102,7 +102,7 @@ class LLM_NER(LLMTask):
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
-        _template = environment.from_string(_TEMPLATE_STR)
+        _template = environment.from_string(self._TEMPLATE_STR)
         for doc in docs:
             prompt = _template.render(
                 text=doc.text, labels=list(self._label_dict.values())
