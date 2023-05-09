@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Dict, Union, Optional, Iterable, List
 
 import srsly  # noqa: F401
-from spacy import Vocab
 from spacy.tokens import Doc, DocBin
+from spacy.vocab import Vocab
 
 
 class Cache:

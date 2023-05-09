@@ -1,12 +1,12 @@
 from typing import Any, Callable, Dict, Iterable
 
-import spacy
 from spacy.util import SimpleFrozenDict
 
 from .backend import Backend
+from ...registry import registry
 
 
-@spacy.registry.llm_backends("spacy.REST.v1")
+@registry.llm_backends("spacy.REST.v1")
 def backend_rest(
     api: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),
