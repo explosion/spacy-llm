@@ -49,11 +49,10 @@ def find_substrings(
     return offsets
 
 
-
 @registry.llm_tasks("spacy.NER.v1")
 def ner_zeroshot_task(
     labels: str,
-    examples: Optional[Callable[[str], Iterable[Any]]] = None,
+    examples: Optional[Callable[[], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: str = "contract",
     case_sensitive_matching: bool = False,
@@ -65,7 +64,7 @@ def ner_zeroshot_task(
     """Default NER template for LLM annotation
 
     labels (str): comma-separated list of labels to pass to the template.
-    examples (Optional[Callable[[str], Iterable[TaskExample]]]): a Callable
+    examples (Optional[Callable[[], Iterable[TaskExample]]]): a Callable
         that takes in a path and returns a list of task examples. for few-shot learning.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
@@ -86,7 +85,7 @@ def ner_zeroshot_task(
         )
 
     # Get task examples if the user supplied any
-    task_examples: Iterable[Dict[str, Any]] = examples() if examples else None
+    task_examples: Optional[Iterable[Dict[str, Any]]] = examples() if examples else None
 
     template = """
 From the text below, extract the following entities in the following format:

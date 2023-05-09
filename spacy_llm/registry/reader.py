@@ -6,7 +6,7 @@ import srsly
 
 
 @spacy.registry.misc("spacy.ExampleReader.v1")
-def example_reader(path: Optional[str] = None) -> Callable[[str], Iterable[Any]]:
+def example_reader(path: str) -> Callable[[], Iterable[Any]]:
     """Read an examples file to include in few-shot learning
 
     path (Path): path to an examples file (.yml, .yaml, .json)
@@ -15,15 +15,15 @@ def example_reader(path: Optional[str] = None) -> Callable[[str], Iterable[Any]]
     """
 
     # typecast string path so that we can use pathlib functionality
-    path = Path(path)
+    eg_path = Path(path)
 
     def reader() -> Iterable[Any]:
-        if path is None:
+        if eg_path is None:
             data = []
-        elif path.suffix in (".yml", ".yaml"):
-            data = srsly.read_yaml(path)
-        elif path.suffix == ".json":
-            data = srsly.read_json(path)
+        elif eg_path.suffix in (".yml", ".yaml"):
+            data = srsly.read_yaml(eg_path)
+        elif eg_path.suffix == ".json":
+            data = srsly.read_json(eg_path)
         else:
             raise ValueError(
                 "The examples file expects a .yml, .yaml, or .json file type."
