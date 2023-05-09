@@ -3,11 +3,11 @@ try:
 
     has_langchain = True
 except (ImportError, AttributeError):
-    langchain = None
+    langchain = None  # type: ignore[assignment]
     has_langchain = False
 
 try:
-    import minichain
+    import minichain  # type: ignore[import]
 
     has_minichain = True
 except (ImportError, AttributeError):
@@ -15,7 +15,7 @@ except (ImportError, AttributeError):
     has_minichain = False
 
 try:
-    import torch
+    import torch  # type: ignore[import]
 
     has_torch = True
 except ImportError:
@@ -23,7 +23,7 @@ except ImportError:
     has_torch = False
 
 try:
-    import transformers
+    import transformers  # type: ignore[import]
 
     has_transformers = True
 except ImportError:
@@ -31,7 +31,7 @@ except ImportError:
     has_transformers = False
 
 try:
-    import accelerate
+    import accelerate  # type: ignore[import]
 
     has_accelerate = True
 except ImportError:

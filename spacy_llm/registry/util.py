@@ -1,4 +1,4 @@
-import catalogue
+import catalogue  # type: ignore[import]
 import spacy
 
 for registry_name in ("queries", "backends", "tasks"):

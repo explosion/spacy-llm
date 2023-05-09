@@ -1,7 +1,7 @@
 from typing import Dict
 
 import pytest
-import srsly
+import srsly  # type: ignore[import]
 from dotenv import load_dotenv
 import spacy
 from spacy.tokens import DocBin

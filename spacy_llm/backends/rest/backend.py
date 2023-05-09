@@ -2,7 +2,7 @@ import os
 from typing import Any, Dict, Iterable, List
 
 import requests  # type: ignore
-import srsly
+import srsly  # type: ignore[import]
 
 
 class Backend:

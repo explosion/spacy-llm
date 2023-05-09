@@ -185,6 +185,7 @@ class LLMWrapper(Pipe):
                 )
             )
             assert len(docs) == 1
+            assert isinstance(docs[0], Doc)
             self._cache.add(docs[0])
 
         assert isinstance(docs[0], Doc)
@@ -212,7 +213,9 @@ class LLMWrapper(Pipe):
                 )
                 for i, doc in enumerate(doc_batch):
                     if is_cached[i]:
-                        yield self._cache[doc]
+                        doc = self._cache[doc]
+                        assert isinstance(doc, Doc)
+                        yield doc
                     else:
                         yield next(modified_docs)
             except Exception as e:
