@@ -28,6 +28,11 @@ def test_llm_pipe(nlp):
     assert len(docs) == 2
 
 
+def test_llm_pipe_empty(nlp):
+    """Test call .pipe() with empty batch."""
+    assert list(nlp.pipe(texts=[])) == []
+
+
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
         template=None,  # type: ignore
