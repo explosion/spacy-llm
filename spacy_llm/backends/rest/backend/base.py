@@ -3,7 +3,6 @@ import time
 from typing import Any, Dict, Iterable, Callable, Tuple, Set
 
 import requests  # type: ignore
-import srsly  # type: ignore[import]
 
 
 class Backend(abc.ABC):
