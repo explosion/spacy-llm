@@ -80,7 +80,8 @@ def test_textcat_config(labels: str, exclusive_classes: bool):
 )
 def test_textcat_predict(text, labels, exclusive_classes, gold_cats):
     """Use OpenAI to get zero-shot Textcat results
-    Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
+    Note that this test may fail randomly, as the LLM's output is unguaranteed
+    to be consistent/predictable
     """
     orig_config = Config().from_str(
         cfg_string,
