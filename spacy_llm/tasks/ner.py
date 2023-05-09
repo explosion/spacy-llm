@@ -1,4 +1,5 @@
-from typing import Callable, Iterable, Optional, Tuple
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 import jinja2
 import spacy
@@ -50,9 +51,14 @@ def find_substrings(
     return offsets
 
 
-@spacy.registry.llm_tasks("spacy.NERZeroShot.v1")
+# {"Jack and Jill went up the hill": [{"PER": ["Jack", "Jill"]}, {"LOC": ["hill"]}]}
+TaskExample = Dict[str, Iterable[Dict[str, Any]]]
+
+
+@spacy.registry.llm_tasks("spacy.NER.v1")
 def ner_zeroshot_task(
     labels: str,
+    examples: Optional[Callable[[Path], Iterable[TaskExample]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: str = "contract",
     case_sensitive_matching: bool = False,
@@ -61,9 +67,11 @@ def ner_zeroshot_task(
     Callable[[Iterable[Doc]], Iterable[str]],
     Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
 ]:
-    """Default NER template for zero-shot annotation
+    """Default NER template for LLM annotation
 
     labels (str): comma-separated list of labels to pass to the template.
+    examples (Optional[Callable[[Path], Iterable[TaskExample]]]): a Callable
+        that takes in a path and returns a list of task examples. for few-shot learning.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
@@ -81,6 +89,10 @@ def ner_zeroshot_task(
         raise ValueError(
             f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
         )
+
+    # Setup how examples are read
+    if examples:
+        task_examples = examples()
 
     template = """
     From the text below, extract the following entities in the following format:
