@@ -14,8 +14,9 @@ repos:
     hooks:
     - id: mypy
       name: mypy
+      entry: mypy
       exclude: ^(.github/)
       language: python
       types: [python]
       require_serial: true
-      args: [ --ignore-missing-imports, --no-implicit-optional ]
+      args: [ "--ignore-missing-imports", "--no-implicit-optional" ]

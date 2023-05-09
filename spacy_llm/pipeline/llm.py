@@ -187,6 +187,7 @@ class LLMWrapper(Pipe):
             assert len(docs) == 1
             self._cache.add(docs[0])
 
+        assert isinstance(docs[0], Doc)
         return docs[0]
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
