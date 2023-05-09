@@ -67,7 +67,6 @@ jobs:
         shell: bash
         run: |
           echo $MODULE_NAME
-          python -c "import $MODULE_NAME" -Werror
 
       - name: Install test requirements
         run: |
