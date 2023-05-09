@@ -1,14 +1,14 @@
 import typing
 import warnings
 from pathlib import Path
-
-from typing import Callable, Iterable, Tuple, Iterator
+from typing import Callable, Iterable, Tuple, Iterator, Type
 from typing import cast, TypeVar, Union, Dict, Optional
 
 import spacy
-from spacy import Language, Vocab
+from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
+from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..cache import Cache
@@ -87,6 +87,10 @@ def _validate_types(
         "backend": typing.get_type_hints(backend),
     }
 
+    parse_input: Optional[Type] = None
+    backend_input: Optional[Type] = None
+    backend_output: Optional[Type] = None
+
     # Validate the 'backend' object
     if not (len(type_hints["backend"]) == 2 and "return" in type_hints["backend"]):
         raise ValueError(
@@ -106,7 +110,7 @@ def _validate_types(
     for k in type_hints["parse"]:
         # find the 'prompt_responses' var without assuming its name
         type_k = type_hints["parse"][k]
-        if type_k is not typing.Iterable[spacy.tokens.doc.Doc]:
+        if type_k is not typing.Iterable[Doc]:
             parse_input = type_hints["parse"][k]
 
     template_output = type_hints["template"]["return"]
@@ -180,8 +184,10 @@ class LLMWrapper(Pipe):
                 )
             )
             assert len(docs) == 1
+            assert isinstance(docs[0], Doc)
             self._cache.add(docs[0])
 
+        assert isinstance(docs[0], Doc)
         return docs[0]
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
@@ -205,7 +211,12 @@ class LLMWrapper(Pipe):
                     )
                 )
                 for i, doc in enumerate(doc_batch):
-                    yield self._cache[doc] if is_cached[i] else next(modified_docs)
+                    if is_cached[i]:
+                        doc = self._cache[doc]
+                        assert isinstance(doc, Doc)
+                        yield doc
+                    else:
+                        yield next(modified_docs)
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
 
@@ -215,10 +226,7 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-        return spacy.util.to_bytes(
-            {},
-            exclude,
-        )
+        return spacy.util.to_bytes({}, exclude)
 
     def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
@@ -227,13 +235,7 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-
-        spacy.util.from_bytes(
-            bytes_data,
-            {},
-            exclude,
-        )
-
+        spacy.util.from_bytes(bytes_data, {}, exclude)
         return self
 
     def to_disk(
@@ -263,5 +265,4 @@ class LLMWrapper(Pipe):
             {},
             exclude,
         )
-
         return self

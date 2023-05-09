@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 try:
     import langchain
 
@@ -13,3 +14,27 @@ try:
 except (ImportError, AttributeError):
     minichain = None
     has_minichain = False
+
+try:
+    import torch
+
+    has_torch = True
+except ImportError:
+    torch = None
+    has_torch = False
+
+try:
+    import transformers
+
+    has_transformers = True
+except ImportError:
+    transformers = None
+    has_transformers = False
+
+try:
+    import accelerate
+
+    has_accelerate = True
+except ImportError:
+    accelerate = None
+    has_accelerate = False

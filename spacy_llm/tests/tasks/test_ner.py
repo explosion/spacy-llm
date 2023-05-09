@@ -1,10 +1,11 @@
+# mypy: ignore-errors
 import pytest
 import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
+from spacy_llm.registry import lowercase_normalizer, noop_normalizer
 from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer
 
 cfg_string = """
 [nlp]
@@ -14,7 +15,7 @@ batch_size = 128
 
 [components]
 
-[components.llm] 
+[components.llm]
 factory = "llm"
 
 [components.llm.task]

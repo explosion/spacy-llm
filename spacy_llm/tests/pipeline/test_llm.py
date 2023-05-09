@@ -1,18 +1,17 @@
-from spacy_llm.pipeline import LLMWrapper
-
 import warnings
 from typing import Callable, Iterable, Tuple
 
 import pytest
 import spacy
-from dotenv import load_dotenv
+from spacy.language import Language
 from spacy.tokens import Doc
 
-load_dotenv()  # take environment variables from .env.
+from spacy_llm.pipeline import LLMWrapper
+from spacy_llm.registry import registry
 
 
 @pytest.fixture
-def nlp() -> spacy.Language:
+def nlp() -> Language:
     nlp = spacy.blank("en")
     nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
     return nlp
@@ -66,7 +65,7 @@ def test_type_checking_valid() -> None:
 def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
-    @spacy.registry.llm_tasks("spacy.TestIncorrect.v1")
+    @registry.llm_tasks("spacy.TestIncorrect.v1")
     def noop_task_incorrect() -> Tuple[
         Callable[[Iterable[Doc]], Iterable[int]],
         Callable[[Iterable[Doc], Iterable[float]], Iterable[Doc]],
