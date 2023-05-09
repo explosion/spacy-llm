@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import spacy
 import srsly
@@ -9,23 +9,29 @@ for registry_name in ("queries", "backends", "tasks"):
         spacy.registry.create(f"llm_{registry_name}", entry_points=True)
 
 
-def read_examples_file(path: Path) -> Iterable[Any]:
+@spacy.registry.misc("spacy.ExampleReader.v1")
+def example_reader(path: Path) -> Callable[[Path], Iterable[Any]]:
     """Read an examples file to include in few-shot learning
 
     path (Path): path to an examples file (.yml, .yaml, .jsonl)
 
     RETURNS (Iterable[Any]): an iterable of examples to be parsed by the template
     """
-    if path.suffix in (".yml", ".yaml"):
-        data = srsly.read_yaml(path)
-    elif path.suffix == ".jsonl":
-        data = srsly.read_jsonl(path)
-    else:
-        raise ValueError(
-            "The examples file expects a .yml, .yaml, or .jsonl file type."
-        )
 
-    if not isinstance(data, list):
-        raise ValueError(
-            f"Cannot interpret prompt examples from {path}. Please check your formatting"
-        )
+    def reader() -> Iterable[Any]:
+        if path.suffix in (".yml", ".yaml"):
+            data = srsly.read_yaml(path)
+        elif path.suffix == ".jsonl":
+            data = srsly.read_jsonl(path)
+        else:
+            raise ValueError(
+                "The examples file expects a .yml, .yaml, or .jsonl file type."
+            )
+
+        if not isinstance(data, list):
+            raise ValueError(
+                f"Cannot interpret prompt examples from {path}. Please check your formatting"
+            )
+        return data
+
+    return reader

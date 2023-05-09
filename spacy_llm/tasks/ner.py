@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, cast
 
 import jinja2
 import spacy
@@ -57,22 +57,10 @@ def find_substrings(
 TaskExample = Dict[str, Iterable[Dict[str, Any]]]
 
 
-@spacy.registry.misc("spacy.NERExampleReader.v1")
-def ner_example_reader() -> Callable[[Path], Iterable[TaskExample]]:
-    """Return a list of examples from a .yml or .jsonl file
-
-    RETURNS (Callable[[Path], Iterable[TaskExample]])
-    """
-
-    def reader(path: Path) -> Iterable[TaskExample]:
-        task_examples = read_examples_file(path)
-        return task_examples
-
-
 @spacy.registry.llm_tasks("spacy.NER.v1")
 def ner_zeroshot_task(
     labels: str,
-    examples: Optional[Callable[[Path], Iterable[TaskExample]]] = None,
+    examples: Optional[Callable[[Path], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: str = "contract",
     case_sensitive_matching: bool = False,
@@ -106,7 +94,7 @@ def ner_zeroshot_task(
 
     # Setup how examples are read
     if examples:
-        task_examples = examples()
+        task_examples = cast(Iterable[TaskExample], examples())
 
     template = """
     From the text below, extract the following entities in the following format:
