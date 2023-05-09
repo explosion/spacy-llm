@@ -13,7 +13,7 @@ for registry_name in ("queries", "backends", "tasks"):
 def example_reader(path: Optional[str] = None) -> Callable[[str], Iterable[Any]]:
     """Read an examples file to include in few-shot learning
 
-    path (Path): path to an examples file (.yml, .yaml, .jsonl)
+    path (Path): path to an examples file (.yml, .yaml, .json)
 
     RETURNS (Iterable[Any]): an iterable of examples to be parsed by the template
     """
@@ -26,11 +26,11 @@ def example_reader(path: Optional[str] = None) -> Callable[[str], Iterable[Any]]
             data = []
         elif path.suffix in (".yml", ".yaml"):
             data = srsly.read_yaml(path)
-        elif path.suffix == ".jsonl":
-            data = srsly.read_jsonl(path)
+        elif path.suffix == ".json":
+            data = srsly.read_json(path)
         else:
             raise ValueError(
-                "The examples file expects a .yml, .yaml, or .jsonl file type."
+                "The examples file expects a .yml, .yaml, or .json file type."
             )
 
         if not isinstance(data, list):
