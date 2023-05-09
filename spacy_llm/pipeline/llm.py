@@ -3,7 +3,6 @@ import warnings
 from pathlib import Path
 from typing import Callable, Iterable, Tuple, Iterator, Type
 from typing import cast, TypeVar, Union, Dict, Optional
-from typing_extensions import Self
 
 import spacy
 from spacy.language import Language
@@ -229,7 +228,7 @@ class LLMWrapper(Pipe):
         """
         return spacy.util.to_bytes({}, exclude)
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> Self:
+    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -255,7 +254,7 @@ class LLMWrapper(Pipe):
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
-    ) -> Self:
+    ) -> "LLMWrapper":
         """Load the LLMWrapper from disk.
         path (Path): A path to a JSON file. Paths may be either strings or Path-like objects.
         exclude (Tuple): Names of properties to exclude from deserialization.

@@ -2,7 +2,7 @@ from typing import Dict
 
 import pytest
 import srsly  # type: ignore[import]
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore[import]
 import spacy
 from spacy.tokens import DocBin
 import copy

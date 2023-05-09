@@ -7,7 +7,7 @@ from ..compat import has_langchain, langchain
 from ..registry import registry
 
 if TYPE_CHECKING and has_langchain:
-    from langchain.llms.base import BaseLLM
+    from langchain.llms.base import BaseLLM  # type: ignore[import]
 
 
 def _check_installation() -> None:
