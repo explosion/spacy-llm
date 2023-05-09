@@ -7,7 +7,7 @@ import spacy
 from spacy.tokens import DocBin
 import copy
 
-from ..cache import Cache
+from spacy_llm.cache import Cache
 
 
 load_dotenv()  # take environment variables from .env.
@@ -21,7 +21,35 @@ DEFAULT_CONFIG = {
 }
 
 
-def test_caching() -> None:
+def test_cache() -> None:
+    with spacy.util.make_tempdir() as tmpdir:
+
+        nlp = spacy.blank("en")
+        cache = Cache(tmpdir, 1, 1, nlp.vocab)
+        known_doc = nlp("Known test doc")
+        unknown_doc = nlp("Unknown test doc")
+
+        known_doc.set_ents([known_doc.char_span(0, 5, "TEST")])
+        cache.add(known_doc)
+
+        # TODO: First save doesn't repopulate the cache, shouldn't it?
+        # Recreating cache for now.
+        cache = Cache(tmpdir, 1, 1, nlp.vocab)
+
+        assert known_doc in cache
+        assert unknown_doc not in cache
+
+        assert cache[known_doc].ents[0].text == known_doc.ents[0].text
+        with pytest.raises(KeyError):
+            cache[unknown_doc]
+
+        processed_known_doc = cache.get(known_doc)
+        assert processed_known_doc is not None
+        assert processed_known_doc.ents[0].text == known_doc.ents[0].text
+        assert cache.get(unknown_doc) is None
+
+
+def test_pipeline_caching() -> None:
     """Test pipeline with caching."""
     n = 10
 
@@ -43,7 +71,7 @@ def test_caching() -> None:
         for rec in index:
             index_dict = {**index_dict, **{int(k): int(v) for k, v in rec.items()}}
         assert len(index) == len(index_dict) == n
-        cache = nlp.get_pipe("llm")._cache  # type: ignore
+        cache: Cache = nlp.get_pipe("llm")._cache  # type: ignore
         assert cache._stats["hit"] == 0
         assert cache._stats["missed"] == n
         assert cache._stats["added"] == n

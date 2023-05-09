@@ -140,7 +140,7 @@ class Cache:
     def __getitem__(self, doc: Doc) -> Doc:
         processed = self.get(doc)
         if processed is None:
-            raise KeyError(f"Doc not in cache. Doc: {doc}")
+            raise KeyError(doc, "Doc not in cache.")
         return processed
 
     def get(self, doc: Doc) -> Optional[Doc]:
