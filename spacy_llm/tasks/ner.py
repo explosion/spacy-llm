@@ -69,7 +69,7 @@ class LLM_NER(LLMTask):
         self,
         labels: str,
         normalizer: Optional[Callable[[str], str]] = None,
-        alignment_mode: str = "contract",
+        alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
