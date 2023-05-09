@@ -1,0 +1,11 @@
+[tool.ruff]
+ignore = [
+    "E501",
+]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "Q",    # flake8-quotes
+    "T201"  # flake8-print
+]
