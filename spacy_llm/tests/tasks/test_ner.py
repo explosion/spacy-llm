@@ -328,7 +328,7 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
+        "spacy_llm/tests/tasks/examples/ner_examples.json",
         "spacy_llm/tests/tasks/examples/ner_examples.yml",
     ],
 )
@@ -346,4 +346,43 @@ def test_jinja_template_rendering_with_examples(examples_path):
     renderer, _ = ner_zeroshot_task(labels=labels, examples=examples)
     prompt = list(renderer([doc]))[0]
 
-    breakpoint()
+    assert (
+        prompt.strip()
+        == """
+From the text below, extract the following entities in the following format:
+PER: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+LOC: <comma delimited list of strings>
+
+Below are some examples (only use these as a guide):
+
+
+Text:
+''' 
+Jack and Jill went up the hill.
+'''
+PER: Jack, Jill
+LOC: hill
+
+
+Text:
+''' 
+Jack fell down and broke his crown.
+'''
+PER: Jack
+
+
+Text:
+''' 
+Jill came tumbling after.
+'''
+PER: Jill
+
+
+Here is the text that needs labeling:
+
+Text:
+'''
+Alice and Bob went to the supermarket
+'''""".strip()
+    )

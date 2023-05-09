@@ -50,13 +50,6 @@ def find_substrings(
     return offsets
 
 
-# {
-#     "text": "Jack and Jill went up the hill",
-#     "entities": {"PER": ["Jack", "Jill"], "LOC": ["hill"]},
-# }
-TaskExample = Dict[str, Any]
-
-
 @spacy.registry.llm_tasks("spacy.NER.v1")
 def ner_zeroshot_task(
     labels: str,
@@ -93,7 +86,7 @@ def ner_zeroshot_task(
         )
 
     # Get task examples if the user supplied any
-    task_examples = cast(Iterable[TaskExample], examples()) if examples else None
+    task_examples: Iterable[Dict[str, Any]] = examples() if examples else None
 
     template = """
 From the text below, extract the following entities in the following format:
@@ -109,6 +102,7 @@ Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
 {%- for example in examples -%}
+{# whitespace #}
 Text:
 ''' 
 {{ example['text'] }}
@@ -116,7 +110,9 @@ Text:
 {# whitespace #}
 {%- for label, substrings in example['entities'].items() -%}
 {{ label }}: {{ ', '.join(substrings) }}
+{# whitespace #}
 {%- endfor -%}
+{# whitespace #}
 {# whitespace #}
 {%- endfor -%}
 {%- endif -%}
