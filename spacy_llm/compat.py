@@ -1,5 +1,5 @@
 # mypy: ignore-errors
-# import sys
+import sys
 
 if sys.version_info[:2] >= (3, 8):  # Python 3.8+
     from typing import Protocol, runtime_checkable
