@@ -28,7 +28,7 @@ def query_minichain() -> Callable[
     def prompt(
         backend: "minichain.backend.Backend", prompts: Iterable[str]
     ) -> Iterable[str]:
-        @minichain.prompt([backend])
+        @minichain.prompt(backend)  # type: ignore
         def _prompt(model: "minichain.base.Prompt.Model", prompt_text: str) -> str:
             return model(prompt_text)
 
