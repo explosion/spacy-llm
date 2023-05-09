@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable, Optional, Tuple, Literal
 
 import jinja2
 from spacy.tokens import Doc
@@ -50,38 +50,9 @@ def find_substrings(
 
 
 @registry.llm_tasks("spacy.NERZeroShot.v1")
-def ner_zeroshot_task(
-    labels: str,
-    normalizer: Optional[Callable[[str], str]] = None,
-    alignment_mode: str = "contract",
-    case_sensitive_matching: bool = False,
-    single_match: bool = False,
-) -> Tuple[
-    Callable[[Iterable[Doc]], Iterable[str]],
-    Callable[[Iterable[Doc], Iterable[str]], Iterable[Doc]],
-]:
-    """Default NER template for zero-shot annotation
+class NERTask:
 
-    labels (str): comma-separated list of labels to pass to the template.
-    normalizer (Optional[Callable[[str], str]]): optional normalizer function.
-    alignment_mode (str): "strict", "contract" or "expand".
-    case_sensitive: Whether to search without case sensitivity.
-    single_match: If False, allow one substring to match multiple times in the text. If True, returns the first hit.
-
-    RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
-    """
-
-    if not normalizer:
-        normalizer = noop_normalizer()
-
-    # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
-    alignment_modes = ("strict", "contract", "expand")
-    if alignment_mode not in alignment_modes:
-        raise ValueError(
-            f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
-        )
-
-    template = """
+    _TEMPLATE_STR = """
     From the text below, extract the following entities in the following format:
     {# whitespace #}
     {%- for label in labels -%}
@@ -93,53 +64,86 @@ def ner_zeroshot_task(
     {{ text }}
     """
 
-    label_dict = {normalizer(label): label for label in labels.split(",")}
+    def __init__(
+        self,
+        labels: str,
+        normalizer: Optional[Callable[[str], str]] = None,
+        alignment_mode: Literal["strict", "contract", "expand"] = "contract",
+        case_sensitive_matching: bool = False,
+        single_match: bool = False,
+    ):
+        """Default NER template for zero-shot annotation
 
-    def prompt_template(docs: Iterable[Doc]) -> Iterable[str]:
+        labels (str): comma-separated list of labels to pass to the template.
+        normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+        alignment_mode (str): "strict", "contract" or "expand".
+        case_sensitive: Whether to search without case sensitivity.
+        single_match: If False, allow one substring to match multiple times in the text. If True, returns the first hit.
+
+        RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
+        """
+        self._normalizer = normalizer if normalizer else noop_normalizer()
+        self._label_dict = {
+            self._normalizer(label): label for label in labels.split(",")
+        }
+        self._validate_alignment(alignment_mode)
+        self._alignment_mode = alignment_mode
+        self._case_sensitive_matching = case_sensitive_matching
+        self._single_match = single_match
+
+    def _validate_alignment(self, mode):
+        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
+        alignment_modes = ("strict", "contract", "expand")
+        if mode not in alignment_modes:
+            raise ValueError(
+                f"Unsupported alignment mode '{mode}'. Supported modes: {', '.join(alignment_modes)}"
+            )
+
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
-        _template = environment.from_string(template)
+        _template = environment.from_string(self._TEMPLATE_STR)
         for doc in docs:
-            prompt = _template.render(text=doc.text, labels=list(label_dict.values()))
+            prompt = _template.render(
+                text=doc.text, labels=list(self._label_dict.values())
+            )
             yield prompt
 
-    def _format_response(response: str) -> Iterable[Tuple[str, Iterable[str]]]:
+    def _format_response(self, response: str) -> Iterable[Tuple[str, Iterable[str]]]:
         """Parse raw string response into a structured format"""
         output = []
-        assert normalizer is not None
+        assert self._normalizer is not None
         for line in response.strip().split("\n"):
             # Check if the formatting we want exists
             # <entity label>: ent1, ent2
             if line and ":" in line:
                 label, phrases = line.split(":", 1)
-                norm_label = normalizer(label)
-                if norm_label in label_dict:
+                norm_label = self._normalizer(label)
+                if norm_label in self._label_dict:
                     # Get the phrases / spans for each entity
                     if phrases.strip():
                         _phrases = [p.strip() for p in phrases.strip().split(",")]
-                        output.append((label_dict[norm_label], _phrases))
+                        output.append((self._label_dict[norm_label], _phrases))
         return output
 
-    def prompt_parse(
-        docs: Iterable[Doc], prompt_responses: Iterable[str]
+    def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, prompt_responses):
+        for doc, prompt_response in zip(docs, responses):
             spans = []
-            for label, phrases in _format_response(prompt_response):
+            for label, phrases in self._format_response(prompt_response):
                 # For each phrase, find the substrings in the text
                 # and create a Span
                 offsets = find_substrings(
                     doc.text,
                     phrases,
-                    case_sensitive=case_sensitive_matching,
-                    single_match=single_match,
+                    case_sensitive=self._case_sensitive_matching,
+                    single_match=self._single_match,
                 )
                 for start, end in offsets:
                     span = doc.char_span(
-                        start, end, alignment_mode=alignment_mode, label=label
+                        start, end, alignment_mode=self._alignment_mode, label=label
                     )
                     if span is not None:
                         spans.append(span)
             doc.set_ents(filter_spans(spans))
             yield doc
-
-    return prompt_template, prompt_parse
