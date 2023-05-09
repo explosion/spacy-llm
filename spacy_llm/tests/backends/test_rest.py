@@ -61,10 +61,9 @@ def test_retries():
             "backend": {"config": {"model": "text-davinci-003"}, "n_max_tries": 0},
         },
     )
-    cache = nlp.get_pipe("llm")._cache
     with pytest.raises(
         ConnectionError,
-        match=f"OpenAI API could not be reached within {cache._timeout} seconds in {cache._n_max_tries} attempts. "
-        f"Check your network connection and the availability of the OpenAI API.",
+        match="OpenAI API could not be reached within 30 seconds in 3 attempts. Check your network connection and the "
+        "availability of the OpenAI API.",
     ):
         nlp("this is a test")
