@@ -4,8 +4,7 @@ from confection import Config
 from spacy.util import make_tempdir
 
 from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer
-from spacy_llm.registry.util import example_reader
+from spacy_llm.registry import noop_normalizer, lowercase_normalizer, example_reader
 
 cfg_string = """
 [nlp]
