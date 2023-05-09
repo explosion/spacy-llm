@@ -1,15 +1,18 @@
-from typing import Callable, Iterable, Dict, Any
+from typing import Any, Callable, Dict, Iterable
 
-import spacy
 from spacy.util import SimpleFrozenDict
+
 from .backend import Backend
+from ...registry import registry
 
 
-@spacy.registry.llm_backends("spacy.REST.v1")
+@registry.llm_backends("spacy.REST.v1")
 def backend_rest(
     api: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = True,
+    max_tries: int = 3,
+    timeout: int = 30,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
     api (str): Name of any API. Currently supported: "OpenAI".
@@ -18,11 +21,15 @@ def backend_rest(
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
         be raised.
+    max_tries (int): Max. number of tries for API request.
+    timeout (int): Timeout for API request in seconds.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using a
         Backend instance.
     """
 
-    backend = Backend(api=api, config=config, strict=strict)
+    backend = Backend(
+        api=api, config=config, strict=strict, max_tries=max_tries, timeout=timeout
+    )
 
     def _query(prompts: Iterable[str]) -> Iterable[str]:
         return backend(prompts)

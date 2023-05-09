@@ -1,16 +1,24 @@
 import os
-from typing import Iterable, Dict, Any, List
+from typing import Any, Dict, Iterable, List
 
 import requests  # type: ignore
-import srsly
+import srsly  # type: ignore[import]
 
 
 class Backend:
     """Queries LLMs via their REST APIs."""
 
     _SUPPORTED_APIS = ("OpenAI",)
+    _DEFAULT_URLS = {"OpenAI": "https://api.openai.com/v1/completions"}
 
-    def __init__(self, api: str, config: Dict[Any, Any], strict: bool):
+    def __init__(
+        self,
+        api: str,
+        config: Dict[Any, Any],
+        strict: bool,
+        max_tries: int,
+        timeout: int,
+    ):
         """Initializes new Backend instance.
         api (str): Name of LLM API.
         config (Dict[Any, Any]): Config passed on to LLM API.
@@ -19,6 +27,8 @@ class Backend:
             this API should look like). If False, the API error responses are returned by __call__(), but no error will
             be raised.
             Note that only response object structure will be checked, not the prompt response text per se.
+        max_tries (int): Max. number of tries for API request.
+        timeout (int): Timeout for API request in seconds.
         """
         if api not in Backend._SUPPORTED_APIS:
             raise ValueError(
@@ -27,7 +37,14 @@ class Backend:
         self._api = api
         self._config = config
         self._strict = strict
+        self._max_tries = max_tries
+        self._timeout = timeout
         self._calls = {"OpenAI": self._call_openai}
+        self._url = (
+            self._config.pop("url")
+            if "url" in self._config
+            else Backend._DEFAULT_URLS[self._api]
+        )
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         """Executes prompts on specified API.
@@ -49,17 +66,31 @@ class Backend:
             "Authorization": f'Bearer {os.getenv("OPENAI_API_KEY", "")}',
         }
         api_responses: List[str] = []
-
         prompts = list(prompts)
         json_data = {"prompt": prompts, **self._config}
-        responses = requests.post(
-            self._config.pop("url")
-            if "url" in self._config
-            else "https://api.openai.com/v1/completions",
-            headers=headers,
-            json=json_data,
-        ).json()
+        request_tries = 0
+        responses: Dict[str, Any] = {}
 
+        # Query API.
+        for request_tries in range(self._max_tries):
+            try:
+                responses = requests.post(
+                    self._url,
+                    headers=headers,
+                    json=json_data,
+                    timeout=self._timeout,
+                ).json()
+                break
+            except ConnectionError:
+                pass
+        if request_tries == self._max_tries:
+            raise ConnectionError(
+                f"OpenAI API could not be reached within {self._timeout} seconds in "
+                f"{self._max_tries} attempts. Check your network connection and the availability "
+                f"of the OpenAI API."
+            )
+
+        # Process responses.
         if "error" in responses:
             if self._strict:
                 raise ValueError(f"API call failed: {responses}.")
