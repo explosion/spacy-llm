@@ -11,6 +11,10 @@ on:
     paths-ignore:
       - "*.md"
 
+env:
+  MODULE_NAME: 'spacy_llm'
+  RUN_MYPY: 'false'
+
 jobs:
   run:
     strategy:
@@ -47,6 +51,12 @@ jobs:
           python -m pip install -U -r requirements.txt
           python -m build --sdist
 
+      - name: Run mypy
+        shell: bash
+        if: ${{ env.RUN_MYPY == 'true' }}
+        run: |
+          python -m mypy $MODULE_NAME
+
       - name: Delete source directory
         shell: bash
         run: |
@@ -66,7 +76,7 @@ jobs:
       - name: Test import
         shell: bash
         run: |
-          echo $MODULE_NAME
+          python -c "import $MODULE_NAME" -Werror
 
       - name: Install test requirements
         run: |
