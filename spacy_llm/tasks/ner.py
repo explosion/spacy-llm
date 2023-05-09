@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple, cast
 
 import jinja2
@@ -61,7 +60,7 @@ TaskExample = Dict[str, Any]
 @spacy.registry.llm_tasks("spacy.NER.v1")
 def ner_zeroshot_task(
     labels: str,
-    examples: Optional[Callable[[Path], Iterable[Any]]] = None,
+    examples: Optional[Callable[[str], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: str = "contract",
     case_sensitive_matching: bool = False,
@@ -73,7 +72,7 @@ def ner_zeroshot_task(
     """Default NER template for LLM annotation
 
     labels (str): comma-separated list of labels to pass to the template.
-    examples (Optional[Callable[[Path], Iterable[TaskExample]]]): a Callable
+    examples (Optional[Callable[[str], Iterable[TaskExample]]]): a Callable
         that takes in a path and returns a list of task examples. for few-shot learning.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
