@@ -1,4 +1,4 @@
-from .ner import NerTask
+from .ner import NERTask
 from .noop import NoopTask
 
-__all__ = ["NoopTask", "NerTask"]
+__all__ = ["NoopTask", "NERTask"]
