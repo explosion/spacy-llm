@@ -58,7 +58,7 @@ From the text below, extract the following entities in the following format:
 {# whitespace #}
 {%- endfor -%}
 Text:
-''' 
+'''
 {{ text }}
 """
 
