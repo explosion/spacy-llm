@@ -22,7 +22,7 @@ batch_size = 128
 
 [components]
 
-[components.llm] 
+[components.llm]
 factory = "llm"
 
 [components.llm.task]
