@@ -13,6 +13,8 @@ supported_models = SimpleFrozenList(
 )
 
 DEFAULT_CONFIG: Dict[str, Any] = {
+    # Loads a custom pipeline from https://huggingface.co/databricks/dolly-v2-3b/blob/main/instruct_pipeline.py
+    # cf also https://huggingface.co/databricks/dolly-v2-12b
     "trust_remote_code": True,
 }
 
