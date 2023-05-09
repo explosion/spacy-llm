@@ -49,3 +49,22 @@ def test_rest_backend_error_handling(strict: bool):
             response["error"]["message"]
             == "The model `x-text-davinci-003` does not exist"
         )
+
+
+def test_retries():
+    """Test retry mechanism."""
+    # Run with 0 tries.
+    nlp = spacy.blank("en")
+    nlp.add_pipe(
+        "llm",
+        config={
+            "task": {"@llm_tasks": "spacy.NoOp.v1"},
+            "backend": {"config": {"model": "text-davinci-003"}, "max_tries": 0},
+        },
+    )
+    with pytest.raises(
+        ConnectionError,
+        match="OpenAI API could not be reached within 30 seconds in 0 attempts. Check your network connection and the "
+        "availability of the OpenAI API.",
+    ):
+        nlp("this is a test")
