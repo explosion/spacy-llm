@@ -18,7 +18,6 @@ env:
 jobs:
   run:
     strategy:
-      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python_version: ["3.11"]
