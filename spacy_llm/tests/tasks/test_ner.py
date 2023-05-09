@@ -7,7 +7,6 @@ from spacy.util import make_tempdir
 from spacy_llm.tasks.ner import find_substrings, NERTask
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer
 
-from ...compat import has_minichain
 
 cfg_string = """
 [nlp]
@@ -28,7 +27,7 @@ labels: PER,ORG,LOC
 @misc: "spacy.LowercaseNormalizer.v1"
 
 [components.llm.backend]
-@llm_backends: "spacy.MiniChain.v1"
+@llm_backends: "spacy.REST.v1"
 api: "OpenAI"
 config: {}
 """
@@ -41,7 +40,6 @@ def test_ner_config():
 
 
 @pytest.mark.external
-@pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 def test_ner_predict():
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
@@ -56,7 +54,6 @@ def test_ner_predict():
 
 
 @pytest.mark.external
-@pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 def test_ner_io():
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
