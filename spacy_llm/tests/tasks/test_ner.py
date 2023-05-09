@@ -7,42 +7,80 @@ from spacy.util import make_tempdir
 from spacy_llm.registry import lowercase_normalizer, noop_normalizer, example_reader
 from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
 
-cfg_string = """
-[nlp]
-lang = "en"
-pipeline = ["llm"]
-batch_size = 128
 
-[components]
+@pytest.fixture
+def zeroshot_cfg_string():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
 
-[components.llm]
-factory = "llm"
+    [components]
 
-[components.llm.task]
-@llm_tasks: "spacy.NERZeroShot.v1"
-labels: PER,ORG,LOC
+    [components.llm]
+    factory = "llm"
 
-[components.llm.task.normalizer]
-@misc: "spacy.LowercaseNormalizer.v1"
+    [components.llm.task]
+    @llm_tasks: "spacy.NER.v1"
+    labels: PER,ORG,LOC
 
-[components.llm.backend]
-@llm_backends: "spacy.MiniChain.v1"
-api: "OpenAI"
-config: {}
-"""
+    [components.llm.task.normalizer]
+    @misc: "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends: "spacy.MiniChain.v1"
+    api: "OpenAI"
+    config: {}
+    """
 
 
-def test_ner_config():
+@pytest.fixture
+def fewshot_cfg_string():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks: "spacy.NER.v1"
+    labels: PER,ORG,LOC
+
+    [components.llm.task.examples]
+    @misc: "spacy.ExampleReader.v1"
+    path: spacy_llm/tests/tasks/examples/ner_examples.yml
+
+    [components.llm.task.normalizer]
+    @misc: "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends: "spacy.MiniChain.v1"
+    api: "OpenAI"
+    config: {}
+    """
+
+
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_ner_config(cfg_string, request):
+    cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
 
 @pytest.mark.external
-def test_ner_predict():
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_ner_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
+    cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     text = "Marc and Bob both live in Ireland."
@@ -53,7 +91,9 @@ def test_ner_predict():
 
 
 @pytest.mark.external
-def test_ner_io():
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_ner_io(cfg_string, request):
+    cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
