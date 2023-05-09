@@ -5,6 +5,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.tasks.ner import find_substrings, ner_zeroshot_task
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer
+from spacy_llm.registry.util import example_reader
 
 cfg_string = """
 [nlp]
@@ -293,8 +294,56 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     assert pred_ents == gold_ents
 
 
-def test_jinja_template_rendering():
+def test_jinja_template_rendering_without_examples():
+    """Test if jinja template renders as we expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
     labels = "PER,ORG,LOC"
-    renderer, _ = ner_zeroshot_task(labels=labels)
+    nlp = spacy.blank("xx")
+    doc = nlp("Alice and Bob went to the supermarket")
+
+    renderer, _ = ner_zeroshot_task(labels=labels, examples=None)
+
+    prompt = list(renderer([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+From the text below, extract the following entities in the following format:
+PER: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+LOC: <comma delimited list of strings>
+
+Here is the text that needs labeling:
+
+Text:
+'''
+Alice and Bob went to the supermarket
+'''
+""".strip()
+    )
+
+
+@pytest.mark.parametrize(
+    "examples_path",
+    [
+        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
+        "spacy_llm/tests/tasks/examples/ner_examples.yml",
+    ],
+)
+def test_jinja_template_rendering_with_examples(examples_path):
+    """Test if jinja2 template renders as expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
+    labels = "PER,ORG,LOC"
+    nlp = spacy.blank("xx")
+    doc = nlp("Alice and Bob went to the supermarket")
+
+    examples = example_reader(examples_path)
+    renderer, _ = ner_zeroshot_task(labels=labels, examples=examples)
+    prompt = list(renderer([doc]))[0]
+
     breakpoint()
-    pass
