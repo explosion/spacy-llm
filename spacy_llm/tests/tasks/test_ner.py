@@ -291,3 +291,10 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     doc_out = list(parser([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
+
+
+def test_jinja_template_rendering():
+    labels = "PER,ORG,LOC"
+    renderer, _ = ner_zeroshot_task(labels=labels)
+    breakpoint()
+    pass

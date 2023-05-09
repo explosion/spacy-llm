@@ -5,10 +5,8 @@ import jinja2
 import spacy
 from spacy.tokens import Doc
 from spacy.util import filter_spans
-from srsly import read_yaml, read_jsonl
 
 from ..registry import noop_normalizer
-from ..registry.util import read_examples_file
 
 
 def find_substrings(
@@ -53,8 +51,11 @@ def find_substrings(
     return offsets
 
 
-# {"Jack and Jill went up the hill": [{"PER": ["Jack", "Jill"]}, {"LOC": ["hill"]}]}
-TaskExample = Dict[str, Iterable[Dict[str, Any]]]
+# {
+#     "text": "Jack and Jill went up the hill",
+#     "entities": {"PER": ["Jack", "Jill"], "LOC": ["hill"]},
+# }
+TaskExample = Dict[str, Any]
 
 
 @spacy.registry.llm_tasks("spacy.NER.v1")
@@ -92,7 +93,7 @@ def ner_zeroshot_task(
             f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
         )
 
-    # Setup how examples are read
+    # Get task examples if the user supplied any
     if examples:
         task_examples = cast(Iterable[TaskExample], examples())
 
@@ -103,8 +104,27 @@ def ner_zeroshot_task(
     {{ label }}: <comma delimited list of strings>
     {# whitespace #}
     {%- endfor -%}
+    {# whitespace #}
+    {%- if examples -%}
+    {# whitespace #}
+    Below are some examples (only use these as a guide):
+    {# whitespace #}
+    {# whitespace #}
+    {%- for example in examples -%}
     Text:
     ''' 
+    {{ example['text'] }}
+    '''
+    {# whitespace #}
+    {%- for label, substrings in example['entities'].items() -%}
+    {{ label }}: {{ ', '.join(substrings) }}
+    {%- endfor -%}
+    {# whitespace #}
+    {%- endfor -%}
+    Here is the text that needs labeling
+    {# whitespace #}
+    Text:
+    '''
     {{ text }}
     '''
     """
