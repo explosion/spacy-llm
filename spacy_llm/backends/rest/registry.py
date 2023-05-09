@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Iterable
 
 from spacy.util import SimpleFrozenDict
 
-from .backend import Backend
+from .backend import supported_apis
 from ...registry import registry
 
 
@@ -27,8 +27,8 @@ def backend_rest(
         Backend instance.
     """
 
-    backend = Backend(
-        api=api, config=config, strict=strict, max_tries=max_tries, timeout=timeout
+    backend = supported_apis[api](
+        config=config, strict=strict, max_tries=max_tries, timeout=timeout
     )
 
     def _query(prompts: Iterable[str]) -> Iterable[str]:

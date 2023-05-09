@@ -20,51 +20,15 @@ def test_initialization():
     nlp("This is a test.")
 
 
-@pytest.mark.parametrize("strict", (False, True))
-def test_rest_backend_error_handling(strict: bool):
-    """Test error handling for default/minimal REST backend.
-    strict (bool): Whether to use strict mode.
-    """
+def test_rest_backend_error_handling():
+    """Test error handling for default/minimal REST backend."""
     nlp = spacy.blank("en")
-    nlp.add_pipe(
-        "llm",
-        config={
-            "task": {"@llm_tasks": "spacy.NoOp.v1"},
-            "backend": {"config": {"model": "x-text-davinci-003"}, "strict": strict},
-        },
-    )
-
-    if strict:
-        with pytest.raises(
-            ValueError,
-            match="API call failed: {'error': {'message': 'The model `x-text-davinci-003` does not exist', 'type': "
-            "'invalid_request_error', 'param': None, 'code': None}}.",
-        ):
-            nlp("this is a test")
-    else:
-        response = nlp.get_pipe("llm")._backend(["this is a test"])
-        assert len(response) == 1
-        response = srsly.json_loads(response[0])
-        assert (
-            response["error"]["message"]
-            == "The model `x-text-davinci-003` does not exist"
+    with pytest.raises(ValueError) as err:
+        nlp.add_pipe(
+            "llm",
+            config={
+                "task": {"@llm_tasks": "spacy.NoOp.v1"},
+                "backend": {"config": {"model": "x-text-davinci-003"}},
+            },
         )
-
-
-def test_retries():
-    """Test retry mechanism."""
-    # Run with 0 tries.
-    nlp = spacy.blank("en")
-    nlp.add_pipe(
-        "llm",
-        config={
-            "task": {"@llm_tasks": "spacy.NoOp.v1"},
-            "backend": {"config": {"model": "text-davinci-003"}, "max_tries": 0},
-        },
-    )
-    with pytest.raises(
-        ConnectionError,
-        match="OpenAI API could not be reached within 30 seconds in 0 attempts. Check your network connection and the "
-        "availability of the OpenAI API.",
-    ):
-        nlp("this is a test")
+    assert "The specified model 'x-text-davinci-003' is not available." in str(err.value)
