@@ -40,10 +40,11 @@ class Backend:
         self._max_tries = max_tries
         self._timeout = timeout
         self._calls = {"OpenAI": self._call_openai}
-
-        # Ensure that config has an "url" entry.
-        if "url" not in self._config:
-            self._config["url"] = Backend._DEFAULT_URLS[self._api]
+        self._url = (
+            self._config.pop("url")
+            if "url" in self._config
+            else Backend._DEFAULT_URLS[self._api]
+        )
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         """Executes prompts on specified API.
@@ -66,7 +67,6 @@ class Backend:
         }
         api_responses: List[str] = []
         prompts = list(prompts)
-        url = self._config.pop("url")
         json_data = {"prompt": prompts, **self._config}
         request_tries = 0
         responses: Dict[str, Any] = {}
@@ -75,7 +75,7 @@ class Backend:
         for request_tries in range(self._max_tries):
             try:
                 responses = requests.post(
-                    url,
+                    self._url,
                     headers=headers,
                     json=json_data,
                     timeout=self._timeout,
