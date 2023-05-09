@@ -88,7 +88,7 @@ def textcat_zeroshot_task(
         labels = {"POS", "NEG"} if binary_textcat else set(label_dict.values())
         categories = {label: 0 for label in labels}
         for label in response.split(","):
-            cat = label.upper() if binary_textcat else label_dict(normalizer(label))
+            cat = label.upper() if binary_textcat else label_dict[normalizer(label)]
             categories[cat] = 1
         return categories
 
