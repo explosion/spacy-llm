@@ -1,5 +1,5 @@
 from typing import Any, Callable, Dict, Iterable, Type
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from spacy.util import SimpleFrozenDict
 
@@ -7,7 +7,7 @@ from ..compat import has_langchain, langchain
 from ..registry import registry
 
 if TYPE_CHECKING and has_langchain:
-    from langchain.llms.base import BaseLLM
+    from langchain.llms.base import BaseLLM  # type: ignore[import]
 
 
 def _check_installation() -> None:
@@ -53,8 +53,8 @@ def backend_langchain(
     # langchain.llms.type_to_cls_dict contains all API names in lowercase, so this allows to be more forgiving and make
     # "OpenAI" work as well "openai".
     api = api.lower()
+    type_to_cls_dict: Dict[str, Type[BaseLLM]] = langchain.llms.type_to_cls_dict
 
-    type_to_cls_dict = cast(Dict[str, Type["BaseLLM"]], langchain.llms.type_to_cls_dict)  # type: ignore
     if api in type_to_cls_dict:
         backend = type_to_cls_dict[api](**config)
 

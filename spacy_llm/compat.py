@@ -1,13 +1,14 @@
+# mypy: ignore-errors
 try:
     import langchain
 
     has_langchain = True
 except (ImportError, AttributeError):
-    langchain = None  # type: ignore[assignment]
+    langchain = None
     has_langchain = False
 
 try:
-    import minichain  # type: ignore[import]
+    import minichain
 
     has_minichain = True
 except (ImportError, AttributeError):
@@ -15,7 +16,7 @@ except (ImportError, AttributeError):
     has_minichain = False
 
 try:
-    import torch  # type: ignore[import]
+    import torch
 
     has_torch = True
 except ImportError:
@@ -23,7 +24,7 @@ except ImportError:
     has_torch = False
 
 try:
-    import transformers  # type: ignore[import]
+    import transformers
 
     has_transformers = True
 except ImportError:
@@ -31,7 +32,7 @@ except ImportError:
     has_transformers = False
 
 try:
-    import accelerate  # type: ignore[import]
+    import accelerate
 
     has_accelerate = True
 except ImportError:

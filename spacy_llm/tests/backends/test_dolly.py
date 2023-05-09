@@ -2,7 +2,7 @@ import copy
 
 import spacy
 import pytest
-from confection import Config
+from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {

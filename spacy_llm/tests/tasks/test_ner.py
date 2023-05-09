@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import pytest
 import spacy
 from confection import Config
