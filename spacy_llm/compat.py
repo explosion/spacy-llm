@@ -1,9 +1,14 @@
 # mypy: ignore-errors
 import sys
 
+if sys.version_info[:2] >= (3, 8):  # Python 3.8+
+    from typing import Protocol, runtime_checkable
+else:
+    from typing_extensions import Protocol, runtime_checkable  # noqa: F401
+
 try:
     # Ensure we import langchain only in the supported Python versions.
-    if sys.version_info[1] not in (9, 10, 11):
+    if sys.version_info[0] == 3 and sys.version_info[1] not in (9, 10, 11):
         raise ImportError
     import langchain
 
@@ -14,7 +19,7 @@ except (ImportError, AttributeError):
 
 try:
     # Ensure we import minichain only in the supported Python versions.
-    if sys.version_info[1] not in (7, 8, 9):
+    if sys.version_info[0] == 3 and sys.version_info[1] not in (7, 8, 9):
         raise ImportError
     import minichain
 

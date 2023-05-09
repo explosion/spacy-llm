@@ -1,10 +1,13 @@
 import warnings
-from typing import Callable, Iterable, Tuple
+from typing import Iterable
 
 import pytest
 import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
+
+from spacy_llm.tasks import NoopTask
+from spacy_llm.ty import LLMTask
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
@@ -28,10 +31,14 @@ def test_llm_pipe(nlp):
     assert len(docs) == 2
 
 
+def test_llm_pipe_empty(nlp):
+    """Test call .pipe() with empty batch."""
+    assert list(nlp.pipe(texts=[])) == []
+
+
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        template=None,  # type: ignore
-        parse=None,  # type: ignore
+        task=NoopTask,
         backend=None,  # type: ignore
         cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
@@ -41,8 +48,7 @@ def test_llm_serialize_bytes():
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        template=None,  # type: ignore
-        parse=None,  # type: ignore
+        task=NoopTask,
         backend=None,  # type: ignore
         cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
@@ -65,35 +71,33 @@ def test_type_checking_valid() -> None:
 def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
-    @registry.llm_tasks("spacy.TestIncorrect.v1")
-    def noop_task_incorrect() -> Tuple[
-        Callable[[Iterable[Doc]], Iterable[int]],
-        Callable[[Iterable[Doc], Iterable[float]], Iterable[Doc]],
-    ]:
-        def template(docs: Iterable[Doc]) -> Iterable[int]:
+    @registry.llm_tasks("IncorrectTypes.v1")
+    class NoopTask_Incorrect(LLMTask):
+        def __init__(self):
+            pass
+
+        def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[int]:
             return [0] * len(list(docs))
 
-        def parse(
-            docs: Iterable[Doc], prompt_responses: Iterable[float]
+        def parse_responses(
+            self, docs: Iterable[Doc], responses: Iterable[float]
         ) -> Iterable[Doc]:
             return docs
-
-        return template, parse
 
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:
         nlp.add_pipe(
             "llm",
-            config={"task": {"@llm_tasks": "spacy.TestIncorrect.v1"}},
+            config={"task": {"@llm_tasks": "IncorrectTypes.v1"}},
         )
     assert len(record) == 2
     assert (
         str(record[0].message)
-        == "Type returned from `task[0]` (`typing.Iterable[int]`) doesn't match type "
+        == "Type returned from `task.generate_prompts()` (`typing.Iterable[int]`) doesn't match type "
         "expected by `backend` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)
         == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
-        "expected by `parse` (`typing.Iterable[float]`)."
+        "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
     )
