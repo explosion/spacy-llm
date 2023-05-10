@@ -9,6 +9,10 @@ from spacy.util import make_tempdir
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
 
+PROJECT_ROOT = Path("__init__").parent.parent
+TEST_DIR = PROJECT_ROOT / "spacy_llm" / "tests"
+EXAMPLES_DIR = TEST_DIR / "tasks" / "examples"
+
 
 @pytest.fixture
 def zeroshot_cfg_string():
@@ -39,7 +43,7 @@ def zeroshot_cfg_string():
 
 @pytest.fixture
 def fewshot_cfg_string():
-    return """
+    return f"""
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -56,7 +60,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc: "spacy.FewShotReader.v1"
-    path: spacy_llm/tests/tasks/examples/ner_examples.yml
+    path: {str(EXAMPLES_DIR / "ner_examples.yml")}
 
     [components.llm.task.normalizer]
     @misc: "spacy.LowercaseNormalizer.v1"
@@ -64,7 +68,7 @@ def fewshot_cfg_string():
     [components.llm.backend]
     @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
-    config: {}
+    config: {{}}
     """
 
 
@@ -368,14 +372,14 @@ Alice and Bob went to the supermarket
 
 
 @pytest.mark.parametrize(
-    "examples_filename",
+    "examples_path",
     [
-        "ner_examples.json",
-        "ner_examples.yml",
-        "ner_examples.jsonl",
+        str(EXAMPLES_DIR / "ner_examples.json"),
+        str(EXAMPLES_DIR / "ner_examples.yml"),
+        str(EXAMPLES_DIR / "ner_examples.jsonl"),
     ],
 )
-def test_jinja_template_rendering_with_examples(examples_filename):
+def test_jinja_template_rendering_with_examples(examples_path):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
@@ -385,7 +389,7 @@ def test_jinja_template_rendering_with_examples(examples_filename):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(Path(__file__).parent / "examples" / examples_filename)
+    examples = fewshot_reader(examples_path)
     llm_ner = NERTask(labels=labels, examples=examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
