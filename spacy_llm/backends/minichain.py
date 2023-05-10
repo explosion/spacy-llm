@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
@@ -16,9 +16,9 @@ def _check_installation() -> None:
 
 
 @registry.llm_queries("spacy.RunMiniChain.v1")
-def query_minichain() -> Callable[
-    ["minichain.backend.Backend", Iterable[str]], Iterable[str]
-]:
+def query_minichain() -> (
+    Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]
+):
     """Returns query Callable for MiniChain.
     RETURNS (Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]): Callable executing simple prompts
         on the specified MiniChain backend.
@@ -40,9 +40,9 @@ def query_minichain() -> Callable[
 @registry.llm_backends("spacy.MiniChain.v1")
 def backend_minichain(
     api: str,
-    query: Callable[
-        ["minichain.backend.Backend", Iterable[str]], Iterable[str]
-    ] = query_minichain(),
+    query: Optional[
+        Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]
+    ] = None,
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using MiniChain backend to prompt specified API.
@@ -59,8 +59,10 @@ def backend_minichain(
     if hasattr(minichain.backend, api):
         backend = getattr(minichain.backend, api)(**config)
 
+        query_fn = query_minichain() if query is None else query
+
         def _query(prompts: Iterable[str]) -> Iterable[str]:
-            return query(backend, prompts)
+            return query_fn(backend, prompts)
 
         return _query
     else:

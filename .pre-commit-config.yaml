@@ -19,4 +19,4 @@ repos:
       language: python
       types: [python]
       require_serial: true
-      args: [ "--ignore-missing-imports", "--no-implicit-optional" ]
+      args: [ "--ignore-missing-imports", "--no-implicit-optional", "--allow-redefinition" ]
