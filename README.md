@@ -165,7 +165,38 @@ Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosi
 
 ### Tasks
 
-TODO
+A _task_ defines an NLP problem or question, that will be sent to the LLM via a prompt. Further, the task defines
+how to parse the LLM's responses back into structured information.
+
+Practically speaking, a task should adhere to the `LLMTask` `Protocol` defined in [ty.py](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py).
+It needs to define a `generate_prompts` function and a `parse_responses` function:
+
+TODO: normalizer functions
+
+#### <kbd>function</kbd> `task.generate_prompts`
+
+Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.
+Often, prompts are of type `str` but this is not enforced to allow for maximum flexibility in the framework.
+
+| Argument    | Type          | Description            |
+| ----------- | ------------- | ---------------------- |
+| `docs`      | Iterable[Doc] | The input documents.   |
+| **RETURNS** | Iterable[Any] | The generated prompts. |
+
+#### <kbd>function</kbd> `task.parse_responses`
+
+Takes a collection of LLM responses and the original documents, parses the responses into structured information,
+and sets the annotations on the documents. The `parse_responses` function is free to set the annotations in any way,
+including `Doc` fields like `ents`, `spans` or `cats`, or using custom defined fields.
+
+The `responses` are of type `Iterable[Any]`, though they will often be `str` objects. This depends on the
+return type of the [backend](#backends).
+
+| Argument    | Type          | Description              |
+| ----------- | ------------- | ------------------------ |
+| `docs`      | Iterable[Doc] | The input documents.     |
+| `responses` | Iterable[Any] | The generated prompts.   |
+| **RETURNS** | Iterable[Doc] | The annotated documents. |
 
 #### spacy.NER.v1
 
