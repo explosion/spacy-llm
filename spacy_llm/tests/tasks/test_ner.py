@@ -342,7 +342,7 @@ def test_jinja_template_rendering_without_examples():
     """
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
-    doc = nlp("Alice and Bob went to the supermarket")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_ner = NERTask(labels=labels, examples=None)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
@@ -381,7 +381,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     """
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
-    doc = nlp("Alice and Bob went to the supermarket")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)
     llm_ner = NERTask(labels=labels, examples=examples)
