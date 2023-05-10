@@ -1,4 +1,4 @@
-# spacy-llm: integrating LLM responses into structured NLP pipelines
+# spacy-llm: Integrating LLMs into structured NLP pipelines
 
 This package supports integration of Large Language Models (LLMs) into [spaCy](https://spacy.io/).
 It adds an `llm` pipeline component to spaCy, allowing to prompt LLMs as part of your spaCy pipeline. 
@@ -193,7 +193,7 @@ Supported models:
 - `"databricks/dolly-v2-7b"`
 - `"databricks/dolly-v2-12b"`
 
-cf the [Databricks models page](https://huggingface.co/databricks) on HuggingFace for details.
+See the [Databricks models page](https://huggingface.co/databricks) on HuggingFace for details.
 
 #### OpenAI
 
@@ -201,5 +201,5 @@ TODO
 
 ```
 OPENAI_ORG = "org-..."
-OPENAI_KEY = "sk-..."
+OPENAI_API_KEY = "sk-..."
 ```
