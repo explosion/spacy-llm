@@ -119,7 +119,8 @@ nlp.add_pipe(
     config={
         "task": {
             "@llm_tasks": "spacy.NER.v1",
-            "labels": "PERSON,ORGANISATION,LOCATION"},
+            "labels": "PERSON,ORGANISATION,LOCATION"
+        },
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
