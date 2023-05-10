@@ -88,6 +88,9 @@ jobs:
           python -m pip install -U -r requirements.txt
           python -m pip install -U -r requirements-dev.txt
 
+      - name: List content
+        run: ls -lh $MODULE_NAME
+
       - name: Run tests
         shell: bash
         env:
