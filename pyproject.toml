@@ -12,9 +12,6 @@ select = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-filterwarnings = [
-    "ignore:DeprecationWarning:pkg_resources"
-]
 markers =[
     "external"
 ]
