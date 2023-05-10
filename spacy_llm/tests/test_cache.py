@@ -25,6 +25,14 @@ _DEFAULT_CFG = {
 }
 
 
+def _init_nlp(tmp_dir: Path) -> Language:
+    nlp = spacy.blank("en")
+    config = copy.deepcopy(_DEFAULT_CFG)
+    config["cache"]["path"] = str(tmp_dir)  # type: ignore
+    nlp.add_pipe("llm", config=config)
+    return nlp
+
+
 @pytest.mark.parametrize("use_pipe", (False, True))
 def test_caching(use_pipe: bool) -> None:
     """Test pipeline with caching.
@@ -33,10 +41,7 @@ def test_caching(use_pipe: bool) -> None:
     n = 10
 
     with spacy.util.make_tempdir() as tmpdir:
-        nlp = spacy.blank("en")
-        config = copy.deepcopy(_DEFAULT_CFG)
-        config["cache"]["path"] = str(tmpdir)  # type: ignore
-        nlp.add_pipe("llm", config=config)
+        nlp = _init_nlp(tmpdir)
         texts = [f"Test {i}" for i in range(n)]
         # Test writing to cache dir.
         docs = list(nlp.pipe(texts)) if use_pipe else [nlp(text) for text in texts]
@@ -69,10 +74,7 @@ def test_caching(use_pipe: bool) -> None:
         # Test cache reading
         #######################################################
 
-        nlp_2 = spacy.blank("en")
-        config = copy.deepcopy(_DEFAULT_CFG)
-        config["cache"]["path"] = str(tmpdir)  # type: ignore
-        nlp_2.add_pipe("llm", config=config)
+        nlp_2 = _init_nlp(tmpdir)
         [nlp_2(text) for text in texts]
         cache = nlp_2.get_pipe("llm")._cache  # type: ignore
         assert cache._stats["hit"] == n
@@ -87,13 +89,6 @@ def test_caching_interrupted() -> None:
     """
     n = 100
     texts = [f"Test {i}" for i in range(n)]
-
-    def _init_nlp(tmp_dir: Path) -> Language:
-        _nlp = spacy.blank("en")
-        config = copy.deepcopy(_DEFAULT_CFG)
-        config["cache"]["path"] = str(tmp_dir)  # type: ignore
-        _nlp.add_pipe("llm", config=config)
-        return _nlp
 
     # Collect stats for complete run with caching.
     with spacy.util.make_tempdir() as tmpdir:
