@@ -15,7 +15,6 @@ PIPE_CFG = {
 
 @pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
-@pytest.mark.filterwarnings("ignore:pkg_resources:DeprecationWarning")
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
