@@ -114,6 +114,8 @@ Text:
         If using multilabel classification, the document labels will be a
         dictionary of strings and their score.
         """
+        categories = {}
+
         if self._use_binary:
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
@@ -133,8 +135,9 @@ Text:
                 pred_labels = []
 
             for pred in pred_labels:
-                category = self._label_dict[self._normalizer(pred.strip())]
-                categories[category] = 1.0
+                if self._normalizer(pred.strip()) in self._label_dict:
+                    category = self._label_dict[self._normalizer(pred.strip())]
+                    categories[category] = 1.0
         return categories
 
     def parse_responses(

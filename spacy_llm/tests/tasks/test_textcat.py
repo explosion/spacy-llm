@@ -4,7 +4,7 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
+from spacy_llm.registry import lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.textcat import TextCatTask
 
 
@@ -182,31 +182,58 @@ def test_textcat_sets_exclusive_classes_if_binary():
         ("Some test text with lowercase response", "neg", []),
     ],
 )
-def test_textcat_binary_labels(text, response, expected):
+def test_textcat_binary_labels_are_correct(text, response, expected):
     """Test if positive label for textcat binary is always the label name and the negative
     label is an empty dictionary
     """
-    llm_textcat = TextCatTask(labels="Recipe", exclusive_classes=True)
+    llm_textcat = TextCatTask(
+        labels="Recipe", exclusive_classes=True, normalizer=lowercase_normalizer()
+    )
 
     nlp = spacy.blank("xx")
     doc = nlp(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
-
     assert list(pred.cats.keys()) == expected
+
+
+@pytest.mark.parametrize(
+    "text,exclusive_classes,response,expected",
+    [
+        # fmt: off
+        ("Golden path for exclusive", True, "Recipe", ["Recipe"]),
+        ("Golden path for non-exclusive", False, "Recipe,Feedback", ["Recipe", "Feedback"]),
+        ("Non-exclusive but responded with a single label", False, "Recipe", ["Recipe"]),  # shouldn't matter
+        ("Exclusive but responded with multilabel", True, "Recipe,Comment", []),  # don't store anything
+        ("Weird outputs for exclusive", True, "reCiPe", ["Recipe"]),
+        ("Weird outputs for non-exclusive", False, "reciPE,CoMMeNt,FeedBack", ["Recipe", "Comment", "Feedback"]),
+        ("Extra spaces for exclusive", True, "Recipe   ", ["Recipe"]),
+        ("Extra spaces for non-exclusive", False, "Recipe,   Comment,    Feedback", ["Recipe", "Comment", "Feedback"]),
+        ("One weird value", False, "Recipe,Comment,SomeOtherUnnecessaryLabel", ["Recipe", "Comment"]),
+        # fmt: on
+    ],
+)
+def test_textcat_multilabel_labels_are_correct(
+    text, exclusive_classes, response, expected
+):
+    labels = "Recipe,Comment,Feedback"
+    llm_textcat = TextCatTask(
+        labels=labels,
+        exclusive_classes=exclusive_classes,
+        normalizer=lowercase_normalizer(),
+    )
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+    pred = list(llm_textcat.parse_responses([doc], [response]))[0]
+    # Take only those that have scores
+    pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
+    assert pred_cats == expected
 
 
 # TODO: test if LLM returns weird results: PoS, NEg, RECIPe
 # output: it should still work because we're normalizing
 
-# TODO: test if LLM returns wild results: POSITIVE, NEGATIVE
-# should fail gracefully
 
 # TODO: test edge cases
 # binary, non-exclusive (not sure if it should raise an error) or check if warning happens
 
 # TODO: test potential user errrors
-
-
-# TODO: test IO
-
-# TODO: test external with OpenAI
