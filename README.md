@@ -155,7 +155,7 @@ This package is experimental and it is possible that changes made to the interfa
 
 ## 📓 API
 
-The details of all registered functions of this package can be found in the [API documentation](api).
+The details of all registered functions of this package can be found in the [API documentation](api.md).
 
 Feel free to browse the source code to get inspiration on how to implement your own 
 [task](https://github.com/explosion/spacy-llm/tree/main/spacy_llm/tasks) or 
