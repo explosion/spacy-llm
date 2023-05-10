@@ -100,7 +100,7 @@ def test_caching_interrupted() -> None:
         nlp = _init_nlp(tmpdir)
         start = time.time()
         [nlp(text) for text in texts]
-        ref_duration = time.time() - start
+        ref_duration = (time.time() - start) / 2
 
     with spacy.util.make_tempdir() as tmpdir:
         nlp2 = _init_nlp(tmpdir)
@@ -112,7 +112,7 @@ def test_caching_interrupted() -> None:
         pass1_cache = nlp2.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure that first pass through half of the doc batch takes up roughly half of the time
         # of a full pass.
-        assert abs(ref_duration / 2 - pass1_duration) < ref_duration / 2 * 0.1
+        assert abs(ref_duration - pass1_duration) < ref_duration * 0.1
         assert pass1_cache._stats["hit"] == 0
         assert pass1_cache._stats["missed"] == n / 2
         assert pass1_cache._stats["added"] == n / 2
