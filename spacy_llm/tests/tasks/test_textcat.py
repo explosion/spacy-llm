@@ -183,27 +183,29 @@ def test_textcat_sets_exclusive_classes_if_binary():
 
 
 @pytest.mark.parametrize(
-    "text,response,expected",
+    "text,response,expected_score",
     [
-        ("Some test text with positive response", "POS", ["Recipe"]),
-        ("Some test text with negative response", "NEG", []),
-        ("Some test text with weird response", "WeIrD OUtpuT", []),
-        ("Some test text with lowercase response", "pos", ["Recipe"]),
-        ("Some test text with lowercase response", "neg", []),
+        ("Some test text with positive response", "POS", 1.0),
+        ("Some test text with negative response", "NEG", 0.0),
+        ("Some test text with weird response", "WeIrD OUtpuT", 0.0),
+        ("Some test text with lowercase response", "pos", 1.0),
+        ("Some test text with lowercase response", "neg", 0.0),
     ],
 )
-def test_textcat_binary_labels_are_correct(text, response, expected):
+def test_textcat_binary_labels_are_correct(text, response, expected_score):
     """Test if positive label for textcat binary is always the label name and the negative
     label is an empty dictionary
     """
+    label = "Recipe"
     llm_textcat = TextCatTask(
-        labels="Recipe", exclusive_classes=True, normalizer=lowercase_normalizer()
+        labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
     nlp = spacy.blank("xx")
     doc = nlp(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
-    assert list(pred.cats.keys()) == expected
+    assert list(pred.cats.keys())[0] == label
+    assert list(pred.cats.values())[0] == expected_score
 
 
 @pytest.mark.parametrize(

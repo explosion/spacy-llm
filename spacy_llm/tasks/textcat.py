@@ -127,7 +127,8 @@ Text:
         if self._use_binary:
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
-            categories = {label: 1.0} if response.upper() == "POS" else {}
+            score = 1.0 if response.upper() == "POS" else 0.0
+            categories = {label: score}
         else:
             # Multilabel classification
             categories = {label: 0 for label in self._label_dict.values()}
