@@ -4,7 +4,7 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer, example_reader
+from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
 
 
@@ -383,7 +383,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp("Alice and Bob went to the supermarket")
 
-    examples = example_reader(examples_path)
+    examples = fewshot_reader(examples_path)
     llm_ner = NERTask(labels=labels, examples=examples)
     prompt = llm_ner.generate_prompts([doc])[0]
 

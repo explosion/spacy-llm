@@ -7,8 +7,8 @@ from ..registry import registry
 
 
 @registry.misc("spacy.FewShotReader.v1")
-def example_reader(path: Union[str, Path]) -> Callable[[], Iterable[Any]]:
-    """Read an examples file to include in few-shot learning
+def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Any]]:
+    """Read a file containing examples to include in few-shot learning
 
     path (Union[str,Path]): path to an examples file (.yml, .yaml, .json)
 
