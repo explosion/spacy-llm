@@ -1,6 +1,5 @@
 # mypy: ignore-errors
 import sys
-import warnings
 
 if sys.version_info[:2] >= (3, 8):  # Python 3.8+
     from typing import Protocol, runtime_checkable, Literal
@@ -16,8 +15,7 @@ except (ImportError, AttributeError):
     has_langchain = False
 
 try:
-    with warnings.catch_warnings(category=DeprecationWarning):
-        import minichain
+    import minichain
 
     has_minichain = True
 except (ImportError, AttributeError):
