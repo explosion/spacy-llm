@@ -1,12 +1,14 @@
-# spacy-llm: integrating raw output from LLMs into structured NLP pipelines
+# spacy-llm: integrating LLM responses into structured NLP pipelines
 
-This package supports integration of LLM APIs into spaCy. It adds an `llm` pipeline component to spaCy, allowing to prompt 
-LLMs as part of your spaCy pipeline. `llm` behaves like any other pipeline component and is (de-)serializable. 
+This package supports integration of Large Language Models (LLMs) into [spaCy](https://spacy.io/).
+It adds an `llm` pipeline component to spaCy, allowing to prompt LLMs as part of your spaCy pipeline. 
+`llm` behaves like any other pipeline component and is (de-)serializable. 
+
 Each `llm` component is defined by two main settings:
 - A _Task_, defining the prompt to send to the LLM as well as the functionality to parse the resulting response 
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.  
-- A _Backend_ defining the model to use and how to connect it. Note that this package supports both access to external
-  APIs (such as OpenAI) as well as local access to self-hosted open-source LLMs (such as using Dolly through HuggingFace).
+- A _Backend_ defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
+  APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through HuggingFace).
 
 ## ⏳ Install
 
@@ -15,9 +17,9 @@ Each `llm` component is defined by two main settings:
 ```bash
 pip install spacy-llm
 ```
+in the same virtual environment where you already have `spacy` [installed](https://spacy.io/usage).
 
-
-## 🖊️ Usage
+## 🐍 Usage
 
 The task and the backend have to be supplied to the `llm` pipeline component using [spaCy's config 
 system](https://spacy.io/api/data-formats#config). This package provides various built-in 
@@ -33,18 +35,21 @@ Create a config file `config.cfg` containing at least the following
 
 ```ini
 [nlp]
+lang = "en"
 pipeline = ["llm"]
 
-[components.llm] 
+[components]
+
+[components.llm]
 factory = "llm"
 
-[components.llm.task] 
+[components.llm.task]
 @llm_tasks = "spacy.NER.v1"
-labels = PER,ORG,LOC
+labels = PERSON,ORGANISATION,LOCATION
 
 [components.llm.backend]
 @llm_backends = "spacy.DollyHF.v1"
-model = "databricks/dolly-v2-3b"
+model = "databricks/dolly-v2-12b"
 ```
 
 Now run:
@@ -52,9 +57,9 @@ Now run:
 from spacy import util
 
 config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config)
+nlp = util.load_model_from_config(config, auto_fill=True)
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
-print([(ent.text, ent.label) for ent in doc.ents])
+print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
 Note that HuggingFace will download the `"databricks/dolly-v2-3b"` model the first time you use it. You can 
@@ -125,9 +130,16 @@ print([(ent.text, ent.label) for ent in doc.ents])
 
 This package is experimental and it is possible that changes made to the interface will be breaking in minor version updates.
 
+## Ongoing work
+
+In the near future, we will
+- Add more example tasks (but PRs are always welcome!)
+- Add more built-in backends
+- Provide more example use-cases and tutorials
+
 ## 📝️ Reporting issues
 
-If you have questions regarding the usage of `spacy-llm`, or want to give us feedback about its usage, please use the 
+If you have questions regarding the usage of `spacy-llm`, or want to give us feedback after giving it a spin, please use the 
 [discussion board](https://github.com/explosion/spaCy/discussions). 
 Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosion/spaCy/issues). Thank you! 
 
