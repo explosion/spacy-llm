@@ -3,34 +3,68 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
-from spacy_llm.tasks.textcat import textcat_zeroshot_task
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer
+from spacy_llm.tasks.textcat import TextCatTask
 
 
-cfg_string = """
-[nlp]
-lang = "en"
-pipeline = ["llm"]
-batch_size = 128
+@pytest.fixture
+def zeroshot_cfg_string():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
 
-[components]
+    [components]
 
-[components.llm]
-factory = "llm"
+    [components.llm]
+    factory = "llm"
 
-[components.llm.task]
-@llm_tasks: "spacy.TextCatZeroShot.v1"
-labels: Recipe
-exclusive_classes: true
+    [components.llm.task]
+    @llm_tasks: "spacy.TextCatZeroShot.v1"
+    labels: Recipe
+    exclusive_classes: true
 
-[components.llm.task.normalizer]
-@misc: "spacy.LowercaseNormalizer.v1"
+    [components.llm.task.normalizer]
+    @misc: "spacy.LowercaseNormalizer.v1"
 
-[components.llm.backend]
-@llm_backends: "spacy.MiniChain.v1"
-api: "OpenAI"
-config: {}
-"""
+    [components.llm.backend]
+    @llm_backends: "spacy.MiniChain.v1"
+    api: "OpenAI"
+    config: {}
+    """
+
+
+@pytest.fixture
+def fewshot_cfg_string():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks: "spacy.TextCatZeroShot.v1"
+    labels: Recipe
+    exclusive_classes: true
+
+    [components.llm.task.examples]
+    @misc: "spacy.FewShotReader.v1"
+    path: spacy_llm/tests/tasks/examples/textcat_examples.yml
+
+    [components.llm.task.normalizer]
+    @misc: "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends: "spacy.MiniChain.v1"
+    api: "OpenAI"
+    config: {}
+    """
 
 
 @pytest.mark.parametrize(
