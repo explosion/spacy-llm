@@ -10,26 +10,29 @@ from ..registry import noop_normalizer, registry
 @registry.llm_tasks("spacy.TextCat.v1")
 class TextCatTask:
     _TEMPLATE_STR = """
-{% if labels|length == 1 %}
-{% set label = labels[0] %}
+{%- if labels|length == 1 -%}
+{%- set label = labels[0] -%}
 Classify whether the text below belongs to the {{ label }} category or not.
-If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer
-`NEG`.
-{% else %}
+If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer `NEG`.
+{%- else -%}
 Classify the text below to any of the following labels: {{ labels|join(", ") }}
-{% if exclusive_classes %}
-The task is exclusive, so only choose one label from what I provided
-{% else %}
-The task is non-exclusive, so you can provide more than one label as long as
-they're comma-delimited. For example: Label1, Label2, Label3
-{% endif %}
-{% endif %}
 {# whitespace #}
-{% if examples %}
+{%- if exclusive_classes -%}
+The task is exclusive, so only choose one label from what I provided.
+{%- else -%}
+The task is non-exclusive, so you can provide more than one label as long as
+they're comma-delimited. For example: Label1, Label2, Label3.
+{%- endif -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
-{% for example in examples %}
+{%- for example in examples -%}
+{# whitespace #}
 Text:
 '''
 {{ example['text'] }}
@@ -37,10 +40,12 @@ Text:
 {# whitespace #}
 {{ example['answer']}}
 {# whitespace #}
-{% endfor %}
-{% endif %}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
 {# whitespace #}
 Here is the text that needs classification
+{# whitespace #}
 {# whitespace #}
 Text:
 '''
@@ -101,7 +106,10 @@ Text:
         _template = environment.from_string(self._TEMPLATE_STR)
         for doc in docs:
             prompt = _template.render(
-                text=doc.text, labels=list(self._label_dict.values())
+                text=doc.text,
+                labels=list(self._label_dict.values()),
+                examples=self._examples,
+                exclusive_classes=self._exclusive_classes,
             )
             yield prompt
 

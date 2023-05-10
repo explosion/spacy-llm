@@ -229,11 +229,191 @@ def test_textcat_multilabel_labels_are_correct(
     assert pred_cats == expected
 
 
-# TODO: test if LLM returns weird results: PoS, NEg, RECIPe
-# output: it should still work because we're normalizing
+@pytest.mark.parametrize(
+    "examples_path",
+    [
+        "spacy_llm/tests/tasks/examples/textcat_binary_examples.json",
+        "spacy_llm/tests/tasks/examples/textcat_binary_examples.yml",
+        "spacy_llm/tests/tasks/examples/textcat_binary_examples.jsonl",
+    ],
+)
+def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary):
+    """Test if jinja2 template renders as expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
+    text, labels, _, exclusive_classes = binary
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+
+    examples = fewshot_reader(examples_path)
+    llm_textcat = TextCatTask(
+        labels=labels,
+        examples=examples,
+        exclusive_classes=exclusive_classes,
+    )
+    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+Classify whether the text below belongs to the Recipe category or not.
+If it is a Recipe, answer `POS`. If it is not a Recipe, answer `NEG`.
+Below are some examples (only use these as a guide):
 
 
-# TODO: test edge cases
-# binary, non-exclusive (not sure if it should raise an error) or check if warning happens
+Text:
+'''
+Macaroni and cheese is the best budget meal for students, unhealthy tho
+'''
 
-# TODO: test potential user errrors
+NEG
+
+Text:
+'''
+2 cups soy sauce, 1/2 lb. of chicken, 1/2 cup vinegar, then salt and paper, mix then well and you get an adobo
+'''
+
+POS
+
+Text:
+'''
+You can still add more layers to that croissant, get extra butter and add a few cups of flour
+'''
+
+POS
+
+
+Here is the text that needs classification
+
+
+Text:
+'''
+Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream
+'''""".strip()
+    )
+
+
+@pytest.mark.parametrize(
+    "examples_path",
+    [
+        "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.json",
+        "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.yml",
+        "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.jsonl",
+    ],
+)
+def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
+    examples_path, multilabel
+):
+    text, labels, _, exclusive_classes = multilabel
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+
+    examples = fewshot_reader(examples_path)
+    llm_textcat = TextCatTask(
+        labels=labels,
+        examples=examples,
+        exclusive_classes=exclusive_classes,
+    )
+    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+Classify the text below to any of the following labels: Recipe, Feedback, Comment
+The task is exclusive, so only choose one label from what I provided.
+Below are some examples (only use these as a guide):
+
+
+Text:
+'''
+Macaroni and cheese is the best budget meal for students, unhealthy tho
+'''
+
+Comment
+
+Text:
+'''
+2 cups soy sauce, 1/2 lb. of chicken, 1/2 cup vinegar, then salt and paper, mix then well and you get an adobo
+'''
+
+Recipe
+
+Text:
+'''
+You can still add more layers to that croissant, get extra butter and add a few cups of flour
+'''
+
+Feedback
+
+
+Here is the text that needs classification
+
+
+Text:
+'''
+You need to increase the temperature when baking, it looks undercooked.
+'''""".strip()
+    )
+
+
+@pytest.mark.parametrize(
+    "examples_path",
+    [
+        "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.json",
+        "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.yml",
+        "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.jsonl",
+    ],
+)
+def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
+    examples_path, multilabel_nonexcl
+):
+    text, labels, _, exclusive_classes = multilabel_nonexcl
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+
+    examples = fewshot_reader(examples_path)
+    llm_textcat = TextCatTask(
+        labels=labels,
+        examples=examples,
+        exclusive_classes=exclusive_classes,
+    )
+    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+    Classify the text below to any of the following labels: Recipe, Feedback, Comment
+The task is non-exclusive, so you can provide more than one label as long as
+they're comma-delimited. For example: Label1, Label2, Label3.
+Below are some examples (only use these as a guide):
+
+
+Text:
+'''
+Macaroni and cheese is the best budget meal for students, unhealthy tho
+'''
+
+Comment,Feedback
+
+Text:
+'''
+2 cups soy sauce, 1/2 lb. of chicken, 1/2 cup vinegar, then salt and paper, mix then well and you get an adobo
+'''
+
+Recipe
+
+Text:
+'''
+You can still add more layers to that croissant, get extra butter and add a few cups of flour
+'''
+
+Feedback,Recipe
+
+
+Here is the text that needs classification
+
+
+Text:
+'''
+I suggest you add some bananas. Mix 3 pieces of banana to your batter before baking.
+'''""".strip()
+    )
