@@ -3,7 +3,7 @@ from typing import Any, Callable, Iterable, Union
 
 import srsly
 
-from ..registry import registry
+from .util import registry
 
 
 @registry.misc("spacy.FewShotReader.v1")

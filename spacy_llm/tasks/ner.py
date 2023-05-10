@@ -49,20 +49,8 @@ def find_substrings(
     return offsets
 
 
-@registry.llm_tasks("spacy.NERZeroShot.v1")
+@registry.llm_tasks("spacy.NER.v1")
 class NERTask:
-    _TEMPLATE_STR = """
-    From the text below, extract the following entities in the following format:
-    {# whitespace #}
-    {%- for label in labels -%}
-    {{ label }}: <comma delimited list of strings>
-    {# whitespace #}
-    {%- endfor -%}
-    Text:
-    '''
-    {{ text }}
-    """
-
     _TEMPLATE_STR = """
 From the text below, extract the following entities in the following format:
 {# whitespace #}

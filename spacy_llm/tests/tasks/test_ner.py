@@ -345,7 +345,7 @@ def test_jinja_template_rendering_without_examples():
     doc = nlp("Alice and Bob went to the supermarket")
 
     llm_ner = NERTask(labels=labels, examples=None)
-    prompt = llm_ner.generate_prompts([doc])[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
@@ -385,7 +385,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
 
     examples = fewshot_reader(examples_path)
     llm_ner = NERTask(labels=labels, examples=examples)
-    prompt = llm_ner.generate_prompts([doc])[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
