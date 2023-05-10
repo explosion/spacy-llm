@@ -1,4 +1,6 @@
 # mypy: ignore-errors
+from pathlib import Path
+
 import pytest
 import spacy
 from confection import Config
@@ -366,14 +368,14 @@ Alice and Bob went to the supermarket
 
 
 @pytest.mark.parametrize(
-    "examples_path",
+    "examples_filename",
     [
-        "spacy_llm/tests/tasks/examples/ner_examples.json",
-        "spacy_llm/tests/tasks/examples/ner_examples.yml",
-        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
+        "ner_examples.json",
+        "ner_examples.yml",
+        "ner_examples.jsonl",
     ],
 )
-def test_jinja_template_rendering_with_examples(examples_path):
+def test_jinja_template_rendering_with_examples(examples_filename):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
@@ -383,7 +385,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(examples_path)
+    examples = fewshot_reader(Path(__file__).parent / "examples" / examples_filename)
     llm_ner = NERTask(labels=labels, examples=examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
