@@ -13,6 +13,7 @@ select = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
+    "error",
     "ignore:pkg_resources:DeprecationWarning"
 ]
 markers =[

@@ -93,4 +93,4 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          python -m pytest --pyargs $MODULE_NAME -W error ignore:pkg_resources:DeprecationWarning
+          python -m pytest --pyargs $MODULE_NAME
