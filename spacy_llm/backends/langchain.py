@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Type
+from typing import Any, Callable, Dict, Iterable, Optional, Type
 from typing import TYPE_CHECKING
 
 from spacy.util import SimpleFrozenDict
@@ -35,7 +35,7 @@ def query_langchain() -> Callable[["BaseLLM", Iterable[str]], Iterable[str]]:
 @registry.llm_backends("spacy.LangChain.v1")
 def backend_langchain(
     api: str,
-    query: Callable[["BaseLLM", Iterable[str]], Iterable[str]] = query_langchain(),
+    query: Optional[Callable[["BaseLLM", Iterable[str]], Iterable[str]]] = None,
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Any]], Iterable[Any]]:
     """Returns Callable using MiniChain backend to prompt specified API.
@@ -57,8 +57,10 @@ def backend_langchain(
     if api in type_to_cls_dict:
         backend = type_to_cls_dict[api](**config)
 
+        query_fn = query_langchain() if query is None else query
+
         def _query(prompts: Iterable[Any]) -> Iterable[Any]:
-            return query(backend, prompts)
+            return query_fn(backend, prompts)
 
         return _query
     else:

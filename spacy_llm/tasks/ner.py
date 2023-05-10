@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable, Optional, Tuple, Any
 
 import jinja2
 from spacy.tokens import Doc
@@ -50,24 +50,49 @@ def find_substrings(
     return offsets
 
 
-@registry.llm_tasks("spacy.NERZeroShot.v1")
+@registry.llm_tasks("spacy.NER.v1")
 class NERTask:
-
     _TEMPLATE_STR = """
-    From the text below, extract the following entities in the following format:
-    {# whitespace #}
-    {%- for label in labels -%}
-    {{ label }}: <comma delimited list of strings>
-    {# whitespace #}
-    {%- endfor -%}
-    Text:
-    '''
-    {{ text }}
+From the text below, extract the following entities in the following format:
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}: <comma delimited list of strings>
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example['text'] }}
+'''
+{# whitespace #}
+{%- for label, substrings in example['entities'].items() -%}
+{{ label }}: {{ ', '.join(substrings) }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''
     """
 
     def __init__(
         self,
         labels: str,
+        examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -75,20 +100,23 @@ class NERTask:
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        """Default NER template for zero-shot annotation
+        """Default NER template for LLM annotation
 
         labels (str): comma-separated list of labels to pass to the template.
+        examples (Optional[Callable[[], Iterable[Any]]]): optional callable that
+            reads a file containing task examples for few-shot learning. If None is
+            passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
-        single_match: If False, allow one substring to match multiple times in the text. If True, returns the first hit.
-
-        RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
+        single_match: If False, allow one substring to match multiple times in
+            the text. If True, returns the first hit.
         """
         self._normalizer = normalizer if normalizer else noop_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }
+        self._examples = examples() if examples else None
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
@@ -107,7 +135,9 @@ class NERTask:
         _template = environment.from_string(self._TEMPLATE_STR)
         for doc in docs:
             prompt = _template.render(
-                text=doc.text, labels=list(self._label_dict.values())
+                text=doc.text,
+                labels=list(self._label_dict.values()),
+                examples=self._examples,
             )
             yield prompt
 
