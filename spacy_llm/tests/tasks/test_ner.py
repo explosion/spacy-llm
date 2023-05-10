@@ -4,7 +4,7 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
+from spacy_llm.registry import strip_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
 
 
@@ -190,7 +190,7 @@ def test_ner_zero_shot_task(text, response, gold_ents):
         ),
         (
             "PER: Jean Jacques, Jaime",
-            noop_normalizer(),
+            strip_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
