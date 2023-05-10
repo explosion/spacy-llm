@@ -116,7 +116,7 @@ Text:
         """
         if self._use_binary:
             # Binary classification: We only have one label
-            label: str = self._label_dict.values()[0]
+            label: str = list(self._label_dict.values())[0]
             categories = {label: 1.0} if response == "POS" else {}
         else:
             # Multilabel classification
