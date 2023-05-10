@@ -1,6 +1,9 @@
 name: Regression Tests
 
-on: pull_request
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited ]
+  workflow_dispatch:
 
 jobs:
   run:
