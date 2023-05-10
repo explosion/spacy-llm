@@ -41,7 +41,7 @@ def zeroshot_cfg_string():
 
 @pytest.fixture
 def fewshot_cfg_string():
-    return """
+    return f"""
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -58,7 +58,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc: "spacy.FewShotReader.v1"
-    path: spacy_llm/tests/tasks/examples/ner_examples.yml
+    path: {EXAMPLES_DIR / "ner_examples.yml"}
 
     [components.llm.task.normalizer]
     @misc: "spacy.LowercaseNormalizer.v1"
@@ -66,7 +66,7 @@ def fewshot_cfg_string():
     [components.llm.backend]
     @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
-    config: {}
+    config: {{}}
     """
 
 
