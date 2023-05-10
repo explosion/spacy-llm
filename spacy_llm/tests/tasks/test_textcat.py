@@ -79,7 +79,7 @@ def binary():
     labels = "Recipe"
     gold_cats = ["Recipe"]
     exclusive_classes = True
-    examples_path = EXAMPLES_DIR / "textcat_binary_examples.yml"
+    examples_path = str(EXAMPLES_DIR / "textcat_binary_examples.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -89,7 +89,7 @@ def multilabel_excl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = True
-    examples_path = EXAMPLES_DIR / "textcat_multi_excl_examples.yml"
+    examples_path = str(EXAMPLES_DIR / "textcat_multi_excl_examples.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -99,7 +99,7 @@ def multilabel_nonexcl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = False
-    examples_path = EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml"
+    examples_path = str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -249,9 +249,9 @@ def test_textcat_multilabel_labels_are_correct(
 @pytest.mark.parametrize(
     "examples_path",
     [
-        EXAMPLES_DIR / "textcat_binary_examples.json",
-        EXAMPLES_DIR / "textcat_binary_examples.yml",
-        EXAMPLES_DIR / "textcat_binary_examples.jsonl",
+        str(EXAMPLES_DIR / "textcat_binary_examples.json"),
+        str(EXAMPLES_DIR / "textcat_binary_examples.yml"),
+        str(EXAMPLES_DIR / "textcat_binary_examples.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary):
@@ -314,9 +314,9 @@ Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream
 @pytest.mark.parametrize(
     "examples_path",
     [
-        EXAMPLES_DIR / "textcat_multi_excl_examples.json",
-        EXAMPLES_DIR / "textcat_multi_excl_examples.yml",
-        EXAMPLES_DIR / "textcat_multi_excl_examples.jsonl",
+        str(EXAMPLES_DIR / "textcat_multi_excl_examples.json"),
+        str(EXAMPLES_DIR / "textcat_multi_excl_examples.yml"),
+        str(EXAMPLES_DIR / "textcat_multi_excl_examples.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
@@ -376,9 +376,9 @@ You need to increase the temperature when baking, it looks undercooked.
 @pytest.mark.parametrize(
     "examples_path",
     [
-        EXAMPLES_DIR / "textcat_multi_nonexcl_examples.json",
-        EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml",
-        EXAMPLES_DIR / "textcat_multi_nonexcl_examples.jsonl",
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.json"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
