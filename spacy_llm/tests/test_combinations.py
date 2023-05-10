@@ -1,0 +1,39 @@
+import copy
+import itertools
+import random
+
+import spacy
+
+PIPE_CFG = {
+    "backend": {
+        "@llm_backends": None,
+        "api": "OpenAI",
+        "config": {},
+    },
+    "task": {"@llm_tasks": None},
+}
+
+
+def test_combinations():
+    """Randomly test combinations of backends and tasks."""
+    n = 5
+    backends = ("spacy.LangChain.v1", "spacy.MiniChain.v1", "spacy.REST.v1")
+    tasks = ("spacy.NER.v1", "spacy.TextCat.v1")
+    combinations = list(itertools.product(backends, tasks))
+    random.shuffle(combinations)
+
+    for combination in random.sample(combinations, n):
+        config = copy.deepcopy(PIPE_CFG)
+        config["backend"]["@llm_backends"] = combination[0]
+        config["task"]["@llm_tasks"] = combination[1]
+
+        # Configure task-specific settings.
+        if combination[1].startswith("spacy.NER"):
+            config["task"]["labels"] = "PER,ORG,LOC"
+        elif combination[1].startswith("spacy.TextCat"):
+            config["task"]["labels"] = "Recipe"
+            config["task"]["exclusive_classes"] = True
+
+        nlp = spacy.blank("en")
+        nlp.add_pipe("llm", config=config)
+        nlp("This is a test.")
