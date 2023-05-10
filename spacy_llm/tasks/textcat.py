@@ -59,6 +59,7 @@ Text:
         examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
+        verbose: bool = False,
     ):
         """Default TextCat task.
 
@@ -69,7 +70,7 @@ Text:
         will be used. The label will get a score of `0` or `1` in `doc.cats`.
 
         If a comma-separated list of labels is provided, multilabel
-        classification will be used. The document labels in `doc.cats` will be a 
+        classification will be used. The document labels in `doc.cats` will be a
         dictionary of strings and their score.
 
         Lastly, you can toggle between exclusive or no-exclusive text
@@ -83,6 +84,7 @@ Text:
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         exclusive_classes (bool): if True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
+        verbose (bool): if set to True, show extra information.
         """
         self._normalizer = normalizer if normalizer else noop_normalizer()
         self._label_dict = {
@@ -92,6 +94,7 @@ Text:
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
+        self._verbose = verbose
 
         if self._use_binary and not self._exclusive_classes:
             msg.warn(
@@ -130,11 +133,12 @@ Text:
 
             pred_labels = response.split(",")
             if self._exclusive_classes and len(pred_labels) > 1:
-                # Don't use anything but raise a warning
+                # Don't use anything but raise a debug message
                 # Don't raise an error. Let user abort if they want to.
-                msg.warn(
+                msg.text(
                     f"LLM returned multiple labels for this exclusive task: {pred_labels}.",
                     " Will store an empty label instead.",
+                    show=self._verbose,
                 )
                 pred_labels = []
 
