@@ -26,16 +26,16 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.NER.v1"
-    labels: PER,ORG,LOC
+    @llm_tasks = "spacy.NER.v1"
+    labels = PER,ORG,LOC
 
     [components.llm.task.normalizer]
-    @misc: "spacy.LowercaseNormalizer.v1"
+    @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.REST.v1"
-    api: "OpenAI"
-    config: {}
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
     """
 
 
@@ -53,19 +53,19 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.NER.v1"
-    labels: PER,ORG,LOC
+    @llm_tasks = "spacy.NER.v1"
+    labels = PER,ORG,LOC
 
     [components.llm.task.examples]
-    @misc: "spacy.FewShotReader.v1"
-    path: {EXAMPLES_DIR / "ner_examples.yml"}
+    @misc = "spacy.FewShotReader.v1"
+    path = {EXAMPLES_DIR / "ner_examples.yml"}
 
     [components.llm.task.normalizer]
-    @misc: "spacy.LowercaseNormalizer.v1"
+    @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.REST.v1"
-    api: "OpenAI"
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
     config: {{}}
     """
 

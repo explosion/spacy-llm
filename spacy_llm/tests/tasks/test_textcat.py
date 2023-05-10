@@ -22,17 +22,17 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.TextCat.v1"
-    labels: "Recipe"
-    exclusive_classes: true
+    @llm_tasks = "spacy.TextCat.v1"
+    labels = "Recipe"
+    exclusive_classes = true
 
     [components.llm.task.normalizer]
-    @misc: "spacy.LowercaseNormalizer.v1"
+    @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.REST.v1"
-    api: "OpenAI"
-    config: {}
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
     """
 
 
@@ -50,21 +50,21 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.TextCat.v1"
-    labels: "Recipe"
-    exclusive_classes: true
+    @llm_tasks = "spacy.TextCat.v1"
+    labels = "Recipe"
+    exclusive_classes = true
 
     [components.llm.task.examples]
-    @misc: "spacy.FewShotReader.v1"
-    path: spacy_llm/tests/tasks/examples/textcat_examples.yml
+    @misc = "spacy.FewShotReader.v1"
+    path = spacy_llm/tests/tasks/examples/textcat_examples.yml
 
     [components.llm.task.normalizer]
-    @misc: "spacy.LowercaseNormalizer.v1"
+    @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.REST.v1"
-    api: "OpenAI"
-    config: {}
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
     """
 
 
