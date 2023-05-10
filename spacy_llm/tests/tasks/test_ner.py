@@ -9,9 +9,7 @@ from spacy.util import make_tempdir
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
 
-PROJECT_ROOT = Path("__init__").parent.parent
-TEST_DIR = PROJECT_ROOT / "spacy_llm" / "tests"
-EXAMPLES_DIR = TEST_DIR / "tasks" / "examples"
+EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 
 @pytest.fixture
