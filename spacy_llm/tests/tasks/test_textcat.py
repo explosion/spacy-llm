@@ -74,16 +74,18 @@ def binary():
     labels = "Recipe"
     gold_cats = ["Recipe"]
     exclusive_classes = True
-    return text, labels, gold_cats, exclusive_classes
+    examples_path = "spacy_llm/tests/tasks/examples/textcat_binary_examples.yml"
+    return text, labels, gold_cats, exclusive_classes, examples_path
 
 
 @pytest.fixture
-def multilabel():
+def multilabel_excl():
     text = "You need to increase the temperature when baking, it looks undercooked."
     labels = "Recipe,Feedback,Comment"
     gold_cats = labels.split(",")
     exclusive_classes = True
-    return text, labels, gold_cats, exclusive_classes
+    examples_path = "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.yml"
+    return text, labels, gold_cats, exclusive_classes, examples_path
 
 
 @pytest.fixture
@@ -92,24 +94,27 @@ def multilabel_nonexcl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = labels.split(",")
     exclusive_classes = False
-    return text, labels, gold_cats, exclusive_classes
+    examples_path = "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.yml"
+    return text, labels, gold_cats, exclusive_classes, examples_path
 
 
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_textcat_config(task, cfg_string, request):
     """Simple test to check if the config loads properly given different settings"""
-    cfg_string = request.getfixturevalue(cfg_string)
-    task = request.getfixturevalue(task)
-    _, labels, _, exclusive_classes = task
 
-    orig_config = Config().from_str(
-        cfg_string,
-        overrides={
-            "components.llm.task.labels": labels,
-            "components.llm.task.exclusive_classes": exclusive_classes,
-        },
-    )
+    task = request.getfixturevalue(task)
+    _, labels, _, exclusive_classes, examples = task
+    overrides = {
+        "components.llm.task.labels": labels,
+        "components.llm.task.exclusive_classes": exclusive_classes,
+    }
+
+    if cfg_string == "fewshot_cfg_string":
+        overrides["components.llm.task.examples.path"] = examples
+
+    cfg_string = request.getfixturevalue(cfg_string)
+    orig_config = Config().from_str(cfg_string, overrides=overrides)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
@@ -122,16 +127,18 @@ def test_textcat_predict(task, cfg_string, request):
     Note that this test may fail randomly, as the LLM's output is unguaranteed
     to be consistent/predictable
     """
-    cfg_string = request.getfixturevalue(cfg_string)
     task = request.getfixturevalue(task)
-    text, labels, gold_cats, exclusive_classes = task
-    orig_config = Config().from_str(
-        cfg_string,
-        overrides={
-            "components.llm.task.labels": labels,
-            "components.llm.task.exclusive_classes": exclusive_classes,
-        },
-    )
+    text, labels, gold_cats, exclusive_classes, examples = task
+    overrides = {
+        "components.llm.task.labels": labels,
+        "components.llm.task.exclusive_classes": exclusive_classes,
+    }
+
+    if cfg_string == "fewshot_cfg_string":
+        overrides["components.llm.task.examples.path"] = examples
+
+    cfg_string = request.getfixturevalue(cfg_string)
+    orig_config = Config().from_str(cfg_string, overrides=overrides)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     doc = nlp(text)
     assert len(doc.cats) >= 0  # can be 0 if binary and negative
@@ -143,16 +150,19 @@ def test_textcat_predict(task, cfg_string, request):
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_textcat_io(task, cfg_string, request):
-    cfg_string = request.getfixturevalue(cfg_string)
     task = request.getfixturevalue(task)
-    text, labels, gold_cats, exclusive_classes = task
-    orig_config = Config().from_str(
-        cfg_string,
-        overrides={
-            "components.llm.task.labels": labels,
-            "components.llm.task.exclusive_classes": exclusive_classes,
-        },
-    )
+    text, labels, gold_cats, exclusive_classes, examples = task
+    overrides = {
+        "components.llm.task.labels": labels,
+        "components.llm.task.exclusive_classes": exclusive_classes,
+    }
+
+    if cfg_string == "fewshot_cfg_string":
+        overrides["components.llm.task.examples.path"] = examples
+
+    cfg_string = request.getfixturevalue(cfg_string)
+    orig_config = Config().from_str(cfg_string, overrides=overrides)
+
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
@@ -243,7 +253,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    text, labels, _, exclusive_classes = binary
+    text, labels, _, exclusive_classes, _ = binary
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
@@ -303,9 +313,9 @@ Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
-    examples_path, multilabel
+    examples_path, multilabel_excl
 ):
-    text, labels, _, exclusive_classes = multilabel
+    text, labels, _, exclusive_classes, _ = multilabel_excl
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
@@ -367,7 +377,7 @@ You need to increase the temperature when baking, it looks undercooked.
 def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     examples_path, multilabel_nonexcl
 ):
-    text, labels, _, exclusive_classes = multilabel_nonexcl
+    text, labels, _, exclusive_classes, _ = multilabel_nonexcl
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
