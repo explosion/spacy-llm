@@ -121,7 +121,18 @@ Text:
         else:
             # Multilabel classification
             categories = {label: 0 for label in self._label_dict.values()}
-            for pred in response.split(","):
+
+            pred_labels = response.split(",")
+            if self._exclusive_classes and len(pred_labels) > 1:
+                # Don't use anything but raise a warning
+                # Don't raise an error. Let user abort if they want to.
+                msg.warn(
+                    f"LLM returned multiple labels for this exclusive task: {pred_labels}.",
+                    " Will store an empty label instead.",
+                )
+                pred_labels = []
+
+            for pred in pred_labels:
                 category = self._label_dict[self._normalizer(pred.strip())]
                 categories[category] = 1.0
         return categories
