@@ -53,7 +53,7 @@ def fewshot_cfg_string():
     labels: PER,ORG,LOC
 
     [components.llm.task.examples]
-    @misc: "spacy.ExampleReader.v1"
+    @misc: "spacy.FewShotReader.v1"
     path: spacy_llm/tests/tasks/examples/ner_examples.yml
 
     [components.llm.task.normalizer]
@@ -370,6 +370,7 @@ Alice and Bob went to the supermarket
     [
         "spacy_llm/tests/tasks/examples/ner_examples.json",
         "spacy_llm/tests/tasks/examples/ner_examples.yml",
+        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):

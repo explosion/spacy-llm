@@ -1,21 +1,22 @@
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Union
 
-import spacy
 import srsly
 
+from ..registry import registry
 
-@spacy.registry.misc("spacy.ExampleReader.v1")
-def example_reader(path: str) -> Callable[[], Iterable[Any]]:
+
+@registry.misc("spacy.FewShotReader.v1")
+def example_reader(path: Union[str, Path]) -> Callable[[], Iterable[Any]]:
     """Read an examples file to include in few-shot learning
 
-    path (Path): path to an examples file (.yml, .yaml, .json)
+    path (Union[str,Path]): path to an examples file (.yml, .yaml, .json)
 
     RETURNS (Iterable[Any]): an iterable of examples to be parsed by the template
     """
 
     # typecast string path so that we can use pathlib functionality
-    eg_path = Path(path)
+    eg_path = Path(path) if isinstance(path, str) else path
 
     def reader() -> Iterable[Any]:
         if eg_path is None:
@@ -24,9 +25,11 @@ def example_reader(path: str) -> Callable[[], Iterable[Any]]:
             data = srsly.read_yaml(eg_path)
         elif eg_path.suffix == ".json":
             data = srsly.read_json(eg_path)
+        elif eg_path.suffix == ".jsonl":
+            data = list(srsly.read_jsonl(eg_path))
         else:
             raise ValueError(
-                "The examples file expects a .yml, .yaml, or .json file type."
+                "The examples file expects a .yml, .yaml, .json, or .jsonl file type."
             )
 
         if not isinstance(data, list):
