@@ -76,15 +76,15 @@ Text:
         Lastly, you can toggle between exclusive or no-exclusive text
         categorization by passing a flag to the `exclusive_classes` parameter.
 
-        labels (str): comma-separated list of labels to pass to the template. This task
+        labels (str): Comma-separated list of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
-        examples (Optional[Callable[[], Iterable[Any]]]): optional callable that
+        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
-        normalizer (Optional[Callable[[str], str]]): optional normalizer function.
-        exclusive_classes (bool): if True, require the language model to suggest only one
+        normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+        exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
-        verbose (bool): if set to True, show extra information.
+        verbose (bool): If True, show extra information.
         """
         self._normalizer = normalizer if normalizer else strip_normalizer()
         self._label_dict = {
