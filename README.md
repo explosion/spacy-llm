@@ -312,11 +312,57 @@ This task is only useful for testing - it tells the LLM to do nothing, and does 
 
 ### Backends
 
-TODO
+A _backend_ defines which LLM model to query, and how to query it. It can be a simple function taking a collection
+of prompts (consistent with the output type of `task.generate_prompts()`) and returning a collection of responses
+(consistent with the expected input of `parse_responses`). Generally speaking, it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`,
+but specific implementations can have other signatures, like `Callable[[Iterable[str]], Iterable[str]]`.
 
-#### spacy.Rest.v1
+All built-in backends are registered in `llm_backends`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
+using the built-in REST protocol, and accesses the `"text-davinci-003"` model.
 
-TODO
+#### OpenAI
+
+When the backend uses OpenAI, you have to get an API key from openai.com, and ensure that the keys are set as
+environmental variables. For instance, set a `.env` file in the root of your directory with the following information,
+and make sure to exclude this file from git versioning:
+
+```
+OPENAI_ORG = "org-..."
+OPENAI_API_KEY = "sk-..."
+```
+
+#### spacy.REST.v1
+
+This default backend uses `requests` and a relatively simple retry mechanism to access an API.
+
+```
+[components.llm.backend]
+@llm_backends = "spacy.REST.v1"
+api = "OpenAI"
+config = {"model": "text-davinci-003", "temperature": 0.3}
+```
+
+| Argument    | Type           | Default | Description                                                                                                          |
+| ----------- | -------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `api`       | str            |         | The name of a supported API. In v.0.1.0, only "OpenAI" is supported.                                                 |
+| `config`    | Dict[Any, Any] | `{}`    | Further configuration passed on to the backend.                                                                      |
+| `strict`    | bool           | `True`  | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | int            | `3`     | Max. number of tries for API request.                                                                                |
+| `timeout`   | int            | `30`    | Timeout for API request in seconds.                                                                                  |
+
+When the `api` is set to `OpenAI`, the following settings can be defined in the `config` dictionary:
+
+- `model`: one of the following list of supported models:
+  - "text-davinci-003"
+  - "text-davinci-002"
+  - "text-curie-001"
+  - "text-babbage-001"
+  - "text-ada-001"
+  - "davinci"
+  - "curie"
+  - "babbage"
+  - "ada"
+- `url`: By default, this is `https://api.openai.com/v1/completions`
 
 #### spacy.MiniChain.v1
 
