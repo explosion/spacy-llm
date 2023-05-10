@@ -15,3 +15,6 @@ testpaths = ["tests"]
 filterwarnings = [
     "ignore:pkg_resources:DeprecationWarning"
 ]
+markers =[
+    "external"
+]
