@@ -23,7 +23,6 @@ def query_minichain() -> (
     RETURNS (Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]): Callable executing simple prompts
         on the specified MiniChain backend.
     """
-    _check_installation()
 
     def prompt(
         backend: "minichain.backend.Backend", prompts: Iterable[str]

@@ -2,9 +2,9 @@
 import sys
 
 if sys.version_info[:2] >= (3, 8):  # Python 3.8+
-    from typing import Protocol, runtime_checkable
+    from typing import Protocol, runtime_checkable, Literal
 else:
-    from typing_extensions import Protocol, runtime_checkable  # noqa: F401
+    from typing_extensions import Protocol, runtime_checkable, Literal  # noqa: F401
 
 try:
     import langchain

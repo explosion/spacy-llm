@@ -1,10 +1,11 @@
-from typing import Any, Callable, Iterable, Literal, Optional, Tuple
+from typing import Callable, Iterable, Optional, Tuple, Any
 
 import jinja2
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
 from ..registry import strip_normalizer, registry
+from ..compat import Literal
 
 
 def find_substrings(
@@ -93,7 +94,9 @@ Text:
         labels: str,
         examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
-        alignment_mode: Literal["strict", "contract", "expand"] = "contract",
+        alignment_mode: Literal[
+            "strict", "contract", "expand"  # noqa: F821
+        ] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
