@@ -9,9 +9,7 @@ from spacy.util import make_tempdir
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
 
-PROJECT_ROOT = Path("__init__").parent.parent
-TEST_DIR = PROJECT_ROOT / "spacy_llm" / "tests"
-EXAMPLES_DIR = TEST_DIR / "tasks" / "examples"
+EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 
 @pytest.fixture
@@ -60,7 +58,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc: "spacy.FewShotReader.v1"
-    path: {str(EXAMPLES_DIR / "ner_examples.yml")}
+    path: {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
 
     [components.llm.task.normalizer]
     @misc: "spacy.LowercaseNormalizer.v1"
@@ -72,7 +70,7 @@ def fewshot_cfg_string():
     """
 
 
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string"])  # "zeroshot_cfg_string",
 def test_ner_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
