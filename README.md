@@ -117,7 +117,9 @@ nlp = spacy.blank("en")
 nlp.add_pipe(
     "llm",
     config={
-        "task": {"@llm_tasks": "spacy.NER.v1"},
+        "task": {
+            "@llm_tasks": "spacy.NER.v1",
+            "labels": "PERSON,ORGANISATION,LOCATION"},
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
@@ -126,7 +128,7 @@ nlp.add_pipe(
     },
 )
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
-print([(ent.text, ent.label) for ent in doc.ents])
+print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
 Note that for efficient usage of resources, typically you would use [`nlp.pipe(docs)`](https://spacy.io/api/language#pipe) 
