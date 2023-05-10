@@ -4,7 +4,7 @@ import jinja2
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from ..registry import strip_normalizer, registry
+from ..registry import lowercase_normalizer, registry
 from ..compat import Literal
 
 
@@ -112,7 +112,7 @@ Text:
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         """
-        self._normalizer = normalizer if normalizer else strip_normalizer()
+        self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }

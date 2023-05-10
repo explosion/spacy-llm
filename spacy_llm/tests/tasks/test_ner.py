@@ -204,8 +204,13 @@ def test_ner_zero_shot_task(text, response, gold_ents):
         ),
         (
             "per: Jean Jacques, Jaime",
-            None,
+            strip_normalizer(),
             [],
+        ),
+        (
+            "per: Jean Jacques, Jaime",
+            None,
+            [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
             "per: Jean Jacques\nPER: Jaime",

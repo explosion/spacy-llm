@@ -4,7 +4,7 @@ import jinja2
 from spacy.tokens import Doc
 from wasabi import msg
 
-from ..registry import strip_normalizer, registry
+from ..registry import lowercase_normalizer, registry
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
@@ -86,7 +86,7 @@ Text:
             label per class. This is automatically set when using binary classification.
         verbose (bool): If True, show extra information.
         """
-        self._normalizer = normalizer if normalizer else strip_normalizer()
+        self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }
