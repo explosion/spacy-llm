@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional, Tuple
+from typing import Any, Callable, Iterable, Literal, Optional, Tuple
 
 import jinja2
 from spacy.tokens import Doc
