@@ -60,7 +60,7 @@ Text:
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
     ):
-        """Default TextCat task for LLM annotation
+        """Default TextCat task.
 
         You can use either binary or multilabel text classification based on the
         labels you provide.
