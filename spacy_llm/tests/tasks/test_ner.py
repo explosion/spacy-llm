@@ -4,45 +4,83 @@ import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
+from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer
-
-cfg_string = """
-[nlp]
-lang = "en"
-pipeline = ["llm"]
-batch_size = 128
-
-[components]
-
-[components.llm]
-factory = "llm"
-
-[components.llm.task]
-@llm_tasks: "spacy.NERZeroShot.v1"
-labels: PER,ORG,LOC
-
-[components.llm.task.normalizer]
-@misc: "spacy.LowercaseNormalizer.v1"
-
-[components.llm.backend]
-@llm_backends: "spacy.MiniChain.v1"
-api: "OpenAI"
-config: {}
-"""
 
 
-def test_ner_config():
+@pytest.fixture
+def zeroshot_cfg_string():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks: "spacy.NER.v1"
+    labels: PER,ORG,LOC
+
+    [components.llm.task.normalizer]
+    @misc: "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends: "spacy.REST.v1"
+    api: "OpenAI"
+    config: {}
+    """
+
+
+@pytest.fixture
+def fewshot_cfg_string():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks: "spacy.NER.v1"
+    labels: PER,ORG,LOC
+
+    [components.llm.task.examples]
+    @misc: "spacy.FewShotReader.v1"
+    path: spacy_llm/tests/tasks/examples/ner_examples.yml
+
+    [components.llm.task.normalizer]
+    @misc: "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends: "spacy.REST.v1"
+    api: "OpenAI"
+    config: {}
+    """
+
+
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_ner_config(cfg_string, request):
+    cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
 
 @pytest.mark.external
-def test_ner_predict():
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_ner_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
+    cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     text = "Marc and Bob both live in Ireland."
@@ -53,7 +91,9 @@ def test_ner_predict():
 
 
 @pytest.mark.external
-def test_ner_io():
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_ner_io(cfg_string, request):
+    cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
@@ -292,3 +332,98 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
+
+
+def test_jinja_template_rendering_without_examples():
+    """Test if jinja template renders as we expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
+    labels = "PER,ORG,LOC"
+    nlp = spacy.blank("xx")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
+
+    llm_ner = NERTask(labels=labels, examples=None)
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
+
+    assert (
+        prompt.strip()
+        == """
+From the text below, extract the following entities in the following format:
+PER: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+LOC: <comma delimited list of strings>
+
+Here is the text that needs labeling:
+
+Text:
+'''
+Alice and Bob went to the supermarket
+'''
+""".strip()
+    )
+
+
+@pytest.mark.parametrize(
+    "examples_path",
+    [
+        "spacy_llm/tests/tasks/examples/ner_examples.json",
+        "spacy_llm/tests/tasks/examples/ner_examples.yml",
+        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
+    ],
+)
+def test_jinja_template_rendering_with_examples(examples_path):
+    """Test if jinja2 template renders as expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
+    labels = "PER,ORG,LOC"
+    nlp = spacy.blank("xx")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
+
+    examples = fewshot_reader(examples_path)
+    llm_ner = NERTask(labels=labels, examples=examples)
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
+
+    assert (
+        prompt.strip()
+        == """
+From the text below, extract the following entities in the following format:
+PER: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+LOC: <comma delimited list of strings>
+
+Below are some examples (only use these as a guide):
+
+
+Text:
+'''
+Jack and Jill went up the hill.
+'''
+PER: Jack, Jill
+LOC: hill
+
+
+Text:
+'''
+Jack fell down and broke his crown.
+'''
+PER: Jack
+
+
+Text:
+'''
+Jill came tumbling after.
+'''
+PER: Jill
+
+
+Here is the text that needs labeling:
+
+Text:
+'''
+Alice and Bob went to the supermarket
+'''""".strip()
+    )
