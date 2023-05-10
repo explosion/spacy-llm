@@ -12,6 +12,7 @@ PIPE_CFG = {
 }
 
 
+@pytest.mark.external
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
@@ -19,6 +20,7 @@ def test_initialization():
     nlp("This is a test.")
 
 
+@pytest.mark.external
 def test_rest_backend_error_handling():
     """Test error handling for default/minimal REST backend."""
     nlp = spacy.blank("en")

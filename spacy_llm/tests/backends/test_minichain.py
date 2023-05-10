@@ -1,5 +1,6 @@
 import spacy
 import pytest
+from spacy_llm.compat import has_minichain
 
 PIPE_CFG = {
     "backend": {
@@ -13,6 +14,7 @@ PIPE_CFG = {
 
 
 @pytest.mark.external
+@pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
