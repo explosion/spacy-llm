@@ -29,7 +29,7 @@ def zeroshot_cfg_string():
     @misc: "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.MiniChain.v1"
+    @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
     config: {}
     """
@@ -60,7 +60,7 @@ def fewshot_cfg_string():
     @misc: "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.MiniChain.v1"
+    @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
     config: {}
     """
