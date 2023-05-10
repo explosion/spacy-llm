@@ -1,7 +1,7 @@
 import spacy
 import pytest
 
-from ...compat import has_langchain
+from spacy_llm.compat import has_langchain
 
 PIPE_CFG = {
     "backend": {
