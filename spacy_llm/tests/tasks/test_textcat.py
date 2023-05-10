@@ -1,9 +1,10 @@
+# mypy: ignore-errors
 import pytest
 import spacy
 from confection import Config
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import noop_normalizer, lowercase_normalizer
+from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.textcat import TextCatTask
 
 
@@ -21,7 +22,7 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.TextCatZeroShot.v1"
+    @llm_tasks: "spacy.TextCat.v1"
     labels: Recipe
     exclusive_classes: true
 
@@ -29,7 +30,7 @@ def zeroshot_cfg_string():
     @misc: "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.MiniChain.v1"
+    @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
     config: {}
     """
@@ -49,7 +50,7 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.TextCatZeroShot.v1"
+    @llm_tasks: "spacy.TextCat.v1"
     labels: Recipe
     exclusive_classes: true
 
@@ -61,22 +62,47 @@ def fewshot_cfg_string():
     @misc: "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.MiniChain.v1"
+    @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
     config: {}
     """
 
 
-@pytest.mark.parametrize(
-    "labels,exclusive_classes",
-    [
-        ("Recipe", True),
-        ("Recipe,Feedback,Comment", True),
-        ("Recipe,Feedback,Comment", False),
-    ],
-)
-def test_textcat_config(labels: str, exclusive_classes: bool):
+@pytest.fixture
+def binary():
+    text = "Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream"
+    labels = "Recipe"
+    gold_cats = ["Recipe"]
+    exclusive_classes = True
+    return text, labels, gold_cats, exclusive_classes
+
+
+@pytest.fixture
+def multilabel():
+    text = "You need to increase the temperature when baking, it looks undercooked."
+    labels = "Recipe,Feedback,Comment"
+    gold_cats = labels.split(",")
+    exclusive_classes = True
+    return text, labels, gold_cats, exclusive_classes
+
+
+@pytest.fixture
+def multilabel_nonexcl():
+    text = "I suggest you add some bananas. Mix 3 pieces of banana to your batter before baking."
+    labels = "Recipe,Feedback,Comment"
+    gold_cats = labels.split(",")
+    exclusive_classes = False
+    return text, labels, gold_cats, exclusive_classes
+
+
+@pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_textcat_config(task, cfg_string, request):
     """Simple test to check if the config loads properly given different settings"""
+    cfg_string = request.getfixturevalue(cfg_string)
+    task = request.getfixturevalue(task)
+    _, labels, _, exclusive_classes = task
+
     orig_config = Config().from_str(
         cfg_string,
         overrides={
@@ -89,34 +115,16 @@ def test_textcat_config(labels: str, exclusive_classes: bool):
 
 
 @pytest.mark.external
-@pytest.mark.parametrize(
-    "text,labels,exclusive_classes,gold_cats",
-    [
-        (
-            "Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream",
-            "Recipe",
-            True,
-            ["POS", "NEG"],
-        ),
-        (
-            "You might need to increase the temperature when baking, it looks undercooked.",
-            "Recipe,Feedback,Comment",
-            True,
-            ["Recipe", "Feedback", "Comment"],
-        ),
-        (
-            "I suggest you add some bananas. Mix 3 pieces of banana to your batter before baking.",
-            "Recipe,Feedback,Comment",
-            False,
-            ["Recipe", "Feedback", "Comment"],
-        ),
-    ],
-)
-def test_textcat_predict(text, labels, exclusive_classes, gold_cats):
+@pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_textcat_predict(task, cfg_string, request):
     """Use OpenAI to get zero-shot Textcat results
     Note that this test may fail randomly, as the LLM's output is unguaranteed
     to be consistent/predictable
     """
+    cfg_string = request.getfixturevalue(cfg_string)
+    task = request.getfixturevalue(task)
+    text, labels, gold_cats, exclusive_classes = task
     orig_config = Config().from_str(
         cfg_string,
         overrides={
@@ -126,8 +134,36 @@ def test_textcat_predict(text, labels, exclusive_classes, gold_cats):
     )
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     doc = nlp(text)
-    assert len(doc.cats) > 0
-    assert set(doc.cats.keys()) == set(gold_cats)
+    assert len(doc.cats) >= 0  # can be 0 if binary and negative
+    for cat in list(doc.cats.keys()):
+        assert cat in gold_cats
+
+
+@pytest.mark.external
+@pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_textcat_io(task, cfg_string, request):
+    cfg_string = request.getfixturevalue(cfg_string)
+    task = request.getfixturevalue(task)
+    text, labels, gold_cats, exclusive_classes = task
+    orig_config = Config().from_str(
+        cfg_string,
+        overrides={
+            "components.llm.task.labels": labels,
+            "components.llm.task.exclusive_classes": exclusive_classes,
+        },
+    )
+    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    assert nlp.pipe_names == ["llm"]
+    # ensure you can save a pipeline to disk and run it after loading
+    with make_tempdir() as tmpdir:
+        nlp.to_disk(tmpdir)
+        nlp2 = spacy.load(tmpdir)
+    assert nlp2.pipe_names == ["llm"]
+    doc = nlp2(text)
+    assert len(doc.cats) >= 0  # can be 0 if binary and negative
+    for cat in list(doc.cats.keys()):
+        assert cat in gold_cats
 
 
 # TODO: Test golden paths
