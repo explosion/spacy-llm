@@ -3,15 +3,15 @@ from typing import Callable
 from .util import registry
 
 
-@registry.misc("spacy.NoopNormalizer.v1")
-def noop_normalizer() -> Callable[[str], str]:
-    """Return the labels as-is
+@registry.misc("spacy.StripNormalizer.v1")
+def strip_normalizer() -> Callable[[str], str]:
+    """Return the labels as-is with stripped whitespaces
 
     RETURNS (Callable[[str], str])
     """
 
     def noop(s: str) -> str:
-        return s
+        return s.strip()
 
     return noop
 
@@ -24,6 +24,6 @@ def lowercase_normalizer() -> Callable[[str], str]:
     """
 
     def lowercase(s: str) -> str:
-        return s.lower()
+        return s.strip().lower()
 
     return lowercase
