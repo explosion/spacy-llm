@@ -1,4 +1,6 @@
 # mypy: ignore-errors
+from pathlib import Path
+
 import pytest
 import spacy
 from confection import Config
@@ -6,6 +8,8 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
+
+EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 
 @pytest.fixture
@@ -37,7 +41,7 @@ def zeroshot_cfg_string():
 
 @pytest.fixture
 def fewshot_cfg_string():
-    return """
+    return f"""
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -54,7 +58,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc: "spacy.FewShotReader.v1"
-    path: spacy_llm/tests/tasks/examples/ner_examples.yml
+    path: {EXAMPLES_DIR / "ner_examples.yml"}
 
     [components.llm.task.normalizer]
     @misc: "spacy.LowercaseNormalizer.v1"
@@ -62,7 +66,7 @@ def fewshot_cfg_string():
     [components.llm.backend]
     @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
-    config: {}
+    config: {{}}
     """
 
 
@@ -368,9 +372,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        "spacy_llm/tests/tasks/examples/ner_examples.json",
-        "spacy_llm/tests/tasks/examples/ner_examples.yml",
-        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
+        str(EXAMPLES_DIR / "ner_examples.json"),
+        str(EXAMPLES_DIR / "ner_examples.yml"),
+        str(EXAMPLES_DIR / "ner_examples.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
