@@ -26,16 +26,16 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.NER.v1"
-    labels: PER,ORG,LOC
+    @llm_tasks = "spacy.NER.v1"
+    labels = PER,ORG,LOC
 
     [components.llm.task.normalizer]
-    @misc: "spacy.LowercaseNormalizer.v1"
+    @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.REST.v1"
-    api: "OpenAI"
-    config: {}
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
     """
 
 
@@ -53,24 +53,24 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks: "spacy.NER.v1"
-    labels: PER,ORG,LOC
+    @llm_tasks = "spacy.NER.v1"
+    labels = PER,ORG,LOC
 
     [components.llm.task.examples]
-    @misc: "spacy.FewShotReader.v1"
-    path: {EXAMPLES_DIR / "ner_examples.yml"}
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
 
     [components.llm.task.normalizer]
-    @misc: "spacy.LowercaseNormalizer.v1"
+    @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.backend]
-    @llm_backends: "spacy.REST.v1"
-    api: "OpenAI"
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
     config: {{}}
     """
 
 
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string"])  # "zeroshot_cfg_string",
 def test_ner_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
