@@ -1,9 +1,12 @@
+import time
+from pathlib import Path
 from typing import Dict
 
 import pytest
 import srsly  # type: ignore[import]
 from dotenv import load_dotenv  # type: ignore[import]
 import spacy
+from spacy import Language
 from spacy.tokens import DocBin
 import copy
 
@@ -13,6 +16,7 @@ from ..cache import Cache
 load_dotenv()  # take environment variables from .env.
 
 _DEFAULT_CFG = {
+    "backend": {"api": "NoOp"},
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
     "cache": {
         "batch_size": 2,
@@ -21,8 +25,11 @@ _DEFAULT_CFG = {
 }
 
 
-def test_caching() -> None:
-    """Test pipeline with caching."""
+@pytest.mark.parametrize("use_pipe", (False, True))
+def test_caching(use_pipe: bool) -> None:
+    """Test pipeline with caching.
+    use_pipe (bool): Whether to use .pipe().
+    """
     n = 10
 
     with spacy.util.make_tempdir() as tmpdir:
@@ -32,7 +39,7 @@ def test_caching() -> None:
         nlp.add_pipe("llm", config=config)
         texts = [f"Test {i}" for i in range(n)]
         # Test writing to cache dir.
-        docs = [nlp(text) for text in texts]
+        docs = list(nlp.pipe(texts)) if use_pipe else [nlp(text) for text in texts]
 
         #######################################################
         # Test cache writing
@@ -72,6 +79,58 @@ def test_caching() -> None:
         assert cache._stats["missed"] == 0
         assert cache._stats["added"] == 0
         assert cache._stats["persisted"] == 0
+
+
+def test_caching_interrupted() -> None:
+    """Test pipeline with caching with simulated interruption (i. e. pipeline stops writing before entire batch is
+    done).
+    """
+    n = 100
+    texts = [f"Test {i}" for i in range(n)]
+
+    def _init_nlp(tmp_dir: Path) -> Language:
+        nlp = spacy.blank("en")
+        config = copy.deepcopy(_DEFAULT_CFG)
+        config["cache"]["path"] = str(tmp_dir)  # type: ignore
+        nlp.add_pipe("llm", config=config)
+        return nlp
+
+    # Collect stats for complete run with caching.
+    with spacy.util.make_tempdir() as tmpdir:
+        nlp = _init_nlp(tmpdir)
+        start = time.time()
+        [nlp(text) for text in texts]
+        ref_time = time.time() - start
+
+    with spacy.util.make_tempdir() as tmpdir:
+        nlp = _init_nlp(tmpdir)
+        # Write half of all docs.
+        start = time.time()
+        for i in range(int(n / 2)):
+            nlp(texts[i])
+        pass1_time = time.time() - start
+        pass1_cache = nlp.get_pipe("llm")._cache  # type: ignore
+        # Arbitrary time check to ensure that first pass through half of the doc batch takes up roughly half of the time
+        # of a full pass.
+        assert abs(ref_time / 2 - pass1_time) < ref_time / 2 * 0.1
+        assert pass1_cache._stats["hit"] == 0
+        assert pass1_cache._stats["missed"] == n / 2
+        assert pass1_cache._stats["added"] == n / 2
+        assert pass1_cache._stats["persisted"] == n / 2
+
+        nlp = _init_nlp(tmpdir)
+        start = time.time()
+        for i in range(n):
+            nlp(texts[i])
+        pass2_time = time.time() - start
+        cache = nlp.get_pipe("llm")._cache  # type: ignore
+        # Arbitrary time check to ensure second pass (leveraging caching) is at least 30% faster (re-utilizing 50% of
+        # the entire doc batch).
+        assert ref_time - pass2_time >= ref_time * 0.3
+        assert cache._stats["hit"] == n / 2
+        assert cache._stats["missed"] == n / 2
+        assert cache._stats["added"] == n / 2
+        assert cache._stats["persisted"] == n / 2
 
 
 def test_path_file_invalid():
