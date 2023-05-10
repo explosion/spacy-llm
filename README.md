@@ -67,7 +67,7 @@ Note that HuggingFace will download the `"databricks/dolly-v2-3b"` model the fir
 by setting the environmental variable `HF_HOME`. 
 Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better performance.
 
-### Example 2: run TextCat using an open-source model through HuggingFace
+### Example 2: run TextCat using a GPT-3 model from OpenAI
 
 To run this example, ensure that you `openai` installed. 
 Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables. 
