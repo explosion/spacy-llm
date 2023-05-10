@@ -1,4 +1,6 @@
 # mypy: ignore-errors
+from pathlib import Path
+
 import pytest
 import spacy
 from confection import Config
@@ -6,6 +8,10 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import noop_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
+
+PROJECT_ROOT = Path("__init__").parent.parent
+TEST_DIR = PROJECT_ROOT / "spacy_llm" / "tests"
+EXAMPLES_DIR = TEST_DIR / "tasks" / "examples"
 
 
 @pytest.fixture
@@ -368,9 +374,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        "spacy_llm/tests/tasks/examples/ner_examples.json",
-        "spacy_llm/tests/tasks/examples/ner_examples.yml",
-        "spacy_llm/tests/tasks/examples/ner_examples.jsonl",
+        str(EXAMPLES_DIR / "ner_examples.json"),
+        str(EXAMPLES_DIR / "ner_examples.yml"),
+        str(EXAMPLES_DIR / "ner_examples.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
