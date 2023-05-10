@@ -151,6 +151,7 @@ In the near future, we will
 - Add more example tasks
 - Support a broader range of models
 - Provide more example use-cases and tutorials
+- Make the built-in tasks easier to customize via Jinja templates to define the instructions & examples
 
 PRs are always welcome!
 
