@@ -1,6 +1,6 @@
 import spacy
 import pytest
-from ...compat import has_minichain
+from spacy_llm.compat import has_minichain
 
 PIPE_CFG = {
     "backend": {
