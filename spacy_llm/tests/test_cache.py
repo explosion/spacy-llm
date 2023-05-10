@@ -100,33 +100,33 @@ def test_caching_interrupted() -> None:
         nlp = _init_nlp(tmpdir)
         start = time.time()
         [nlp(text) for text in texts]
-        ref_time = time.time() - start
+        ref_duration = time.time() - start
 
     with spacy.util.make_tempdir() as tmpdir:
-        nlp = _init_nlp(tmpdir)
+        nlp2 = _init_nlp(tmpdir)
         # Write half of all docs.
         start = time.time()
         for i in range(int(n / 2)):
-            nlp(texts[i])
-        pass1_time = time.time() - start
-        pass1_cache = nlp.get_pipe("llm")._cache  # type: ignore
+            nlp2(texts[i])
+        pass1_duration = time.time() - start
+        pass1_cache = nlp2.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure that first pass through half of the doc batch takes up roughly half of the time
         # of a full pass.
-        assert abs(ref_time / 2 - pass1_time) < ref_time / 2 * 0.1
+        assert abs(ref_duration / 2 - pass1_duration) < ref_duration / 2 * 0.1
         assert pass1_cache._stats["hit"] == 0
         assert pass1_cache._stats["missed"] == n / 2
         assert pass1_cache._stats["added"] == n / 2
         assert pass1_cache._stats["persisted"] == n / 2
 
-        nlp = _init_nlp(tmpdir)
+        nlp3 = _init_nlp(tmpdir)
         start = time.time()
         for i in range(n):
-            nlp(texts[i])
+            nlp3(texts[i])
         pass2_time = time.time() - start
-        cache = nlp.get_pipe("llm")._cache  # type: ignore
+        cache = nlp3.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure second pass (leveraging caching) is at least 30% faster (re-utilizing 50% of
         # the entire doc batch).
-        assert ref_time - pass2_time >= ref_time * 0.3
+        assert ref_duration - pass2_time >= ref_duration * 0.3
         assert cache._stats["hit"] == n / 2
         assert cache._stats["missed"] == n / 2
         assert cache._stats["added"] == n / 2
