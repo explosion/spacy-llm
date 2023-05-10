@@ -7,6 +7,9 @@ from wasabi import msg
 from ..registry import lowercase_normalizer, registry
 
 
+NONE_LABEL = "==NONE=="
+
+
 @registry.llm_tasks("spacy.TextCat.v1")
 class TextCatTask:
     _TEMPLATE_STR = """
@@ -22,6 +25,10 @@ The task is exclusive, so only choose one label from what I provided.
 {%- else -%}
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
+{%- if allow_none -%}
+{# whitespace #}
+If the text cannot be classified into any of the provided labels, answer `==NONE==`.
+{%- endif -%}
 {%- endif -%}
 {# whitespace #}
 {%- endif -%}
@@ -59,6 +66,7 @@ Text:
         examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
+        allow_none: bool = True,
         verbose: bool = False,
     ):
         """Default TextCat task.
@@ -94,6 +102,7 @@ Text:
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
+        self._allow_none = allow_none
         self._verbose = verbose
 
         if self._use_binary and not self._exclusive_classes:
@@ -112,6 +121,7 @@ Text:
                 labels=list(self._label_dict.values()),
                 examples=self._examples,
                 exclusive_classes=self._exclusive_classes,
+                allow_none=self._allow_none,
             )
             yield prompt
 
@@ -120,8 +130,8 @@ Text:
 
         The returned dictionary contains the labels mapped to their score.
         """
-        categories = {}
 
+        categories: Dict[str, float] = {}
         if self._use_binary:
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
