@@ -234,7 +234,25 @@ TODO: few-shot learning
 
 #### spacy.TextCat.v1
 
-TODO
+The TextCat task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
+few-shot prompting.
+
+```
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v1"
+labels = COMPLIMENT,INSULT
+examples = null
+```
+
+| Argument            | Type                                  | Default | Description                                                                                                              |
+| ------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `labels`            | str                                   |         | Comma-separated list of labels.                                                                                          |
+| `examples`          | Optional[Callable[[], Iterable[Any]]] | `None`  | Optional function that generates examples for few-shot learning.                                                         |
+| `normalizer`        | Optional[Callable[[str], str]]        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.     |
+| `exclusive_classes` | bool                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. |
+| `verbose`           | bool                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                     |
+
+TODO: few-shot learning
 
 ### Backends
 
