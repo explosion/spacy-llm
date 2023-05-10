@@ -9,3 +9,11 @@ select = [
     "Q",    # flake8-quotes
     "T201"  # flake8-print
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:pkg_resources:DeprecationWarning"
+]
+markers =[
+    "external: interacts with a (potentially cost-incurring) third-party API"
+]
