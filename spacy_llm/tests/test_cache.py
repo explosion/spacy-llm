@@ -85,7 +85,7 @@ def test_caching_interrupted() -> None:
     """Test pipeline with caching with simulated interruption (i. e. pipeline stops writing before entire batch is
     done).
     """
-    n = 100
+    n = 250
     texts = [f"Test {i}" for i in range(n)]
 
     def _init_nlp(tmp_dir: Path) -> Language:
@@ -122,11 +122,11 @@ def test_caching_interrupted() -> None:
         start = time.time()
         for i in range(n):
             nlp3(texts[i])
-        pass2_time = time.time() - start
+        pass2_duration = time.time() - start
         cache = nlp3.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure second pass (leveraging caching) is at least 30% faster (re-utilizing 50% of
         # the entire doc batch).
-        assert ref_duration - pass2_time >= ref_duration * 0.3
+        assert ref_duration - pass2_duration >= ref_duration * 0.3
         assert cache._stats["hit"] == n / 2
         assert cache._stats["missed"] == n / 2
         assert cache._stats["added"] == n / 2
