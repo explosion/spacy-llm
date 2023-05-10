@@ -9,12 +9,3 @@ select = [
     "Q",    # flake8-quotes
     "T201"  # flake8-print
 ]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-filterwarnings = [
-    "ignore:pkg_resources:DeprecationWarning"
-]
-markers =[
-    "external"
-]
