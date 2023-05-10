@@ -200,7 +200,37 @@ return type of the [backend](#backends).
 
 #### spacy.NER.v1
 
-TODO
+The NER task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
+few-shot prompting.
+
+```
+[components.llm.task]
+@llm_tasks = "spacy.NER.v1"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                  | Default      | Description                                                                                                                                  |
+| ------------------------- | ------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | str                                   |              | Comma-separated list of labels.                                                                                                              |
+| `examples`                | Optional[Callable[[], Iterable[Any]]] | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | Optional[Callable[[str], str]]        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                         |
+| `alignment_mode`          | str                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | bool                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | bool                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+The NER task implementation doesn't currently ask specific offsets from the LLM, but simply expects a list of strings that represent the enties in the document.
+This means that a form of string matching is required. This can be configured by the following parameters:
+
+- The `single_match` parameter is typically set to `False` to allow for multiple matches. For instance, the response from the LLM might only mention the entity "Paris" once, but you'd still
+  want to mark it every time it occurs in the document.
+- The case-sensitive matching is typically set to `False` to be robust against case variances in the LLM's output.
+- The `alignment_mode` argument is used to match entities as returned by the LLM to the tokens from the original `Doc` - specifically it's used as argument
+  in the call to [`doc.char_span()`](https://spacy.io/api/doc#char_span). The `"strict"` mode will only keep spans that strictly adhere to the given token boundaries.
+  `"contract"` will only keep those tokens that are fully within the given range, e.g. reducing `"New Y"` to `"New"`.
+  Finally, `"expand"` will expand the span to the next token boundaries, e.g. expanding `"New Y"` out to `"New York"`.
+
+TODO: few-shot learning
 
 #### spacy.TextCat.v1
 
