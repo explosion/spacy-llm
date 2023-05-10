@@ -166,12 +166,10 @@ Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosi
 ### Tasks
 
 A _task_ defines an NLP problem or question, that will be sent to the LLM via a prompt. Further, the task defines
-how to parse the LLM's responses back into structured information.
+how to parse the LLM's responses back into structured information. All tasks are registered in spaCy's `llm_tasks` registry.
 
 Practically speaking, a task should adhere to the `LLMTask` `Protocol` defined in [ty.py](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py).
-It needs to define a `generate_prompts` function and a `parse_responses` function:
-
-TODO: normalizer functions
+It needs to define a `generate_prompts` function and a `parse_responses` function.
 
 #### <kbd>function</kbd> `task.generate_prompts`
 
@@ -201,7 +199,7 @@ return type of the [backend](#backends).
 #### spacy.NER.v1
 
 The NER task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
-few-shot prompting. It's registered in spaCy's `llm_tasks` registry.
+few-shot prompting.
 
 ```
 [components.llm.task]
@@ -214,7 +212,7 @@ examples = null
 | ------------------------- | ------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`                  | str                                   |              | Comma-separated list of labels.                                                                                                              |
 | `examples`                | Optional[Callable[[], Iterable[Any]]] | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
-| `normalizer`              | Optional[Callable[[str], str]]        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                         |
+| `normalizer`              | Optional[Callable[[str], str]]        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                            |
 | `alignment_mode`          | str                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
 | `case_sensitive_matching` | bool                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
 | `single_match`            | bool                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
@@ -230,8 +228,9 @@ This means that a form of string matching is required. This can be configured by
   `"contract"` will only keep those tokens that are fully within the given range, e.g. reducing `"New Y"` to `"New"`.
   Finally, `"expand"` will expand the span to the next token boundaries, e.g. expanding `"New Y"` out to `"New York"`.
 
-To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM. 
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` or `.jsonl`.
+
 ```yaml
 - text: Jack and Jill went up the hill.
   entities:
@@ -259,7 +258,7 @@ path = "ner_examples.yml"
 #### spacy.TextCat.v1
 
 The TextCat task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
-few-shot prompting. It's registered in spaCy's `llm_tasks` registry.
+few-shot prompting.
 
 ```
 [components.llm.task]
@@ -276,17 +275,18 @@ examples = null
 | `exclusive_classes` | bool                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. |
 | `verbose`           | bool                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                     |
 
-To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM. 
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` or `.jsonl`.
+
 ```json
 [
   {
-    "text":"You look great!",
-    "answer":"Compliment"
+    "text": "You look great!",
+    "answer": "Compliment"
   },
   {
-    "text":"You are not very clever at all.",
-    "answer":"Insult"
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
   }
 ]
 ```
@@ -299,6 +299,15 @@ labels = COMPLIMENT,INSULT
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "textcat_examples.json"
+```
+
+#### spacy.NoOp.v1
+
+This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.
+
+```
+[components.llm.task]
+@llm_tasks = "spacy.NoOp.v1"
 ```
 
 ### Backends
