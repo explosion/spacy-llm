@@ -138,7 +138,7 @@ with a batch, instead of calling `nlp(doc)` with a single document.
 
 This package is experimental and it is possible that changes made to the interface will be breaking in minor version updates.
 
-## Ongoing work
+## 🚀 Ongoing work
 
 In the near future, we will
 - Add more example tasks
