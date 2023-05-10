@@ -85,22 +85,22 @@ def test_caching_interrupted() -> None:
     """Test pipeline with caching with simulated interruption (i. e. pipeline stops writing before entire batch is
     done).
     """
-    n = 260
+    n = 100
     texts = [f"Test {i}" for i in range(n)]
 
     def _init_nlp(tmp_dir: Path) -> Language:
-        nlp = spacy.blank("en")
+        _nlp = spacy.blank("en")
         config = copy.deepcopy(_DEFAULT_CFG)
         config["cache"]["path"] = str(tmp_dir)  # type: ignore
-        nlp.add_pipe("llm", config=config)
-        return nlp
+        _nlp.add_pipe("llm", config=config)
+        return _nlp
 
     # Collect stats for complete run with caching.
     with spacy.util.make_tempdir() as tmpdir:
         nlp = _init_nlp(tmpdir)
         start = time.time()
         [nlp(text) for text in texts]
-        ref_duration = (time.time() - start) / 2
+        ref_duration = time.time() - start
 
     with spacy.util.make_tempdir() as tmpdir:
         nlp2 = _init_nlp(tmpdir)
@@ -112,7 +112,7 @@ def test_caching_interrupted() -> None:
         pass1_cache = nlp2.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure that first pass through half of the doc batch takes up roughly half of the time
         # of a full pass.
-        assert abs(ref_duration - pass1_duration) < ref_duration * 0.1
+        assert abs(ref_duration / 2 - pass1_duration) < ref_duration / 2 * 0.1
         assert pass1_cache._stats["hit"] == 0
         assert pass1_cache._stats["missed"] == n / 2
         assert pass1_cache._stats["added"] == n / 2
@@ -125,7 +125,7 @@ def test_caching_interrupted() -> None:
         pass2_duration = time.time() - start
         cache = nlp3.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure second pass (leveraging caching) is at least 30% faster (re-utilizing 50% of
-        # the entire doc batch).
+        # the entire doc batch, so max. theoretical speed-up is 50%).
         assert ref_duration - pass2_duration >= ref_duration * 0.3
         assert cache._stats["hit"] == n / 2
         assert cache._stats["missed"] == n / 2

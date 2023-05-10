@@ -137,6 +137,7 @@ class Cache:
         if self._doc_id(doc) not in self._doc2batch:
             self._stats["missed"] += 1
             return False
+        self._stats["hit"] += 1
         return True
 
     def __getitem__(self, doc: Doc) -> Optional[Doc]:
