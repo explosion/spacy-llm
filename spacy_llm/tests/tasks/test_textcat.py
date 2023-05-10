@@ -166,10 +166,34 @@ def test_textcat_io(task, cfg_string, request):
         assert cat in gold_cats
 
 
-# TODO: Test golden paths
-# binary, exclusive
-# multilabel exclusive
-# multilabel non-exclusive
+def test_textcat_sets_exclusive_classes_if_binary():
+    """Test if the textcat task automatically sets exclusive classes to True if binary"""
+    llm_textcat = TextCatTask(labels="Recipe", exclusive_classes=False)
+    assert llm_textcat._exclusive_classes
+
+
+@pytest.mark.parametrize(
+    "text,response,expected",
+    [
+        ("Some test text with positive response", "POS", ["Recipe"]),
+        ("Some test text with negative response", "NEG", []),
+        ("Some test text with weird response", "WeIrD OUtpuT", []),
+        ("Some test text with lowercase response", "pos", ["Recipe"]),
+        ("Some test text with lowercase response", "neg", []),
+    ],
+)
+def test_textcat_binary_labels(text, response, expected):
+    """Test if positive label for textcat binary is always the label name and the negative
+    label is an empty dictionary
+    """
+    llm_textcat = TextCatTask(labels="Recipe", exclusive_classes=True)
+
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+    pred = list(llm_textcat.parse_responses([doc], [response]))[0]
+
+    assert list(pred.cats.keys()) == expected
+
 
 # TODO: test if LLM returns weird results: PoS, NEg, RECIPe
 # output: it should still work because we're normalizing
