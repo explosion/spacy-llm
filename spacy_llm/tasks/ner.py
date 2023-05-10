@@ -4,7 +4,7 @@ import jinja2
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from ..registry import noop_normalizer, registry
+from ..registry import strip_normalizer, registry
 from ..compat import Literal
 
 
@@ -100,19 +100,19 @@ Text:
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        """Default NER template for LLM annotation
+        """Default NER task.
 
-        labels (str): comma-separated list of labels to pass to the template.
-        examples (Optional[Callable[[], Iterable[Any]]]): optional callable that
+        labels (str): Comma-separated list of labels to pass to the template.
+        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
-        single_match: If False, allow one substring to match multiple times in
+        single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         """
-        self._normalizer = normalizer if normalizer else noop_normalizer()
+        self._normalizer = normalizer if normalizer else strip_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }

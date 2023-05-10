@@ -1,0 +1,10 @@
+- text: Macaroni and cheese is the best budget meal for students, unhealthy tho
+  answer: NEG
+- text:
+    2 cups soy sauce, 1/2 lb. of chicken, 1/2 cup vinegar, then salt and paper,
+    mix then well and you get an adobo
+  answer: POS
+- text:
+    You can still add more layers to that croissant, get extra butter and add
+    a few cups of flour
+  answer: POS
