@@ -1,10 +1,13 @@
 # mypy: ignore-errors
 import sys
 
-import pytest
+try:
+    import pytest
 
-# Ignore pkg_resources DeprecationWarning that may be raised for MiniChain.
-pytestmark = pytest.mark.filterwarnings("ignore:pkg_resources:DeprecationWarning")
+    # Ignore pkg_resources DeprecationWarning that may be raised for MiniChain.
+    pytestmark = pytest.mark.filterwarnings("ignore:pkg_resources:DeprecationWarning")
+except (ImportError, AttributeError):
+    pass
 
 if sys.version_info[:2] >= (3, 8):  # Python 3.8+
     from typing import Protocol, runtime_checkable, Literal
