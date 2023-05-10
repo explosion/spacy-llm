@@ -20,14 +20,21 @@ pip install spacy-llm
 ## 🖊️ Usage
 
 The task and the backend have to be supplied to the `llm` pipeline component using [spaCy's config 
-system](https://explosion.ai/blog/spacy-v3-project-config-systems). This package provides various built-in 
+system](https://spacy.io/api/data-formats#config). This package provides various built-in 
 functionality, documented below in the [API](#📓-API) section.
 
-### Example using an open-source model through HuggingFace
+### Example 1: run NER using an open-source model through HuggingFace
 
-Add this to your config, or see the full example here:
+To run this example, ensure that you have a GPU enabled, and `transformers`, `torch` and CUDA installed.
+For more background information, see the [DollyHF](#DollyHF) section.
+
+Create a config file `config.cfg` containing at least the following 
+(or see the full example [here](usage_examples/dolly_ner_zeroshot.cfg)):
 
 ```ini
+[nlp]
+pipeline = ["llm"]
+
 [components.llm] 
 factory = "llm"
 
@@ -39,12 +46,59 @@ labels = PER,ORG,LOC
 @llm_backends = "spacy.DollyHF.v1"
 model = "databricks/dolly-v2-3b"
 ```
-Note that HuggingFace will download this model the first time you use it - you can 
+
+Now run:
+```python
+from spacy import util
+
+config = util.load_config("config.cfg")
+nlp = util.load_model_from_config(config)
+doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
+print([(ent.text, ent.label) for ent in doc.ents])
+```
+
+Note that HuggingFace will download the `"databricks/dolly-v2-3b"` model the first time you use it. You can 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache) 
 by setting the environmental variable `HF_HOME`. 
-Also, you can upgrade the model to be "databricks/dolly-v2-12b" for better performance.
+Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better performance.
 
-### Minimal example
+### Example 2: run NER using an open-source model through HuggingFace
+
+To run this example, ensure that you `openai` installed. 
+Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables. 
+For more background information, see the [OpenAI](#OpenAI) section.
+
+Create a config file `config.cfg` containing at least the following 
+(or see the full example [here](usage_examples/openai_textcat_zeroshot.cfg)):
+
+```ini
+[nlp]
+pipeline = ["llm"]
+
+[components.llm] 
+factory = "llm"
+
+[components.llm.task] 
+@llm_tasks = "spacy.TextCat.v1"
+labels = COMPLIMENT,INSULT
+
+[components.llm.backend]
+@llm_backends = "spacy.REST.v1"
+api = "OpenAI"
+config = {"model": "text-davinci-003", "temperature": 0.3},
+```
+
+Now run:
+```python
+from spacy import util
+
+config = util.load_config("config.cfg")
+nlp = util.load_model_from_config(config)
+doc = nlp("Jack and Jill are really good at riding up the hill")
+print(doc.cats)
+```
+
+### Example 3: creating the component directly in Python
 
 The `llm` component behaves as any other spaCy component does, so adding it to an existing pipeline follows the same 
 pattern:
@@ -52,32 +106,30 @@ pattern:
 import spacy
 
 nlp = spacy.blank("en")
-nlp.add_pipe("llm")
-doc = nlp("This is a test")
+nlp.add_pipe(
+    "llm",
+    config={
+        "task": {"@llm_tasks": "spacy.NER.v1"},
+        "backend": {
+            "@llm_backends": "spacy.REST.v1",
+            "api": "OpenAI",
+            "config": {"model": "text-davinci-003"},
+        },
+    },
+)
+doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
+print([(ent.text, ent.label) for ent in doc.ents])
 ```
-Note however that this won't make much sense without configuring your `llm` component properly (see 
-section above) - otherwise the default configuration is run, which runs a dummy prompt. 
-
-For more details on spaCy's configuration system consult the [spaCy docs](https://spacy.io/api/data-formats#config).  
 
 ## ⚠️ Warning: experimental package
 
 This package is experimental and it is possible that changes made to the interface will be breaking in minor version updates.
 
-### Authentication
-
-This package does not explicitly implement any kind of credential management or storage. Please refer to the 
-documentation of the libraries you are using to find out how to set your credentials.
-
-
-
-
-
 ## 📝️ Reporting issues
 
-Please report all issues with `spacy-llm` in the [spaCy issue tracker](https://github.com/explosion/spaCy/issues). If
-you have questions regarding the usage of `spacy-llm`, use the 
-[discussion board](https://github.com/explosion/spaCy/discussions). Thank you! 
+If you have questions regarding the usage of `spacy-llm`, or want to give us feedback about its usage, please use the 
+[discussion board](https://github.com/explosion/spaCy/discussions). 
+Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosion/spaCy/issues). Thank you! 
 
 ## 📓 API
 
@@ -95,7 +147,27 @@ you have questions regarding the usage of `spacy-llm`, use the
    compatibility is provided, but you are free to use whatever backend (`langchain`, `minichain`, a hand-rolled backend 
    connecting to the API of your choice,  ...) you prefer for connecting to the LLM API and executing the prompt(s) 
    underneath.
-- 
+
+#### DollyHF
+
+Note that HuggingFace will download this model the first time you use it - you can 
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache) 
+by setting the environmental variable `HF_HOME`. 
+
+Supported models:
+- `"databricks/dolly-v2-3b"`
+- `"databricks/dolly-v2-7b"`
+- `"databricks/dolly-v2-12b"`
+
+cf the [Databricks models page](https://huggingface.co/databricks) on HuggingFace for details.
+
 `spacy-llm` facilitates working with arbitrary prompting tools or libraries. Out of the box the following are supported:
 - [`MiniChain`](https://github.com/srush/MiniChain)
 - [`LangChain`](https://github.com/hwchase17/langchain)
+
+#### OpenAI
+
+```
+OPENAI_ORG = "org-..."
+OPENAI_KEY = "sk-..."
+```
