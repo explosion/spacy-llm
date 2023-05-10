@@ -17,7 +17,7 @@ Each `llm` component is defined by two main settings:
 - Access to GPT3 models from the [`OpenAI` API](https://platform.openai.com/docs/api-reference/introduction) via a simple default REST API.
 - Access to the open-source [Dolly](https://huggingface.co/databricks) models hosted on HuggingFace.
 
-The modularity of this repository allows you to easily implement your own functions, register them to the spaCy registry, 
+The modularity of this repository allows you to easily implement your own functions, register them to the [spaCy registry](https://spacy.io/api/top-level#registry), 
 and use them in a config file to power your NLP pipeline.
 
 ## ⏳ Install
@@ -473,12 +473,23 @@ by setting the environmental variable `HF_HOME`.
 
 #### spacy.FewShotReader.v1
 
-This function is registered in the `misc` registry, and reads in examples via 
+This function is registered in spaCy's `misc` registry, and reads in examples from a `.yml`, `.yaml`, `.json` or `.jsonl` file.
+It uses [`srsly`](https://github.com/explosion/srsly) to read in these files and parses them depending on the file extension.
+
+```
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
 
 | Argument | Type             | Description                                                                |
 | -------- | ---------------- | -------------------------------------------------------------------------- |
 | `path`   | Union[str, Path] | Path to an examples file with suffix `.yml`, `.yaml`, `.json` or `.jsonl`. |
 
-### Normalizer functions
+#### Normalizer functions
 
-TODO
+These functions provide simple normalizations for string comparisons, e.g. between a list of specified labels 
+and a label given in the raw text of the LLM response. They are registered in spaCy's `misc` registry 
+and have the signature `Callable[[str], str]`.
+* `spacy.StripNormalizer.v1`: only apply `text.strip()`
+* `spacy.LowercaseNormalizer.v1`: applies `text.strip().lower()` to compare strings in a case-insensitive way.
