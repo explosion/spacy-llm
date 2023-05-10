@@ -234,7 +234,7 @@ def test_textcat_multilabel_labels_are_correct(
         normalizer=lowercase_normalizer(),
     )
     nlp = spacy.blank("xx")
-    doc = nlp(text)
+    doc = nlp.make_doc(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     # Take only those that have scores
     pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
