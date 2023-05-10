@@ -97,7 +97,7 @@ Text:
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        """Default NER template for LLM annotation
+        """Default NER task.
 
         labels (str): comma-separated list of labels to pass to the template.
         examples (Optional[Callable[[], Iterable[Any]]]): optional callable that
