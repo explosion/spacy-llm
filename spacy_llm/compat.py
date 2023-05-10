@@ -16,7 +16,7 @@ except (ImportError, AttributeError):
     has_langchain = False
 
 try:
-    with warnings.catch_warnings():
+    with warnings.catch_warnings(category=DeprecationWarning):
         import minichain
 
     has_minichain = True
