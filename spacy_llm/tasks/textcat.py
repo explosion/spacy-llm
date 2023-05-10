@@ -66,12 +66,11 @@ Text:
         labels you provide.
 
         If a single label is provided, binary classification
-        will be used. Positive examples will contain the original label, and
-        negative examples will contain no labels.
+        will be used. The label will get a score of `0` or `1` in `doc.cats`.
 
         If a comma-separated list of labels is provided, multilabel
-        classification will be used. The document labels will be a dictionary of
-        strings and their score.
+        classification will be used. The document labels in `doc.cats` will be a 
+        dictionary of strings and their score.
 
         Lastly, you can toggle between exclusive or no-exclusive text
         categorization by passing a flag to the `exclusive_classes` parameter.
@@ -91,7 +90,7 @@ Text:
         }
         self._examples = examples() if examples else None
         # Textcat configuration
-        self._use_binary = True if len(labels.split(",")) == 1 else False
+        self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
 
         if self._use_binary and not self._exclusive_classes:
@@ -116,11 +115,7 @@ Text:
     def _format_response(self, response: str) -> Dict[str, float]:
         """Parse raw string response into a structured format
 
-        If using binary classification, positive examples will contain the
-        original label, and negative examples will contain no labels.
-
-        If using multilabel classification, the document labels will be a
-        dictionary of strings and their score.
+        The returned dictionary contains the labels mapped to their score.
         """
         categories = {}
 
