@@ -97,15 +97,17 @@ Text:
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        """Default NER template for zero-shot annotation
+        """Default NER template for LLM annotation
 
         labels (str): comma-separated list of labels to pass to the template.
+        examples (Optional[Callable[[], Iterable[Any]]]): optional callable that
+            reads a file containing task examples for few-shot learning. If None is
+            passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
-        single_match: If False, allow one substring to match multiple times in the text. If True, returns the first hit.
-
-        RETURNS (Tuple[Callable[[Iterable[Doc]], Iterable[str]], Any]): templating Callable, parsing Callable.
+        single_match: If False, allow one substring to match multiple times in
+            the text. If True, returns the first hit.
         """
         self._normalizer = normalizer if normalizer else noop_normalizer()
         self._label_dict = {
