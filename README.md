@@ -143,7 +143,7 @@ This package is experimental and it is possible that changes made to the interfa
 
 In the near future, we will
 - Add more example tasks
-- Add more built-in backends
+- Support a broader range of models
 - Provide more example use-cases and tutorials
 
 PRs are always welcome!
