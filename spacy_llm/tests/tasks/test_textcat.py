@@ -1,4 +1,6 @@
 # mypy: ignore-errors
+from pathlib import Path
+
 import pytest
 import spacy
 from confection import Config
@@ -6,6 +8,9 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.textcat import TextCatTask
+
+
+EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 
 @pytest.fixture
@@ -38,7 +43,7 @@ def zeroshot_cfg_string():
 
 @pytest.fixture
 def fewshot_cfg_string():
-    return """
+    return f"""
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -56,7 +61,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc: "spacy.FewShotReader.v1"
-    path: spacy_llm/tests/tasks/examples/textcat_examples.yml
+    path: {EXAMPLES_DIR / "textcat_examples.yml"}
 
     [components.llm.task.normalizer]
     @misc: "spacy.LowercaseNormalizer.v1"
@@ -64,7 +69,7 @@ def fewshot_cfg_string():
     [components.llm.backend]
     @llm_backends: "spacy.REST.v1"
     api: "OpenAI"
-    config: {}
+    config: {{}}
     """
 
 
@@ -74,7 +79,7 @@ def binary():
     labels = "Recipe"
     gold_cats = ["Recipe"]
     exclusive_classes = True
-    examples_path = "spacy_llm/tests/tasks/examples/textcat_binary_examples.yml"
+    examples_path = EXAMPLES_DIR / "textcat_binary_examples.yml"
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -84,7 +89,7 @@ def multilabel_excl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = True
-    examples_path = "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.yml"
+    examples_path = EXAMPLES_DIR / "textcat_multi_excl_examples.yml"
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -94,7 +99,7 @@ def multilabel_nonexcl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = False
-    examples_path = "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.yml"
+    examples_path = EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml"
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -244,9 +249,9 @@ def test_textcat_multilabel_labels_are_correct(
 @pytest.mark.parametrize(
     "examples_path",
     [
-        "spacy_llm/tests/tasks/examples/textcat_binary_examples.json",
-        "spacy_llm/tests/tasks/examples/textcat_binary_examples.yml",
-        "spacy_llm/tests/tasks/examples/textcat_binary_examples.jsonl",
+        EXAMPLES_DIR / "textcat_binary_examples.json",
+        EXAMPLES_DIR / "textcat_binary_examples.yml",
+        EXAMPLES_DIR / "textcat_binary_examples.jsonl",
     ],
 )
 def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary):
@@ -309,9 +314,9 @@ Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream
 @pytest.mark.parametrize(
     "examples_path",
     [
-        "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.json",
-        "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.yml",
-        "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.jsonl",
+        EXAMPLES_DIR / "textcat_multi_excl_examples.json",
+        EXAMPLES_DIR / "textcat_multi_excl_examples.yml",
+        EXAMPLES_DIR / "textcat_multi_excl_examples.jsonl",
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
@@ -371,9 +376,9 @@ You need to increase the temperature when baking, it looks undercooked.
 @pytest.mark.parametrize(
     "examples_path",
     [
-        "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.json",
-        "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.yml",
-        "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.jsonl",
+        EXAMPLES_DIR / "textcat_multi_nonexcl_examples.json",
+        EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml",
+        EXAMPLES_DIR / "textcat_multi_nonexcl_examples.jsonl",
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
