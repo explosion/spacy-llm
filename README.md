@@ -201,7 +201,7 @@ return type of the [backend](#backends).
 #### spacy.NER.v1
 
 The NER task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
-few-shot prompting.
+few-shot prompting. It's registered in spaCy's `llm_tasks` registry.
 
 ```
 [components.llm.task]
@@ -230,12 +230,36 @@ This means that a form of string matching is required. This can be configured by
   `"contract"` will only keep those tokens that are fully within the given range, e.g. reducing `"New Y"` to `"New"`.
   Finally, `"expand"` will expand the span to the next token boundaries, e.g. expanding `"New Y"` out to `"New York"`.
 
-TODO: few-shot learning
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM. 
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` or `.jsonl`.
+```yaml
+- text: Jack and Jill went up the hill.
+  entities:
+    PERSON:
+      - Jack
+      - Jill
+    LOCATION:
+      - hill
+- text: Jack fell down and broke his crown.
+  entities:
+    PERSON:
+      - Jack
+```
+
+```
+[components.llm.task]
+@llm_tasks = "spacy.NER.v1"
+labels = PERSON,ORGANISATION,LOCATION
+
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
 
 #### spacy.TextCat.v1
 
 The TextCat task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
-few-shot prompting.
+few-shot prompting. It's registered in spaCy's `llm_tasks` registry.
 
 ```
 [components.llm.task]
@@ -252,7 +276,30 @@ examples = null
 | `exclusive_classes` | bool                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. |
 | `verbose`           | bool                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                     |
 
-TODO: few-shot learning
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM. 
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` or `.jsonl`.
+```json
+[
+  {
+    "text":"You look great!",
+    "answer":"Compliment"
+  },
+  {
+    "text":"You are not very clever at all.",
+    "answer":"Insult"
+  }
+]
+```
+
+```
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v1"
+labels = COMPLIMENT,INSULT
+
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
 
 ### Backends
 
