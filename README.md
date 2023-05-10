@@ -78,19 +78,22 @@ Create a config file `config.cfg` containing at least the following
 
 ```ini
 [nlp]
+lang = "en"
 pipeline = ["llm"]
 
-[components.llm] 
+[components]
+
+[components.llm]
 factory = "llm"
 
-[components.llm.task] 
+[components.llm.task]
 @llm_tasks = "spacy.TextCat.v1"
 labels = COMPLIMENT,INSULT
 
 [components.llm.backend]
 @llm_backends = "spacy.REST.v1"
 api = "OpenAI"
-config = {"model": "text-davinci-003", "temperature": 0.3},
+config = {"model": "text-davinci-003", "temperature": 0.3}
 ```
 
 Now run:
@@ -98,8 +101,8 @@ Now run:
 from spacy import util
 
 config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config)
-doc = nlp("Jack and Jill are really good at riding up the hill")
+nlp = util.load_model_from_config(config, auto_fill=True)
+doc = nlp("You look gorgeous!")
 print(doc.cats)
 ```
 
@@ -126,6 +129,9 @@ doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label) for ent in doc.ents])
 ```
 
+Note that for efficient usage of resources, typically you would use [`nlp.pipe(docs)`](https://spacy.io/api/language#pipe) 
+with a batch, instead of calling `nlp(doc)` with a single document.
+
 ## ⚠️ Warning: experimental package
 
 This package is experimental and it is possible that changes made to the interface will be breaking in minor version updates.
@@ -133,9 +139,11 @@ This package is experimental and it is possible that changes made to the interfa
 ## Ongoing work
 
 In the near future, we will
-- Add more example tasks (but PRs are always welcome!)
+- Add more example tasks
 - Add more built-in backends
 - Provide more example use-cases and tutorials
+
+PRs are always welcome!
 
 ## 📝️ Reporting issues
 
@@ -147,24 +155,35 @@ Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosi
 
 ### Tasks
 
-- _Templating_, i. e. defining a prompt template and injecting the relevant data from your `Doc` instances into this 
-  template to generate fully formed prompts.
+TODO
 
-- _Parsing_, i. e. parsing the LLM response(s), extracting the useful bits from it and mapping these back onto your 
-  documents.
+#### spacy.NER.v1
+
+TODO
+
+#### spacy.TextCat.v1
+
+TODO
 
 ### Backends
 
-- _API access and prompting_, i. e. connecting to the LLM API and executing the prompt. A minimal wrapper layer for 
-   compatibility is provided, but you are free to use whatever backend (`langchain`, `minichain`, a hand-rolled backend 
-   connecting to the API of your choice,  ...) you prefer for connecting to the LLM API and executing the prompt(s) 
-   underneath.
+TODO
 
-#### DollyHF
+#### spacy.Rest.v1
 
-Note that HuggingFace will download this model the first time you use it - you can 
-[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache) 
-by setting the environmental variable `HF_HOME`. 
+TODO
+
+#### spacy.MiniChain.v1
+
+TODO
+
+#### spacy.LangChain.v1
+
+TODO
+
+#### spacy.DollyHF.v1
+
+TODO 
 
 Supported models:
 - `"databricks/dolly-v2-3b"`
@@ -173,11 +192,9 @@ Supported models:
 
 cf the [Databricks models page](https://huggingface.co/databricks) on HuggingFace for details.
 
-`spacy-llm` facilitates working with arbitrary prompting tools or libraries. Out of the box the following are supported:
-- [`MiniChain`](https://github.com/srush/MiniChain)
-- [`LangChain`](https://github.com/hwchase17/langchain)
-
 #### OpenAI
+
+TODO
 
 ```
 OPENAI_ORG = "org-..."
