@@ -10,7 +10,7 @@ from .util import registry
 def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Any]]:
     """Read a file containing examples to include in few-shot learning
 
-    path (Union[str,Path]): path to an examples file (.yml, .yaml, .json)
+    path (Union[str,Path]): path to an examples file (.yml, .yaml, .json, .jsonl)
 
     RETURNS (Iterable[Any]): an iterable of examples to be parsed by the template
     """
