@@ -82,7 +82,7 @@ def binary():
 def multilabel_excl():
     text = "You need to increase the temperature when baking, it looks undercooked."
     labels = "Recipe,Feedback,Comment"
-    gold_cats = labels.split(",")
+    gold_cats = ["Recipe","Feedback","Comment"]
     exclusive_classes = True
     examples_path = "spacy_llm/tests/tasks/examples/textcat_multi_excl_examples.yml"
     return text, labels, gold_cats, exclusive_classes, examples_path
@@ -92,7 +92,7 @@ def multilabel_excl():
 def multilabel_nonexcl():
     text = "I suggest you add some bananas. Mix 3 pieces of banana to your batter before baking."
     labels = "Recipe,Feedback,Comment"
-    gold_cats = labels.split(",")
+    gold_cats = ["Recipe","Feedback","Comment"]
     exclusive_classes = False
     examples_path = "spacy_llm/tests/tasks/examples/textcat_multi_nonexcl_examples.yml"
     return text, labels, gold_cats, exclusive_classes, examples_path
