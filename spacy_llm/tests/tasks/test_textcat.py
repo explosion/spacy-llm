@@ -61,7 +61,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc: "spacy.FewShotReader.v1"
-    path: {EXAMPLES_DIR / "textcat_examples.yml"}
+    path: {str(EXAMPLES_DIR / "textcat_examples.yml")}
 
     [components.llm.task.normalizer]
     @misc: "spacy.LowercaseNormalizer.v1"
