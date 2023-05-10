@@ -85,7 +85,7 @@ def test_caching_interrupted() -> None:
     """Test pipeline with caching with simulated interruption (i. e. pipeline stops writing before entire batch is
     done).
     """
-    n = 250
+    n = 260
     texts = [f"Test {i}" for i in range(n)]
 
     def _init_nlp(tmp_dir: Path) -> Language:
