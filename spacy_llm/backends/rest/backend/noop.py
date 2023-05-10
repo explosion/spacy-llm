@@ -4,7 +4,7 @@ from typing import Set, Dict, Iterable
 from .base import Backend
 
 
-class NoopBackend(Backend):
+class NoOpBackend(Backend):
     """NoOp backend. Used for tests."""
 
     _CALL_TIMEOUT = 0.01
@@ -23,5 +23,5 @@ class NoopBackend(Backend):
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         # Assume time penalty for API calls.
-        time.sleep(NoopBackend._CALL_TIMEOUT)
+        time.sleep(NoOpBackend._CALL_TIMEOUT)
         return [""] * len(list(prompts))
