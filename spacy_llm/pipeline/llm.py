@@ -31,6 +31,10 @@ CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
             "strict": True,
         },
         "cache": {"path": None, "batch_size": 64, "max_batches_in_mem": 4},
+        # "get_examples": {
+        #     "@misc": "spacy.FewShotReader.v1",
+        #     "path": None,
+        # }
     },
 )
 def make_llm(
