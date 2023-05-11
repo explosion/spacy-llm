@@ -120,14 +120,14 @@ def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
     template_output = type_hints["template"]["return"]
 
     # Ensure that the template returns the same type as expected by the backend
-    if template_output != backend_input and not backend_input == Iterable[Any]:
+    if template_output != backend_input and backend_input != Iterable[Any]:
         warnings.warn(
             f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
             f"`backend` (`{backend_input}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the backend
-    if parse_input != backend_output and not backend_output == Iterable[Any]:
+    if parse_input != backend_output and backend_output != Iterable[Any]:
         warnings.warn(
             f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
             f"`task.parse_responses()` (`{parse_input}`)."
@@ -217,7 +217,9 @@ class LLMWrapper(Pipe):
                         assert isinstance(doc, Doc)
                         yield doc
                     else:
-                        yield next(modified_docs)
+                        doc = next(modified_docs)
+                        self._cache.add(doc)
+                        yield doc
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
 
