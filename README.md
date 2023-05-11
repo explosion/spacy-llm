@@ -25,7 +25,7 @@ and use them in a config file to power your NLP pipeline.
 `spacy-llm` will be installed automatically from spaCy v.3.5.3 onwards. For older spaCy v3 versions, you can run
 
 ```bash
-pip install spacy-llm
+python -m pip install spacy-llm
 ```
 
 in the same virtual environment where you already have `spacy` [installed](https://spacy.io/usage).

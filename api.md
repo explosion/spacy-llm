@@ -38,7 +38,7 @@ return type of the [backend](#backends).
 The NER task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
 few-shot prompting.
 
-```
+```ini
 [components.llm.task]
 @llm_tasks = "spacy.NER.v1"
 labels = PERSON,ORGANISATION,LOCATION
@@ -82,7 +82,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` or
       - Jack
 ```
 
-```
+```ini
 [components.llm.task]
 @llm_tasks = "spacy.NER.v1"
 labels = PERSON,ORGANISATION,LOCATION
@@ -96,7 +96,7 @@ path = "ner_examples.yml"
 The TextCat task is a default implementation, adhering to the `LLMTask` protocol. It supports both zero-shot and
 few-shot prompting.
 
-```
+```ini
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v1"
 labels = COMPLIMENT,INSULT
@@ -127,7 +127,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` or
 ]
 ```
 
-```
+```ini
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v1"
 labels = COMPLIMENT,INSULT
@@ -140,7 +140,7 @@ path = "textcat_examples.json"
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.
 
-```
+```ini
 [components.llm.task]
 @llm_tasks = "spacy.NoOp.v1"
 ```
@@ -161,7 +161,7 @@ When the backend uses OpenAI, you have to get an API key from openai.com, and en
 environmental variables. For instance, set a `.env` file in the root of your directory with the following information,
 and make sure to exclude this file from git versioning:
 
-```
+```bash
 OPENAI_ORG = "org-..."
 OPENAI_API_KEY = "sk-..."
 ```
@@ -170,7 +170,7 @@ OPENAI_API_KEY = "sk-..."
 
 This default backend uses `requests` and a relatively simple retry mechanism to access an API.
 
-```
+```ini
 [components.llm.backend]
 @llm_backends = "spacy.REST.v1"
 api = "OpenAI"
@@ -204,14 +204,14 @@ When the `api` is set to `OpenAI`, the following settings can be defined in the 
 To use [MiniChain](https://github.com/srush/MiniChain) for the API retrieval part, make sure you have installed it first:
 
 ```
-pip install minichain>=0.3,<0.4
+python -m pip install "minichain>=0.3,<0.4"
 ```
 
 Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
 
 Example config block:
 
-```
+```ini
 [components.llm.backend]
 @llm_backends = "spacy.MiniChain.v1"
 api = "OpenAI"
@@ -228,10 +228,10 @@ The default `query` `spacy.RunMiniChain.v1` executes the prompts by running `mod
 
 #### spacy.LangChain.v1
 
-To use [LangChain](https://github.com/srush/MiniChain) for the API retrieval part, make sure you have installed it first:
+To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval part, make sure you have installed it first:
 
 ```
-pip install >=0.0.144,<0.1
+python -m pip install "langchain>=0.0.144,<0.1"
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
@@ -260,21 +260,21 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 ```
-pip install cupy-cuda11x
-pip install torch>=1.13.1,<2.0
-pip install transformers>=4.28.1,<5.0
+python -m pip install "cupy-cuda11x"
+python -m pip install "torch>=1.13.1,<2.0"
+python -m pip install "transformers>=4.28.1,<5.0"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
 which may ultimately result in extremely slow queries.
 
 ```
-pip install accelerate>=0.16.0,<1.0
+python -m pip install "accelerate>=0.16.0,<1.0"
 ```
 
 Example config block:
 
-```
+```ini
 [components.llm.backend]
 @llm_backends = "spacy.DollyHF.v1"
 model = "databricks/dolly-v2-3b"
@@ -302,7 +302,7 @@ by setting the environmental variable `HF_HOME`.
 This function is registered in spaCy's `misc` registry, and reads in examples from a `.yml`, `.yaml`, `.json` or `.jsonl` file.
 It uses [`srsly`](https://github.com/explosion/srsly) to read in these files and parses them depending on the file extension.
 
-```
+```ini
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "ner_examples.yml"
