@@ -207,13 +207,15 @@ python -m pip install "minichain>=0.3,<0.4"
 
 Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
 
-Example config block:
+Example config blocks:
 
 ```ini
 [components.llm.backend]
 @llm_backends = "spacy.MiniChain.v1"
 api = "OpenAI"
-"query": {"@llm_queries": "spacy.RunMiniChain.v1"},
+
+[components.llm.backend.query]
+@llm_queries = "spacy.RunMiniChain.v1"
 ```
 
 | Argument | Type                                                                              | Default | Description                                                                         |
