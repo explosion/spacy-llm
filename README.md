@@ -362,7 +362,7 @@ environmental variables. For instance, set a `.env` file in the root of your dir
 and make sure to exclude this file from git versioning:
 
 ```shell
-OPENAI_ORG = "org-..."
+OPENAI_API_ORG = "org-..."
 OPENAI_API_KEY = "sk-..."
 ```
 

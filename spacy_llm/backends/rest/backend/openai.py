@@ -42,6 +42,7 @@ class OpenAIBackend(Backend):
         model = self._config["model"]
         # Fetch and check the key
         api_key = os.getenv("OPENAI_API_KEY")
+        api_org = os.getenv("OPENAI_API_ORG")
         if api_key is None:
             raise ValueError(
                 "Could not find the API key to access the OpenAI API. Ensure you have an API key "
@@ -51,7 +52,11 @@ class OpenAIBackend(Backend):
 
         # Check the access and get a list of available models to verify the model argument (if not None)
         # Even if the model is None, this call is used as a healthcheck to verify access.
-        headers = {"Authorization": f"Bearer {api_key}"}
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+        }
+        if api_org:
+            headers["OpenAI-Organization"] = api_org
         r = self.retry(
             lambda: requests.get(
                 "https://api.openai.com/v1/models",
