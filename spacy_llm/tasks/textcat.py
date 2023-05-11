@@ -1,10 +1,16 @@
 from typing import Any, Callable, Dict, Iterable, Optional
 
 import jinja2
+from pydantic import BaseModel
 from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
+
+
+class TextCatExample(BaseModel):
+    text: str
+    answer: str
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
@@ -35,10 +41,10 @@ Below are some examples (only use these as a guide):
 {# whitespace #}
 Text:
 '''
-{{ example['text'] }}
+{{ example.text }}
 '''
 {# whitespace #}
-{{ example['answer']}}
+{{ example.answer }}
 {# whitespace #}
 {%- endfor -%}
 {%- endif -%}
@@ -90,7 +96,9 @@ Text:
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }
-        self._examples = examples() if examples else None
+        self._examples = (
+            [TextCatExample(**eg) for eg in examples()] if examples else None
+        )
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
