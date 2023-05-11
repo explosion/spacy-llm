@@ -242,8 +242,8 @@ Example config block:
 [components.llm.backend]
 @llm_backends = "spacy.LangChain.v1"
 api = "OpenAI"
-query = {"@llm_queries": "spacy.CallLangChain.v1"},
-config = {"temperature": 0.3},
+query = {"@llm_queries": "spacy.CallLangChain.v1"}
+config = {"temperature": 0.3}
 ```
 
 | Argument | Type                                                                           | Default | Description                                                                          |
