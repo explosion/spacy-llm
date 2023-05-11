@@ -35,7 +35,7 @@ return type of the [backend](#backends).
 
 #### spacy.NER.v1
 
-The NER task is a default implementation. It supports both zero-shot and few-shot prompting.
+The built-in NER task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
@@ -92,8 +92,7 @@ path = "ner_examples.yml"
 
 #### spacy.TextCat.v1
 
-The TextCat task is a default implementation. It supports both zero-shot and
-few-shot prompting.
+The built-in TextCat task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
