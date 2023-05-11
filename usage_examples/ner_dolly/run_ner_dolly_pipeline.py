@@ -11,7 +11,7 @@ Opt = typer.Option
 
 def run_pipeline(
     # fmt: off
-    text: str = Arg("", help="Text to perform named-entity recognition on."),
+    text: str = Arg("", help="Text to perform Named Entity Recognition on."),
     config_path: Path = Arg(..., help="Path to the configuration file to use."),
     verbose: bool = Opt(False, "--verbose", "-v", help="Show extra information."),
     # fmt: on

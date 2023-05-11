@@ -2,7 +2,7 @@
 
 This example shows how you can use the [open-source Dolly
 models](https://github.com/databrickslabs/dolly) hosted on Huggingface in a
-named-entity recognition (NER) task. We demonstrate how you can use large
+Named Entity Recognition (NER) task. We demonstrate how you can use large
 language models in zero- or few-shot annotation settings. 
 
 You can run the pipeline on a sample text via:
@@ -25,6 +25,7 @@ for each entity. You can change these labels by updating the configuration file.
 You can also include examples to perform few-shot annotation. To do so, use the
 `dolly_ner_fewshot.cfg` file instead. You can find the few-shot examples in the
 `ner_examples.yml` file. Feel free to change and update it to your liking.
+We also support other file formats, including `json` and `jsonl`.
 
 Finally, you can update the Dolly model in the configuration file. We're using
 [`dolly-v2-3b`](https://huggingface.co/databricks/dolly-v2-3b) by default, but
