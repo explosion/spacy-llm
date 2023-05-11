@@ -1,5 +1,9 @@
 # spacy-llm: Integrating LLMs into structured NLP pipelines
 
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/external.yml)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
+[![pypi Version](https://img.shields.io/pypi/v/spacy-llm.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy-llm/)
+
 This package supports integration of Large Language Models (LLMs) into [spaCy](https://spacy.io/).
 It adds an `llm` pipeline component to spaCy, allowing to prompt LLMs as part of your spaCy pipeline.
 `llm` behaves like any other pipeline component and is (de-)serializable.
