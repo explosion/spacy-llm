@@ -1,3 +1,5 @@
+<a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
+
 # spacy-llm: Integrating LLMs into structured NLP pipelines
 
 <!--![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/external.yml)-->
