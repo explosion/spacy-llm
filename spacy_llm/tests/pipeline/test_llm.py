@@ -24,6 +24,7 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
+@pytest.mark.external
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
