@@ -43,12 +43,11 @@ functionality, as detailed in the [API](api.md) documentation.
 
 ### Example 1: run TextCat using a GPT-3 model from OpenAI
 
-To run this example, ensure that you `openai` installed.
 Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
 For more background information, see the [OpenAI](api.md#OpenAI) section.
 
 Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/openai_textcat_zeroshot.cfg)):
+(or see the full example [here](usage_examples/textcat_openai)):
 
 ```ini
 [nlp]
@@ -87,7 +86,7 @@ To run this example, ensure that you have a GPU enabled, and `transformers`, `to
 For more background information, see the [DollyHF](api.md#spacydollyhfv1) section.
 
 Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/textcat_openai/)):
+(or see the full example [here](usage_examples/ner_dolly/)):
 
 ```ini
 [nlp]
@@ -105,7 +104,8 @@ labels = PERSON,ORGANISATION,LOCATION
 
 [components.llm.backend]
 @llm_backends = "spacy.DollyHF.v1"
-model = "databricks/dolly-v2-12b"
+# For better performance, use databricks/dolly-v2-12b instead 
+model = "databricks/dolly-v2-3b"
 ```
 
 Now run:
