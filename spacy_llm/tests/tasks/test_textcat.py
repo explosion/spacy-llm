@@ -403,6 +403,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     Classify the text below to any of the following labels: Recipe, Feedback, Comment
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
+If the text cannot be classified into any of the provided labels, answer `==NONE==`.
 Below are some examples (only use these as a guide):
 
 
