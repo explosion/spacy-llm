@@ -5,7 +5,7 @@ import random
 import pytest
 import spacy
 
-from ..compat import has_minichain, has_langchain
+from spacy_llm.compat import has_minichain, has_langchain
 
 PIPE_CFG = {
     "backend": {
