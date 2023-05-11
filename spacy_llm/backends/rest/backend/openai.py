@@ -39,7 +39,7 @@ class OpenAIBackend(Backend):
 
     @property
     def credentials(self) -> Dict[str, str]:
-        model = self._config.get("model", "text-davinci-003")
+        model = self._config["model"]
         # Fetch and check the key
         api_key = os.getenv("OPENAI_API_KEY")
         if api_key is None:
@@ -94,7 +94,7 @@ class OpenAIBackend(Backend):
         prompts = list(prompts)
 
         data: Dict[str, Union[List[str], List[Dict[str, str]]]] = {}
-        url = self._url if self._url else self.supported_models["model"]
+        url = self._url if self._url else self.supported_models[self._config["model"]]
         if url == Endpoints.chat:
             data = {
                 "messages": [{"role": "user", "content": prompt} for prompt in prompts]
@@ -104,7 +104,7 @@ class OpenAIBackend(Backend):
 
         r = self.retry(
             lambda: requests.post(
-                self._url,
+                url,
                 headers=headers,
                 json={**data, **self._config},
                 timeout=self._timeout,
@@ -122,12 +122,12 @@ class OpenAIBackend(Backend):
         assert len(responses["choices"]) == len(prompts)
 
         for prompt, response in zip(prompts, responses["choices"]):
-            if self._url.endswith("chat"):
+            if url == Endpoints.chat:
                 if "message" in response:
                     api_responses.append(response["message"]["content"])
                 else:
                     api_responses.append(srsly.json_dumps(response))
-            elif self._url.endswith("completions"):
+            elif url == Endpoints.non_chat:
                 if "text" in response:
                     api_responses.append(response["text"])
                 else:
