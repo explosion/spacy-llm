@@ -45,7 +45,9 @@ must be stored in a spaCy [`Doc`](https://spacy.io/api/doc). For example,
 named entities are stored in [`doc.ents`](https://spacy.io/api/doc#ents) while
 text categorization results are in [`doc.cats`](https://spacy.io/api/doc#cats).
 
-To write a `task`, you need to implement two functions:
+To write a
+[`task`](https://github.com/explosion/spacy-llm/blob/main/api.md#tasks), you
+need to implement two functions:
 
 - **`generate_prompts(docs: Iterable[Doc]) -> Iterable[str]`**: a function that
 takes in a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transform
