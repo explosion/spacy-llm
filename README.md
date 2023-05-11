@@ -36,7 +36,47 @@ The task and the backend have to be supplied to the `llm` pipeline component usi
 system](https://spacy.io/api/data-formats#config). This package provides various built-in
 functionality, as detailed in the [API](api.md) documentation.
 
-### Example 1: run NER using an open-source model through HuggingFace
+### Example 1: run TextCat using a GPT-3 model from OpenAI
+
+To run this example, ensure that you `openai` installed.
+Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
+For more background information, see the [OpenAI](api.md#OpenAI) section.
+
+Create a config file `config.cfg` containing at least the following
+(or see the full example [here](usage_examples/openai_textcat_zeroshot.cfg)):
+
+```ini
+[nlp]
+lang = "en"
+pipeline = ["llm"]
+
+[components]
+
+[components.llm]
+factory = "llm"
+
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v1"
+labels = COMPLIMENT,INSULT
+
+[components.llm.backend]
+@llm_backends = "spacy.REST.v1"
+api = "OpenAI"
+config = {"model": "text-davinci-003", "temperature": 0.3}
+```
+
+Now run:
+
+```python
+from spacy import util
+
+config = util.load_config("config.cfg")
+nlp = util.load_model_from_config(config, auto_fill=True)
+doc = nlp("You look gorgeous!")
+print(doc.cats)
+```
+
+### Example 2: run NER using an open-source model through HuggingFace
 
 To run this example, ensure that you have a GPU enabled, and `transformers`, `torch` and CUDA installed.
 For more background information, see the [DollyHF](api.md#spacydollyhfv1) section.
@@ -79,45 +119,6 @@ Note that HuggingFace will download the `"databricks/dolly-v2-3b"` model the fir
 by setting the environmental variable `HF_HOME`.
 Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better performance.
 
-### Example 2: run TextCat using a GPT-3 model from OpenAI
-
-To run this example, ensure that you `openai` installed.
-Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
-For more background information, see the [OpenAI](api.md#OpenAI) section.
-
-Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/openai_textcat_zeroshot.cfg)):
-
-```ini
-[nlp]
-lang = "en"
-pipeline = ["llm"]
-
-[components]
-
-[components.llm]
-factory = "llm"
-
-[components.llm.task]
-@llm_tasks = "spacy.TextCat.v1"
-labels = COMPLIMENT,INSULT
-
-[components.llm.backend]
-@llm_backends = "spacy.REST.v1"
-api = "OpenAI"
-config = {"model": "text-davinci-003", "temperature": 0.3}
-```
-
-Now run:
-
-```python
-from spacy import util
-
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
-doc = nlp("You look gorgeous!")
-print(doc.cats)
-```
 
 ### Example 3: creating the component directly in Python
 
