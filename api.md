@@ -201,7 +201,7 @@ When `api` is set to `OpenAI`, the following settings can be defined in the `con
   - `"curie"`
   - `"babbage"`
   - `"ada"`
-- `url`: By default, this is `https://api.openai.com/v1/completions`
+- `url`: By default, this is `https://api.openai.com/v1/completions`. For models requiring the chat endpoint, use `https://api.openai.com/v1/chat/completions`.
 
 #### spacy.MiniChain.v1
 
