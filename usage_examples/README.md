@@ -1,8 +1,8 @@
 # Usage examples
 
-This directory contains different examples on how you can use `spacy-llm` for
-common NLP tasks. Each directory contains a sample configuration and an
-optional `examples.yml` file for few-shot annotation.
+This directory contains different examples on how you can use `spacy-llm` to
+simulate or prototype common NLP tasks. Each directory contains a sample
+configuration and an optional `examples.yml` file for few-shot annotation.
 
 ## The configuration file
 
