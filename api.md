@@ -222,7 +222,7 @@ api = "OpenAI"
 | `config` | `Dict[Any, Any]`                                                                  | `{}`    | Further configuration passed on to the backend.                                     |
 | `query`  | `Optional[Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]]` | `None`  | Function that executes the prompts. If `None`, defaults to `spacy.RunMiniChain.v1`. |
 
-The default `query` `spacy.RunMiniChain.v1` executes the prompts by running `model(text).run()` for each given textual prompt.
+The default `query` (`spacy.RunMiniChain.v1`) executes the prompts by running `model(text).run()` for each given textual prompt.
 
 #### spacy.LangChain.v1
 
@@ -250,7 +250,7 @@ config = {"temperature": 0.3},
 | `config` | `Dict[Any, Any]`                                                               | `{}`    | Further configuration passed on to the backend.                                      |
 | `query`  | `Optional[Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]]` | `None`  | Function that executes the prompts. If `None`, defaults to `spacy.CallLangChain.v1`. |
 
-The default `query` `spacy.CallLangChain.v1` executes the prompts by running `model(text)` for each given textual prompt.
+The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `model(text)` for each given textual prompt.
 
 #### spacy.DollyHF.v1
 
