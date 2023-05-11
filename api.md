@@ -229,7 +229,7 @@ The default `query` (`spacy.RunMiniChain.v1`) executes the prompts by running `m
 To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval part, make sure you have installed it first:
 
 ```shell
-pip install >=0.0.144,<0.1
+python -m pip install "langchain>=0.0.144,<0.1"
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
