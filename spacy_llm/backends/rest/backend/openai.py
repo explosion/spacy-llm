@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Set, Dict, Iterable, List, Tuple, Any, Union
+from typing import Dict, Iterable, List, Union
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -14,65 +14,28 @@ class Endpoints(str, Enum):
 
 
 class OpenAIBackend(Backend):
-    def __init__(
-        self,
-        config: Dict[Any, Any],
-        strict: bool,
-        max_tries: int,
-        timeout: int,
-    ):
-        super().__init__(
-            config=config, strict=strict, max_tries=max_tries, timeout=timeout
-        )
-        self._check_api_endpoint_compatibility()
-
     @property
-    def _default_endpoint(self) -> str:
-        return Endpoints.non_chat.value
-
-    @property
-    def supported_models(self) -> Set[str]:
-        return set(OpenAIBackend._supported_models_with_endpoints().keys())
-
-    @staticmethod
-    def _supported_models_with_endpoints() -> Dict[str, Tuple[str, ...]]:
+    def supported_models(self) -> Dict[str, str]:
         """Returns supported models with their endpoints.
-        RETURNS (Dict[str, Tuple[str, ...]]): Supported models with their endpoints.
+        RETURNS (Dict[str, str]): Supported models with their endpoints.
         """
         return {
-            "gpt-4": (Endpoints.chat,),
-            "gpt-4-0314": (Endpoints.chat,),
-            "gpt-4-32k": (Endpoints.chat,),
-            "gpt-4-32k-0314": (Endpoints.chat,),
-            "gpt-3.5-turbo": (Endpoints.chat,),
-            "gpt-3.5-turbo-0301": (Endpoints.chat,),
-            "text-davinci-003": (Endpoints.non_chat,),
-            "text-davinci-002": (Endpoints.non_chat,),
-            "text-curie-001": (Endpoints.non_chat,),
-            "text-babbage-001": (Endpoints.non_chat,),
-            "text-ada-001": (Endpoints.non_chat,),
-            "davinci": (Endpoints.non_chat,),
-            "curie": (Endpoints.non_chat,),
-            "babbage": (Endpoints.non_chat,),
-            "ada": (Endpoints.non_chat,),
+            "gpt-4": Endpoints.chat.value,
+            "gpt-4-0314": Endpoints.chat.value,
+            "gpt-4-32k": Endpoints.chat.value,
+            "gpt-4-32k-0314": Endpoints.chat.value,
+            "gpt-3.5-turbo": Endpoints.chat.value,
+            "gpt-3.5-turbo-0301": Endpoints.chat.value,
+            "text-davinci-003": Endpoints.non_chat.value,
+            "text-davinci-002": Endpoints.non_chat.value,
+            "text-curie-001": Endpoints.non_chat.value,
+            "text-babbage-001": Endpoints.non_chat.value,
+            "text-ada-001": Endpoints.non_chat.value,
+            "davinci": Endpoints.non_chat.value,
+            "curie": Endpoints.non_chat.value,
+            "babbage": Endpoints.non_chat,
+            "ada": Endpoints.non_chat.value,
         }
-
-    def _check_api_endpoint_compatibility(self):
-        """Checks whether specified model supports the supported API endpoint."""
-        supported_models = OpenAIBackend._supported_models_with_endpoints()
-        if self._config["model"] not in supported_models:
-            raise ValueError(
-                f"Requested model '{self._config['model']}' is not one of the supported models: "
-                f"{', '.join(sorted(list(supported_models.keys())))}."
-            )
-
-        model_endpoints = supported_models[self._config["model"]]
-        if self._url not in model_endpoints:
-            raise ValueError(
-                f"Specified model {self._config['model']} supports of the following endpoints: "
-                f"{', '.join(model_endpoints)}. However, endpoint {self._url} has been configured. Please ensure that "
-                f"model and endpoint match."
-            )
 
     @property
     def credentials(self) -> Dict[str, str]:
@@ -131,11 +94,12 @@ class OpenAIBackend(Backend):
         prompts = list(prompts)
 
         data: Dict[str, Union[List[str], List[Dict[str, str]]]] = {}
-        if self._url == Endpoints.chat:
+        url = self._url if self._url else self.supported_models["model"]
+        if url == Endpoints.chat:
             data = {
                 "messages": [{"role": "user", "content": prompt} for prompt in prompts]
             }
-        elif self._url == Endpoints.non_chat:
+        elif url == Endpoints.non_chat:
             data = {"prompt": prompts}
 
         r = self.retry(

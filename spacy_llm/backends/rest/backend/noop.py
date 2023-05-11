@@ -1,5 +1,5 @@
 import time
-from typing import Set, Dict, Iterable
+from typing import Dict, Iterable
 
 from .base import Backend
 
@@ -14,8 +14,8 @@ class NoOpBackend(Backend):
         return ""
 
     @property
-    def supported_models(self) -> Set[str]:
-        return set()
+    def supported_models(self) -> Dict[str, str]:
+        return {}
 
     @property
     def credentials(self) -> Dict[str, str]:

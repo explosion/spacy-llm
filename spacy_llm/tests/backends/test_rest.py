@@ -58,11 +58,12 @@ def test_model_backend_compatibility():
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(PIPE_CFG)
     cfg["backend"]["config"]["model"] = "gpt-4"
-    with pytest.raises(
-        ValueError,
-        match="Specified model gpt-4 supports of the following endpoints: "
-        "https://api.openai.com/v1/chat/completions. However, endpoint https://api.openai.com/v1/completions "
-        "has been configured. Please ensure that model and endpoint match.",
+    cfg["backend"]["config"]["url"] = "https://api.openai.com/v1/completions"
+    with pytest.warns(
+        UserWarning,
+        match="Configured endpoint https://api.openai.com/v1/completions diverges from expected endpoint "
+        "https://api.openai.com/v1/chat/completions for selected model 'gpt-4'. Please ensure that this endpoint "
+        "supports your model.",
     ):
         nlp.add_pipe(
             "llm",
