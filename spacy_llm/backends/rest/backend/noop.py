@@ -10,12 +10,8 @@ class NoOpBackend(Backend):
     _CALL_TIMEOUT = 0.01
 
     @property
-    def _default_endpoint(self) -> str:
-        return ""
-
-    @property
     def supported_models(self) -> Dict[str, str]:
-        return {}
+        return {"NoOp": ""}
 
     @property
     def credentials(self) -> Dict[str, str]:
