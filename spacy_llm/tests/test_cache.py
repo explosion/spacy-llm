@@ -32,7 +32,7 @@ def _init_nlp(tmp_dir: Path) -> Language:
     nlp.add_pipe("llm", config=config)
     return nlp
 
-  
+
 @pytest.mark.parametrize("use_pipe", (False, True))
 def test_caching(use_pipe: bool) -> None:
     """Test pipeline with caching.
