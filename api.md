@@ -202,7 +202,7 @@ When `api` is set to `OpenAI`, the following settings can be defined in the `con
 To use [MiniChain](https://github.com/srush/MiniChain) for the API retrieval part, make sure you have installed it first:
 
 ```shell
-pip install minichain>=0.3,<0.4
+python -m pip install "minichain>=0.3,<0.4"
 ```
 
 Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
@@ -226,10 +226,10 @@ The default `query` `spacy.RunMiniChain.v1` executes the prompts by running `mod
 
 #### spacy.LangChain.v1
 
-To use [LangChain](https://github.com/srush/MiniChain) for the API retrieval part, make sure you have installed it first:
+To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval part, make sure you have installed it first:
 
 ```shell
-pip install >=0.0.144,<0.1
+python -m pip install "langchain>=0.0.144,<0.1"
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
@@ -258,16 +258,16 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 ```shell
-pip install cupy-cuda11x
-pip install torch>=1.13.1,<2.0
-pip install transformers>=4.28.1,<5.0
+python -m pip install "cupy-cuda11x"
+python -m pip install "torch>=1.13.1,<2.0"
+python -m pip install "transformers>=4.28.1,<5.0"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
 which may ultimately result in extremely slow queries.
 
 ```shell
-pip install accelerate>=0.16.0,<1.0
+python -m pip install "accelerate>=0.16.0,<1.0"
 ```
 
 Example config block:

@@ -30,7 +30,7 @@ and use them in a config file to power your NLP pipeline.
 `spacy-llm` will be installed automatically from spaCy v.3.5.3 onwards. For older spaCy v3 versions, you can run
 
 ```bash
-pip install spacy-llm
+python -m pip install spacy-llm
 ```
 
 in the same virtual environment where you already have `spacy` [installed](https://spacy.io/usage).
@@ -41,56 +41,13 @@ The task and the backend have to be supplied to the `llm` pipeline component usi
 system](https://spacy.io/api/data-formats#config). This package provides various built-in
 functionality, as detailed in the [API](api.md) documentation.
 
-### Example 1: run NER using an open-source model through HuggingFace
+### Example 1: run TextCat using a GPT-3 model from OpenAI
 
-To run this example, ensure that you have a GPU enabled, and `transformers`, `torch` and CUDA installed.
-For more background information, see the [DollyHF](api.md#spacydollyhfv1) section.
-
-Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/dolly_ner_zeroshot.cfg)):
-
-```ini
-[nlp]
-lang = "en"
-pipeline = ["llm"]
-
-[components]
-
-[components.llm]
-factory = "llm"
-
-[components.llm.task]
-@llm_tasks = "spacy.NER.v1"
-labels = PERSON,ORGANISATION,LOCATION
-
-[components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
-model = "databricks/dolly-v2-12b"
-```
-
-Now run:
-
-```python
-from spacy import util
-
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
-doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
-print([(ent.text, ent.label_) for ent in doc.ents])
-```
-
-Note that HuggingFace will download the `"databricks/dolly-v2-3b"` model the first time you use it. You can
-[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
-by setting the environmental variable `HF_HOME`.
-Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better performance.
-
-### Example 2: run TextCat using a GPT-3 model from OpenAI
-
-Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environment variables.
+Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
 For more background information, see the [OpenAI](api.md#OpenAI) section.
 
 Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/textcat_openai/)):
+(or see the full example [here](usage_examples/textcat_openai)):
 
 ```ini
 [nlp]
@@ -122,6 +79,51 @@ nlp = util.load_model_from_config(config, auto_fill=True)
 doc = nlp("You look gorgeous!")
 print(doc.cats)
 ```
+
+### Example 2: run NER using an open-source model through HuggingFace
+
+To run this example, ensure that you have a GPU enabled, and `transformers`, `torch` and CUDA installed.
+For more background information, see the [DollyHF](api.md#spacydollyhfv1) section.
+
+Create a config file `config.cfg` containing at least the following
+(or see the full example [here](usage_examples/ner_dolly/)):
+
+```ini
+[nlp]
+lang = "en"
+pipeline = ["llm"]
+
+[components]
+
+[components.llm]
+factory = "llm"
+
+[components.llm.task]
+@llm_tasks = "spacy.NER.v1"
+labels = PERSON,ORGANISATION,LOCATION
+
+[components.llm.backend]
+@llm_backends = "spacy.DollyHF.v1"
+# For better performance, use databricks/dolly-v2-12b instead 
+model = "databricks/dolly-v2-3b"
+```
+
+Now run:
+
+```python
+from spacy import util
+
+config = util.load_config("config.cfg")
+nlp = util.load_model_from_config(config, auto_fill=True)
+doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
+print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+Note that HuggingFace will download the `"databricks/dolly-v2-3b"` model the first time you use it. You can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better performance.
+
 
 ### Example 3: creating the component directly in Python
 
