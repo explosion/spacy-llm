@@ -4,7 +4,6 @@ from typing import Dict
 
 import pytest
 import srsly  # type: ignore[import]
-from dotenv import load_dotenv  # type: ignore[import]
 import spacy
 from spacy import Language
 from spacy.tokens import DocBin
@@ -12,8 +11,6 @@ import copy
 
 from ..cache import Cache
 
-
-load_dotenv()  # take environment variables from .env.
 
 _DEFAULT_CFG = {
     "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
