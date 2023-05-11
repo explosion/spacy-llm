@@ -20,7 +20,7 @@ def run_pipeline(
     if not os.getenv("OPENAI_API_KEY", None):
         msg.fail(
             "OPENAI_API_KEY env variable was not found. "
-            "Set it in a .env file and try again.",
+            "Set it by running 'export OPENAI_API_KEY=...' and try again.",
             exits=1,
         )
 

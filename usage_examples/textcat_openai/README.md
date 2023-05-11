@@ -7,10 +7,11 @@ determine if a given text is an `INSULT` or a `COMPLIMENT`.
 First, create a new API key from
 [openai.com](https://platform.openai.com/account/api-keys) or fetch an existing
 one. Record the secret key and make sure this is available as an environmental
-variable. Set them in a `.env` file in this directory:
+variable:
 
 ```sh
-OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="sk-..."
+export OPENAI_API_ORG="org-..."
 ```
 
 Then, you can run the pipeline on a sample text via:
