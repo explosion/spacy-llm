@@ -90,7 +90,7 @@ Create a new API key from openai.com or fetch an existing one, and ensure the ke
 For more background information, see the [OpenAI](api.md#OpenAI) section.
 
 Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/openai_textcat_zeroshot.cfg)):
+(or see the full example [here](usage_examples/textcat_openai/)):
 
 ```ini
 [nlp]
