@@ -88,7 +88,7 @@ labels = LABEL1,LABEL2,LABEL3
 ...
 ```
 
-You can check sample tasks for named-entity recognition and text categorization
+You can check sample tasks for Named Entity Recognition and text categorization
 in the `spacy_llm/tasks/` directory. We also recommend checking out the
 `spacy.NoOp.v1` task for a barebones implementation to pattern your task from.
 
