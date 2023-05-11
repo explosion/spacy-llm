@@ -214,10 +214,10 @@ It needs to define a `generate_prompts` function and a `parse_responses` functio
 Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.
 Often, prompts are of type `str` - but this is not enforced to allow for maximum flexibility in the framework.
 
-| Argument    | Type          | Description            |
-| ----------- | ------------- | ---------------------- |
-| `docs`      | Iterable[Doc] | The input documents.   |
-| **RETURNS** | Iterable[Any] | The generated prompts. |
+| Argument    | Type            | Description            |
+| ----------- | --------------- | ---------------------- |
+| `docs`      | `Iterable[Doc]` | The input documents.   |
+| **RETURNS** | `Iterable[Any]` | The generated prompts. |
 
 #### <kbd>function</kbd> `task.parse_responses`
 
@@ -228,11 +228,11 @@ including `Doc` fields like `ents`, `spans` or `cats`, or using custom defined f
 The `responses` are of type `Iterable[Any]`, though they will often be `str` objects. This depends on the
 return type of the [backend](#backends).
 
-| Argument    | Type          | Description              |
-| ----------- | ------------- | ------------------------ |
-| `docs`      | Iterable[Doc] | The input documents.     |
-| `responses` | Iterable[Any] | The generated prompts.   |
-| **RETURNS** | Iterable[Doc] | The annotated documents. |
+| Argument    | Type            | Description              |
+| ----------- | --------------- | ------------------------ |
+| `docs`      | `Iterable[Doc]` | The input documents.     |
+| `responses` | `Iterable[Any]` | The generated prompts.   |
+| **RETURNS** | `Iterable[Doc]` | The annotated documents. |
 
 #### spacy.NER.v1
 
