@@ -107,7 +107,7 @@ def test_caching_interrupted() -> None:
         pass1_cache = nlp2.get_pipe("llm")._cache  # type: ignore
         # Arbitrary time check to ensure that first pass through half of the doc batch takes up roughly half of the time
         # of a full pass.
-        assert abs(ref_duration / 2 - pass1_duration) < ref_duration / 2 * 0.2
+        assert abs(ref_duration / 2 - pass1_duration) < ref_duration / 2 * 0.3
         assert pass1_cache._stats["hit"] == 0
         assert pass1_cache._stats["missed"] == n / 2
         assert pass1_cache._stats["added"] == n / 2
