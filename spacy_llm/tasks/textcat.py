@@ -137,7 +137,7 @@ Text:
             categories = {label: score}
         else:
             # Multilabel classification
-            categories = {label: 0 for label in self._label_dict.values()}
+            categories = {label: 0.0 for label in self._label_dict.values()}
 
             pred_labels = response.split(",")
             if self._exclusive_classes and len(pred_labels) > 1:
