@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 import spacy
+import srsly
 from confection import Config
+from pydantic import ValidationError
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import strip_normalizer, lowercase_normalizer, fewshot_reader
@@ -436,3 +438,19 @@ Text:
 Alice and Bob went to the supermarket
 '''""".strip()
     )
+
+
+def test_example_not_following_basemodel():
+    wrong_example = [
+        {
+            "text": "I'm a wrong example. Entities should be a dict, not a list",
+            # Should be: {"PER": ["Entities"], "ORG": ["dict", "list"]}
+            "entities": [("PER", ("Entities")), ("ORG", ("dict", "list"))],
+        }
+    ]
+    with make_tempdir() as tmpdir:
+        tmp_path = tmpdir / "wrong_example.yml"
+        srsly.write_yaml(tmp_path, wrong_example)
+
+        with pytest.raises(ValidationError):
+            NERTask(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))

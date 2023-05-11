@@ -1,11 +1,17 @@
-from typing import Callable, Iterable, Optional, Tuple, Any
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Any
 
 import jinja2
+from pydantic import BaseModel
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
 from ..registry import lowercase_normalizer, registry
 from ..compat import Literal
+
+
+class NERExample(BaseModel):
+    text: str
+    entities: Dict[str, List[str]]
 
 
 def find_substrings(
@@ -69,10 +75,10 @@ Below are some examples (only use these as a guide):
 {# whitespace #}
 Text:
 '''
-{{ example['text'] }}
+{{ example.text }}
 '''
 {# whitespace #}
-{%- for label, substrings in example['entities'].items() -%}
+{%- for label, substrings in example.entities.items() -%}
 {{ label }}: {{ ', '.join(substrings) }}
 {# whitespace #}
 {%- endfor -%}
@@ -116,7 +122,7 @@ Text:
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }
-        self._examples = examples() if examples else None
+        self._examples = [NERExample(**eg) for eg in examples()] if examples else None
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
