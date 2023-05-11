@@ -358,12 +358,11 @@ using the built-in REST protocol, and accesses the `"text-davinci-003"` model.
 #### OpenAI
 
 When the backend uses OpenAI, you have to get an API key from openai.com, and ensure that the keys are set as
-environmental variables. For instance, set a `.env` file in the root of your directory with the following information,
-and make sure to exclude this file from git versioning:
+environmental variables:
 
 ```shell
-OPENAI_API_ORG = "org-..."
-OPENAI_API_KEY = "sk-..."
+export OPENAI_API_KEY="sk-..."
+export OPENAI_API_ORG="org-..."
 ```
 
 #### spacy.REST.v1
