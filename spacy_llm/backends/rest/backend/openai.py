@@ -10,7 +10,7 @@ from .base import Backend
 
 class Endpoints(str, Enum):
     chat = "https://api.openai.com/v1/chat/completions"
-    completions = "https://api.openai.com/v1/completions"
+    non_chat = "https://api.openai.com/v1/completions"
 
 
 class OpenAIBackend(Backend):
@@ -28,7 +28,7 @@ class OpenAIBackend(Backend):
 
     @property
     def _default_endpoint(self) -> str:
-        return Endpoints.completions.value
+        return Endpoints.non_chat.value
 
     @property
     def supported_models(self) -> Set[str]:
@@ -46,15 +46,15 @@ class OpenAIBackend(Backend):
             "gpt-4-32k-0314": (Endpoints.chat,),
             "gpt-3.5-turbo": (Endpoints.chat,),
             "gpt-3.5-turbo-0301": (Endpoints.chat,),
-            "text-davinci-003": (Endpoints.completions,),
-            "text-davinci-002": (Endpoints.completions,),
-            "text-curie-001": (Endpoints.completions,),
-            "text-babbage-001": (Endpoints.completions,),
-            "text-ada-001": (Endpoints.completions,),
-            "davinci": (Endpoints.completions,),
-            "curie": (Endpoints.completions,),
-            "babbage": (Endpoints.completions,),
-            "ada": (Endpoints.completions,),
+            "text-davinci-003": (Endpoints.non_chat,),
+            "text-davinci-002": (Endpoints.non_chat,),
+            "text-curie-001": (Endpoints.non_chat,),
+            "text-babbage-001": (Endpoints.non_chat,),
+            "text-ada-001": (Endpoints.non_chat,),
+            "davinci": (Endpoints.non_chat,),
+            "curie": (Endpoints.non_chat,),
+            "babbage": (Endpoints.non_chat,),
+            "ada": (Endpoints.non_chat,),
         }
 
     def _check_api_endpoint_compatibility(self):
@@ -135,7 +135,7 @@ class OpenAIBackend(Backend):
             data = {
                 "messages": [{"role": "user", "content": prompt} for prompt in prompts]
             }
-        elif self._url == Endpoints.completions:
+        elif self._url == Endpoints.non_chat:
             data = {"prompt": prompts}
 
         r = self.retry(
