@@ -59,9 +59,14 @@ class OpenAIBackend(Backend):
 
     def _check_api_endpoint_compatibility(self):
         """Checks whether specified model supports the supported API endpoint."""
-        model_endpoints = OpenAIBackend._supported_models_with_endpoints()[
-            self._config["model"]
-        ]
+        supported_models = OpenAIBackend._supported_models_with_endpoints()
+        if self._config["model"] not in supported_models:
+            raise ValueError(
+                f"Requested model '{self._config['model']}' is not one of the supported models: "
+                f"{', '.join(sorted(list(supported_models.keys())))}."
+            )
+
+        model_endpoints = supported_models[self._config["model"]]
         if self._url not in model_endpoints:
             raise ValueError(
                 f"Specified model {self._config['model']} supports of the following endpoints: "
