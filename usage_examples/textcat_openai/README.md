@@ -23,7 +23,7 @@ For example:
 
 ```sh
 python run_textcat_openai_pipeline.py \
-    "One half of me is yours, the other half yours--Mine own, I would say; but if mine, then yours, and so all yours" \
+    "You look great today! Nice shirt!" \
     ./openai_textcat_zeroshot.cfg
 ```
 
