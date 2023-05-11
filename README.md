@@ -10,7 +10,7 @@
 This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.io), featuring a modular system for **fast prototyping** and **prompting**, and turning unstructured responses into **robust outputs** for various NLP tasks, **no training data** required.
 
 - Serializable `llm` **component** to integrate prompts into your pipeline
-- **Modular functions** to define the [**task**](#Tasks) (prompting and parsing) and [**backend**](#Backend) (model to use)
+- **Modular functions** to define the [**task**](#Tasks) (prompting and parsing) and [**backend**](#Backends) (model to use)
 - Support for **hosted APIs** and self-hosted **open-source models**
 - Integration with [`MiniChain`](https://github.com/srush/MiniChain) and [`LangChain`](https://github.com/hwchase17/langchain)
 - Access to **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**, including GPT-4 and various GPT-3 models
@@ -79,7 +79,7 @@ To run this example, ensure that you have a GPU enabled, and `transformers`, `to
 For more background information, see the [DollyHF](#spacydollyhfv1) section.
 
 Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/ner_dolly/)):
+(or see the full example [here](usage_examples/ner_dolly)):
 
 ```ini
 [nlp]
