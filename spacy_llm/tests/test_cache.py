@@ -21,6 +21,7 @@ _DEFAULT_CFG = {
 }
 
 
+@pytest.mark.external
 def test_caching() -> None:
     """Test pipeline with caching."""
     n = 10
