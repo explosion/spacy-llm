@@ -1,6 +1,7 @@
 import abc
 import time
-from typing import Any, Dict, Iterable, Callable, Tuple, Set
+import warnings
+from typing import Any, Dict, Iterable, Callable, Tuple
 
 import requests  # type: ignore
 
@@ -29,20 +30,15 @@ class Backend(abc.ABC):
         self._strict = strict
         self._max_tries = max_tries
         self._timeout = timeout
-        self._url = (
-            self._config.pop("url") if "url" in self._config else self._default_endpoint
-        )
+        self._url = self._config.pop("url") if "url" in self._config else None
         self._credentials = self.credentials
+
+        if "model" not in config:
+            raise ValueError("The LLM model must be specified in the config.")
+        self._check_api_endpoint_compatibility()
 
         assert self._max_tries >= 1
         assert self._timeout >= 1
-
-    @property
-    @abc.abstractmethod
-    def _default_endpoint(self) -> str:
-        """Returns default endpoint URL.
-        RETURNS (str): Default endpoint URL.
-        """
 
     @property
     def _retry_error_codes(self) -> Tuple[int, ...]:
@@ -60,9 +56,9 @@ class Backend(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def supported_models(self) -> Set[str]:
-        """Set of supported models.
-        RETURNS (Set[str]): Set of supported models.
+    def supported_models(self) -> Dict[str, str]:
+        """Returns supported models with their endpoints.
+        RETURNS (Dict[str, str]): Supported models with their endpoints.
         """
 
     @property
@@ -102,3 +98,19 @@ class Backend(abc.ABC):
             )
 
         return response
+
+    def _check_api_endpoint_compatibility(self):
+        """Checks whether specified model supports the supported API endpoint."""
+        supported_models = self.supported_models
+        if self._config["model"] not in supported_models:
+            raise ValueError(
+                f"Requested model '{self._config['model']}' is not one of the supported models: "
+                f"{', '.join(sorted(list(supported_models.keys())))}."
+            )
+
+        model_endpoint = supported_models[self._config["model"]]
+        if self._url and self._url != model_endpoint:
+            warnings.warn(
+                f"Configured endpoint {self._url} diverges from expected endpoint {model_endpoint} for selected "
+                f"model '{self._config['model']}'. Please ensure that this endpoint supports your model."
+            )

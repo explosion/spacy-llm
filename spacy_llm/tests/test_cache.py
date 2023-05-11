@@ -16,7 +16,7 @@ from ..cache import Cache
 load_dotenv()  # take environment variables from .env.
 
 _DEFAULT_CFG = {
-    "backend": {"api": "NoOp"},
+    "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
     "cache": {
         "batch_size": 2,

@@ -1,5 +1,5 @@
 import time
-from typing import Set, Dict, Iterable
+from typing import Dict, Iterable
 
 from .base import Backend
 
@@ -10,12 +10,8 @@ class NoOpBackend(Backend):
     _CALL_TIMEOUT = 0.01
 
     @property
-    def _default_endpoint(self) -> str:
-        return ""
-
-    @property
-    def supported_models(self) -> Set[str]:
-        return set()
+    def supported_models(self) -> Dict[str, str]:
+        return {"NoOp": ""}
 
     @property
     def credentials(self) -> Dict[str, str]:
