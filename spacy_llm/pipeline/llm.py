@@ -10,6 +10,8 @@ from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
+from wasabi import msg
+
 from .. import registry  # noqa: F401
 from ..cache import Cache
 from ..ty import LLMTask, PromptExecutor
@@ -31,6 +33,7 @@ CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
             "strict": True,
         },
         "cache": {"path": None, "batch_size": 64, "max_batches_in_mem": 4},
+        "verbose": False,
     },
 )
 def make_llm(
@@ -39,6 +42,7 @@ def make_llm(
     task: Optional[LLMTask],
     backend: PromptExecutor,
     cache: CacheConfigType,
+    verbose: bool = False,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -65,6 +69,7 @@ def make_llm(
         backend=backend,
         cache=cache,
         vocab=nlp.vocab,
+        verbose=verbose,
     )
 
 
@@ -145,6 +150,7 @@ class LLMWrapper(Pipe):
         task: LLMTask,
         backend: PromptExecutor,
         cache: CacheConfigType,
+        verbose: bool = False,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -160,6 +166,7 @@ class LLMWrapper(Pipe):
             binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
+        self._task = task
         self._template = task.generate_prompts
         self._parse = task.parse_responses
         self._backend = backend
@@ -169,6 +176,7 @@ class LLMWrapper(Pipe):
             max_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
             vocab=vocab,
         )
+        self._verbose = verbose
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -178,12 +186,15 @@ class LLMWrapper(Pipe):
         """
         docs = [self._cache[doc]]
         if docs[0] is None:
-            docs = list(
-                self._parse(
-                    [doc],
-                    self._backend(self._template([doc])),
-                )
-            )
+            prompt = list(self._template([doc]))[0]
+            if self._verbose:
+                msg.divider("Generated Prompt")
+                print(prompt)  # noqa T201
+            response = list(self._backend([prompt]))[0]
+            if self._verbose:
+                msg.divider("Response from Backend")
+                print(response)  # noqa T201
+            docs = list(self._parse([doc], [response]))
             assert len(docs) == 1
             assert isinstance(docs[0], Doc)
             self._cache.add(docs[0])
