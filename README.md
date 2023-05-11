@@ -20,11 +20,11 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
 
 ## 🧠 Motivation
 
-Large Language Models (LLMs) feature powerful natural language understanding capabilities. With only a few (and sometimes no) examples, an LLM can be prompted to **perform custom NLP tasks** such as text categorization, named entity recognition, coreference resolution, information extraction and more.
+Large Language Models (LLMs) feature powerful natural language understanding capabilities. With only a few (and sometimes no) examples, an LLM can be prompted to perform custom NLP tasks such as text categorization, named entity recognition, coreference resolution, information extraction and more.
 
 [spaCy](https://spacy.io) is a well-established library for building systems that need to work with language in various ways. spaCy's built-in components are generally powered by supervised learning or rule-based approaches.
 
-Supervised learning is much worse than LLM prompting for prototyping, but for many tasks it's much **better for production**. A transformer model that runs comfortably on a single GPU is extremely powerful, and it's likely to be a better choice for any task for which you have a well-defined output. You train the model with anything from a few hundred to a few thousand labelled examples, and it will learn to do exactly that. **Efficiency**, **reliability** and **control** are all better with supervised learning, and **accuracy** will generally be higher than LLM prompting as well.
+Supervised learning is much worse than LLM prompting for prototyping, but for many tasks it's much better for production. A transformer model that runs comfortably on a single GPU is extremely powerful, and it's likely to be a better choice for any task for which you have a well-defined output. You train the model with anything from a few hundred to a few thousand labelled examples, and it will learn to do exactly that. Efficiency, reliability and control are all better with supervised learning, and accuracy will generally be higher than LLM prompting as well.
 
 `spacy-llm` lets you have **the best of both worlds**. You can quickly initialize a pipeline with components powered by LLM prompts, and freely mix in components powered by other approaches. As your project progresses, you can look at replacing some or all of the LLM-powered components as you require.
 
