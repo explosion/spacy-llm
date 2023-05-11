@@ -23,9 +23,9 @@ python run_textcat_openai_pipeline.py [TEXT] [PATH TO CONFIG]
 For example:
 
 ```sh
-python run_ner_dolly_pipeline.py \
+python run_textcat_openai_pipeline.py \
     "One half of me is yours, the other half yours--Mine own, I would say; but if mine, then yours, and so all yours" \
-    ./dolly_ner_zeroshot.cfg
+    ./openai_textcat_zeroshot.cfg
 ```
 
 You can also include examples to perform few-shot annotation. To do so, use the 
