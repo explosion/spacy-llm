@@ -28,7 +28,7 @@ class OpenAIBackend(Backend):
 
     @property
     def _default_endpoint(self) -> str:
-        return Endpoints.completions
+        return Endpoints.completions.value
 
     @property
     def supported_models(self) -> Set[str]:
