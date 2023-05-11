@@ -73,9 +73,6 @@ jobs:
         shell: bash
         run: |
           SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-          python -m pip uninstall dotenv
-          python -m pip uninstall python-dotenv
-          python -m pip install python-dotenv
           python -m pip install dist/$SDIST
 
       - name: Test import

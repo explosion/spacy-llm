@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import typer
-from dotenv import load_dotenv
 from spacy import util
 from wasabi import msg
 
@@ -18,8 +17,6 @@ def run_pipeline(
     verbose: bool = Opt(False, "--verbose", "-v", help="Show extra information."),
     # fmt: on
 ):
-    load_dotenv()
-
     if not os.getenv("OPENAI_API_KEY", None):
         msg.fail(
             "OPENAI_API_KEY env variable was not found. "
