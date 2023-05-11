@@ -87,7 +87,7 @@ To run this example, ensure that you have a GPU enabled, and `transformers`, `to
 For more background information, see the [DollyHF](api.md#spacydollyhfv1) section.
 
 Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/dolly_ner_zeroshot.cfg)):
+(or see the full example [here](usage_examples/textcat_openai/)):
 
 ```ini
 [nlp]

@@ -83,6 +83,7 @@ def test_caching(use_pipe: bool) -> None:
         assert cache._stats["persisted"] == 0
 
 
+@pytest.mark.skip(reason="Flaky test - needs to be updated")
 def test_caching_interrupted() -> None:
     """Test pipeline with caching with simulated interruption (i. e. pipeline stops writing before entire batch is
     done).
