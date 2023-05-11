@@ -1,8 +1,7 @@
-## Using GPT-3.5 models from OpenAI
+## Using GPT models from OpenAI
 
-This example shows how you can use the [GPT-3.5 model from
-OpenAI](https://platform.openai.com/docs/models/gpt-3-5) for categorizing texts
-in zero- or few-shot settings. Here, we perform binary text classification to
+This example shows how you can use a model from OpenAI for categorizing texts in
+zero- or few-shot settings. Here, we perform binary text classification to
 determine if a given text is an `INSULT` or a `COMPLIMENT`.
 
 First, create a new API key from
