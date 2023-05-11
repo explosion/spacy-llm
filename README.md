@@ -1,6 +1,7 @@
 # spacy-llm: Integrating LLMs into structured NLP pipelines
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/external.yml)
+<!--![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/external.yml)-->
+
 [![pypi Version](https://img.shields.io/pypi/v/spacy-llm.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy-llm/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
@@ -10,13 +11,14 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
 - **Modular functions** to define the [**task**](#Tasks) (prompting and parsing) and [**backend**](#Backend) (model to use)
 - Support for **hosted APIs** and self-hosted **open-source models**
 - Integration with [`MiniChain`](https://github.com/srush/MiniChain) and [`LangChain`](https://github.com/hwchase17/langchain)
-- Access to [OpenAI API](https://platform.openai.com/docs/api-reference/introduction), open-source [Dolly](https://huggingface.co/databricks) models hosted on Hugging Face
+- Access to **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**, including GPT-4 and various GPT-3 models
+- Built-in support for **open-source [Dolly](https://huggingface.co/databricks)** models hosted on Hugging Face
 - Usage examples for **Named Entity Recognition** and **Text Classification**
 - Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
 
 ## ⏳ Install
 
-`spacy-llm` will be installed automatically from **spaCy v.3.5.3 onwards**. For older spaCy v3 versions, you can run the following in the same virtual environment where you already have `spacy` [installed](https://spacy.io/usage).
+`spacy-llm` will be installed automatically in future spaCy versions. For now, you can run the following in the same virtual environment where you already have `spacy` [installed](https://spacy.io/usage).
 
 ```bash
 python -m pip install spacy-llm
@@ -177,6 +179,13 @@ labels = LABEL1,LABEL2,LABEL3
 ```
 
 ## 📓 API
+
+Each `llm` component is defined by two main settings:
+
+- A [**task**](#Tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
+  back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
+- A [**backend**](#Backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
+  APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
 
 ### Tasks
 
