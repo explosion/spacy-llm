@@ -12,12 +12,13 @@ Each `llm` component is defined by two main settings:
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through HuggingFace).
 
 `spacy-llm` facilitates working with arbitrary prompting tools or libraries. Out of the box the following are supported:
+
 - [`MiniChain`](https://github.com/srush/MiniChain)
 - [`LangChain`](https://github.com/hwchase17/langchain)
-- Access to GPT3 models from the [`OpenAI` API](https://platform.openai.com/docs/api-reference/introduction) via a simple default REST API.
+- Access to models from the [`OpenAI` API](https://platform.openai.com/docs/api-reference/introduction) via a simple default REST API.
 - Access to the open-source [Dolly](https://huggingface.co/databricks) models hosted on HuggingFace.
 
-The modularity of this repository allows you to easily implement your own functions, register them to the [spaCy registry](https://spacy.io/api/top-level#registry), 
+The modularity of this repository allows you to easily implement your own functions, register them to the [spaCy registry](https://spacy.io/api/top-level#registry),
 and use them in a config file to power your NLP pipeline.
 
 ## ⏳ Install
@@ -81,8 +82,7 @@ Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better per
 
 ### Example 2: run TextCat using a GPT-3 model from OpenAI
 
-To run this example, ensure that you `openai` installed.
-Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
+Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environment variables.
 For more background information, see the [OpenAI](api.md#OpenAI) section.
 
 Create a config file `config.cfg` containing at least the following
@@ -157,8 +157,8 @@ This package is experimental and it is possible that changes made to the interfa
 
 The details of all registered functions of this package can be found in the [API documentation](api.md).
 
-Feel free to browse the source code to get inspiration on how to implement your own 
-[task](https://github.com/explosion/spacy-llm/tree/main/spacy_llm/tasks) or 
+Feel free to browse the source code to get inspiration on how to implement your own
+[task](https://github.com/explosion/spacy-llm/tree/main/spacy_llm/tasks) or
 [backend](https://github.com/explosion/spacy-llm/tree/main/spacy_llm/backends)!
 
 ## 🚀 Ongoing work
