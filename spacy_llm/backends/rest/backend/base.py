@@ -32,6 +32,9 @@ class Backend(abc.ABC):
         self._timeout = timeout
         self._url = self._config.pop("url") if "url" in self._config else None
         self._credentials = self.credentials
+
+        if "model" not in config:
+            raise ValueError("The LLM model must be specified in the config.")
         self._check_api_endpoint_compatibility()
 
         assert self._max_tries >= 1
