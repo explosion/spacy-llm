@@ -10,6 +10,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.textcat import TextCatTask
+from spacy_llm.compat import has_openai_key
 
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -105,6 +106,7 @@ def multilabel_nonexcl():
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_textcat_config(task, cfg_string, request):

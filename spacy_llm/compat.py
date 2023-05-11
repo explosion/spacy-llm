@@ -1,5 +1,6 @@
 # mypy: ignore-errors
 import sys
+import os
 
 if sys.version_info[:2] >= (3, 8):  # Python 3.8+
     from typing import Protocol, runtime_checkable, Literal
@@ -45,3 +46,8 @@ try:
 except ImportError:
     accelerate = None
     has_accelerate = False
+
+if os.getenv("OPENAI_API_KEY") is None:
+    has_openai_key = False
+else:
+    has_openai_key = True
