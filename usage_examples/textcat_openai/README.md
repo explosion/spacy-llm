@@ -1,4 +1,4 @@
-## Using GPT models from OpenAI
+# Using GPT models from OpenAI
 
 This example shows how you can use a model from OpenAI for categorizing texts in
 zero- or few-shot settings. Here, we perform binary text classification to
