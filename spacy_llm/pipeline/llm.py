@@ -217,7 +217,9 @@ class LLMWrapper(Pipe):
                         assert isinstance(doc, Doc)
                         yield doc
                     else:
-                        yield next(modified_docs)
+                        doc = next(modified_docs)
+                        self._cache.add(doc)
+                        yield doc
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
 
