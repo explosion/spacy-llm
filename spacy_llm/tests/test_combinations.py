@@ -19,7 +19,7 @@ PIPE_CFG = {
 
 @pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
-@pytest.mark.skipif(has_langchain is False, reason="MiniChain is not installed")
+@pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 def test_combinations():
     """Randomly test combinations of backends and tasks."""
     n = 5
