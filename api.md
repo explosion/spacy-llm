@@ -101,13 +101,14 @@ labels = COMPLIMENT,INSULT
 examples = null
 ```
 
-| Argument            | Type                                  | Default | Description                                                                                                              |
-| ------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `labels`            | str                                   |         | Comma-separated list of labels.                                                                                          |
-| `examples`          | Optional[Callable[[], Iterable[Any]]] | `None`  | Optional function that generates examples for few-shot learning.                                                         |
-| `normalizer`        | Optional[Callable[[str], str]]        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.     |
-| `exclusive_classes` | bool                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. |
-| `verbose`           | bool                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                     |
+| Argument            | Type                                  | Default | Description                                                                                                                                      |
+| ------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`            | str                                   |         | Comma-separated list of labels.                                                                                                                  |
+| `examples`          | Optional[Callable[[], Iterable[Any]]] | `None`  | Optional function that generates examples for few-shot learning.                                                                                 |
+| `normalizer`        | Optional[Callable[[str], str]]        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
+| `exclusive_classes` | bool                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
+| `allow_none`        | bool                                  | `True`  | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
+| `verbose`           | bool                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
 
 To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
