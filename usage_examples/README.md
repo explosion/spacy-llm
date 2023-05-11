@@ -39,11 +39,12 @@ The common use-case for `spacy-llm` is to use a large language model (LLM) to
 power a natural language processing pipeline. In `spacy-llm`, we define these
 actions as **tasks**.
 
-Think of a `task` as something you want an LLM to do. In our examples, we ask
-an LLM to find named entities or categorize a text. Note that an LLM's output
-must be stored in a spaCy [`Doc`](https://spacy.io/api/doc). For example,
-named entities are stored in [`doc.ents`](https://spacy.io/api/doc#ents) while
-text categorization results are in [`doc.cats`](https://spacy.io/api/doc#cats).
+Think of a `task` as something you want an LLM to do. In our examples, we ask an
+LLM to find named entities or categorize a text. Note that an LLM's output
+should eventually be stored in a spaCy [`Doc`](https://spacy.io/api/doc). For
+example, named entities are stored in
+[`doc.ents`](https://spacy.io/api/doc#ents) while text categorization results
+are in [`doc.cats`](https://spacy.io/api/doc#cats).
 
 To write a
 [`task`](https://github.com/explosion/spacy-llm/blob/main/api.md#tasks), you
