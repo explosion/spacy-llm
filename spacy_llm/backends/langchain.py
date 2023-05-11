@@ -20,13 +20,13 @@ def _check_installation() -> None:
 
 
 @registry.llm_queries("spacy.CallLangChain.v1")
-def query_langchain() -> Callable[["BaseLLM", Iterable[str]], Iterable[str]]:
+def query_langchain() -> Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]:
     """Returns query Callable for LangChain.
-    RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]:): Callable executing simple prompts on
+    RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
         the specified LangChain backend.
     """
 
-    def prompt(backend: "BaseLLM", prompts: Iterable[str]) -> Iterable[str]:
+    def prompt(backend: "BaseLLM", prompts: Iterable[Any]) -> Iterable[Any]:
         return [backend(pr) for pr in prompts]
 
     return prompt

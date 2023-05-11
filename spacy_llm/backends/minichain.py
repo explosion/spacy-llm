@@ -46,7 +46,7 @@ def backend_minichain(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using MiniChain backend to prompt specified API.
     api (str): Name of any API/class in minichain.backend, e. g. "OpenAI".
-    query (Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]): Callable implementing querying this
+    query (Optional[Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]]): Callable implementing querying this
         API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the minichain.Backend
         instance.
