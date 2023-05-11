@@ -8,9 +8,6 @@ from wasabi import msg
 from ..registry import lowercase_normalizer, registry
 
 
-NONE_LABEL = "==NONE=="
-
-
 class TextCatExample(BaseModel):
     text: str
     answer: str
@@ -98,6 +95,7 @@ Text:
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
+        allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
         """
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
@@ -138,7 +136,7 @@ Text:
 
         The returned dictionary contains the labels mapped to their score.
         """
-        categories: Dict[str, float] = {}
+        categories: Dict[str, float]
         if self._use_binary:
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
