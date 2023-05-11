@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, List, Iterable, Optional, Union
 
 import jinja2
 from pydantic import BaseModel
@@ -13,9 +13,7 @@ class TextCatExample(BaseModel):
     answer: str
 
 
-@registry.llm_tasks("spacy.TextCat.v1")
-class TextCatTask:
-    _TEMPLATE_STR = """
+DEFAULT_TEXTCAT_TEMPLATE = """
 {%- if labels|length == 1 -%}
 {%- set label = labels[0] -%}
 Classify whether the text below belongs to the {{ label }} category or not.
@@ -61,12 +59,39 @@ Text:
 '''
 {{ text }}
 '''
-    """
+"""
 
+
+@registry.llm_tasks("spacy.TextCat.v1")
+def make_textcat_task(
+    labels: Union[str, Iterable[str]],
+    template: str = DEFAULT_TEXTCAT_TEMPLATE,
+    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+):
+    labels = labels.split(",") if isinstance(labels, str) else labels
+    labels = [label.strip() for label in labels]
+    textcat_examples = [TextCatExample(**eg) for eg in examples()] if examples else None
+    return TextCatTask(
+        labels=labels,
+        template=template,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
+
+
+class TextCatTask:
     def __init__(
         self,
-        labels: str,
-        examples: Optional[Callable[[], Iterable[Any]]] = None,
+        labels: List[str],
+        template: str = DEFAULT_TEXTCAT_TEMPLATE,
+        examples: Optional[List[TextCatExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
         allow_none: bool = True,
@@ -98,13 +123,10 @@ Text:
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
         """
+        self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in labels.split(",")
-        }
-        self._examples = (
-            [TextCatExample(**eg) for eg in examples()] if examples else None
-        )
+        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._examples = examples
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
@@ -120,7 +142,7 @@ Text:
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
-        _template = environment.from_string(self._TEMPLATE_STR)
+        _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,
@@ -137,7 +159,12 @@ Text:
         The returned dictionary contains the labels mapped to their score.
         """
         categories: Dict[str, float]
+        # response = response.strip()
         if self._use_binary:
+            # print("in use binary")
+            # print(response)
+            # print(response.upper() == "POS")
+            # print(response.strip().upper() == "POS")
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
             score = 1.0 if response.upper() == "POS" else 0.0
