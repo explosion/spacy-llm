@@ -29,5 +29,5 @@ python run_textcat_openai_pipeline.py \
 
 You can also include examples to perform few-shot annotation. To do so, use the 
 `openai_textcat_fewshot.cfg` file instead. You can find the few-shot examples in
-the `textcat_examples.yml` file. Feel free to change and update it to your liking.
-We also support other file formats, including `json` and `jsonl`.
+the `textcat_examples.jsonl` file. Feel free to change and update it to your liking.
+We also support other file formats, including `.yml`, `.yaml` and `.json`.
