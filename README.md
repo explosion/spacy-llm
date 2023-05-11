@@ -376,6 +376,12 @@ config = {"model": "text-davinci-003", "temperature": 0.3}
 When `api` is set to `OpenAI`, the following settings can be defined in the `config` dictionary:
 
 - `model`: one of the following list of supported models:
+  - `"gpt-4"`
+  - `"gpt-4-0314"`
+  - `"gpt-4-32k"`
+  - `"gpt-4-32k-0314"`
+  - `"gpt-3.5-turbo"`
+  - `"gpt-3.5-turbo-0301"`
   - `"text-davinci-003"`
   - `"text-davinci-002"`
   - `"text-curie-001"`
@@ -385,7 +391,7 @@ When `api` is set to `OpenAI`, the following settings can be defined in the `con
   - `"curie"`
   - `"babbage"`
   - `"ada"`
-- `url`: By default, this is `https://api.openai.com/v1/completions`
+- `url`: By default, this is `https://api.openai.com/v1/completions`. For models requiring the chat endpoint, use `https://api.openai.com/v1/chat/completions`.
 
 #### spacy.MiniChain.v1
 
