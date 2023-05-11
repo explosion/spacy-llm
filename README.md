@@ -35,7 +35,7 @@ functionality, as detailed in the [API](#-api) documentation.
 ### Example 1: Add a text classifier using a GPT-3 model from OpenAI
 
 Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
-For more background information, see the [OpenAI](api.md#OpenAI) section.
+For more background information, see the [OpenAI](#OpenAI) section.
 
 Create a config file `config.cfg` containing at least the following
 (or see the full example [here](usage_examples/textcat_openai)):
@@ -74,7 +74,7 @@ print(doc.cats)
 ### Example 2: Add NER using an open-source model through Hugging Face
 
 To run this example, ensure that you have a GPU enabled, and `transformers`, `torch` and CUDA installed.
-For more background information, see the [DollyHF](api.md#spacydollyhfv1) section.
+For more background information, see the [DollyHF](#spacydollyhfv1) section.
 
 Create a config file `config.cfg` containing at least the following
 (or see the full example [here](usage_examples/ner_dolly/)):
@@ -148,7 +148,7 @@ with a batch, instead of calling `nlp(doc)` with a single document.
 ### Example 4: Implement your own custom task
 
 To write a
-[`task`](https://github.com/explosion/spacy-llm/blob/main/api.md#tasks), you
+[`task`](#tasks), you
 need to implement two functions: `generate_prompts` that takes a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transforms
 them into a list of prompts, and `parse_responses` that transforms the LLM outputs into annotations on the [`Doc`](https://spacy.io/api/doc), e.g. entity spans, text categories and more.
 
@@ -192,7 +192,7 @@ Each `llm` component is defined by two main settings:
 A _task_ defines an NLP problem or question, that will be sent to the LLM via a prompt. Further, the task defines
 how to parse the LLM's responses back into structured information. All tasks are registered in spaCy's `llm_tasks` registry.
 
-Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined in [ty.py](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py).
+Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined in [`ty.py`](spacy_llm/ty.py).
 It needs to define a `generate_prompts` function and a `parse_responses` function.
 
 #### <kbd>function</kbd> `task.generate_prompts`
