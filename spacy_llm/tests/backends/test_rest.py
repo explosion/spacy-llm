@@ -4,6 +4,8 @@ import copy
 import pytest
 import spacy
 
+from spacy_llm.compat import has_openai_key
+
 PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.REST.v1",
@@ -53,6 +55,7 @@ def test_openai_chat():
     nlp("test")
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_model_backend_compatibility():
     """Tests whether incompatible model and backend are detected as expected."""
     nlp = spacy.blank("en")

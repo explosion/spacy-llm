@@ -7,9 +7,9 @@ from spacy.language import Language
 from spacy.tokens import Doc
 
 from spacy_llm.tasks import NoopTask
-
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
+from spacy_llm.compat import has_openai_key
 
 
 @pytest.fixture
@@ -19,18 +19,21 @@ def nlp() -> Language:
     return nlp
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_init(nlp):
     """Test pipeline intialization."""
     assert ["llm"] == nlp.pipe_names
 
 
 @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
     assert len(docs) == 2
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_pipe_empty(nlp):
     """Test call .pipe() with empty batch."""
     assert list(nlp.pipe(texts=[])) == []
@@ -59,6 +62,7 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_type_checking_valid() -> None:
     """Test type checking for consistency between functions."""
     # Ensure default config doesn't raise warnings.
@@ -68,6 +72,7 @@ def test_type_checking_valid() -> None:
         nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
