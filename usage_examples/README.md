@@ -1,7 +1,7 @@
 # Usage examples
 
 This directory contains different examples on how you can use `spacy-llm` for
-common NLP tasks. Each directory will contain a sample configuration and an
+common NLP tasks. Each directory contains a sample configuration and an
 optional `examples.yml` file for few-shot annotation.
 
 ## The configuration file
@@ -31,7 +31,7 @@ factory = "llm"
 
 The configuration files are based on [spaCy's configuration
 system](https://spacy.io/api/data-formats#config). This means that `spacy-llm`
-is modular and it's easy enough to implement your own tasks.
+is modular and it's easy to implement your own tasks.
 
 ## Writing your own task
 
@@ -40,20 +40,20 @@ power a natural language processing pipeline. In `spacy-llm`, we define these
 actions as **tasks**.
 
 Think of a `task` as something you want an LLM to do. In our examples, we ask
-an LLM to find named-entities or categorize a text. Note that an LLM's output
-must be contained in a spaCy [`Doc`](https://spacy.io/api/doc). For example,
-named-entities are stored in [`doc.ents`](https://spacy.io/api/doc#ents) while
+an LLM to find named entities or categorize a text. Note that an LLM's output
+must be stored in a spaCy [`Doc`](https://spacy.io/api/doc). For example,
+named entities are stored in [`doc.ents`](https://spacy.io/api/doc#ents) while
 text categorization results are in [`doc.cats`](https://spacy.io/api/doc#cats).
 
 To write a `task`, you need to implement two functions:
 
-- **generate_prompts(docs: Iterable[Doc]) -> Iterable[str]**: a function that
+- **`generate_prompts(docs: Iterable[Doc]) -> Iterable[str]`**: a function that
 takes in a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transform
 them into a list of prompts. These prompts will then be sent to the LLM in the
 `backend`.
 
-- **parse_responses(docs: Iterable[Doc], responses: Iterable[str]) ->
-Iterable[Doc]**: a function for parsing the LLM's outputs into spaCy
+- **`parse_responses(docs: Iterable[Doc], responses: Iterable[str]) ->
+Iterable[Doc]`**: a function for parsing the LLM's outputs into spaCy
 [`Doc`](https://spacy.io/api/doc) objects. You also have access to the input
 `Doc` objects so you can store the outputs into one of its attributes.
 
@@ -78,7 +78,7 @@ class MyTask:
 
 (and in the config)
 
-```
+```ini
 ...
 [components.llm.task]
 @llm_tasks = "spacy.MyTask.v1"

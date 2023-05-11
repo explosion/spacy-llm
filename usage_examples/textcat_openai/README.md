@@ -10,7 +10,7 @@ First, create a new API key from
 one. Record the secret key and make sure this is available as an environmental
 variable. Set them in a `.env` file in this directory:
 
-```
+```sh
 OPENAI_API_KEY="sk-..."
 ```
 
