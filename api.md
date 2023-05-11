@@ -222,14 +222,14 @@ api = "OpenAI"
 | `config` | `Dict[Any, Any]`                                                                  | `{}`    | Further configuration passed on to the backend.                                     |
 | `query`  | `Optional[Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]]` | `None`  | Function that executes the prompts. If `None`, defaults to `spacy.RunMiniChain.v1`. |
 
-The default `query` `spacy.RunMiniChain.v1` executes the prompts by running `model(text).run()` for each given textual prompt.
+The default `query` (`spacy.RunMiniChain.v1`) executes the prompts by running `model(text).run()` for each given textual prompt.
 
 #### spacy.LangChain.v1
 
-To use [LangChain](https://github.com/srush/MiniChain) for the API retrieval part, make sure you have installed it first:
+To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval part, make sure you have installed it first:
 
 ```shell
-pip install >=0.0.144,<0.1
+pip install langchain>=0.0.144,<0.1
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
@@ -250,7 +250,7 @@ config = {"temperature": 0.3},
 | `config` | `Dict[Any, Any]`                                                               | `{}`    | Further configuration passed on to the backend.                                      |
 | `query`  | `Optional[Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]]` | `None`  | Function that executes the prompts. If `None`, defaults to `spacy.CallLangChain.v1`. |
 
-The default `query` `spacy.CallLangChain.v1` executes the prompts by running `model(text)` for each given textual prompt.
+The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `model(text)` for each given textual prompt.
 
 #### spacy.DollyHF.v1
 
