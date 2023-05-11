@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 import spacy
+import srsly
 from confection import Config
+from pydantic import ValidationError
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import lowercase_normalizer, fewshot_reader
@@ -434,3 +436,26 @@ Text:
 I suggest you add some bananas. Mix 3 pieces of banana to your batter before baking.
 '''""".strip()
     )
+
+
+@pytest.mark.parametrize(
+    "wrong_example,labels,exclusive_classes",
+    [
+        # fmt: off
+        ([{"text": "wrong example for binary", "answer": [0]}], "Label", True),
+        ([{"text": "wrong example for multilabel excl", "answer": [12345]}], "Label1,Label2", True),
+        ([{"text": "wrong example for multilabel nonexcl", "answer": ["Label1", "Label2"]}], "Label,Label2", False),
+        # fmt: on
+    ],
+)
+def test_example_not_following_basemodel(wrong_example, labels, exclusive_classes):
+    with make_tempdir() as tmpdir:
+        tmp_path = tmpdir / "wrong_example.yml"
+        srsly.write_yaml(tmp_path, wrong_example)
+
+        with pytest.raises(ValidationError):
+            TextCatTask(
+                labels=labels,
+                examples=fewshot_reader(tmp_path),
+                exclusive_classes=exclusive_classes,
+            )

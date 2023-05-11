@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, Iterable, Optional
 
 import jinja2
+from pydantic import BaseModel
 from spacy.tokens import Doc
 from wasabi import msg
 
@@ -8,6 +9,11 @@ from ..registry import lowercase_normalizer, registry
 
 
 NONE_LABEL = "==NONE=="
+
+
+class TextCatExample(BaseModel):
+    text: str
+    answer: str
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
@@ -42,10 +48,10 @@ Below are some examples (only use these as a guide):
 {# whitespace #}
 Text:
 '''
-{{ example['text'] }}
+{{ example.text }}
 '''
 {# whitespace #}
-{{ example['answer']}}
+{{ example.answer }}
 {# whitespace #}
 {%- endfor -%}
 {%- endif -%}
@@ -98,7 +104,9 @@ Text:
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }
-        self._examples = examples() if examples else None
+        self._examples = (
+            [TextCatExample(**eg) for eg in examples()] if examples else None
+        )
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
@@ -130,7 +138,6 @@ Text:
 
         The returned dictionary contains the labels mapped to their score.
         """
-
         categories: Dict[str, float] = {}
         if self._use_binary:
             # Binary classification: We only have one label
@@ -139,7 +146,7 @@ Text:
             categories = {label: score}
         else:
             # Multilabel classification
-            categories = {label: 0 for label in self._label_dict.values()}
+            categories = {label: 0.0 for label in self._label_dict.values()}
 
             pred_labels = response.split(",")
             if self._exclusive_classes and len(pred_labels) > 1:

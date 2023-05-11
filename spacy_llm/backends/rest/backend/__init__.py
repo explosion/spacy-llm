@@ -1,8 +1,8 @@
-from . import base
-from . import openai
+from . import base, openai, noop
 
 supported_apis = {
     "OpenAI": openai.OpenAIBackend,
+    "NoOp": noop.NoOpBackend,
 }
 
-__all__ = ["base", "openai", "supported_apis"]
+__all__ = ["base", "openai", "noop", "supported_apis"]
