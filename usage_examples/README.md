@@ -18,7 +18,7 @@ which model to use and how to connect to it.
 [components.llm]
 factory = "llm"
 
-# Defines the prompt you'll send to an LLM, and how the corresponding output 
+# Defines the prompt you'll send to an LLM, and how the corresponding output
 # will be parsed.
 [components.llm.task]
 ...
@@ -47,18 +47,16 @@ example, named entities are stored in
 are in [`doc.cats`](https://spacy.io/api/doc#cats).
 
 To write a
-[`task`](https://github.com/explosion/spacy-llm/blob/main/api.md#tasks), you
+[`task`](https://github.com/explosion/spacy-llm/blob/main/README.md#tasks), you
 need to implement two functions:
 
 - **`generate_prompts(docs: Iterable[Doc]) -> Iterable[str]`**: a function that
-takes in a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transform
-them into a list of prompts. These prompts will then be sent to the LLM in the
-`backend`.
-
-- **`parse_responses(docs: Iterable[Doc], responses: Iterable[str]) ->
-Iterable[Doc]`**: a function for parsing the LLM's outputs into spaCy
-[`Doc`](https://spacy.io/api/doc) objects. You also have access to the input
-`Doc` objects so you can store the outputs into one of its attributes.
+  takes in a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transforms
+  them into a list of prompts. These prompts will then be sent to the LLM in the
+  `backend`.
+- **`parse_responses(docs: Iterable[Doc], responses: Iterable[str]) -> Iterable[Doc]`**: a function for parsing the LLM's outputs into spaCy
+  [`Doc`](https://spacy.io/api/doc) objects. You also have access to the input
+  `Doc` objects so you can store the outputs into one of its attributes.
 
 The `spacy-llm` library requires tasks to be defined as a class and registered in the `llm_tasks` registry:
 
@@ -93,7 +91,7 @@ You can check sample tasks for Named Entity Recognition and text categorization
 in the `spacy_llm/tasks/` directory. We also recommend checking out the
 `spacy.NoOp.v1` task for a barebones implementation to pattern your task from.
 
-<!-- TODO 
+<!-- TODO
 
 ### Writing your own backend
 
