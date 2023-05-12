@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import lowercase_normalizer, fewshot_reader
-from spacy_llm.tasks.textcat import TextCatTask
+from spacy_llm.tasks.textcat import make_textcat_task
 from spacy_llm.compat import has_openai_key
 
 
@@ -187,7 +187,7 @@ def test_textcat_io(task, cfg_string, request):
 
 def test_textcat_sets_exclusive_classes_if_binary():
     """Test if the textcat task automatically sets exclusive classes to True if binary"""
-    llm_textcat = TextCatTask(labels="Recipe", exclusive_classes=False)
+    llm_textcat = make_textcat_task(labels="Recipe", exclusive_classes=False)
     assert llm_textcat._exclusive_classes
 
 
@@ -208,7 +208,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
     label is an empty dictionary
     """
     label = "Recipe"
-    llm_textcat = TextCatTask(
+    llm_textcat = make_textcat_task(
         labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
@@ -239,7 +239,7 @@ def test_textcat_multilabel_labels_are_correct(
     text, exclusive_classes, response, expected
 ):
     labels = "Recipe,Comment,Feedback"
-    llm_textcat = TextCatTask(
+    llm_textcat = make_textcat_task(
         labels=labels,
         exclusive_classes=exclusive_classes,
         normalizer=lowercase_normalizer(),
@@ -271,7 +271,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = TextCatTask(
+    llm_textcat = make_textcat_task(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -333,7 +333,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = TextCatTask(
+    llm_textcat = make_textcat_task(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -395,7 +395,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = TextCatTask(
+    llm_textcat = make_textcat_task(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -459,7 +459,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValidationError):
-            TextCatTask(
+            make_textcat_task(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
