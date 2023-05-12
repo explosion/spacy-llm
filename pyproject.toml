@@ -14,7 +14,7 @@ select = [
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    # "ignore::DeprecationWarning"
+    "ignore:pkg_resources:DeprecationWarning"
 ]
 markers =[
     "external: interacts with a (potentially cost-incurring) third-party API"
