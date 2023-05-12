@@ -199,6 +199,8 @@ def test_textcat_sets_exclusive_classes_if_binary():
         ("Some test text with weird response", "WeIrD OUtpuT", 0.0),
         ("Some test text with lowercase response", "pos", 1.0),
         ("Some test text with lowercase response", "neg", 0.0),
+        ("Some test text with unstripped response", "\n\n\nPOS", 1.0),
+        ("Some test text with unstripped response", "\n\n\nNEG", 0.0),
     ],
 )
 def test_textcat_binary_labels_are_correct(text, response, expected_score):
