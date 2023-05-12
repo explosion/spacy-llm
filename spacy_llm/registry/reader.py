@@ -35,7 +35,6 @@ def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, An
             raise ValueError(
                 f"Cannot interpret prompt examples from {path}. Please check your formatting"
             )
-        data = cast(Iterable[Dict[str, Any]], data)
-        return data
+        return cast(Iterable[Dict[str, Any]], data)
 
     return reader

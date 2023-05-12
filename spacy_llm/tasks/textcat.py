@@ -13,7 +13,7 @@ class TextCatExample(BaseModel):
     answer: str
 
 
-DEFAULT_TEXTCAT_TEMPLATE = """
+_DEFAULT_TEXTCAT_TEMPLATE = """
 {%- if labels|length == 1 -%}
 {%- set label = labels[0] -%}
 Classify whether the text below belongs to the {{ label }} category or not.
@@ -62,7 +62,7 @@ Text:
 """
 
 
-ExamplesType = Union[
+_ExamplesType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
 
@@ -70,8 +70,8 @@ ExamplesType = Union[
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
     labels: Union[str, Iterable[str]],
-    template: str = DEFAULT_TEXTCAT_TEMPLATE,
-    examples: ExamplesType = None,
+    template: str = _DEFAULT_TEXTCAT_TEMPLATE,
+    examples: _ExamplesType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -98,7 +98,7 @@ class TextCatTask:
     def __init__(
         self,
         labels: List[str],
-        template: str = DEFAULT_TEXTCAT_TEMPLATE,
+        template: str = _DEFAULT_TEXTCAT_TEMPLATE,
         examples: Optional[List[TextCatExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
@@ -159,8 +159,6 @@ class TextCatTask:
                 exclusive_classes=self._exclusive_classes,
                 allow_none=self._allow_none,
             )
-            # print("----- GENERATED PROMPT -----")
-            # print(prompt)
             yield prompt
 
     def _format_response(self, response: str) -> Dict[str, float]:
@@ -170,8 +168,6 @@ class TextCatTask:
         """
         categories: Dict[str, float]
         response = response.strip()
-        # print("----- BACKEND RESPONSE -----")
-        # print(response)
         if self._use_binary:
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
