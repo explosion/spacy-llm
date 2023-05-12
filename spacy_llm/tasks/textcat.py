@@ -62,11 +62,16 @@ Text:
 """
 
 
+ExamplesType = Union[
+    Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
+]
+
+
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
     labels: Union[str, Iterable[str]],
     template: str = DEFAULT_TEXTCAT_TEMPLATE,
-    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    examples: ExamplesType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -74,7 +79,10 @@ def make_textcat_task(
 ):
     labels = labels.split(",") if isinstance(labels, str) else labels
     labels = [label.strip() for label in labels]
-    textcat_examples = [TextCatExample(**eg) for eg in examples()] if examples else None
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
     return TextCatTask(
         labels=labels,
         template=template,
@@ -151,6 +159,8 @@ class TextCatTask:
                 exclusive_classes=self._exclusive_classes,
                 allow_none=self._allow_none,
             )
+            # print("----- GENERATED PROMPT -----")
+            # print(prompt)
             yield prompt
 
     def _format_response(self, response: str) -> Dict[str, float]:
@@ -159,12 +169,10 @@ class TextCatTask:
         The returned dictionary contains the labels mapped to their score.
         """
         categories: Dict[str, float]
-        # response = response.strip()
+        response = response.strip()
+        # print("----- BACKEND RESPONSE -----")
+        # print(response)
         if self._use_binary:
-            # print("in use binary")
-            # print(response)
-            # print(response.upper() == "POS")
-            # print(response.strip().upper() == "POS")
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
             score = 1.0 if response.upper() == "POS" else 0.0
