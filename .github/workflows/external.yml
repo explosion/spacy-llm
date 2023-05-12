@@ -30,6 +30,9 @@ jobs:
         run: |
           pytest spacy_llm/tests --external
 
+      - name: Fail on purpose
+        run: exit 1
+
       - name: Report Status
         if: always()
         uses: ravsamhq/notify-slack-action@v1
