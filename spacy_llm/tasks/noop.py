@@ -6,6 +6,10 @@ from ..registry import registry
 
 
 @registry.llm_tasks("spacy.NoOp.v1")
+def make_noop_task():
+    return NoopTask()
+
+
 class NoopTask:
     def __init__(self):
         """Returns (1) templating Callable (injecting Doc data into a prompt template and returning one fully specified

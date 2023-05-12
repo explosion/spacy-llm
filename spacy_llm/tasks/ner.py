@@ -1,12 +1,52 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Any
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import jinja2
 from pydantic import BaseModel
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
-from ..registry import lowercase_normalizer, registry
 from ..compat import Literal
+from ..registry import lowercase_normalizer, registry
+from ..ty import ExamplesConfigType
+from ..util import split_labels
+
+
+_DEFAULT_NER_TEMPLATE = """
+From the text below, extract the following entities in the following format:
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}: <comma delimited list of strings>
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{%- for label, substrings in example.entities.items() -%}
+{{ label }}: {{ ', '.join(substrings) }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''
+"""
 
 
 class NERExample(BaseModel):
@@ -57,48 +97,35 @@ def find_substrings(
 
 
 @registry.llm_tasks("spacy.NER.v1")
-class NERTask:
-    _TEMPLATE_STR = """
-From the text below, extract the following entities in the following format:
-{# whitespace #}
-{%- for label in labels -%}
-{{ label }}: <comma delimited list of strings>
-{# whitespace #}
-{%- endfor -%}
-{# whitespace #}
-{%- if examples -%}
-{# whitespace #}
-Below are some examples (only use these as a guide):
-{# whitespace #}
-{# whitespace #}
-{%- for example in examples -%}
-{# whitespace #}
-Text:
-'''
-{{ example.text }}
-'''
-{# whitespace #}
-{%- for label, substrings in example.entities.items() -%}
-{{ label }}: {{ ', '.join(substrings) }}
-{# whitespace #}
-{%- endfor -%}
-{# whitespace #}
-{# whitespace #}
-{%- endfor -%}
-{%- endif -%}
-{# whitespace #}
-Here is the text that needs labeling:
-{# whitespace #}
-Text:
-'''
-{{ text }}
-'''
-    """
+def make_ner_task(
+    labels: Union[str, Iterable[str]],
+    template: str = _DEFAULT_NER_TEMPLATE,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
+) -> "NERTask":
+    labels = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    ner_examples = [NERExample(**eg) for eg in raw_examples] if raw_examples else None
+    return NERTask(
+        labels=labels,
+        template=template,
+        examples=ner_examples,
+        normalizer=normalizer,
+        alignment_mode=alignment_mode,
+        case_sensitive_matching=case_sensitive_matching,
+        single_match=single_match,
+    )
 
+
+class NERTask:
     def __init__(
         self,
-        labels: str,
-        examples: Optional[Callable[[], Iterable[Any]]] = None,
+        labels: List[str],
+        template: str = _DEFAULT_NER_TEMPLATE,
+        examples: Optional[List[NERExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -118,11 +145,10 @@ Text:
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         """
+        self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in labels.split(",")
-        }
-        self._examples = [NERExample(**eg) for eg in examples()] if examples else None
+        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._examples = examples
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
@@ -138,7 +164,7 @@ Text:
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
-        _template = environment.from_string(self._TEMPLATE_STR)
+        _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,

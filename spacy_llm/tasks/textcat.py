@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Iterable, Optional, Union
+from typing import Callable, Dict, List, Iterable, Optional, Union
 
 import jinja2
 from pydantic import BaseModel
@@ -6,11 +6,8 @@ from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
-
-
-class TextCatExample(BaseModel):
-    text: str
-    answer: str
+from ..ty import ExamplesConfigType
+from ..util import split_labels
 
 
 _DEFAULT_TEXTCAT_TEMPLATE = """
@@ -62,23 +59,22 @@ Text:
 """
 
 
-_ExamplesType = Union[
-    Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
-]
+class TextCatExample(BaseModel):
+    text: str
+    answer: str
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
     labels: Union[str, Iterable[str]],
     template: str = _DEFAULT_TEXTCAT_TEMPLATE,
-    examples: _ExamplesType = None,
+    examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-):
-    labels = labels.split(",") if isinstance(labels, str) else labels
-    labels = [label.strip() for label in labels]
+) -> "TextCatTask":
+    labels = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     textcat_examples = (
         [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None

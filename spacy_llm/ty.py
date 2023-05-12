@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Dict, Iterable, Union
 
 from spacy.tokens import Doc
 
@@ -9,6 +9,9 @@ _Prompt = Any
 _Response = Any
 
 PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
+ExamplesConfigType = Union[
+    Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
+]
 
 
 @runtime_checkable
