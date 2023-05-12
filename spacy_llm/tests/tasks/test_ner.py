@@ -363,10 +363,14 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == """
-From the text below, extract the following entities in the following format:
+You are an expert in parsing text to extract important named entities (NER).
+From the text below, extract entities for each provided label in the following format:
+
+
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+
 
 Here is the text that needs labeling:
 
@@ -403,7 +407,10 @@ def test_jinja_template_rendering_with_examples(examples_path):
     assert (
         prompt.strip()
         == """
-From the text below, extract the following entities in the following format:
+You are an expert in parsing text to extract important named entities (NER).
+From the text below, extract entities for each provided label in the following format:
+
+
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
@@ -431,6 +438,7 @@ Text:
 Jill came tumbling after.
 '''
 PER: Jill
+
 
 
 Here is the text that needs labeling:

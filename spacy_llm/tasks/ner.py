@@ -59,13 +59,27 @@ def find_substrings(
 @registry.llm_tasks("spacy.NER.v1")
 class NERTask:
     _TEMPLATE_STR = """
-From the text below, extract the following entities in the following format:
+You are an expert in parsing text to extract important named entities (NER).
+From the text below, extract entities for each provided label in the following format:
+
+{# whitespace #}
 {# whitespace #}
 {%- for label in labels -%}
 {{ label }}: <comma delimited list of strings>
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
+
+{%- if label_definitions -%}
+{# whitespace #}
+The following are definitions of each label so you have a better idea of what to extract:
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{# whitespace #}
+{{ label }}: {{ definition }}
+{%- endfor -%}
+{%- endif -%}
+
 {%- if examples -%}
 {# whitespace #}
 Below are some examples (only use these as a guide):
@@ -87,8 +101,9 @@ Text:
 {%- endfor -%}
 {%- endif -%}
 {# whitespace #}
+
 Here is the text that needs labeling:
-{# whitespace #}
+
 Text:
 '''
 {{ text }}
@@ -98,6 +113,7 @@ Text:
     def __init__(
         self,
         labels: str,
+        label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
@@ -109,6 +125,10 @@ Text:
         """Default NER task.
 
         labels (str): Comma-separated list of labels to pass to the template.
+        label_definitions (Optional[Dict[str, str]]): Map of label -> description
+            of the label to help the language model output the entities wanted.
+            It is usually easier to provide these definitions rather than
+            full examples, although both can be provided.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
@@ -122,6 +142,7 @@ Text:
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
         }
+        self._label_definitions = label_definitions
         self._examples = [NERExample(**eg) for eg in examples()] if examples else None
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
@@ -143,6 +164,7 @@ Text:
             prompt = _template.render(
                 text=doc.text,
                 labels=list(self._label_dict.values()),
+                label_definitions=self._label_definitions,
                 examples=self._examples,
             )
             yield prompt
