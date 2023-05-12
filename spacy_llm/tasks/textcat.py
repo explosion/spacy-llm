@@ -137,6 +137,7 @@ Text:
         The returned dictionary contains the labels mapped to their score.
         """
         categories: Dict[str, float]
+        response = response.strip()
         if self._use_binary:
             # Binary classification: We only have one label
             label: str = list(self._label_dict.values())[0]
