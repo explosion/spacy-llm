@@ -61,7 +61,6 @@ class NERTask:
     _TEMPLATE_STR = """
 You are an expert in parsing text to extract important named entities (NER).
 From the text below, extract entities for each provided label in the following format:
-
 {# whitespace #}
 {# whitespace #}
 {%- for label in labels -%}
@@ -69,41 +68,43 @@ From the text below, extract entities for each provided label in the following f
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
-
-{%- if label_definitions -%}
 {# whitespace #}
+{%- if label_definitions -%}
 The following are definitions of each label so you have a better idea of what to extract:
 {# whitespace #}
+{# whitespace #}
 {%- for label, definition in label_definitions.items() -%}
-{# whitespace #}
 {{ label }}: {{ definition }}
-{%- endfor -%}
-{%- endif -%}
-
-{%- if examples -%}
 {# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{# whitespace #}
+{%- if examples -%}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
 {%- for example in examples -%}
-{# whitespace #}
 Text:
 '''
 {{ example.text }}
 '''
 {# whitespace #}
 {%- for label, substrings in example.entities.items() -%}
+{# whitespace #}
 {{ label }}: {{ ', '.join(substrings) }}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
 {# whitespace #}
-{%- endfor -%}
 {%- endif -%}
-{# whitespace #}
-
 Here is the text that needs labeling:
-
+{# whitespace #}
 Text:
 '''
 {{ text }}

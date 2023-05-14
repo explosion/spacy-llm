@@ -366,7 +366,6 @@ def test_jinja_template_rendering_without_examples():
 You are an expert in parsing text to extract important named entities (NER).
 From the text below, extract entities for each provided label in the following format:
 
-
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
@@ -410,35 +409,79 @@ def test_jinja_template_rendering_with_examples(examples_path):
 You are an expert in parsing text to extract important named entities (NER).
 From the text below, extract entities for each provided label in the following format:
 
-
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
 
-Below are some examples (only use these as a guide):
 
+Below are some examples (only use these as a guide):
 
 Text:
 '''
 Jack and Jill went up the hill.
 '''
+
 PER: Jack, Jill
 LOC: hill
-
 
 Text:
 '''
 Jack fell down and broke his crown.
 '''
-PER: Jack
 
+PER: Jack
 
 Text:
 '''
 Jill came tumbling after.
 '''
+
 PER: Jill
 
+
+Here is the text that needs labeling:
+
+Text:
+'''
+Alice and Bob went to the supermarket
+'''""".strip()
+    )
+
+
+def test_jinja_template_rendering_with_label_definitions():
+    """Test if jinja2 template renders as expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
+    labels = "PER,ORG,LOC"
+    nlp = spacy.blank("xx")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
+    llm_ner = NERTask(
+        labels=labels,
+        label_definitions={
+            "PER": "Person definition",
+            "ORG": "Organization definition",
+            "LOC": "Location definition",
+        },
+    )
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
+
+    assert (
+        prompt.strip()
+        == """
+You are an expert in parsing text to extract important named entities (NER).
+From the text below, extract entities for each provided label in the following format:
+
+PER: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+LOC: <comma delimited list of strings>
+
+The following are definitions of each label so you have a better idea of what to extract:
+
+PER: Person definition
+ORG: Organization definition
+LOC: Location definition
 
 
 Here is the text that needs labeling:
