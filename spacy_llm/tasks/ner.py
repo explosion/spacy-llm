@@ -59,8 +59,8 @@ def find_substrings(
 @registry.llm_tasks("spacy.NER.v1")
 class NERTask:
     _TEMPLATE_STR = """
-You are an expert in parsing text to extract important named entities (NER).
-From the text below, extract entities for each provided label in the following format:
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+From the Text input provided, extract named entities for each label in the following format:
 {# whitespace #}
 {# whitespace #}
 {%- for label in labels -%}
@@ -70,7 +70,8 @@ From the text below, extract entities for each provided label in the following f
 {# whitespace #}
 {# whitespace #}
 {%- if label_definitions -%}
-The following are definitions of each label so you have a better idea of what to extract:
+Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
 {# whitespace #}
 {# whitespace #}
 {%- for label, definition in label_definitions.items() -%}

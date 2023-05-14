@@ -363,8 +363,8 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == """
-You are an expert in parsing text to extract important named entities (NER).
-From the text below, extract entities for each provided label in the following format:
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+From the Text input provided, extract named entities for each label in the following format:
 
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
@@ -406,8 +406,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
     assert (
         prompt.strip()
         == """
-You are an expert in parsing text to extract important named entities (NER).
-From the text below, extract entities for each provided label in the following format:
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+From the Text input provided, extract named entities for each label in the following format:
 
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
@@ -470,14 +470,15 @@ def test_jinja_template_rendering_with_label_definitions():
     assert (
         prompt.strip()
         == """
-You are an expert in parsing text to extract important named entities (NER).
-From the text below, extract entities for each provided label in the following format:
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+From the Text input provided, extract named entities for each label in the following format:
 
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
 
-The following are definitions of each label so you have a better idea of what to extract:
+Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
 
 PER: Person definition
 ORG: Organization definition
