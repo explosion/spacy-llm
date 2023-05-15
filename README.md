@@ -392,7 +392,7 @@ When `api` is set to `OpenAI`, the following settings can be defined in the `con
   - `"gpt-4-32k-0314"`
   - `"gpt-3.5-turbo"`
   - `"gpt-3.5-turbo-0301"`
-  - `"gpt-3.5-turbo"`
+  - `"text-davinci-003"`
   - `"text-davinci-002"`
   - `"text-curie-001"`
   - `"text-babbage-001"`
