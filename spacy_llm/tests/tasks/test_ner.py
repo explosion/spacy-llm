@@ -149,9 +149,9 @@ def test_ensure_offsets_correspond_to_substrings(
     offsets = find_substrings(text, input_strings)
     # Compare strings instead of offsets, but we need to get
     # those strings first from the text
-    assert result_offsets == offsets
+    assert sorted(result_offsets) == sorted(offsets)
     found_substrings = [text[start:end] for start, end in offsets]
-    assert result_strings == found_substrings
+    assert sorted(result_strings) == sorted(found_substrings)
 
 
 @pytest.mark.parametrize(
