@@ -165,14 +165,23 @@ To write a
 need to implement two functions: `generate_prompts` that takes a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transforms
 them into a list of prompts, and `parse_responses` that transforms the LLM outputs into annotations on the [`Doc`](https://spacy.io/api/doc), e.g. entity spans, text categories and more.
 
+To register your custom task with spaCy, decorate a factory function using the `spacy_llm.registry.llm_tasks`
+with a custom name that you can refer to in your config.
+
 > 📖 For more details, see the [**usage example on writing your own task**](usage_examples/README.md#writing-your-own-task)
 
 ```python
 from spacy_llm.registry import registry
 
-@registry.llm_tasks("spacy.MyTask.v1")
+
+@registry.llm_tasks("my_namespace.MyTask.v1")
+def make_my_task(labels: str, my_other_config_val: float) -> "MyTask":
+    labels_list = split_labels(labels)
+    return MyTask(labels=labels_list, my_other_config_val=my_other_config_val)
+
+
 class MyTask:
-    def __init__(self, labels: str):
+    def __init__(self, labels: List[str], my_other_config_val: float):
         ...
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
@@ -187,8 +196,9 @@ class MyTask:
 ```ini
 # config.cfg (excerpt)
 [components.llm.task]
-@llm_tasks = "spacy.MyTask.v1"
+@llm_tasks = "my_namespace.MyTask.v1"
 labels = LABEL1,LABEL2,LABEL3
+my_other_config_val = 0.3
 ```
 
 ## 📓 API

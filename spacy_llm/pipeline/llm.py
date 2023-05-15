@@ -160,6 +160,7 @@ class LLMWrapper(Pipe):
             binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
+        self._task = task
         self._template = task.generate_prompts
         self._parse = task.parse_responses
         self._backend = backend
