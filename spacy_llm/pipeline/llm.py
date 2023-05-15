@@ -27,7 +27,7 @@ CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
-            "config": {"model": "text-davinci-003"},
+            "config": {"model": "gpt-3.5-turbo"},
             "strict": True,
         },
         "cache": {"path": None, "batch_size": 64, "max_batches_in_mem": 4},

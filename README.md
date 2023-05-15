@@ -70,7 +70,7 @@ labels = COMPLIMENT,INSULT
 [components.llm.backend]
 @llm_backends = "spacy.REST.v1"
 api = "OpenAI"
-config = {"model": "text-davinci-003", "temperature": 0.3}
+config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 ```
 
 Now run:
@@ -147,7 +147,7 @@ nlp.add_pipe(
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
-            "config": {"model": "text-davinci-003"},
+            "config": {"model": "gpt-3.5-turbo"},
         },
     },
 )
@@ -352,7 +352,7 @@ of prompts (consistent with the output type of `task.generate_prompts()`) and re
 but specific implementations can have other signatures, like `Callable[[Iterable[str]], Iterable[str]]`.
 
 All built-in backends are registered in `llm_backends`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
-using the built-in REST protocol, and accesses the `"text-davinci-003"` model.
+using the built-in REST protocol, and accesses the `"gpt-3.5-turbo"` model.
 
 #### OpenAI
 
@@ -372,7 +372,7 @@ This default backend uses `requests` and a simple retry mechanism to access an A
 [components.llm.backend]
 @llm_backends = "spacy.REST.v1"
 api = "OpenAI"
-config = {"model": "text-davinci-003", "temperature": 0.3}
+config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 ```
 
 | Argument    | Type             | Default | Description                                                                                                          |
@@ -392,7 +392,7 @@ When `api` is set to `OpenAI`, the following settings can be defined in the `con
   - `"gpt-4-32k-0314"`
   - `"gpt-3.5-turbo"`
   - `"gpt-3.5-turbo-0301"`
-  - `"text-davinci-003"`
+  - `"gpt-3.5-turbo"`
   - `"text-davinci-002"`
   - `"text-curie-001"`
   - `"text-babbage-001"`

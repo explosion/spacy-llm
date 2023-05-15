@@ -10,7 +10,7 @@ PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.REST.v1",
         "api": "OpenAI",
-        "config": {"temperature": 0.3, "model": "text-davinci-003"},
+        "config": {"temperature": 0.3, "model": "gpt-3.5-turbo"},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
@@ -33,12 +33,10 @@ def test_rest_backend_error_handling():
             "llm",
             config={
                 "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "backend": {"config": {"model": "x-text-davinci-003"}},
+                "backend": {"config": {"model": "x-gpt-3.5-turbo"}},
             },
         )
-    assert "The specified model 'x-text-davinci-003' is not available." in str(
-        err.value
-    )
+    assert "The specified model 'x-gpt-3.5-turbo' is not available." in str(err.value)
 
 
 @pytest.mark.external
