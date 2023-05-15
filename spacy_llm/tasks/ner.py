@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import jinja2
 from pydantic import BaseModel
@@ -7,7 +7,7 @@ from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import lowercase_normalizer, registry
-from ..ty import ExamplesConfig
+from ..ty import ExamplesConfigType
 from ..util import split_labels
 
 
@@ -98,19 +98,19 @@ def find_substrings(
 
 @registry.llm_tasks("spacy.NER.v1")
 def make_ner_task(
-    labels: Union[str, Iterable[str]],
+    labels: str,
     template: str = _DEFAULT_NER_TEMPLATE,
-    examples: ExamplesConfig = None,
+    examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ) -> "NERTask":
-    labels = split_labels(labels)
+    labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     ner_examples = [NERExample(**eg) for eg in raw_examples] if raw_examples else None
     return NERTask(
-        labels=labels,
+        labels=labels_list,
         template=template,
         examples=ner_examples,
         normalizer=normalizer,
