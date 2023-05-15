@@ -160,8 +160,7 @@ class LLMWrapper(Pipe):
             binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
-        self._template = task.generate_prompts
-        self._parse = task.parse_responses
+        self._task = task
         self._backend = backend
         self._cache = Cache(
             path=cache["path"],  # type: ignore
@@ -178,12 +177,9 @@ class LLMWrapper(Pipe):
         """
         docs = [self._cache[doc]]
         if docs[0] is None:
-            docs = list(
-                self._parse(
-                    [doc],
-                    self._backend(self._template([doc])),
-                )
-            )
+            prompts = self._task.generate_prompts([doc])
+            responses = self._backend(prompts)
+            docs = list(self._task.parse_responses([doc], responses))
             assert len(docs) == 1
             assert isinstance(docs[0], Doc)
             self._cache.add(docs[0])
@@ -204,13 +200,10 @@ class LLMWrapper(Pipe):
             noncached_doc_batch = [
                 doc for i, doc in enumerate(doc_batch) if not is_cached[i]
             ]
-
             try:
-                modified_docs = iter(
-                    self._parse(
-                        doc_batch, self._backend(self._template(noncached_doc_batch))
-                    )
-                )
+                prompts = self._task.generate_prompts(noncached_doc_batch)
+                responses = self._backend(prompts)
+                modified_docs = iter(self._task.parse_responses(doc_batch, responses))
                 for i, doc in enumerate(doc_batch):
                     if is_cached[i]:
                         doc = self._cache[doc]
