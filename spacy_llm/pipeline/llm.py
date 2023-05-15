@@ -139,7 +139,7 @@ def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
         """Compares argument type of Iterables for compatibility.
         in_arg (Iterable): Input argument.
         out_arg (Iterable): Output argument.
-        RETURNS (bool): True type variables are of the same length and for type variables in out_arg are a subclass
+        RETURNS (bool): True if type variables are of the same length and if type variables in out_arg are a subclass
             of (or the same class as) the type variables in in_arg.
         """
         assert hasattr(out_arg, "__args__") and hasattr(in_arg, "__args__")
