@@ -1,8 +1,10 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Any
 
 import jinja2
+import spacy
 from pydantic import BaseModel
-from spacy.tokens import Doc
+from spacy.matcher import PhraseMatcher
+from spacy.tokens import Doc, Span
 from spacy.util import filter_spans
 
 from ..registry import lowercase_normalizer, registry
@@ -18,41 +20,38 @@ def find_substrings(
     text: str,
     substrings: Iterable[str],
     *,
+    lang: str = "xx",
     case_sensitive: bool = False,
     single_match: bool = False,
 ) -> Iterable[Tuple[int, int]]:
     """Given a list of substrings, find their character start and end positions
     in a text"""
+    nlp = spacy.blank(lang)
+    matcher = PhraseMatcher(nlp.vocab, attr="ORTH" if case_sensitive else "LOWER")
+    patterns = [nlp.make_doc(substring) for substring in substrings]
+    matcher.add("substrings", patterns)
+    # Perform the match
+    doc = nlp.make_doc(text)
+    matches: List[Span] = matcher(doc, as_spans=True)
 
-    def _unique(items: Iterable[str]) -> Iterable[str]:
-        """Remove duplicates without changing order"""
-        seen = set()
-        output = []
-        for item in items:
-            if item not in seen:
-                output.append(item)
-                seen.add(item)
-        return output
+    def _filter_first_hit(matches: List[Span]) -> Iterable[Tuple[int, int]]:
+        seen_spans = []
+        filtered = []
+        for match in matches:
+            start, end = match.start_char, match.end_char
+            span_text = doc.char_span(start, end).text
+            if not case_sensitive:
+                span_text = span_text.lower()
+            if span_text not in seen_spans:
+                filtered.append((start, end))
+                seen_spans.append(span_text)
+        return filtered
 
-    # Remove empty and duplicate strings, and lowercase everything if need be
-    substrings = [s for s in substrings if s and len(s) > 0]
-    if not case_sensitive:
-        text = text.lower()
-        substrings = [s.lower() for s in substrings]
-    substrings = _unique(substrings)
-    offsets = []
-    for substring in substrings:
-        search_from = 0
-        # Search until one hit is found. Continue only if single_match is False.
-        while True:
-            start = text.find(substring, search_from)
-            if start == -1:
-                break
-            end = start + len(substring)
-            offsets.append((start, end))
-            if single_match:
-                break
-            search_from = end
+    offsets = (
+        _filter_first_hit(matches)
+        if single_match
+        else [(match.start_char, match.end_char) for match in matches]
+    )
     return offsets
 
 
@@ -103,6 +102,7 @@ Text:
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
         ] = "contract",
+        lang: str = "xx",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
@@ -114,6 +114,7 @@ Text:
             passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
+        lang (str): the language code the PhraseMatcher will use for finding substrings.
         case_sensitive: Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
@@ -125,6 +126,7 @@ Text:
         self._examples = [NERExample(**eg) for eg in examples()] if examples else None
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
+        self._lang = lang
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
@@ -175,6 +177,7 @@ Text:
                 offsets = find_substrings(
                     doc.text,
                     phrases,
+                    lang=self._lang,
                     case_sensitive=self._case_sensitive_matching,
                     single_match=self._single_match,
                 )

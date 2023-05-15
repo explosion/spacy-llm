@@ -31,6 +31,7 @@ def zeroshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v1"
     labels = PER,ORG,LOC
+    lang = ${nlp.lang}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -58,6 +59,7 @@ def fewshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v1"
     labels = PER,ORG,LOC
+    lang = ${{nlp.lang}}
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -456,3 +458,41 @@ def test_example_not_following_basemodel():
 
         with pytest.raises(ValidationError):
             NERTask(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+
+
+@pytest.mark.parametrize(
+    "substrings,case_sensitive,single_match,expected",
+    [
+        # fmt: off
+        (["Jack","Jill"], True, True, ["Jack", "Jill"]),
+        (["jaCk", "jilL"], False, True, ["Jack", "Jill"]),
+        (["Jack", "Jill"], True, False, ["Jack", "Jill", "Jack", "Jill"]),
+        (["jaCk", "jilL"], False, False, ["Jack", "Jill", "Jack", "Jill"]),
+        # What if nothing matched?
+        (["Alice", "Bob"], False, False, []),
+        # What if LLM gave duplicates in the response?
+        (["Jack", "Jack", "Jill"], False, True, ["Jack", "Jill"]),
+        (["Jack", "Jack", "Jill"], False, False, ["Jack", "Jill", "Jack", "Jill"]),
+        # What if LLM didn't include Jill?
+        (["Jack"], False, True, ["Jack"]),
+        (["Jack"], False, False, ["Jack", "Jack"]),
+        # fmt: on
+    ],
+)
+def test_find_substring_output(substrings, case_sensitive, single_match, expected):
+    """Test if find_substring works as expected given different configurations"""
+    text = "Jack and Jill went up the hill. Jack fell down and broke his crown. Jill came tumbling after."
+    lang = "en"
+
+    nlp = spacy.blank(lang)
+    offsets = find_substrings(
+        text,
+        substrings,
+        lang=lang,
+        case_sensitive=case_sensitive,
+        single_match=single_match,
+    )
+
+    doc = nlp.make_doc(text)
+    predicted = [doc.char_span(start, end).text for start, end in offsets]
+    assert predicted == expected
