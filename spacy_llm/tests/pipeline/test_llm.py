@@ -9,7 +9,7 @@ from spacy.tokens import Doc
 from spacy_llm.tasks import NoopTask
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from spacy_llm.compat import has_openai_key
+from ..compat import has_openai_key
 
 
 @pytest.fixture

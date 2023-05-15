@@ -4,7 +4,7 @@ import copy
 import pytest
 import spacy
 
-from spacy_llm.compat import has_openai_key
+from ..compat import has_openai_key
 
 PIPE_CFG = {
     "backend": {
