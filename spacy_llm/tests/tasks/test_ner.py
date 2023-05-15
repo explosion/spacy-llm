@@ -10,7 +10,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import strip_normalizer, lowercase_normalizer, fewshot_reader
 from spacy_llm.tasks.ner import find_substrings, NERTask
-from spacy_llm.compat import has_openai_key
+from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 
