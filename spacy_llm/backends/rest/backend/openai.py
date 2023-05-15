@@ -126,7 +126,7 @@ class OpenAIBackend(Backend):
                 return [srsly.json_dumps(responses)] * len(prompts)
         assert len(responses["choices"]) == len(prompts)
 
-        for prompt, response in zip(prompts, responses["choices"]):
+        for response in responses["choices"]:
             if url == Endpoints.chat:
                 if "message" in response:
                     api_responses.append(response["message"]["content"])
