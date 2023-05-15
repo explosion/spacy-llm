@@ -7,7 +7,7 @@ from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import lowercase_normalizer, registry
-from ..ty import ExamplesConfigType
+from ..ty import ExamplesConfig
 from ..util import split_labels
 
 
@@ -100,7 +100,7 @@ def find_substrings(
 def make_ner_task(
     labels: Union[str, Iterable[str]],
     template: str = _DEFAULT_NER_TEMPLATE,
-    examples: ExamplesConfigType = None,
+    examples: ExamplesConfig = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
     case_sensitive_matching: bool = False,
