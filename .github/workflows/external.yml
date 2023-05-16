@@ -5,6 +5,9 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -25,10 +28,12 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          pytest spacy_llm/tests --external
+        shell: bash
+        run: pytest spacy_llm/tests --external
+
+      - name: Run usage tests
+        shell: bash
+        run: pytest usage_examples --external
 
       - name: Report Status
         if: always()
@@ -37,5 +42,6 @@ jobs:
           status: ${{ job.status }}
           notification_title: "{workflow} have {status_message}"
           message_format: "{emoji} external workflow has {status_message}"
+          notify_when: "failure"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_MONITORING_WEBHOOK_URL }}

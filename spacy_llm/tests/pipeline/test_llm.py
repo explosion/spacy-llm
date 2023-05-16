@@ -9,7 +9,7 @@ from spacy.tokens import Doc
 from spacy_llm.tasks import NoopTask
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from spacy_llm.compat import has_openai_key
+from ..compat import has_openai_key
 
 
 @pytest.fixture
@@ -25,8 +25,8 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
-@pytest.mark.external
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+# @pytest.mark.external
+# @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
@@ -72,7 +72,6 @@ def test_type_checking_valid() -> None:
         nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
 
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
@@ -93,7 +92,14 @@ def test_type_checking_invalid() -> None:
     with pytest.warns(UserWarning) as record:
         nlp.add_pipe(
             "llm",
-            config={"task": {"@llm_tasks": "IncorrectTypes.v1"}},
+            config={
+                "task": {"@llm_tasks": "IncorrectTypes.v1"},
+                "backend": {
+                    "@llm_backends": "spacy.REST.v1",
+                    "api": "NoOp",
+                    "config": {"model": "NoOp"},
+                },
+            },
         )
     assert len(record) == 2
     assert (

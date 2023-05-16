@@ -4,13 +4,13 @@ import copy
 import pytest
 import spacy
 
-from spacy_llm.compat import has_openai_key
+from ..compat import has_openai_key
 
 PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.REST.v1",
         "api": "OpenAI",
-        "config": {"temperature": 0.3, "model": "text-davinci-003"},
+        "config": {"temperature": 0.3, "model": "gpt-3.5-turbo"},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
@@ -33,26 +33,32 @@ def test_rest_backend_error_handling():
             "llm",
             config={
                 "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "backend": {"config": {"model": "x-text-davinci-003"}},
+                "backend": {"config": {"model": "x-gpt-3.5-turbo"}},
             },
         )
-    assert "The specified model 'x-text-davinci-003' is not available." in str(
-        err.value
-    )
+    assert "The specified model 'x-gpt-3.5-turbo' is not available." in str(err.value)
 
 
+@pytest.mark.parametrize("model", ("gpt-3.5-turbo", "text-davinci-002"))
 @pytest.mark.external
-def test_openai_chat():
-    """Test OpenAI call to /chat backend (/completions backend is in PIPE_CFG and tested in other tests)."""
+def test_openai(model: str):
+    """Test OpenAI call to /chat/completions and /completions backend.
+    model (str): Model to use.
+    """
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(PIPE_CFG)
-    cfg["backend"]["config"]["model"] = "gpt-3.5-turbo"
-    cfg["backend"]["config"]["url"] = "https://api.openai.com/v1/chat/completions"
+    cfg["backend"]["config"]["model"] = model
+    cfg["backend"]["config"]["url"] = (
+        "https://api.openai.com/v1/chat/completions"
+        if model == "gpt-3.5-turbo"
+        else "https://api.openai.com/v1/completions"
+    )
     nlp.add_pipe(
         "llm",
         config=cfg,
     )
     nlp("test")
+    nlp.pipe(["test 1", "test 2"])
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")

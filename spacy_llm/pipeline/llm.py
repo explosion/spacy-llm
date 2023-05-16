@@ -1,8 +1,9 @@
+import logging
 import typing
 import warnings
 from pathlib import Path
-from typing import Iterable, Tuple, Iterator, Type
-from typing import cast, Union, Dict, Optional, Any
+from typing import Iterable, List, Tuple, Iterator, Type
+from typing import cast, Optional, Any
 
 import spacy
 from spacy.language import Language
@@ -10,14 +11,21 @@ from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
-from wasabi import msg
 
 from .. import registry  # noqa: F401
 from ..cache import Cache
+from ..compat import TypedDict
 from ..ty import LLMTask, PromptExecutor
 
 
-CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
+
+class CacheConfigType(TypedDict):
+    path: Optional[Path]
+    batch_size: int
+    max_batches_in_mem: int
 
 
 @Language.factory(
@@ -29,11 +37,10 @@ CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
-            "config": {"model": "text-davinci-003"},
+            "config": {"model": "gpt-3.5-turbo"},
             "strict": True,
         },
         "cache": {"path": None, "batch_size": 64, "max_batches_in_mem": 4},
-        "verbose": False,
     },
 )
 def make_llm(
@@ -42,7 +49,6 @@ def make_llm(
     task: Optional[LLMTask],
     backend: PromptExecutor,
     cache: CacheConfigType,
-    verbose: bool = False,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -69,7 +75,6 @@ def make_llm(
         backend=backend,
         cache=cache,
         vocab=nlp.vocab,
-        verbose=verbose,
     )
 
 
@@ -124,15 +129,53 @@ def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
 
     template_output = type_hints["template"]["return"]
 
+    # Check that all variables are Iterables.
+    for var, msg in (
+        (template_output, "`task.generate_prompts()` needs to return an `Iterable`."),
+        (
+            backend_input,
+            "The prompts variable in the 'backend' needs to be an `Iterable`.",
+        ),
+        (backend_output, "The `backend` function needs to return an `Iterable`."),
+        (
+            parse_input,
+            "`responses` in `task.parse_responses()` needs to be an `Iterable`.",
+        ),
+    ):
+        if not var != Iterable:
+            raise ValueError(msg)
+
+    def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
+        """Compares argument type of Iterables for compatibility.
+        in_arg (Iterable): Input argument.
+        out_arg (Iterable): Output argument.
+        RETURNS (bool): True if type variables are of the same length and if type variables in out_arg are a subclass
+            of (or the same class as) the type variables in in_arg.
+        """
+        assert hasattr(out_arg, "__args__") and hasattr(in_arg, "__args__")
+        # Replace Any with object to make issubclass() check work.
+        out_type_vars = [arg if arg != Any else object for arg in out_arg.__args__]
+        in_type_vars = [arg if arg != Any else object for arg in in_arg.__args__]
+
+        if len(out_type_vars) != len(in_type_vars):
+            return False
+
+        return all(
+            [
+                issubclass(out_tv, in_tv) or issubclass(in_tv, out_tv)
+                for out_tv, in_tv in zip(out_type_vars, in_type_vars)
+            ]
+        )
+
     # Ensure that the template returns the same type as expected by the backend
-    if template_output != backend_input and backend_input != Iterable[Any]:
+    if not _do_args_match(template_output, backend_input):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
             f"`backend` (`{backend_input}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the backend
-    if parse_input != backend_output and backend_output != Iterable[Any]:
+    if not _do_args_match(backend_output, parse_input):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
             f"`task.parse_responses()` (`{parse_input}`)."
@@ -150,7 +193,6 @@ class LLMWrapper(Pipe):
         task: LLMTask,
         backend: PromptExecutor,
         cache: CacheConfigType,
-        verbose: bool = False,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -167,16 +209,13 @@ class LLMWrapper(Pipe):
         """
         self._name = name
         self._task = task
-        self._template = task.generate_prompts
-        self._parse = task.parse_responses
         self._backend = backend
         self._cache = Cache(
-            path=cache["path"],  # type: ignore
-            batch_size=int(cache["batch_size"]),  # type: ignore
-            max_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
+            path=cache["path"],
+            batch_size=int(cache["batch_size"]),
+            max_batches_in_mem=int(cache["max_batches_in_mem"]),
             vocab=vocab,
         )
-        self._verbose = verbose
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -184,21 +223,7 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        docs = [self._cache[doc]]
-        if docs[0] is None:
-            prompt = list(self._template([doc]))[0]
-            if self._verbose:
-                msg.divider("Generated Prompt")
-                print(prompt)  # noqa T201
-            response = list(self._backend([prompt]))[0]
-            if self._verbose:
-                msg.divider("Response from Backend")
-                print(response)  # noqa T201
-            docs = list(self._parse([doc], [response]))
-            assert len(docs) == 1
-            assert isinstance(docs[0], Doc)
-            self._cache.add(docs[0])
-
+        docs = self._process_docs([doc])
         assert isinstance(docs[0], Doc)
         return docs[0]
 
@@ -211,28 +236,43 @@ class LLMWrapper(Pipe):
         """
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
-            is_cached = [doc in self._cache for doc in doc_batch]
-            noncached_doc_batch = [
-                doc for i, doc in enumerate(doc_batch) if not is_cached[i]
-            ]
-
             try:
-                modified_docs = iter(
-                    self._parse(
-                        doc_batch, self._backend(self._template(noncached_doc_batch))
-                    )
-                )
-                for i, doc in enumerate(doc_batch):
-                    if is_cached[i]:
-                        doc = self._cache[doc]
-                        assert isinstance(doc, Doc)
-                        yield doc
-                    else:
-                        doc = next(modified_docs)
-                        self._cache.add(doc)
-                        yield doc
+                yield from iter(self._process_docs(doc_batch))
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
+
+    def _process_docs(self, docs: List[Doc]) -> List[Doc]:
+        docs = list(docs)
+        is_cached = [doc in self._cache for doc in docs]
+
+        noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
+        if len(noncached_doc_batch) < len(docs):
+            logger.debug(
+                "Found %d docs in cache. Processing %d docs not found in cache",
+                len(docs) - len(noncached_doc_batch),
+                len(noncached_doc_batch),
+            )
+
+        prompts = list(self._task.generate_prompts(noncached_doc_batch))
+        responses = list(self._backend(prompts))
+        for prompt, response, doc in zip(prompts, responses, noncached_doc_batch):
+            logger.debug("Generated prompt for doc: %s", doc.text)
+            logger.debug(prompt)
+            logger.debug("Backend response for doc: %s", doc.text)
+            logger.debug(response)
+
+        modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
+        final_docs = []
+        for i, doc in enumerate(docs):
+            if is_cached[i]:
+                cached_doc = self._cache[doc]
+                assert cached_doc is not None
+                final_docs.append(cached_doc)
+            else:
+                doc = next(modified_docs)
+                self._cache.add(doc)
+                final_docs.append(doc)
+        return final_docs
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
