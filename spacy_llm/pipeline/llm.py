@@ -2,7 +2,7 @@ import typing
 import warnings
 from pathlib import Path
 from typing import Iterable, Tuple, Iterator, Type
-from typing import cast, Union, Dict, Optional, Any
+from typing import cast, Optional, Any
 
 import spacy
 from spacy.language import Language
@@ -12,10 +12,14 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..cache import Cache
+from ..compat import TypedDict
 from ..ty import LLMTask, PromptExecutor
 
 
-CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
+class CacheConfigType(TypedDict):
+    path: Optional[Path]
+    batch_size: int
+    max_batches_in_mem: int
 
 
 @Language.factory(
@@ -164,9 +168,9 @@ class LLMWrapper(Pipe):
         self._parse = task.parse_responses
         self._backend = backend
         self._cache = Cache(
-            path=cache["path"],  # type: ignore
-            batch_size=int(cache["batch_size"]),  # type: ignore
-            max_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
+            path=cache["path"],
+            batch_size=int(cache["batch_size"]),
+            max_batches_in_mem=int(cache["max_batches_in_mem"]),
             vocab=vocab,
         )
 
