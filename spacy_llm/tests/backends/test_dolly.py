@@ -42,6 +42,7 @@ def test_init():
     nlp("This is a test.")
 
 
+# @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
