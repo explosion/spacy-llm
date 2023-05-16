@@ -1,5 +1,5 @@
 import warnings
-from typing import Iterable
+from typing import Iterable, Dict, Any
 
 import pytest
 import spacy
@@ -9,31 +9,37 @@ from spacy.tokens import Doc
 from spacy_llm.tasks import NoopTask
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from ..compat import has_openai_key
 
 
 @pytest.fixture
-def nlp() -> Language:
+def noop_config() -> Dict[str, Any]:
+    """Returns NoOp config.
+    RETURNS (Dict[str, Any]): NoOp config.
+    """
+    return {
+        "task": {"@llm_tasks": "spacy.NoOp.v1"},
+        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+    }
+
+
+@pytest.fixture
+def nlp(noop_config) -> Language:
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
+    nlp.add_pipe("llm", config=noop_config)
     return nlp
 
 
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_init(nlp):
     """Test pipeline intialization."""
     assert ["llm"] == nlp.pipe_names
 
 
-# @pytest.mark.external
-# @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
     assert len(docs) == 2
 
 
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_pipe_empty(nlp):
     """Test call .pipe() with empty batch."""
     assert list(nlp.pipe(texts=[])) == []
@@ -62,8 +68,8 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-def test_type_checking_valid() -> None:
+@pytest.mark.external
+def test_type_checking_valid(config) -> None:
     """Test type checking for consistency between functions."""
     # Ensure default config doesn't raise warnings.
     nlp = spacy.blank("en")
@@ -72,7 +78,7 @@ def test_type_checking_valid() -> None:
         nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
 
-def test_type_checking_invalid() -> None:
+def test_type_checking_invalid(noop_config) -> None:
     """Test type checking for consistency between functions."""
 
     @registry.llm_tasks("IncorrectTypes.v1")
@@ -90,17 +96,8 @@ def test_type_checking_invalid() -> None:
 
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:
-        nlp.add_pipe(
-            "llm",
-            config={
-                "task": {"@llm_tasks": "IncorrectTypes.v1"},
-                "backend": {
-                    "@llm_backends": "spacy.REST.v1",
-                    "api": "NoOp",
-                    "config": {"model": "NoOp"},
-                },
-            },
-        )
+        noop_config["task"] = {"@llm_tasks": "IncorrectTypes.v1"}
+        nlp.add_pipe("llm", config=noop_config)
     assert len(record) == 2
     assert (
         str(record[0].message)
