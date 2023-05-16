@@ -172,6 +172,7 @@ with a custom name that you can refer to in your config.
 
 ```python
 from spacy_llm.registry import registry
+from spacy_llm.util import split_labels
 
 
 @registry.llm_tasks("my_namespace.MyTask.v1")

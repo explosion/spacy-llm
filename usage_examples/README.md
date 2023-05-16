@@ -63,6 +63,7 @@ The `spacy-llm` library requires tasks to be defined as a class and registered i
 
 ```python
 from spacy_llm.registry import registry
+from spacy_llm.util import split_labels
 
 
 @registry.llm_tasks("my_namespace.MyTask.v1")
