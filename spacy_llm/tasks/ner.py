@@ -7,7 +7,7 @@ from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import lowercase_normalizer, registry
-from ..ty import ExamplesConfigType
+from ..ty import ExamplesConfigType, TemplateConfigType
 from ..util import split_labels
 
 
@@ -99,7 +99,7 @@ def find_substrings(
 @registry.llm_tasks("spacy.NER.v1")
 def make_ner_task(
     labels: str,
-    template: str = _DEFAULT_NER_TEMPLATE,
+    template: TemplateConfigType = _DEFAULT_NER_TEMPLATE,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
@@ -109,9 +109,10 @@ def make_ner_task(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     ner_examples = [NERExample(**eg) for eg in raw_examples] if raw_examples else None
+    task_template = template() if callable(template) else template
     return NERTask(
         labels=labels_list,
-        template=template,
+        template=task_template,
         examples=ner_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,

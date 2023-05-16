@@ -12,6 +12,7 @@ PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
+TemplateConfigType = Union[str, Callable[[], str], None]
 
 
 @runtime_checkable
