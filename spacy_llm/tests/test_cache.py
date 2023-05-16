@@ -74,7 +74,9 @@ def test_caching(use_pipe: bool) -> None:
         nlp_2 = _init_nlp(tmpdir)
         [nlp_2(text) for text in texts]
         cache = nlp_2.get_pipe("llm")._cache  # type: ignore
-        assert cache._stats["hit"] == n
+        # The number of hits should be batch_size n * 2 since
+        # __contains__ and __getitem__ both log hits
+        assert cache._stats["hit"] == n * 2
         assert cache._stats["missed"] == 0
         assert cache._stats["added"] == 0
         assert cache._stats["persisted"] == 0
