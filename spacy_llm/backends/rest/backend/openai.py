@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Dict, Iterable, List, Union
+from typing import Dict, Iterable, List, Any, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -97,42 +97,60 @@ class OpenAIBackend(Backend):
         }
         api_responses: List[str] = []
         prompts = list(prompts)
-
-        data: Dict[str, Union[List[str], List[Dict[str, str]]]] = {}
         url = self._url if self._url else self.supported_models[self._config["model"]]
-        if url == Endpoints.chat:
-            data = {
-                "messages": [{"role": "user", "content": prompt} for prompt in prompts]
-            }
-        elif url == Endpoints.non_chat:
-            data = {"prompt": prompts}
 
-        r = self.retry(
-            lambda: requests.post(
-                url,
-                headers=headers,
-                json={**data, **self._config},
-                timeout=self._timeout,
-            ),
-        )
-        r.raise_for_status()
-        responses = r.json()
+        def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
+            r = self.retry(
+                lambda: requests.post(
+                    url,
+                    headers=headers,
+                    json={**json_data, **self._config},
+                    timeout=self._timeout,
+                ),
+            )
+            r.raise_for_status()
+            responses = r.json()
 
-        # Process responses.
-        if "error" in responses:
-            if self._strict:
-                raise ValueError(f"API call failed: {responses}.")
-            else:
-                return [srsly.json_dumps(responses)] * len(prompts)
-        assert len(responses["choices"]) == len(prompts)
-
-        for response in responses["choices"]:
-            if url == Endpoints.chat:
-                if "message" in response:
-                    api_responses.append(response["message"]["content"])
+            if "error" in responses:
+                if self._strict:
+                    raise ValueError(f"API call failed: {responses}.")
                 else:
-                    api_responses.append(srsly.json_dumps(response))
-            elif url == Endpoints.non_chat:
+                    assert isinstance(prompts, Sized)
+                    return {"error": [srsly.json_dumps(responses)] * len(prompts)}
+
+            return responses
+
+        if url == Endpoints.chat:
+            # todo
+            #   - test pipe with chat and other models in openai tests
+            #   - add v0.2.0 release ticket to board
+            #   - modify PR template with item to have run all external tests
+
+            # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
+            for prompt in prompts:
+                responses = _request(
+                    {"messages": [{"role": "user", "content": prompt}]}
+                )
+                if "error" in responses:
+                    return responses["error"]
+
+                # Process responses.
+                assert len(responses["choices"]) == 1
+                response = responses["choices"][0]
+                if "text" in response:
+                    api_responses = (
+                        [response["text"]]
+                        if "text" in response
+                        else [srsly.json_dumps(response)]
+                    )
+
+        elif url == Endpoints.non_chat:
+            responses = _request({"prompt": prompts})
+            if "error" in responses:
+                return responses["error"]
+            assert len(responses["choices"]) == len(prompts)
+
+            for response in responses["choices"]:
                 if "text" in response:
                     api_responses.append(response["text"])
                 else:
