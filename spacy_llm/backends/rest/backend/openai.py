@@ -121,11 +121,6 @@ class OpenAIBackend(Backend):
             return responses
 
         if url == Endpoints.chat:
-            # todo
-            #   - test pipe with chat and other models in openai tests
-            #   - add v0.2.0 release ticket to board
-            #   - modify PR template with item to have run all external tests
-
             # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
             for prompt in prompts:
                 responses = _request(
