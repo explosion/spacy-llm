@@ -136,6 +136,7 @@ class NERTask:
         """Default NER task.
 
         labels (str): Comma-separated list of labels to pass to the template.
+        template (str): Prompt template passed to the model.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.

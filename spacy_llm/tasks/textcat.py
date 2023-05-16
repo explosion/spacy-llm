@@ -118,6 +118,7 @@ class TextCatTask:
 
         labels (str): Comma-separated list of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
+        template (str): Prompt template passed to the model.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
