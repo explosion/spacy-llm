@@ -5,12 +5,12 @@ import pytest
 from ..ner_dolly import run_ner_dolly_pipeline
 from ..textcat_openai import run_textcat_openai_pipeline
 
-# from thinc.compat import has_torch_cuda_gpu
+from thinc.compat import has_torch_cuda_gpu
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
 
-# @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 @pytest.mark.parametrize(
     "config_name", ("dolly_ner_fewshot.cfg", "dolly_ner_zeroshot.cfg")
 )
