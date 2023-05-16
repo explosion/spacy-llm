@@ -2,7 +2,7 @@ import typing
 import warnings
 from pathlib import Path
 from typing import Iterable, Tuple, Iterator, Type
-from typing import cast, Union, Dict, Optional, Any
+from typing import cast, Optional, Any
 
 import spacy
 from spacy.language import Language
@@ -12,10 +12,14 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..cache import Cache
+from ..compat import TypedDict
 from ..ty import LLMTask, PromptExecutor
 
 
-CacheConfigType = Dict[str, Union[Optional[str], bool, int]]
+class CacheConfigType(TypedDict):
+    path: Optional[Path]
+    batch_size: int
+    max_batches_in_mem: int
 
 
 @Language.factory(
@@ -119,15 +123,53 @@ def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
 
     template_output = type_hints["template"]["return"]
 
+    # Check that all variables are Iterables.
+    for var, msg in (
+        (template_output, "`task.generate_prompts()` needs to return an `Iterable`."),
+        (
+            backend_input,
+            "The prompts variable in the 'backend' needs to be an `Iterable`.",
+        ),
+        (backend_output, "The `backend` function needs to return an `Iterable`."),
+        (
+            parse_input,
+            "`responses` in `task.parse_responses()` needs to be an `Iterable`.",
+        ),
+    ):
+        if not var != Iterable:
+            raise ValueError(msg)
+
+    def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
+        """Compares argument type of Iterables for compatibility.
+        in_arg (Iterable): Input argument.
+        out_arg (Iterable): Output argument.
+        RETURNS (bool): True if type variables are of the same length and if type variables in out_arg are a subclass
+            of (or the same class as) the type variables in in_arg.
+        """
+        assert hasattr(out_arg, "__args__") and hasattr(in_arg, "__args__")
+        # Replace Any with object to make issubclass() check work.
+        out_type_vars = [arg if arg != Any else object for arg in out_arg.__args__]
+        in_type_vars = [arg if arg != Any else object for arg in in_arg.__args__]
+
+        if len(out_type_vars) != len(in_type_vars):
+            return False
+
+        return all(
+            [
+                issubclass(out_tv, in_tv)
+                for out_tv, in_tv in zip(out_type_vars, in_type_vars)
+            ]
+        )
+
     # Ensure that the template returns the same type as expected by the backend
-    if template_output != backend_input and backend_input != Iterable[Any]:
+    if not _do_args_match(template_output, backend_input):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
             f"`backend` (`{backend_input}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the backend
-    if parse_input != backend_output and backend_output != Iterable[Any]:
+    if not _do_args_match(backend_output, parse_input):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
             f"`task.parse_responses()` (`{parse_input}`)."
@@ -160,13 +202,12 @@ class LLMWrapper(Pipe):
             binary .spacy files. Docs found in the cache directory won't be reprocessed.
         """
         self._name = name
-        self._template = task.generate_prompts
-        self._parse = task.parse_responses
+        self._task = task
         self._backend = backend
         self._cache = Cache(
-            path=cache["path"],  # type: ignore
-            batch_size=int(cache["batch_size"]),  # type: ignore
-            max_batches_in_mem=int(cache["max_batches_in_mem"]),  # type: ignore
+            path=cache["path"],
+            batch_size=int(cache["batch_size"]),
+            max_batches_in_mem=int(cache["max_batches_in_mem"]),
             vocab=vocab,
         )
 
@@ -178,12 +219,9 @@ class LLMWrapper(Pipe):
         """
         docs = [self._cache[doc]]
         if docs[0] is None:
-            docs = list(
-                self._parse(
-                    [doc],
-                    self._backend(self._template([doc])),
-                )
-            )
+            prompts = self._task.generate_prompts([doc])
+            responses = self._backend(prompts)
+            docs = list(self._task.parse_responses([doc], responses))
             assert len(docs) == 1
             assert isinstance(docs[0], Doc)
             self._cache.add(docs[0])
@@ -204,13 +242,10 @@ class LLMWrapper(Pipe):
             noncached_doc_batch = [
                 doc for i, doc in enumerate(doc_batch) if not is_cached[i]
             ]
-
             try:
-                modified_docs = iter(
-                    self._parse(
-                        doc_batch, self._backend(self._template(noncached_doc_batch))
-                    )
-                )
+                prompts = self._task.generate_prompts(noncached_doc_batch)
+                responses = self._backend(prompts)
+                modified_docs = iter(self._task.parse_responses(doc_batch, responses))
                 for i, doc in enumerate(doc_batch):
                     if is_cached[i]:
                         doc = self._cache[doc]

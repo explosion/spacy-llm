@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Dict, Union, Optional, Iterable, List
 
@@ -14,7 +13,7 @@ class Cache:
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Optional[Union[str, Path]],
         batch_size: int,
         max_batches_in_mem: int,
         vocab: Vocab,
@@ -56,7 +55,7 @@ class Cache:
         if self._path is None:
             return
 
-        if self._path.exists() and not os.path.isdir(self._path):
+        if self._path.exists() and not self._path.is_dir():
             raise ValueError("Cache directory exists and is not a directory.")
         self._path.mkdir(parents=True, exist_ok=True)
 

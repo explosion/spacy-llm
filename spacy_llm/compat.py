@@ -6,6 +6,11 @@ if sys.version_info[:2] >= (3, 8):  # Python 3.8+
 else:
     from typing_extensions import Protocol, runtime_checkable, Literal  # noqa: F401
 
+if sys.version_info[:2] >= (3, 9):  # Python 3.8+
+    from typing import TypedDict  # noqa: F401
+else:
+    from typing_extensions import TypedDict  # noqa: F401
+
 try:
     import langchain
 

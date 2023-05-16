@@ -25,8 +25,8 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
-@pytest.mark.external
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+# @pytest.mark.external
+# @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
