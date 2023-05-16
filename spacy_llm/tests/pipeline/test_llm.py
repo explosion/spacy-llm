@@ -69,7 +69,7 @@ def test_llm_serialize_disk():
 
 
 @pytest.mark.external
-def test_type_checking_valid(config) -> None:
+def test_type_checking_valid(noop_config) -> None:
     """Test type checking for consistency between functions."""
     # Ensure default config doesn't raise warnings.
     nlp = spacy.blank("en")
