@@ -1,4 +1,5 @@
 from .pipeline import llm
+from .pipeline.llm import logger  # noqa: F401
 from . import backends  # noqa: F401
 from . import registry  # noqa: F401
 from . import tasks  # noqa: F401
