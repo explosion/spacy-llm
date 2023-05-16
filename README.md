@@ -247,6 +247,7 @@ examples = null
 | Argument                  | Type                                    | Default      | Description                                                                                                                                  |
 | ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `label_descriptions`      | `Optional[Dict[str, str]]`              | `None`       | Optional dict of label: description of label to better instruct the LLM on what to extract for each label.                                                                                                              |
 | `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
 | `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
 | `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
@@ -289,6 +290,20 @@ labels = PERSON,ORGANISATION,LOCATION
 @misc = "spacy.FewShotReader.v1"
 path = "ner_examples.yml"
 ```
+
+If you don't have specific examples to provide to the LLM, you can write definitions for each label and provide them via the `label_descriptions` argument. This lets you tell the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name. Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief description along with some examples and counter examples seems to work quite well.
+
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v1"
+labels = PERSON,SPORTS_TEAM
+[components.llm.task.label_descriptions]
+PERSON = "Extract any named individual in the text."
+SPORTS_TEAM = "Extract the names of any professional sports team. e.g. Golden State Warriors, LA Lakers, Man City, Real Madrid"
+```
+
+> Label descriptions can also be used with explicit examples to give as much info to the LLM backend as possible.
 
 #### spacy.TextCat.v1
 
