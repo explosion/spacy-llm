@@ -26,6 +26,15 @@ def run_pipeline(
 
     msg.text(f"Loading config from {config_path}", show=verbose)
     config = util.load_config(config_path)
+    # Reload config with dynamic path for examples, if available in config.
+    if "examples" in config.get("paths", {}):
+        config = util.load_config(
+            config_path,
+            overrides={
+                "paths.examples": str(Path(__file__).parent / "textcat_examples.jsonl")
+            },
+        )
+
     nlp = util.load_model_from_config(config, auto_fill=True)
     doc = nlp(text)
 

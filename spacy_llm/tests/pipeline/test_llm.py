@@ -72,7 +72,6 @@ def test_type_checking_valid() -> None:
         nlp.add_pipe("llm", config={"task": {"@llm_tasks": "spacy.NoOp.v1"}})
 
 
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_type_checking_invalid() -> None:
     """Test type checking for consistency between functions."""
 
@@ -93,7 +92,14 @@ def test_type_checking_invalid() -> None:
     with pytest.warns(UserWarning) as record:
         nlp.add_pipe(
             "llm",
-            config={"task": {"@llm_tasks": "IncorrectTypes.v1"}},
+            config={
+                "task": {"@llm_tasks": "IncorrectTypes.v1"},
+                "backend": {
+                    "@llm_backends": "spacy.REST.v1",
+                    "api": "NoOp",
+                    "config": {"model": "NoOp"},
+                },
+            },
         )
     assert len(record) == 2
     assert (

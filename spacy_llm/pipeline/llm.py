@@ -156,7 +156,7 @@ def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
 
         return all(
             [
-                issubclass(out_tv, in_tv)
+                issubclass(out_tv, in_tv) or issubclass(in_tv, out_tv)
                 for out_tv, in_tv in zip(out_type_vars, in_type_vars)
             ]
         )
