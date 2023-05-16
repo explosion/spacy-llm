@@ -132,12 +132,11 @@ class OpenAIBackend(Backend):
                 # Process responses.
                 assert len(responses["choices"]) == 1
                 response = responses["choices"][0]
-                if "text" in response:
-                    api_responses = (
-                        [response["text"]]
-                        if "text" in response
-                        else [srsly.json_dumps(response)]
+                api_responses = [
+                    response.get("message", {}).get(
+                        "content", srsly.json_dumps(response)
                     )
+                ]
 
         elif url == Endpoints.non_chat:
             responses = _request({"prompt": prompts})
