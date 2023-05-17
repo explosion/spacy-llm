@@ -1,11 +1,10 @@
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, List, Optional
 
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 from ..compat import Literal
 from ..registry import registry
 from .ner import NERTask
-from .util import find_substrings
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
@@ -59,7 +58,7 @@ Text:
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        """Default NER task.
+        """Default SpanCat task.
 
         labels (str): Comma-separated list of labels to pass to the template.
         spans_key (str): Key of the `Doc.spans` dict to save under.
@@ -80,27 +79,13 @@ Text:
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
-        self._span_key = spans_key
+        self._spans_key = spans_key
 
-    def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, responses):
-            spans = []
-            for label, phrases in self._format_response(prompt_response):
-                # For each phrase, find the substrings in the text
-                # and create a Span
-                offsets = find_substrings(
-                    doc.text,
-                    phrases,
-                    case_sensitive=self._case_sensitive_matching,
-                    single_match=self._single_match,
-                )
-                for start, end in offsets:
-                    span = doc.char_span(
-                        start, end, alignment_mode=self._alignment_mode, label=label
-                    )
-                    if span is not None:
-                        spans.append(span)
-            doc.spans[self._span_key] = spans
-            yield doc
+    def assign_spans(
+        self,
+        doc: Doc,
+        spans: List[Span],
+    ) -> Doc:
+        """Assign spans to the document."""
+        doc.spans[self._spans_key] = spans
+        return doc

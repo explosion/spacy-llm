@@ -1,7 +1,7 @@
-from typing import Any, Callable, Iterable, Optional, Tuple
+from typing import Any, Callable, Iterable, List, Optional, Tuple
 
 import jinja2
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.util import filter_spans
 
 from ..compat import Literal
@@ -117,6 +117,15 @@ Text:
                         output.append((self._label_dict[norm_label], _phrases))
         return output
 
+    def assign_spans(
+        self,
+        doc: Doc,
+        spans: List[Span],
+    ) -> Doc:
+        """Assign spans to the document."""
+        doc.set_ents(filter_spans(spans))
+        return doc
+
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
@@ -137,5 +146,6 @@ Text:
                     )
                     if span is not None:
                         spans.append(span)
-            doc.set_ents(filter_spans(spans))
+
+            self.assign_spans(doc, spans)
             yield doc
