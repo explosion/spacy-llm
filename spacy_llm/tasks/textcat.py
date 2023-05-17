@@ -75,10 +75,14 @@ def make_textcat_task(
     verbose: bool = False,
 ) -> "TextCatTask":
     labels_list = split_labels(labels)
+    # Load examples
     raw_examples = examples() if callable(examples) else examples
     textcat_examples = (
         [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
     )
+    # Load templates
+    if template is None:
+        raise ValueError("A template must be supplied. It cannot be 'None'.")
     task_template = template() if callable(template) else template
     return TextCatTask(
         labels=labels_list,

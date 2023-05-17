@@ -107,8 +107,12 @@ def make_ner_task(
     single_match: bool = False,
 ) -> "NERTask":
     labels_list = split_labels(labels)
+    # Load examples
     raw_examples = examples() if callable(examples) else examples
     ner_examples = [NERExample(**eg) for eg in raw_examples] if raw_examples else None
+    # Load templates
+    if template is None:
+        raise ValueError("A template must be supplied. It cannot be 'None'.")
     task_template = template() if callable(template) else template
     return NERTask(
         labels=labels_list,
