@@ -41,25 +41,32 @@ def test_llm_pipe(nlp):
     assert len(docs) == 2
 
 
-def test_llm_pipe_with_cache(noop_config: Dict, tmp_path: Path):
+def test_llm_pipe_with_cache(tmp_path: Path):
     """Test call .pipe() with pre-cached docs"""
 
     path = tmp_path / "cache"
 
-    noop_config["cache"] = {
-        "path": str(path),
-        "batch_size": 1,
-        "max_batches_in_mem": 10,
+    config = {
+        "task": {"@llm_tasks": "spacy.NoOp.v1"},
+        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+        "cache": {
+            "path": str(path),
+            "batch_size": 1,  # Eager caching
+            "max_batches_in_mem": 10,
+        },
     }
 
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=noop_config)
+    nlp.add_pipe("llm", config=config)
 
     cached_text = "This is a cached test"
+
+    # Run the text through, caching it.
     nlp(cached_text)
 
     texts = [cached_text, "This is a test", "This is another test"]
 
+    # Run it again, along with other documents
     docs = list(nlp.pipe(texts=texts))
     assert [doc.text for doc in docs] == texts
 
