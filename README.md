@@ -9,7 +9,7 @@
 This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.io), featuring a modular system for **fast prototyping** and **prompting**, and turning unstructured responses into **robust outputs** for various NLP tasks, **no training data** required.
 
 - Serializable `llm` **component** to integrate prompts into your pipeline
-- **Modular functions** to define the [**task**](#Tasks) (prompting and parsing) and [**backend**](#Backends) (model to use)
+- **Modular functions** to define the [**task**](#tasks) (prompting and parsing) and [**backend**](#backends) (model to use)
 - Support for **hosted APIs** and self-hosted **open-source models**
 - Integration with [`MiniChain`](https://github.com/srush/MiniChain) and [`LangChain`](https://github.com/hwchase17/langchain)
 - Access to **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**, including GPT-4 and various GPT-3 models
@@ -48,7 +48,7 @@ functionality, as detailed in the [API](#-api) documentation.
 ### Example 1: Add a text classifier using a GPT-3 model from OpenAI
 
 Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
-For more background information, see the [OpenAI](#OpenAI) section.
+For more background information, see the [OpenAI](#openai) section.
 
 Create a config file `config.cfg` containing at least the following
 (or see the full example [here](usage_examples/textcat_openai)):
@@ -195,10 +195,13 @@ labels = LABEL1,LABEL2,LABEL3
 
 Each `llm` component is defined by two main settings:
 
-- A [**task**](#Tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
+- A [**task**](#tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
-- A [**backend**](#Backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
+- A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
+
+Moreover, the component also implements a [**cache**](#cache) to avoid running
+the same document through an LLM service (be it local or through a REST API) twice.
 
 ### Tasks
 
@@ -500,6 +503,29 @@ Supported models (see the [Databricks models page](https://huggingface.co/databr
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
+
+### Cache
+
+Interacting with LLMs, either through an external API or a local instance, is costly.
+Since developing an NLP pipeline generally means a lot of exploration and prototyping,
+`spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run.
+
+Example config block:
+
+```ini
+[components.llm.cache]
+# The cache is not a registered function.
+# You supply its configuration to the llm component directly.
+path = "path/to/cache"
+batch_size = 64
+max_batches_in_mem = 4
+```
+
+| Argument             | Type            | Default | Description                                          |
+| -------------------- | --------------- | ------- | ---------------------------------------------------- |
+| `path`               | `Optional[str]` | `None`  | Cache directory. If `None`, no caching is performed. |
+| `batch_size`         | `int`           | 64      | Number of docs in one batch (file).                  |
+| `max_batches_in_mem` | `int`           | 4       | Max. number of batches to hold in memory.            |
 
 ### Various functions
 
