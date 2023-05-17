@@ -163,11 +163,15 @@ def test_ensure_offsets_correspond_to_substrings(
             "PER: Jean Jacques, Jaime\nLOC: library",
             [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "LOC")],
         ),
-        # overlapping: should only return the longest span
+        # overlapping: should only return all spans
         (
             "The Manila Observatory was founded in 1865.",
             "LOC: The Manila Observatory, Manila, Manila Observatory",
-            [("The Manila Observatory", "LOC")],
+            [
+                ("The Manila Observatory", "LOC"),
+                ("Manila", "LOC"),
+                ("Manila Observatory", "LOC"),
+            ],
         ),
         # flipped: order shouldn't matter
         (

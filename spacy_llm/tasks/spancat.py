@@ -53,5 +53,5 @@ class SpanCatTask(AbstractSpanTask):
         spans: List[Span],
     ) -> Doc:
         """Assign spans to the document."""
-        doc.spans[self._spans_key] = spans
+        doc.spans[self._spans_key] = sorted(spans)
         return doc
