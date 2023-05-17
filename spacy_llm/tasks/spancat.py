@@ -2,17 +2,16 @@ from typing import Any, Callable, Iterable, Optional, Tuple
 
 import jinja2
 from spacy.tokens import Doc
-from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import lowercase_normalizer, registry
 from .util import SpanExample, find_substrings
 
 
-@registry.llm_tasks("spacy.NER.v1")
-class NERTask:
+@registry.llm_tasks("spacy.SpanCat.v1")
+class SpanCatTask:
     _TEMPLATE_STR = """
-From the text below, extract the following entities in the following format:
+From the text below, extract the following (possibly overlapping) entities in the following format:
 {# whitespace #}
 {%- for label in labels -%}
 {{ label }}: <comma delimited list of strings>
@@ -51,6 +50,7 @@ Text:
     def __init__(
         self,
         labels: str,
+        spans_key: str = "sc",
         examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
@@ -80,6 +80,7 @@ Text:
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
+        self._span_key = spans_key
 
     def _validate_alignment(self, mode):
         # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
@@ -137,5 +138,5 @@ Text:
                     )
                     if span is not None:
                         spans.append(span)
-            doc.set_ents(filter_spans(spans))
+            doc.spans[self._span_key] = spans
             yield doc
