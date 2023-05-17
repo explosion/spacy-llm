@@ -1,15 +1,16 @@
-from typing import Any, Callable, Iterable, List, Literal, Optional
+from typing import Any, Callable, Iterable, List, Optional
 
 from spacy.tokens import Doc, Span
 from spacy.util import filter_spans
 
+from ..compat import Literal
 from ..registry import registry
 from .templates import read_template
-from .util.span_task import SpanTask
+from .util import BaseSpanTask
 
 
 @registry.llm_tasks("spacy.NER.v1")
-class NERTask(SpanTask):
+class NERTask(BaseSpanTask):
     _TEMPLATE_STR = read_template("ner")
 
     def __init__(

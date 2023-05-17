@@ -4,12 +4,12 @@ from spacy.tokens import Doc, Span
 
 from ..compat import Literal
 from ..registry import registry
-from .ner import NERTask
 from .templates import read_template
+from .util import BaseSpanTask
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
-class SpanCatTask(NERTask):
+class SpanCatTask(BaseSpanTask):
     _TEMPLATE_STR = read_template("spancat")
 
     def __init__(
