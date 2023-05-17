@@ -35,13 +35,13 @@ jobs:
         shell: bash
         run: pytest usage_examples --external
 
-      - name: Report Status
-        if: always()
-        uses: ravsamhq/notify-slack-action@v1
-        with:
-          status: ${{ job.status }}
-          notification_title: "{workflow} have {status_message}"
-          message_format: "{emoji} external workflow has {status_message}"
-          notify_when: "failure"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_MONITORING_WEBHOOK_URL }}
+#      - name: Report Status
+#        if: always()
+#        uses: ravsamhq/notify-slack-action@v1
+#        with:
+#          status: ${{ job.status }}
+#          notification_title: "{workflow} have {status_message}"
+#          message_format: "{emoji} external workflow has {status_message}"
+#          notify_when: "failure"
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_MONITORING_WEBHOOK_URL }}

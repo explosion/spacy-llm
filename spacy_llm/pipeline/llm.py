@@ -2,8 +2,7 @@ import logging
 import typing
 import warnings
 from pathlib import Path
-from typing import Iterable, List, Tuple, Iterator, Type
-from typing import cast, Optional, Any
+from typing import Any, Iterable, Iterator, List, Optional, Tuple, Type, cast
 
 import spacy
 from spacy.language import Language
@@ -242,9 +241,7 @@ class LLMWrapper(Pipe):
                 error_handler(self._name, self, doc_batch, e)
 
     def _process_docs(self, docs: List[Doc]) -> List[Doc]:
-        docs = list(docs)
         is_cached = [doc in self._cache for doc in docs]
-
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
         if len(noncached_doc_batch) < len(docs):
             logger.debug(
