@@ -1,6 +1,5 @@
-import os
 from pathlib import Path
-from typing import Dict, Union, Optional, Iterable, List
+from typing import Dict, Iterable, List, Optional, Union
 
 import srsly  # type: ignore[import]
 from spacy.tokens import Doc, DocBin
@@ -14,7 +13,7 @@ class Cache:
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Optional[Union[str, Path]],
         batch_size: int,
         max_batches_in_mem: int,
         vocab: Vocab,
@@ -56,7 +55,7 @@ class Cache:
         if self._path is None:
             return
 
-        if self._path.exists() and not os.path.isdir(self._path):
+        if self._path.exists() and not self._path.is_dir():
             raise ValueError("Cache directory exists and is not a directory.")
         self._path.mkdir(parents=True, exist_ok=True)
 
@@ -116,13 +115,18 @@ class Cache:
     def _persist(self) -> None:
         """Persists all processed docs in the queue to disk as one file."""
         assert self._path
-        doc_hashes = [self._doc_id(doc) for doc in self._cache_queue]
-        batch_id = self._batch_id(doc_hashes)
+
+        doc_ids = [self._doc_id(doc) for doc in self._cache_queue]
+        batch_id = self._batch_id(doc_ids)
+
+        for doc_id in doc_ids:
+            self._doc2batch[doc_id] = batch_id
+
         batch_path = self._batch_path(batch_id)
         DocBin(docs=self._cache_queue, store_user_data=True).to_disk(batch_path)
         srsly.write_jsonl(
             self._index_path,
-            lines=[{str(doc_hash): str(batch_id)} for doc_hash in doc_hashes],
+            lines=[{str(doc_id): str(batch_id)} for doc_id in doc_ids],
             append=True,
             append_new_line=False,
         )
