@@ -10,6 +10,8 @@ from spacy_llm.tasks import NoopTask
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 
+from ..compat import has_openai_key
+
 
 @pytest.fixture
 def noop_config() -> Dict[str, Any]:
@@ -47,7 +49,7 @@ def test_llm_pipe_empty(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        task=NoopTask,
+        task=NoopTask(),
         backend=None,  # type: ignore
         cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
@@ -57,7 +59,7 @@ def test_llm_serialize_bytes():
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        task=NoopTask,
+        task=NoopTask(),
         backend=None,  # type: ignore
         cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
         vocab=None,  # type: ignore
@@ -68,6 +70,7 @@ def test_llm_serialize_disk():
         llm.from_disk(tmp_dir / "llm")
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.external
 def test_type_checking_valid(noop_config) -> None:
     """Test type checking for consistency between functions."""
