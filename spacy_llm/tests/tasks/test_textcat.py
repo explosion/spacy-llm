@@ -99,7 +99,7 @@ def ext_template_cfg_string():
     exclusive_classes = true
 
     [components.llm.task.template]
-    @misc = "spacy.JinjaReader.v1
+    @misc = "spacy.JinjaReader.v1"
     path = {str((Path(__file__).parent / "templates" / "textcat_template.jinja2"))}
 
     [components.llm.task.normalizer]
