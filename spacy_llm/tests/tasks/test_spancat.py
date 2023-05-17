@@ -365,7 +365,7 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == """
-From the text below, extract the following entities in the following format:
+From the text below, extract the following (possibly overlapping) entities in the following format:
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
@@ -405,7 +405,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     assert (
         prompt.strip()
         == """
-From the text below, extract the following entities in the following format:
+From the text below, extract the following (possibly overlapping) entities in the following format:
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
