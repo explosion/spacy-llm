@@ -62,6 +62,7 @@ Text:
         """Default NER task.
 
         labels (str): Comma-separated list of labels to pass to the template.
+        spans_key (str): Key of the `Doc.spans` dict to save under.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
