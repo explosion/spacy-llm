@@ -5,46 +5,12 @@ from spacy.tokens import Doc, Span
 from ..compat import Literal
 from ..registry import registry
 from .ner import NERTask
+from .templates import read_template
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
 class SpanCatTask(NERTask):
-    _TEMPLATE_STR = """
-From the text below, extract the following (possibly overlapping) entities in the following format:
-{# whitespace #}
-{%- for label in labels -%}
-{{ label }}: <comma delimited list of strings>
-{# whitespace #}
-{%- endfor -%}
-{# whitespace #}
-{%- if examples -%}
-{# whitespace #}
-Below are some examples (only use these as a guide):
-{# whitespace #}
-{# whitespace #}
-{%- for example in examples -%}
-{# whitespace #}
-Text:
-'''
-{{ example.text }}
-'''
-{# whitespace #}
-{%- for label, substrings in example.entities.items() -%}
-{{ label }}: {{ ', '.join(substrings) }}
-{# whitespace #}
-{%- endfor -%}
-{# whitespace #}
-{# whitespace #}
-{%- endfor -%}
-{%- endif -%}
-{# whitespace #}
-Here is the text that needs labeling:
-{# whitespace #}
-Text:
-'''
-{{ text }}
-'''
-    """
+    _TEMPLATE_STR = read_template("spancat")
 
     def __init__(
         self,
