@@ -6,7 +6,7 @@ from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
-from ..ty import ExamplesConfigType
+from ..ty import ExamplesConfigType, TemplateConfigType
 from ..util import split_labels
 
 
@@ -67,7 +67,7 @@ class TextCatExample(BaseModel):
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
     labels: str,
-    template: str = _DEFAULT_TEXTCAT_TEMPLATE,
+    template: TemplateConfigType = _DEFAULT_TEXTCAT_TEMPLATE,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
@@ -79,9 +79,10 @@ def make_textcat_task(
     textcat_examples = (
         [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
     )
+    task_template = template() if callable(template) else template
     return TextCatTask(
         labels=labels_list,
-        template=template,
+        template=task_template,
         examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
