@@ -1,14 +1,15 @@
 import warnings
-from typing import Iterable, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, Iterable
 
 import pytest
 import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
 
-from spacy_llm.tasks import NoopTask
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
+from spacy_llm.tasks import NoopTask
 
 from ..compat import has_openai_key
 
@@ -40,6 +41,36 @@ def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
     assert len(docs) == 2
+
+
+def test_llm_pipe_with_cache(tmp_path: Path):
+    """Test call .pipe() with pre-cached docs"""
+
+    path = tmp_path / "cache"
+
+    config = {
+        "task": {"@llm_tasks": "spacy.NoOp.v1"},
+        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+        "cache": {
+            "path": str(path),
+            "batch_size": 1,  # Eager caching
+            "max_batches_in_mem": 10,
+        },
+    }
+
+    nlp = spacy.blank("en")
+    nlp.add_pipe("llm", config=config)
+
+    cached_text = "This is a cached test"
+
+    # Run the text through, caching it.
+    nlp(cached_text)
+
+    texts = [cached_text, "This is a test", "This is another test"]
+
+    # Run it again, along with other documents
+    docs = list(nlp.pipe(texts=texts))
+    assert [doc.text for doc in docs] == texts
 
 
 def test_llm_pipe_empty(nlp):
