@@ -8,11 +8,13 @@ from confection import Config
 from pydantic import ValidationError
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import strip_normalizer, lowercase_normalizer, fewshot_reader
+from spacy_llm.registry import strip_normalizer, lowercase_normalizer
+from spacy_llm.registry import fewshot_reader, jinja_reader
 from spacy_llm.tasks.ner import find_substrings, make_ner_task
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
+TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 @pytest.fixture
@@ -73,8 +75,44 @@ def fewshot_cfg_string():
     """
 
 
+@pytest.fixture
+def ext_template_cfg_string():
+    """Simple zero-shot config with an external template"""
+
+    return f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v1"
+    labels = PER,ORG,LOC
+
+    [components.llm.task.template]
+    @misc = "spacy.JinjaReader.v1
+    path = {str((Path(__file__).parent / "templates" / "ner_template.jinja2"))}
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {{}}
+    """
+
+
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string", "zeroshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["fewshot_cfg_string", "zeroshot_cfg_string", "ext_template_cfg_string"],
+)
 def test_ner_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
@@ -83,7 +121,10 @@ def test_ner_config(cfg_string, request):
 
 
 # @pytest.mark.external
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+)
 def test_ner_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
@@ -99,7 +140,10 @@ def test_ner_predict(cfg_string, request):
 
 
 @pytest.mark.external
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+)
 def test_ner_io(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
@@ -456,3 +500,33 @@ def test_example_not_following_basemodel():
 
         with pytest.raises(ValidationError):
             make_ner_task(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+
+
+def test_external_template_actually_loads():
+    template_path = str(TEMPLATES_DIR / "ner_template.jinja2")
+    template = jinja_reader(template_path)
+    labels = "PER,ORG,LOC"
+    nlp = spacy.blank("xx")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
+
+    llm_ner = make_ner_task(labels=labels, template=template)
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+This is a test NER template. Here are the labels
+PER
+ORG
+LOC
+
+Here is the text: Alice and Bob went to the supermarket
+""".strip()
+    )
+
+
+def test_none_template_raises_an_error():
+    """This is a user-error, they cannot pass None templates"""
+    template = None
+    labels = "PER,ORG,LOC"
+    with pytest.raises(ValueError):
+        make_ner_task(labels=labels, template=template)

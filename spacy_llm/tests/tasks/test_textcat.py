@@ -8,12 +8,14 @@ from confection import Config
 from pydantic import ValidationError
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import lowercase_normalizer, fewshot_reader
+from spacy_llm.registry import lowercase_normalizer
+from spacy_llm.registry import fewshot_reader, jinja_reader
 from spacy_llm.tasks.textcat import make_textcat_task
 from ..compat import has_openai_key
 
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
+TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 @pytest.fixture
@@ -77,6 +79,40 @@ def fewshot_cfg_string():
 
 
 @pytest.fixture
+def ext_template_cfg_string():
+    """Simple zero-shot config with an external template"""
+
+    return f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.TextCat.v1"
+    labels = "Recipe"
+    exclusive_classes = true
+
+    [components.llm.task.template]
+    @misc = "spacy.JinjaReader.v1
+    path = {str((Path(__file__).parent / "templates" / "textcat_template.jinja2"))}
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {{}}
+    """
+
+
+@pytest.fixture
 def binary():
     text = "Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream"
     labels = "Recipe"
@@ -107,8 +143,14 @@ def multilabel_nonexcl():
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize(
+    "task",
+    ["binary", "multilabel_nonexcl", "multilabel_excl"],
+)
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+)
 def test_textcat_config(task, cfg_string, request):
     """Simple test to check if the config loads properly given different settings"""
 
@@ -130,9 +172,12 @@ def test_textcat_config(task, cfg_string, request):
 
 @pytest.mark.external
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+)
 def test_textcat_predict(task, cfg_string, request):
-    """Use OpenAI to get zero-shot Textcat results
+    """Use OpenAI to get Textcat results
     Note that this test may fail randomly, as the LLM's output is unguaranteed
     to be consistent/predictable
     """
@@ -157,7 +202,10 @@ def test_textcat_predict(task, cfg_string, request):
 
 @pytest.mark.external
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+)
 def test_textcat_io(task, cfg_string, request):
     task = request.getfixturevalue(task)
     text, labels, gold_cats, exclusive_classes, examples = task
@@ -464,3 +512,31 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
                 examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
             )
+
+
+def test_external_template_actually_loads():
+    template_path = str(TEMPLATES_DIR / "textcat_template.jinja2")
+    template = jinja_reader(template_path)
+    labels = "Recipe"
+    nlp = spacy.blank("xx")
+    doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
+
+    llm_textcat = make_textcat_task(labels=labels, template=template)
+    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+This is a test textcat template. Here is/are the label/s
+Recipe
+
+Here is the text: Combine 2 cloves of garlic with soy sauce
+""".strip()
+    )
+
+
+def test_none_template_raises_an_error():
+    """This is a user-error, they cannot pass None templates"""
+    template = None
+    labels = "Recipe"
+    with pytest.raises(ValueError):
+        make_textcat_task(labels=labels, template=template)
