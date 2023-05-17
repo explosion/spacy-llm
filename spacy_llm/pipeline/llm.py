@@ -241,6 +241,12 @@ class LLMWrapper(Pipe):
                 error_handler(self._name, self, doc_batch, e)
 
     def _process_docs(self, docs: List[Doc]) -> List[Doc]:
+        """Process a batch of docs with the configured LLM backend and task.
+        If a cache is configured, only sends prompts to backend for docs not found in cache.
+
+        docs (List[Doc]): Input batch of docs
+        RETURNS (List[Doc]): Processed batch of docs with task annotations set
+        """
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
         if len(noncached_doc_batch) < len(docs):
