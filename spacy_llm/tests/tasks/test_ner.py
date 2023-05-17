@@ -8,8 +8,10 @@ from confection import Config
 from pydantic import ValidationError
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import strip_normalizer, lowercase_normalizer, fewshot_reader
-from spacy_llm.tasks.ner import find_substrings, NERTask
+from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
+from spacy_llm.tasks.ner import NERTask
+from spacy_llm.tasks.util import find_substrings
+
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"

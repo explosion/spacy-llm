@@ -5,11 +5,11 @@ from spacy.tokens import Doc, Span
 from ..compat import Literal
 from ..registry import registry
 from .templates import read_template
-from .util import BaseSpanTask
+from .util import AbstractSpanTask
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
-class SpanCatTask(BaseSpanTask):
+class SpanCatTask(AbstractSpanTask):
     _TEMPLATE_STR = read_template("spancat")
 
     def __init__(

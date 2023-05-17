@@ -6,11 +6,11 @@ from spacy.util import filter_spans
 from ..compat import Literal
 from ..registry import registry
 from .templates import read_template
-from .util import BaseSpanTask
+from .util import AbstractSpanTask
 
 
 @registry.llm_tasks("spacy.NER.v1")
-class NERTask(BaseSpanTask):
+class NERTask(AbstractSpanTask):
     _TEMPLATE_STR = read_template("ner")
 
     def __init__(
