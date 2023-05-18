@@ -57,6 +57,66 @@ def find_substrings(
 
 
 @registry.llm_tasks("spacy.NER.v1")
+def make_ner_task_v1(
+    labels: str,
+    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
+):
+    task = NERTask(
+        labels=labels,
+        examples=examples,
+        normalizer=normalizer,
+        alignment_mode=alignment_mode,
+        case_sensitive_matching=case_sensitive_matching,
+        single_match=single_match,
+    )
+
+    setattr(
+        task,
+        "_TEMPLATE_STR",
+        """
+From the text below, extract the following entities in the following format:
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}: <comma delimited list of strings>
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{%- for label, substrings in example.entities.items() -%}
+{{ label }}: {{ ', '.join(substrings) }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''
+    """,
+    )
+
+
+@registry.llm_tasks("spacy.NER.v2")
 class NERTask:
     _TEMPLATE_STR = """
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
