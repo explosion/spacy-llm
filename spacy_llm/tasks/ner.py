@@ -35,8 +35,8 @@ def find_substrings(
     matches: List[Span] = matcher(doc, as_spans=True)
 
     def _filter_first_hit(matches: List[Span]) -> Iterable[Tuple[int, int]]:
-        seen_spans = []
-        filtered = []
+        seen_spans: List[Span] = []
+        filtered: List[Span] = []
         for match in matches:
             start, end = match.start_char, match.end_char
             span_text = doc.char_span(start, end).text
