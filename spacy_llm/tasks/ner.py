@@ -56,28 +56,7 @@ def find_substrings(
     return offsets
 
 
-@registry.llm_tasks("spacy.NER.v1")
-def make_ner_task_v1(
-    labels: str,
-    examples: Optional[Callable[[], Iterable[Any]]] = None,
-    normalizer: Optional[Callable[[str], str]] = None,
-    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
-    case_sensitive_matching: bool = False,
-    single_match: bool = False,
-):
-    task = NERTask(
-        labels=labels,
-        examples=examples,
-        normalizer=normalizer,
-        alignment_mode=alignment_mode,
-        case_sensitive_matching=case_sensitive_matching,
-        single_match=single_match,
-    )
-
-    setattr(
-        task,
-        "_TEMPLATE_STR",
-        """
+_NER_TEMPLATE_V1 = """
 From the text below, extract the following entities in the following format:
 {# whitespace #}
 {%- for label in labels -%}
@@ -112,8 +91,28 @@ Text:
 '''
 {{ text }}
 '''
-    """,
+"""
+
+
+@registry.llm_tasks("spacy.NER.v1")
+def make_ner_task_v1(
+    labels: str,
+    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
+):
+    task = NERTask(
+        labels=labels,
+        examples=examples,
+        normalizer=normalizer,
+        alignment_mode=alignment_mode,
+        case_sensitive_matching=case_sensitive_matching,
+        single_match=single_match,
     )
+    setattr(task, "_TEMPLATE_STR", _NER_TEMPLATE_V1)
+    return task
 
 
 @registry.llm_tasks("spacy.NER.v2")
