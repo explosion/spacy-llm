@@ -200,8 +200,8 @@ Each `llm` component is defined by two main settings:
 - A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
 
-Moreover, the component also implements a [**cache**](#cache) to avoid running
-the same document through an LLM service (be it local or through a REST API) twice.
+Moreover, the component also implements [**caching**](#cache) functionality to avoid running
+the same document through an LLM service (be it local or through a REST API) more than once.
 
 ### Tasks
 
