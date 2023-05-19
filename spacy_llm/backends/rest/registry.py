@@ -13,7 +13,7 @@ def backend_rest(
     strict: bool = True,
     max_tries: int = 3,
     interval: int = 30,
-    max_request_time: int = 30,
+    max_request_time: float = 30,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
     api (str): Name of any API. Currently supported: "OpenAI".
@@ -24,7 +24,7 @@ def backend_rest(
         be raised.
     max_tries (int): Max. number of tries for API request.
     interval (int): Time inteval for API retries in seconds.
-    max_request_time (int): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using a
         Backend instance.
     """

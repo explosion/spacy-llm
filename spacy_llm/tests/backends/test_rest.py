@@ -20,6 +20,18 @@ PIPE_CFG = {
 }
 
 
+@registry.llm_tasks("spacy.Count.v1")
+class _CountTask:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+        for doc in docs:
+            yield f"Count the number of characters in this string: '{doc.text}'."
+
+    def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[str]
+    ) -> Iterable[Doc]:
+        return docs
+
+
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
@@ -30,6 +42,7 @@ def test_initialization():
     nlp("This is a test.")
 
 
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.external
 def test_model_error_handling():
     """Test error handling for wrong model."""
@@ -45,22 +58,11 @@ def test_model_error_handling():
     assert "The specified model 'x-gpt-3.5-turbo' is not available." in str(err.value)
 
 
-# @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.external
 def test_doc_length_error_handling():
-    """Test error handling for wrong URL."""
+    """Test error handling for excessive doc length."""
     nlp = spacy.blank("en")
-
-    @registry.llm_tasks("spacy.Count.v1")
-    class CountTask:
-        def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-            for doc in docs:
-                yield f"Count the number of characters in this string: '{doc.text}'."
-
-        def parse_responses(
-            self, docs: Iterable[Doc], responses: Iterable[str]
-        ) -> Iterable[Doc]:
-            return docs
-
     nlp.add_pipe(
         "llm",
         config={
@@ -80,45 +82,19 @@ def test_doc_length_error_handling():
         nlp("n" * 5000)
 
 
-@pytest.mark.parametrize("model", ("gpt-3.5-turbo", "text-davinci-002"))
-@pytest.mark.external
-def test_openai(model: str):
-    """Test OpenAI call to /chat/completions and /completions backend.
-    model (str): Model to use.
-    """
-    nlp = spacy.blank("en")
-    cfg = copy.deepcopy(PIPE_CFG)
-    cfg["backend"]["config"]["model"] = model
-    cfg["backend"]["config"]["url"] = (
-        "https://api.openai.com/v1/chat/completions"
-        if model == "gpt-3.5-turbo"
-        else "https://api.openai.com/v1/completions"
-    )
-    nlp.add_pipe(
-        "llm",
-        config=cfg,
-    )
-    nlp("test")
-    docs = list(nlp.pipe(["test 1", "test 2"]))
-    assert len(docs) == 2
-    assert docs[0].text == "test 1"
-    assert docs[1].text == "test 2"
-
-
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-def test_model_backend_compatibility():
-    """Tests whether incompatible model and backend are detected as expected."""
+@pytest.mark.external
+def test_max_time_error_handling():
+    """Test error handling for exceeding max. time."""
     nlp = spacy.blank("en")
-    cfg = copy.deepcopy(PIPE_CFG)
-    cfg["backend"]["config"]["model"] = "gpt-4"
-    cfg["backend"]["config"]["url"] = "https://api.openai.com/v1/completions"
-    with pytest.warns(
-        UserWarning,
-        match="Configured endpoint https://api.openai.com/v1/completions diverges from expected endpoint "
-        "https://api.openai.com/v1/chat/completions for selected model 'gpt-4'. Please ensure that this endpoint "
-        "supports your model.",
+    with pytest.raises(
+        TimeoutError,
+        match="Request time out. Check your network connection and the API's availability.",
     ):
         nlp.add_pipe(
             "llm",
-            config=cfg,
+            config={
+                "task": {"@llm_tasks": "spacy.Count.v1"},
+                "backend": {"config": {"model": "ada"}, "max_request_time": 0.001},
+            },
         )

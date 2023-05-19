@@ -4,6 +4,7 @@ import warnings
 from typing import Any, Dict, Iterable, Callable, Tuple
 
 import requests  # type: ignore
+from requests import ConnectTimeout, ReadTimeout
 
 
 class Backend(abc.ABC):
@@ -15,7 +16,7 @@ class Backend(abc.ABC):
         strict: bool,
         max_tries: int,
         interval: int,
-        max_request_time: int,
+        max_request_time: float,
     ):
         """Initializes new Backend instance.
         config (Dict[Any, Any]): Config passed on to LLM API.
@@ -26,7 +27,7 @@ class Backend(abc.ABC):
             Note that only response object structure will be checked, not the prompt response text per se.
         max_tries (int): Max. number of tries for API request.
         interval (int): Time interval (in seconds) for API retries in seconds.
-        max_request_time (int): Max. time (in seconds) to wait for request to terminate before raising an exception.
+        max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
         """
         self._config = config
         self._strict = strict
@@ -42,6 +43,7 @@ class Backend(abc.ABC):
 
         assert self._max_tries >= 1
         assert self._interval >= 1
+        assert self._max_request_time > 0
 
     @property
     def _retry_error_codes(self) -> Tuple[int, ...]:
@@ -91,7 +93,7 @@ class Backend(abc.ABC):
             """
             try:
                 return call_method(url, **kwargs)
-            except TimeoutError as err:
+            except (ConnectTimeout, ReadTimeout, TimeoutError) as err:
                 raise TimeoutError(
                     "Request time out. Check your network connection and the API's availability."
                 ) from err
