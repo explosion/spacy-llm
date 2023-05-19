@@ -10,7 +10,6 @@ from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
-
 from .. import registry  # noqa: F401
 from ..cache import Cache
 from ..compat import TypedDict
@@ -27,10 +26,20 @@ class CacheConfigType(TypedDict):
     max_batches_in_mem: int
 
 
+LLM_PROMPT_EXT_ATTR = "llm_prompt"
+LLM_RESPONSE_EXT_ATTR = "llm_response"
+
+
+def install_extensions():
+    for attr in [LLM_PROMPT_EXT_ATTR, LLM_RESPONSE_EXT_ATTR]:
+        if not Doc.has_extension(attr):
+            Doc.set_extension(attr, default=None, force=True)
+
+
 @Language.factory(
     "llm",
     requires=[],
-    assigns=["doc._.llm_prompt", "doc._.llm_response"],
+    assigns=[f"doc._.{LLM_PROMPT_EXT_ATTR}", f"doc._.{LLM_RESPONSE_EXT_ATTR}"],
     default_config={
         "task": None,
         "backend": {
@@ -215,10 +224,7 @@ class LLMWrapper(Pipe):
             max_batches_in_mem=int(cache["max_batches_in_mem"]),
             vocab=vocab,
         )
-        if not Doc.has_extension("llm_prompt"):
-            Doc.set_extension("llm_prompt", default=None)
-        if not Doc.has_extension("llm_response"):
-            Doc.set_extension("llm_response", default=None)
+        install_extensions()
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -251,6 +257,7 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
         """
+        install_extensions()
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
         if len(noncached_doc_batch) < len(docs):
@@ -263,12 +270,12 @@ class LLMWrapper(Pipe):
         prompts = list(self._task.generate_prompts(noncached_doc_batch))
         responses = list(self._backend(prompts))
         for prompt, response, doc in zip(prompts, responses, noncached_doc_batch):
+            doc._.llm_prompt = prompt
+            doc._.llm_response = response
             logger.debug("Generated prompt for doc: %s", doc.text)
             logger.debug(prompt)
             logger.debug("Backend response for doc: %s", doc.text)
             logger.debug(response)
-            doc._.llm_prompt = prompt
-            doc._.llm_response = response
 
         modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
         final_docs = []
@@ -281,6 +288,7 @@ class LLMWrapper(Pipe):
                 doc = next(modified_docs)
                 self._cache.add(doc)
                 final_docs.append(doc)
+
         return final_docs
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
