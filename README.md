@@ -103,7 +103,7 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.NER.v1"
+@llm_tasks = "spacy.NER.v2"
 labels = PERSON,ORGANISATION,LOCATION
 
 [components.llm.backend]
@@ -141,7 +141,7 @@ nlp.add_pipe(
     "llm",
     config={
         "task": {
-            "@llm_tasks": "spacy.NER.v1",
+            "@llm_tasks": "spacy.NER.v2",
             "labels": "PERSON,ORGANISATION,LOCATION"
         },
         "backend": {
@@ -236,13 +236,13 @@ return type of the [backend](#backends).
 | `responses` | `Iterable[Any]` | The generated prompts.   |
 | **RETURNS** | `Iterable[Doc]` | The annotated documents. |
 
-#### spacy.NER.v1
+#### spacy.NER.v2
 
 The built-in NER task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.NER.v1"
+@llm_tasks = "spacy.NER.v2"
 labels = PERSON,ORGANISATION,LOCATION
 examples = null
 ```
@@ -287,7 +287,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.NER.v1"
+@llm_tasks = "spacy.NER.v2"
 labels = PERSON,ORGANISATION,LOCATION
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
@@ -299,7 +299,7 @@ If you don't have specific examples to provide to the LLM, you can write definit
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.NER.v1"
+@llm_tasks = "spacy.NER.v2"
 labels = PERSON,SPORTS_TEAM
 [components.llm.task.label_descriptions]
 PERSON = "Extract any named individual in the text."
