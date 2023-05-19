@@ -4,6 +4,7 @@ from typing import Dict, Iterable, List, Any, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
+from requests import HTTPError
 
 from .base import Backend
 
@@ -116,7 +117,7 @@ class OpenAIBackend(Backend):
             )
             try:
                 r.raise_for_status()
-            except Exception as ex:
+            except HTTPError as ex:
                 res_content = srsly.json_loads(r.content.decode("utf-8"))
                 # Include specific error message in exception.
                 raise ValueError(
