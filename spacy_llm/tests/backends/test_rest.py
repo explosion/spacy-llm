@@ -1,10 +1,14 @@
 # mypy: ignore-errors
 import copy
+import re
+from typing import Iterable
 
 import pytest
 import spacy
+from spacy.tokens import Doc
 
 from ..compat import has_openai_key
+from ...registry import registry
 
 PIPE_CFG = {
     "backend": {
@@ -27,8 +31,8 @@ def test_initialization():
 
 
 @pytest.mark.external
-def test_rest_backend_error_handling():
-    """Test error handling for default/minimal REST backend."""
+def test_model_error_handling():
+    """Test error handling for wrong model."""
     nlp = spacy.blank("en")
     with pytest.raises(ValueError) as err:
         nlp.add_pipe(
@@ -39,6 +43,41 @@ def test_rest_backend_error_handling():
             },
         )
     assert "The specified model 'x-gpt-3.5-turbo' is not available." in str(err.value)
+
+
+@pytest.mark.external
+def test_doc_length_error_handling():
+    """Test error handling for wrong URL."""
+    nlp = spacy.blank("en")
+
+    @registry.llm_tasks("spacy.Count.v1")
+    class CountTask:
+        def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+            for doc in docs:
+                yield f"Count the number of characters in this string: '{doc.text}'."
+
+        def parse_responses(
+            self, docs: Iterable[Doc], responses: Iterable[str]
+        ) -> Iterable[Doc]:
+            return docs
+
+    nlp.add_pipe(
+        "llm",
+        config={
+            # Not using the NoOp task is necessary here, as the NoOp task sends a fixed-size prompt.
+            "task": {"@llm_tasks": "spacy.Count.v1"},
+            "backend": {"config": {"model": "ada"}},
+        },
+    )
+    # Call with an overly long document to elicit error.
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Request to OpenAI API failed: This model's maximum context length is 2049 tokens, however you requested "
+            "2527 tokens (2511 in your prompt; 16 for the completion). Please reduce your prompt; or completion length."
+        ),
+    ):
+        nlp("n" * 5000)
 
 
 @pytest.mark.parametrize("model", ("gpt-3.5-turbo", "text-davinci-002"))

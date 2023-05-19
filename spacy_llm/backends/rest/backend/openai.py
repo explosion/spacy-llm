@@ -50,6 +50,13 @@ class OpenAIBackend(Backend):
                 "an environment variable 'OPENAI_API_KEY."
             )
 
+        # Ensure endpoint is supported.
+        url = self._url if self._url else self.supported_models[self._config["model"]]
+        if url not in (Endpoints.non_chat, Endpoints.chat):
+            raise ValueError(
+                f"Endpoint {url} isn't supported. Please use of: {Endpoints.chat}, {Endpoints.non_chat}."
+            )
+
         # Check the access and get a list of available models to verify the model argument (if not None)
         # Even if the model is None, this call is used as a healthcheck to verify access.
         headers = {
@@ -108,7 +115,14 @@ class OpenAIBackend(Backend):
                     timeout=self._timeout,
                 ),
             )
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except Exception as ex:
+                res_content = srsly.json_loads(r.content.decode("utf-8"))
+                # Include specific error message in exception.
+                raise ValueError(
+                    f"Request to OpenAI API failed: {res_content.get('error', {}).get('message', str(res_content))}"
+                ) from ex
             responses = r.json()
 
             if "error" in responses:
