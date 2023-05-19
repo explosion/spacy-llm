@@ -117,7 +117,7 @@ def make_ner_task_v1(
 
 @registry.llm_tasks("spacy.NER.v2")
 class NERTask:
-    _TEMPLATE_STR = """
+    _TEMPLATE_STR: str = """
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 {# whitespace #}
