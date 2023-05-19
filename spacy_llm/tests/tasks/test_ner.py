@@ -43,6 +43,38 @@ def zeroshot_cfg_string():
 
 
 @pytest.fixture
+def zeroshot_cfg_string_v2_lds():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v2"
+    labels = PER,ORG,LOC
+
+    [components.llm.task.label_definitions]
+    PER = "Any named individual in the text"
+    ORG = "Any named organization in the text"
+    LOC = "The name of any politically or geographically defined location"
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
+    """
+
+
+@pytest.fixture
 def fewshot_cfg_string():
     return f"""
     [nlp]
@@ -75,17 +107,31 @@ def fewshot_cfg_string():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string", "zeroshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["fewshot_cfg_string", "zeroshot_cfg_string", "zeroshot_cfg_string_v2_lds"],
+)
 def test_ner_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
+    # also test nlp config from a dict in add_pipe
+    component_cfg = dict(orig_config["components"]["llm"])
+    component_cfg.pop("factory")
+
+    nlp2 = spacy.blank("en")
+    nlp2.add_pipe("llm", config=component_cfg)
+    assert nlp2.pipe_names == ["llm"]
+
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize(
+    "cfg_string",
+    ["zeroshot_cfg_string", "zeroshot_cfg_string_v2_lds", "fewshot_cfg_string"],
+)
 def test_ner_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
