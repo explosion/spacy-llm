@@ -111,7 +111,7 @@ def make_ner_task_v1(
         case_sensitive_matching=case_sensitive_matching,
         single_match=single_match,
     )
-    setattr(task, "_TEMPLATE_STR", _NER_TEMPLATE_V1)
+    task._TEMPLATE_STR = _NER_TEMPLATE_V1
     return task
 
 
