@@ -30,7 +30,7 @@ class CacheConfigType(TypedDict):
 @Language.factory(
     "llm",
     requires=[],
-    assigns=[],
+    assigns=["doc._.llm_prompt", "doc._.llm_response"],
     default_config={
         "task": None,
         "backend": {
@@ -215,6 +215,10 @@ class LLMWrapper(Pipe):
             max_batches_in_mem=int(cache["max_batches_in_mem"]),
             vocab=vocab,
         )
+        if not Doc.has_extension("llm_prompt"):
+            Doc.set_extension("llm_prompt", default=None)
+        if not Doc.has_extension("llm_response"):
+            Doc.set_extension("llm_response", default=None)
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -263,6 +267,8 @@ class LLMWrapper(Pipe):
             logger.debug(prompt)
             logger.debug("Backend response for doc: %s", doc.text)
             logger.debug(response)
+            doc._.llm_prompt = prompt
+            doc._.llm_response = response
 
         modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
         final_docs = []
