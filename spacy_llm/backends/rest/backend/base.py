@@ -14,7 +14,8 @@ class Backend(abc.ABC):
         config: Dict[Any, Any],
         strict: bool,
         max_tries: int,
-        timeout: int,
+        interval: int,
+        max_request_time: int,
     ):
         """Initializes new Backend instance.
         config (Dict[Any, Any]): Config passed on to LLM API.
@@ -24,12 +25,14 @@ class Backend(abc.ABC):
             be raised.
             Note that only response object structure will be checked, not the prompt response text per se.
         max_tries (int): Max. number of tries for API request.
-        timeout (int): Timeout for API request in seconds.
+        interval (int): Time interval (in seconds) for API retries in seconds.
+        max_request_time (int): Max. time (in seconds) to wait for request to terminate before raising an exception.
         """
         self._config = config
         self._strict = strict
         self._max_tries = max_tries
-        self._timeout = timeout
+        self._interval = interval
+        self._max_request_time = max_request_time
         self._url = self._config.pop("url") if "url" in self._config else None
         self._credentials = self.credentials
 
@@ -38,7 +41,7 @@ class Backend(abc.ABC):
         self._check_api_endpoint_compatibility()
 
         assert self._max_tries >= 1
-        assert self._timeout >= 1
+        assert self._interval >= 1
 
     @property
     def _retry_error_codes(self) -> Tuple[int, ...]:
@@ -69,31 +72,46 @@ class Backend(abc.ABC):
         """
 
     def retry(
-        self,
-        call_api: Callable[[], requests.Response],
+        self, call_method: Callable[..., requests.Response], url: str, **kwargs
     ) -> requests.Response:
         """Retry a call to an API if we get a non-ok status code.
         This function automatically retries a request if it catches a response
-        with an error code in `error_codes`. The amount of timeout also increases
+        with an error code in `error_codes`. The time interval also increases
         exponentially every time we retry.
-        call_api (Callable[[], requests.Response]): Call to API.
-        error_codes (Tuple[int]): Error codes indicating unsuccessful calls.
+        call_method (Callable[[str, ...], requests.Response]): Method to use to fetch request. Must accept URL as first
+            parameter.
+        url (str): URL to address in request.
+        kwargs: Keyword args to be passed on to request.
         RETURNS (requests.Response): Response of last call.
         """
-        timeout = self._timeout
-        response = call_api()
+
+        def _call_api() -> requests.Response:
+            """Calls API with given timeout.
+            RETURNS (requests.Response): Response object.
+            """
+            try:
+                return call_method(url, **kwargs)
+            except TimeoutError as err:
+                raise TimeoutError(
+                    "Request time out. Check your network connection and the API's availability."
+                ) from err
+
+        interval = self._interval
+        response = _call_api()
         i = 0
 
         # We don't want to retry on every non-ok status code. Some are about
         # incorrect inputs, etc. and we want to terminate on those.
         while i < self._max_tries and response.status_code in self._retry_error_codes:
-            time.sleep(timeout)
+            time.sleep(interval)
+            response = _call_api()
             i += 1
-            timeout = timeout * 2  # Increase timeout everytime you retry
+            # Increase timeout everytime you retry
+            interval = interval * 2
 
         if response.status_code in self._retry_error_codes:
             raise ConnectionError(
-                f"API could not be reached within {self._timeout} seconds in {self._max_tries} attempts. Check your "
+                f"API could not be reached within {self._interval} seconds in {self._max_tries} attempts. Check your "
                 f"network connection and the API's availability."
             )
 

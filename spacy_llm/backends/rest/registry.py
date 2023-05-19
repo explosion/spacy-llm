@@ -12,7 +12,8 @@ def backend_rest(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = True,
     max_tries: int = 3,
-    timeout: int = 30,
+    interval: int = 30,
+    max_request_time: int = 30,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
     api (str): Name of any API. Currently supported: "OpenAI".
@@ -22,13 +23,18 @@ def backend_rest(
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
         be raised.
     max_tries (int): Max. number of tries for API request.
-    timeout (int): Timeout for API request in seconds.
+    interval (int): Time inteval for API retries in seconds.
+    max_request_time (int): Max. time (in seconds) to wait for request to terminate before raising an exception.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using a
         Backend instance.
     """
 
     backend = supported_apis[api](
-        config=config, strict=strict, max_tries=max_tries, timeout=timeout
+        config=config,
+        strict=strict,
+        max_tries=max_tries,
+        interval=interval,
+        max_request_time=max_request_time,
     )
 
     def _query(prompts: Iterable[str]) -> Iterable[str]:

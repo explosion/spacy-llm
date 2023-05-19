@@ -45,7 +45,7 @@ def test_model_error_handling():
     assert "The specified model 'x-gpt-3.5-turbo' is not available." in str(err.value)
 
 
-@pytest.mark.external
+# @pytest.mark.external
 def test_doc_length_error_handling():
     """Test error handling for wrong URL."""
     nlp = spacy.blank("en")

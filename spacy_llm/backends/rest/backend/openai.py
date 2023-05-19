@@ -50,13 +50,6 @@ class OpenAIBackend(Backend):
                 "an environment variable 'OPENAI_API_KEY."
             )
 
-        # Ensure endpoint is supported.
-        url = self._url if self._url else self.supported_models[self._config["model"]]
-        if url not in (Endpoints.non_chat, Endpoints.chat):
-            raise ValueError(
-                f"Endpoint {url} isn't supported. Please use of: {Endpoints.chat}, {Endpoints.non_chat}."
-            )
-
         # Check the access and get a list of available models to verify the model argument (if not None)
         # Even if the model is None, this call is used as a healthcheck to verify access.
         headers = {
@@ -65,10 +58,10 @@ class OpenAIBackend(Backend):
         if api_org:
             headers["OpenAI-Organization"] = api_org
         r = self.retry(
-            lambda: requests.get(
-                "https://api.openai.com/v1/models",
-                headers=headers,
-            ),
+            call_method=requests.get,
+            url="https://api.openai.com/v1/models",
+            headers=headers,
+            timeout=self._max_request_time,
         )
         if r.status_code == 422:
             raise ValueError(
@@ -94,6 +87,13 @@ class OpenAIBackend(Backend):
                 "(See OpenAI API documentation: https://platform.openai.com/docs/models/gpt-3)"
             )
 
+        # Ensure endpoint is supported.
+        url = self._url if self._url else self.supported_models[self._config["model"]]
+        if url not in (Endpoints.non_chat, Endpoints.chat):
+            raise ValueError(
+                f"Endpoint {url} isn't supported. Please use of: {Endpoints.chat}, {Endpoints.non_chat}."
+            )
+
         assert api_key is not None
         return headers
 
@@ -108,12 +108,11 @@ class OpenAIBackend(Backend):
 
         def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
             r = self.retry(
-                lambda: requests.post(
-                    url,
-                    headers=headers,
-                    json={**json_data, **self._config},
-                    timeout=self._timeout,
-                ),
+                call_method=requests.post,
+                url=url,
+                headers=headers,
+                json={**json_data, **self._config},
+                timeout=self._max_request_time,
             )
             try:
                 r.raise_for_status()
