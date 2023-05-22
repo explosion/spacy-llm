@@ -26,20 +26,10 @@ class CacheConfigType(TypedDict):
     max_batches_in_mem: int
 
 
-LLM_PROMPT_EXT_ATTR = "llm_prompt"
-LLM_RESPONSE_EXT_ATTR = "llm_response"
-
-
-def install_extensions():
-    for attr in [LLM_PROMPT_EXT_ATTR, LLM_RESPONSE_EXT_ATTR]:
-        if not Doc.has_extension(attr):
-            Doc.set_extension(attr, default=None, force=True)
-
-
 @Language.factory(
     "llm",
     requires=[],
-    assigns=[f"doc._.{LLM_PROMPT_EXT_ATTR}", f"doc._.{LLM_RESPONSE_EXT_ATTR}"],
+    assigns=[],
     default_config={
         "task": None,
         "backend": {
@@ -224,7 +214,6 @@ class LLMWrapper(Pipe):
             max_batches_in_mem=int(cache["max_batches_in_mem"]),
             vocab=vocab,
         )
-        install_extensions()
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -257,7 +246,6 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
         """
-        install_extensions()
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
         if len(noncached_doc_batch) < len(docs):
@@ -270,8 +258,6 @@ class LLMWrapper(Pipe):
         prompts = list(self._task.generate_prompts(noncached_doc_batch))
         responses = list(self._backend(prompts))
         for prompt, response, doc in zip(prompts, responses, noncached_doc_batch):
-            doc._.llm_prompt = prompt
-            doc._.llm_response = response
             logger.debug("Generated prompt for doc: %s", doc.text)
             logger.debug(prompt)
             logger.debug("Backend response for doc: %s", doc.text)
