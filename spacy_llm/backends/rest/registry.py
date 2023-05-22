@@ -1,9 +1,12 @@
 from typing import Any, Callable, Dict, Iterable
 
 from spacy.util import SimpleFrozenDict
+from sqlalchemy.exc import MovedIn20Warning
 
 from .backend import supported_apis
 from ...registry import registry
+
+MovedIn20Warning
 
 
 @registry.llm_backends("spacy.REST.v1")

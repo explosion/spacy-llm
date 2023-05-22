@@ -85,11 +85,6 @@ jobs:
           python -m pip install -U -r requirements.txt
           python -m pip install -U -r requirements-dev.txt
 
-      - name: Check env
-        shell: bash
-        run: |
-          python -m pip freeze
-
       - name: Run spacy_llm tests
         shell: bash
         run: |

@@ -15,6 +15,7 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:^.*pkg_resources.*:DeprecationWarning",
+    "ignore:^.*sqlalchemy.exc.MovedIn20Warning.*:DeprecationWarning",
     "ignore::DeprecationWarning:sqlalchemy.*"
 ]
 markers =[
