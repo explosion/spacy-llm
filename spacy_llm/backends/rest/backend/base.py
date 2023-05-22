@@ -15,7 +15,7 @@ class Backend(abc.ABC):
         config: Dict[Any, Any],
         strict: bool,
         max_tries: int,
-        interval: int,
+        interval: float,
         max_request_time: float,
     ):
         """Initializes new Backend instance.
@@ -26,7 +26,7 @@ class Backend(abc.ABC):
             be raised.
             Note that only response object structure will be checked, not the prompt response text per se.
         max_tries (int): Max. number of tries for API request.
-        interval (int): Time interval (in seconds) for API retries in seconds.
+        interval (float): Time interval (in seconds) for API retries in seconds.
         max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
         """
         self._config = config
@@ -42,7 +42,7 @@ class Backend(abc.ABC):
         self._check_api_endpoint_compatibility()
 
         assert self._max_tries >= 1
-        assert self._interval >= 1
+        assert self._interval > 0
         assert self._max_request_time > 0
 
     @property
@@ -104,6 +104,7 @@ class Backend(abc.ABC):
 
         # We don't want to retry on every non-ok status code. Some are about
         # incorrect inputs, etc. and we want to terminate on those.
+        start_time = time.time()
         while i < self._max_tries and response.status_code in self._retry_error_codes:
             time.sleep(interval)
             response = _call_api()
@@ -113,8 +114,8 @@ class Backend(abc.ABC):
 
         if response.status_code in self._retry_error_codes:
             raise ConnectionError(
-                f"API could not be reached within {self._interval} seconds in {self._max_tries} attempts. Check your "
-                f"network connection and the API's availability."
+                f"API could not be reached after {(time.time() - start_time):.3f} seconds in total and attempting to "
+                f"connect {self._max_tries} times. Check your network connection and the API's availability."
             )
 
         return response
