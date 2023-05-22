@@ -92,7 +92,7 @@ class OpenAIBackend(Backend):
         url = self._url if self._url else self.supported_models[self._config["model"]]
         if url not in (Endpoints.non_chat, Endpoints.chat):
             raise ValueError(
-                f"Endpoint {url} isn't supported. Please use of: {Endpoints.chat}, {Endpoints.non_chat}."
+                f"Endpoint {url} isn't supported. Please use one of: {Endpoints.chat}, {Endpoints.non_chat}."
             )
 
         assert api_key is not None
