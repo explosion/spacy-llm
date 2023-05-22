@@ -11,8 +11,8 @@ def backend_rest(
     api: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = True,
-    max_tries: int = 3,
-    interval: int = 30,
+    max_tries: int = 5,
+    interval: int = 1,
     max_request_time: float = 30,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
