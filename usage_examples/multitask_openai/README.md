@@ -8,8 +8,6 @@ LLM query, but in this example we'll only use built-in task templates to
 see how easy it is to compose them. Note that breaking down tasks this way
 might be a better choice anyway, since it allows you to better control the
 performance of your pipeline.
-See [Matt Honnibal's blog post on the subject](https://explosion.ai/blog/against-llm-maximalism)
-for more context.
 
 This example shows how you can use a model from OpenAI for categorizing texts
 as well as detect entities of interest in zero- or few-shot settings.
