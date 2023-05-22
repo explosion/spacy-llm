@@ -12,8 +12,9 @@ class _HTTPRetryErrorCodes(Enum):
     TOO_MANY_REQUESTS = 429
     SERVICE_UNAVAILABLE = 503
 
-    def __contains__(self, item: int):
-        return item in set(item.value for item in _HTTPRetryErrorCodes)
+    @classmethod
+    def has(cls, item: int):
+        return item in set(item.value for item in cls)
 
 
 class Backend(abc.ABC):
@@ -107,14 +108,14 @@ class Backend(abc.ABC):
         # We don't want to retry on every non-ok status code. Some are about
         # incorrect inputs, etc. and we want to terminate on those.
         start_time = time.time()
-        while i < self._max_tries and response.status_code in _HTTPRetryErrorCodes:
+        while i < self._max_tries and _HTTPRetryErrorCodes.has(response.status_code):
             time.sleep(interval)
             response = _call_api()
             i += 1
             # Increase timeout everytime you retry
             interval = interval * 2
 
-        if response.status_code in _HTTPRetryErrorCodes:
+        if _HTTPRetryErrorCodes.has(response.status_code):
             raise ConnectionError(
                 f"API could not be reached after {(time.time() - start_time):.3f} seconds in total and attempting to "
                 f"connect {self._max_tries} times. Check your network connection and the API's availability."
