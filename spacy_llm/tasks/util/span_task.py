@@ -9,7 +9,7 @@ from .examples import SpanExample
 from .parsing import find_substrings
 
 
-class AbstractSpanTask:
+class SpanTask:
     _TEMPLATE_STR: str
 
     def __init__(
