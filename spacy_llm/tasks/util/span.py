@@ -10,6 +10,8 @@ from .parsing import find_substrings
 
 
 class SpanTask:
+    """Base class for Span-related tasks, eg NER and SpanCat."""
+
     _TEMPLATE_STR: str
 
     def __init__(
