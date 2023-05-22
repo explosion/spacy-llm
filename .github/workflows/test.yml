@@ -89,7 +89,6 @@ jobs:
         shell: bash
         run: |
           python -m pip freeze | grep sqlalchemy
-          python -m pip freeze | grep langchain
 
       - name: Run spacy_llm tests
         shell: bash
