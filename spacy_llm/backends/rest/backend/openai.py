@@ -10,8 +10,8 @@ from .base import Backend
 
 
 class Endpoints(str, Enum):
-    chat = "https://api.openai.com/v1/chat/completions"
-    non_chat = "https://api.openai.com/v1/completions"
+    CHAT = "https://api.openai.com/v1/chat/completions"
+    NON_CHAT = "https://api.openai.com/v1/completions"
 
 
 class OpenAIBackend(Backend):
@@ -21,21 +21,21 @@ class OpenAIBackend(Backend):
         RETURNS (Dict[str, str]): Supported models with their endpoints.
         """
         return {
-            "gpt-4": Endpoints.chat.value,
-            "gpt-4-0314": Endpoints.chat.value,
-            "gpt-4-32k": Endpoints.chat.value,
-            "gpt-4-32k-0314": Endpoints.chat.value,
-            "gpt-3.5-turbo": Endpoints.chat.value,
-            "gpt-3.5-turbo-0301": Endpoints.chat.value,
-            "text-davinci-003": Endpoints.non_chat.value,
-            "text-davinci-002": Endpoints.non_chat.value,
-            "text-curie-001": Endpoints.non_chat.value,
-            "text-babbage-001": Endpoints.non_chat.value,
-            "text-ada-001": Endpoints.non_chat.value,
-            "davinci": Endpoints.non_chat.value,
-            "curie": Endpoints.non_chat.value,
-            "babbage": Endpoints.non_chat,
-            "ada": Endpoints.non_chat.value,
+            "gpt-4": Endpoints.CHAT.value,
+            "gpt-4-0314": Endpoints.CHAT.value,
+            "gpt-4-32k": Endpoints.CHAT.value,
+            "gpt-4-32k-0314": Endpoints.CHAT.value,
+            "gpt-3.5-turbo": Endpoints.CHAT.value,
+            "gpt-3.5-turbo-0301": Endpoints.CHAT.value,
+            "text-davinci-003": Endpoints.NON_CHAT.value,
+            "text-davinci-002": Endpoints.NON_CHAT.value,
+            "text-curie-001": Endpoints.NON_CHAT.value,
+            "text-babbage-001": Endpoints.NON_CHAT.value,
+            "text-ada-001": Endpoints.NON_CHAT.value,
+            "davinci": Endpoints.NON_CHAT.value,
+            "curie": Endpoints.NON_CHAT.value,
+            "babbage": Endpoints.NON_CHAT,
+            "ada": Endpoints.NON_CHAT.value,
         }
 
     @property
@@ -90,9 +90,9 @@ class OpenAIBackend(Backend):
 
         # Ensure endpoint is supported.
         url = self._url if self._url else self.supported_models[self._config["model"]]
-        if url not in (Endpoints.non_chat, Endpoints.chat):
+        if url not in (Endpoints.NON_CHAT, Endpoints.CHAT):
             raise ValueError(
-                f"Endpoint {url} isn't supported. Please use one of: {Endpoints.chat}, {Endpoints.non_chat}."
+                f"Endpoint {url} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
             )
 
         assert api_key is not None
@@ -134,7 +134,7 @@ class OpenAIBackend(Backend):
 
             return responses
 
-        if url == Endpoints.chat:
+        if url == Endpoints.CHAT:
             # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
             for prompt in prompts:
                 responses = _request(
@@ -152,7 +152,7 @@ class OpenAIBackend(Backend):
                     )
                 )
 
-        elif url == Endpoints.non_chat:
+        elif url == Endpoints.NON_CHAT:
             responses = _request({"prompt": prompts})
             if "error" in responses:
                 return responses["error"]

@@ -1,10 +1,19 @@
 import abc
 import time
 import warnings
-from typing import Any, Dict, Iterable, Callable, Tuple
+from enum import Enum
+from typing import Any, Dict, Iterable, Callable
 
 import requests  # type: ignore
 from requests import ConnectTimeout, ReadTimeout
+
+
+class _HTTPRetryErrorCodes(Enum):
+    TOO_MANY_REQUESTS = 429
+    SERVICE_UNAVAILABLE = 503
+
+    def __contains__(self, item: int):
+        return item in set(item.value for item in _HTTPRetryErrorCodes)
 
 
 class Backend(abc.ABC):
@@ -45,13 +54,6 @@ class Backend(abc.ABC):
         assert self._max_tries >= 1
         assert self._interval > 0
         assert self._max_request_time > 0
-
-    @property
-    def _retry_error_codes(self) -> Tuple[int, ...]:
-        """Returns codes qualifying as error (and triggering retrying requests).
-        RETURNS (Tuple[int]): Error codes.
-        """
-        return 429, 503
 
     @abc.abstractmethod
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
@@ -105,14 +107,14 @@ class Backend(abc.ABC):
         # We don't want to retry on every non-ok status code. Some are about
         # incorrect inputs, etc. and we want to terminate on those.
         start_time = time.time()
-        while i < self._max_tries and response.status_code in self._retry_error_codes:
+        while i < self._max_tries and response.status_code in _HTTPRetryErrorCodes:
             time.sleep(interval)
             response = _call_api()
             i += 1
             # Increase timeout everytime you retry
             interval = interval * 2
 
-        if response.status_code in self._retry_error_codes:
+        if response.status_code in _HTTPRetryErrorCodes:
             raise ConnectionError(
                 f"API could not be reached after {(time.time() - start_time):.3f} seconds in total and attempting to "
                 f"connect {self._max_tries} times. Check your network connection and the API's availability."
