@@ -1,8 +1,5 @@
-import warnings
-
 import spacy
 import pytest
-from sqlalchemy.exc import MovedIn20Warning
 
 from spacy_llm.compat import has_langchain
 
@@ -23,10 +20,4 @@ def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
     nlp.add_pipe("llm", config=PIPE_CFG)
-
-    warnings.warn("blub pkg_resources", DeprecationWarning)
-    warnings.warn(
-        "The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0)",
-        MovedIn20Warning,
-    )
     nlp("This is a test.")
