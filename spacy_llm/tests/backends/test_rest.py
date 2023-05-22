@@ -12,15 +12,17 @@ PIPE_CFG = {
         "api": "OpenAI",
         "config": {"temperature": 0.3, "model": "gpt-3.5-turbo"},
     },
-    "task": {"@llm_tasks": "spacy.NoOp.v1"},
+    "task": {"@llm_tasks": "spacy.TextCat.v1", "labels": "POSITIVE,NEGATIVE"},
 }
 
 
-@pytest.mark.external
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=PIPE_CFG)
+    cfg = copy.deepcopy(PIPE_CFG)
+    cfg["backend"]["api"] = "NoOp"
+    cfg["backend"]["config"] = {"model": "NoOp"}
+    nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
 
@@ -58,7 +60,10 @@ def test_openai(model: str):
         config=cfg,
     )
     nlp("test")
-    nlp.pipe(["test 1", "test 2"])
+    docs = list(nlp.pipe(["test 1", "test 2"]))
+    assert len(docs) == 2
+    assert docs[0].text == "test 1"
+    assert docs[1].text == "test 2"
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")

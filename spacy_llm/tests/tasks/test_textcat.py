@@ -279,8 +279,12 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     assert (
         prompt.strip()
         == """
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
 Classify whether the text below belongs to the Recipe category or not.
 If it is a Recipe, answer `POS`. If it is not a Recipe, answer `NEG`.
+Do not put any other text in your answer, only one of 'POS' or 'NEG' with nothing before or after.
 Below are some examples (only use these as a guide):
 
 
@@ -341,8 +345,12 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     assert (
         prompt.strip()
         == """
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
 Classify the text below to any of the following labels: Recipe, Feedback, Comment
 The task is exclusive, so only choose one label from what I provided.
+Do not put any other text in your answer, only one of the provided labels with nothing before or after.
 Below are some examples (only use these as a guide):
 
 
@@ -403,9 +411,13 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     assert (
         prompt.strip()
         == """
-    Classify the text below to any of the following labels: Recipe, Feedback, Comment
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
+Classify the text below to any of the following labels: Recipe, Feedback, Comment
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
+Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
 If the text cannot be classified into any of the provided labels, answer `==NONE==`.
 Below are some examples (only use these as a guide):
 

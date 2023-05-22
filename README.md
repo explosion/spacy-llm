@@ -2,7 +2,7 @@
 
 # spacy-llm: Integrating LLMs into structured NLP pipelines
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/external.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/external.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/test.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/test.yml)
 [![pypi Version](https://img.shields.io/pypi/v/spacy-llm.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy-llm/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
@@ -199,6 +199,9 @@ Each `llm` component is defined by two main settings:
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
 - A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
+
+Moreover, the component also implements [**caching**](#cache) functionality to avoid running
+the same document through an LLM service (be it local or through a REST API) more than once.
 
 ### Tasks
 
@@ -525,6 +528,29 @@ Supported models (see the [Databricks models page](https://huggingface.co/databr
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
+
+### Cache
+
+Interacting with LLMs, either through an external API or a local instance, is costly.
+Since developing an NLP pipeline generally means a lot of exploration and prototyping,
+`spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run.
+
+Example config block:
+
+```ini
+[components.llm.cache]
+# The cache is not a registered function.
+# You supply its configuration to the llm component directly.
+path = "path/to/cache"
+batch_size = 64
+max_batches_in_mem = 4
+```
+
+| Argument             | Type            | Default | Description                                          |
+| -------------------- | --------------- | ------- | ---------------------------------------------------- |
+| `path`               | `Optional[str]` | `None`  | Cache directory. If `None`, no caching is performed. |
+| `batch_size`         | `int`           | 64      | Number of docs in one batch (file).                  |
+| `max_batches_in_mem` | `int`           | 4       | Max. number of batches to hold in memory.            |
 
 ### Various functions
 

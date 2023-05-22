@@ -1,8 +1,7 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Iterable, Tuple, Iterator, Type
-from typing import cast, Optional, Any
+from typing import Any, Iterable, Iterator, Optional, Tuple, Type, cast
 
 import spacy
 from spacy.language import Language
@@ -240,14 +239,16 @@ class LLMWrapper(Pipe):
         for doc_batch in spacy.util.minibatch(stream, batch_size):
             is_cached = [doc in self._cache for doc in doc_batch]
             noncached_doc_batch = [
-                doc for i, doc in enumerate(doc_batch) if not is_cached[i]
+                doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
             try:
                 prompts = self._task.generate_prompts(noncached_doc_batch)
                 responses = self._backend(prompts)
-                modified_docs = iter(self._task.parse_responses(doc_batch, responses))
-                for i, doc in enumerate(doc_batch):
-                    if is_cached[i]:
+                modified_docs = iter(
+                    self._task.parse_responses(noncached_doc_batch, responses)
+                )
+                for doc, cached_doc in zip(doc_batch, is_cached):
+                    if cached_doc:
                         doc = self._cache[doc]
                         assert isinstance(doc, Doc)
                         yield doc
