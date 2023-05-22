@@ -15,5 +15,8 @@ or new feature, or a change to the documentation? -->
 <!--- Before you submit the PR, go over this checklist and make sure you can
 tick off all the boxes. [] -> [x] -->
 - [ ] I confirm that I have the right to submit this contribution under the project's MIT license.
-- [ ] I ran the tests (including the **external** tests), and all new and existing tests passed.
+- [ ] I ran all tests , and all new and existing tests passed. This includes tests marked as `external` and those 
+  requiring a GPU. I did this for the following directories:
+  - [ ] `tests`
+  - [ ] `usage_example/tests`
 - [ ] My changes don't require a change to the documentation, or if they do, I've added all required information.
