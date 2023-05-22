@@ -44,3 +44,5 @@ if os.environ["OPENAI_API_KEY"]:
         visualize_textcat(doc)
     if selected_model == "ner":
         visualize_ner(doc)
+else:
+    st.error("Input your OpenAI API key")
