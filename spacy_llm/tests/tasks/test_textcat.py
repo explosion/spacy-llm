@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 from pathlib import Path
 
 import pytest
@@ -8,10 +7,10 @@ from confection import Config
 from pydantic import ValidationError
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import lowercase_normalizer, fewshot_reader
+from spacy_llm.registry import fewshot_reader, lowercase_normalizer
 from spacy_llm.tasks.textcat import TextCatTask
-from ..compat import has_openai_key
 
+from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 
