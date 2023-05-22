@@ -2,7 +2,7 @@ import abc
 import time
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, Callable
+from typing import Any, Dict, Iterable, Callable, Optional
 
 import requests  # type: ignore
 from requests import ConnectTimeout, ReadTimeout
@@ -90,31 +90,40 @@ class Backend(abc.ABC):
         RETURNS (requests.Response): Response of last call.
         """
 
-        def _call_api() -> requests.Response:
+        def _call_api(attempt: int) -> Optional[requests.Response]:
             """Calls API with given timeout.
-            RETURNS (requests.Response): Response object.
+            attempt (int): Reflects the how many-th try at reaching the API this is. If attempt < self._max_tries and
+                the call fails, None is returned. If attempt == self._max_tries and the call fails, a TimeoutError is
+                raised.
+            RETURNS (Optional[requests.Response]): Response object.
             """
             try:
                 return call_method(url, **kwargs)
             except (ConnectTimeout, ReadTimeout, TimeoutError) as err:
-                raise TimeoutError(
-                    "Request time out. Check your network connection and the API's availability."
-                ) from err
+                if attempt < self._max_tries:
+                    return None
+                else:
+                    raise TimeoutError(
+                        "Request time out. Check your network connection and the API's availability."
+                    ) from err
 
         interval = self._interval
-        response = _call_api()
         i = 0
+        response = _call_api(i)
 
         # We don't want to retry on every non-ok status code. Some are about
         # incorrect inputs, etc. and we want to terminate on those.
         start_time = time.time()
-        while i < self._max_tries and _HTTPRetryErrorCodes.has(response.status_code):
+        while i < self._max_tries and (
+            response is None or _HTTPRetryErrorCodes.has(response.status_code)
+        ):
             time.sleep(interval)
-            response = _call_api()
+            response = _call_api(i + 1)
             i += 1
             # Increase timeout everytime you retry
             interval = interval * 2
 
+        assert isinstance(response, requests.Response)
         if _HTTPRetryErrorCodes.has(response.status_code):
             raise ConnectionError(
                 f"API could not be reached after {(time.time() - start_time):.3f} seconds in total and attempting to "
