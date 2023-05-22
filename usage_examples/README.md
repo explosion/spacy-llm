@@ -91,8 +91,60 @@ You can check sample tasks for Named Entity Recognition and text categorization
 in the `spacy_llm/tasks/` directory. We also recommend checking out the
 `spacy.NoOp.v1` task for a barebones implementation to pattern your task from.
 
-<!-- TODO
+## Writing your own backend
 
-### Writing your own backend
+In `spacy-llm`, the [**backend**](../README.md#backend) is responsible for the
+interaction with the actual LLM model. For instance, this can be an
+[API-based service](../README.md#spacyrestv1), or a local model - whether
+you [downloaded it from the Hugging Face Hub](../README.md#spacydollyhfv1)
+directly or finetuned it with proprietary data.
 
--->
+`spacy-llm` lets you implement your own custom backend so you can try out the
+latest LLM interface out there. It should be consistent with a given task since
+behind the scenes, `spacy-llm` roughly performs the following pseudo-code:
+
+```python
+prompts = task.generate_prompts(docs)
+responses = backend(prompts)
+task.parse_responses(docs, responses)
+```
+
+Let's write a dummy backend that provides a random output for the
+[text classification task](../README.md#spacytextcatv1).
+
+```python
+from spacy_llm.registry import registry
+import random
+from typing import Iterable
+
+@registry.llm_backends("RandomClassification.v1")
+def random_textcat(labels: str):
+    labels = labels.split(",")
+    def _classify(prompts: Iterable[str]) -> Iterable[str]:
+        for _ in prompts:
+            yield random.choice(labels)
+    
+    return _classify
+```
+
+```ini
+...
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v1"
+labels = LABEL1,LABEL2,LABEL3
+
+
+[components.llm.backend]
+@llm_backends = "RandomClassification.v1"
+labels = ${components.llm.task.labels}  # Make sure to use the same label
+...
+```
+
+Of course, this particular backend is not very realistic
+(it does not even interact with an actual LLM model!).
+But it does show how you would go about writing custom
+and arbitrary logic to interact with any LLM implementation.
+
+Note that at the moment, all built-in tasks generate text-based prompts
+and expect text response. Therefore, built-in tasks and backends
+are currently inter-operable.
