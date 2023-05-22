@@ -85,7 +85,7 @@ class OpenAIBackend(Backend):
             raise ValueError(
                 f"The specified model '{model}' is not supported by the /v1/completions endpoint. "
                 f"Choices are: {sorted(list(self.supported_models))} ."
-                "(See OpenAI API documentation: https://platform.openai.com/docs/models/gpt-3)"
+                "(See OpenAI API documentation: https://platform.openai.com/docs/models/)"
             )
 
         # Ensure endpoint is supported.
