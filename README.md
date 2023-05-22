@@ -296,7 +296,7 @@ path = "ner_examples.yml"
 #### spacy.SpanCat.v1
 
 The built-in SpanCat task is a simple adaptation of the NER task to
-support overlapping entities and land its annotations with `doc.spans`.
+support overlapping entities and store its annotations in `doc.spans`.
 
 ```ini
 [components.llm.task]
