@@ -19,8 +19,6 @@ PIPE_CFG = {
 
 @pytest.mark.external
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
-@pytest.mark.filterwarnings("ignore:^.*pkg_resources.*:DeprecationWarning")
-@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.MovedIn20Warning")
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
