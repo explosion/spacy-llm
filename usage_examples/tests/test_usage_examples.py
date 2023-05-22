@@ -45,7 +45,7 @@ def test_textcat_openai(config_name: str):
     "config_name", ("openai_multitask_fewshot.cfg", "openai_multitask_zeroshot.cfg")
 )
 def test_multitask_openai(config_name: str):
-    """Test NER Dolly usage example.
+    """Test multi-task OpenAI usage example.
     config_name (str): Name of config file to use.
     """
     run_multitask_openai_pipeline.run_pipeline(
