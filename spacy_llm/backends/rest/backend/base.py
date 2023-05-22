@@ -78,9 +78,8 @@ class Backend(abc.ABC):
         self, call_method: Callable[..., requests.Response], url: str, **kwargs
     ) -> requests.Response:
         """Retry a call to an API if we get a non-ok status code.
-        This function automatically retries a request if it catches a response
-        with an error code in `error_codes`. The time interval also increases
-        exponentially every time we retry.
+        This function automatically retries a request if it catches a response with an error code in `error_codes`.
+        The time interval also increases exponentially every time we retry.
         call_method (Callable[[str, ...], requests.Response]): Method to use to fetch request. Must accept URL as first
             parameter.
         url (str): URL to address in request.
