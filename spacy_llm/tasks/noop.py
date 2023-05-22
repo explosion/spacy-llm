@@ -16,7 +16,7 @@ class NoopTask:
         pass
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        for doc in docs:
+        for _ in docs:
             yield "Don't do anything."
 
     def parse_responses(
