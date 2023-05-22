@@ -12,6 +12,9 @@ st.markdown(
     Large Language Models (LLMs) into spaCy, featuring a modular system 
     for fast prototyping and prompting, and turning unstructured responses 
     into robust outputs for various NLP tasks, no training data required.
+
+    This demo uses the OpenAI backend to demonstrate the NER and textcat 
+    tasks.
     """
 )
 os.environ["OPENAI_API_KEY"] = st.text_input("Your OpenAI API key", type="password")
@@ -41,4 +44,3 @@ if os.environ["OPENAI_API_KEY"]:
         visualize_textcat(doc)
     if selected_model == "ner":
         visualize_ner(doc)
-
