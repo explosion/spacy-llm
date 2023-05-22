@@ -1,11 +1,11 @@
 from pathlib import Path
 
 import pytest
+from thinc.compat import has_torch_cuda_gpu
 
+from ..multitask_openai import run_multitask_openai_pipeline
 from ..ner_dolly import run_ner_dolly_pipeline
 from ..textcat_openai import run_textcat_openai_pipeline
-
-from thinc.compat import has_torch_cuda_gpu
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
@@ -19,7 +19,9 @@ def test_ner_dolly(config_name: str):
     config_name (str): Name of config file to use.
     """
     run_ner_dolly_pipeline.run_pipeline(
-        "text", _USAGE_EXAMPLE_PATH / "ner_dolly" / config_name, False
+        text="text",
+        config_path=_USAGE_EXAMPLE_PATH / "ner_dolly" / config_name,
+        verbose=False,
     )
 
 
@@ -32,5 +34,22 @@ def test_textcat_openai(config_name: str):
     config_name (str): Name of config file to use.
     """
     run_textcat_openai_pipeline.run_pipeline(
-        "text", _USAGE_EXAMPLE_PATH / "textcat_openai" / config_name, False
+        text="text",
+        config_path=_USAGE_EXAMPLE_PATH / "textcat_openai" / config_name,
+        verbose=False,
+    )
+
+
+@pytest.mark.external
+@pytest.mark.parametrize(
+    "config_name", ("openai_multitask_fewshot.cfg", "openai_multitask_zeroshot.cfg")
+)
+def test_multitask_openai(config_name: str):
+    """Test multi-task OpenAI usage example.
+    config_name (str): Name of config file to use.
+    """
+    run_multitask_openai_pipeline.run_pipeline(
+        text="text",
+        config_path=_USAGE_EXAMPLE_PATH / "multitask_openai" / config_name,
+        verbose=False,
     )
