@@ -16,7 +16,7 @@ from ..compat import TypedDict
 from ..ty import LLMTask, PromptExecutor
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
 
 
