@@ -11,7 +11,7 @@ Each configuration file contains an `llm` component that takes in a `task` and a
 how the corresponding LLM output will be parsed whereas the `backend` defines
 which model to use and how to connect to it.
 
-```
+```ini
 ...
 [components]
 
