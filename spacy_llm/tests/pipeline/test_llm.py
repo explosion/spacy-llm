@@ -1,3 +1,4 @@
+import logging
 import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable
@@ -143,3 +144,28 @@ def test_type_checking_invalid(noop_config) -> None:
         == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
         "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
     )
+
+
+@pytest.mark.parametrize("use_pipe", [True, False])
+def test_llm_logs_at_debug_level(nlp: Language, use_pipe: bool, caplog):
+    with caplog.at_level(logging.INFO):
+        if use_pipe:
+            doc = next(nlp.pipe(["This is a test"]))
+        else:
+            doc = nlp("This is a test")
+
+    assert "spacy_llm" not in caplog.text
+    assert doc.text not in caplog.text
+
+    with caplog.at_level(logging.DEBUG):
+        if use_pipe:
+            doc = next(nlp.pipe(["This is a test"]))
+        else:
+            doc = nlp("This is a test")
+
+    assert "spacy_llm" in caplog.text
+    assert doc.text in caplog.text
+
+    assert f"Generated prompt for doc: {doc.text}" in caplog.text
+    assert "Don't do anything" in caplog.text
+    assert f"Backend response for doc: {doc.text}" in caplog.text
