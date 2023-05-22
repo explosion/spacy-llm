@@ -23,7 +23,8 @@ def backend_rest(
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
         be raised.
     max_tries (int): Max. number of tries for API request.
-    interval (float): Time interval for API retries in seconds.
+    interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
+        at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using a
         Backend instance.

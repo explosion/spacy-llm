@@ -26,7 +26,8 @@ class Backend(abc.ABC):
             be raised.
             Note that only response object structure will be checked, not the prompt response text per se.
         max_tries (int): Max. number of tries for API request.
-        interval (float): Time interval (in seconds) for API retries in seconds.
+        interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential
+            backoff at each retry.
         max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
         """
         self._config = config
