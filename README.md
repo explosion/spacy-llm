@@ -315,7 +315,8 @@ examples = null
 | `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
 | `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
 
-Except for the `spans_key` parameter, the SpanCat reuses the configuration from the NER task.
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task.
 Refer to [its documentation](#spacynerv1) for more insight.
 
 #### spacy.TextCat.v1
