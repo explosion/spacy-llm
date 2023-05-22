@@ -15,8 +15,7 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:^.*pkg_resources.*:DeprecationWarning",
-    "ignore:^.*sqlalchemy.exc.MovedIn20Warning.*:DeprecationWarning",
-    "ignore::DeprecationWarning:sqlalchemy.*"
+    "ignore::sqlalchemy.exc.MovedIn20Warning"
 ]
 markers =[
     "external: interacts with a (potentially cost-incurring) third-party API"
