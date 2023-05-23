@@ -1,3 +1,4 @@
+import functools
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 from typing import TYPE_CHECKING
 
@@ -25,11 +26,11 @@ def query_langchain() -> Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]:
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
         the specified LangChain backend.
     """
+    return _prompt_langchain
 
-    def prompt(backend: "BaseLLM", prompts: Iterable[Any]) -> Iterable[Any]:
-        return [backend(pr) for pr in prompts]
 
-    return prompt
+def _prompt_langchain(backend: "BaseLLM", prompts: Iterable[Any]) -> Iterable[Any]:
+    return [backend(pr) for pr in prompts]
 
 
 @registry.llm_backends("spacy.LangChain.v1")
@@ -55,15 +56,20 @@ def backend_langchain(
     type_to_cls_dict: Dict[str, Type[BaseLLM]] = langchain.llms.type_to_cls_dict
 
     if api in type_to_cls_dict:
-        backend = type_to_cls_dict[api](**config)
-
+        lc_backend = type_to_cls_dict[api](**config)
         query_fn = query_langchain() if query is None else query
-
-        def _query(prompts: Iterable[Any]) -> Iterable[Any]:
-            return query_fn(backend, prompts)
-
-        return _query
+        return LangChainBackend(lc_backend, query_fn).query
     else:
         raise KeyError(
             f"The requested API {api} is not available in `langchain.llms.type_to_cls_dict`."
         )
+
+
+class LangChainBackend:
+
+    def __init__(self, backend: "BaseLLM", query_fn: Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]) -> None:
+        self._backend = backend
+        self._query_fn = query_fn
+
+    def query(self, prompts: Iterable[Any]) -> Iterable[Any]:
+        return self._query_fn(self._backend, prompts)
