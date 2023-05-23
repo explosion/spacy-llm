@@ -91,7 +91,7 @@ def _validate_types(task: LLMTask, backend: PromptExecutor) -> None:
     type_hints = {
         "template": typing.get_type_hints(task.generate_prompts),
         "parse": typing.get_type_hints(task.parse_responses),
-        "backend": typing.get_type_hints(backend),
+        "backend": typing.get_type_hints(backend.__call__) if hasattr(backend, "__call__") else typing.get_type_hints(backend),
     }
 
     parse_input: Optional[Type] = None

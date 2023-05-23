@@ -37,4 +37,4 @@ def backend_rest(
         interval=interval,
         max_request_time=max_request_time,
     )
-    return backend.__call__
+    return backend
