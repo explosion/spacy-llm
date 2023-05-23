@@ -1,0 +1,2 @@
+{"text": "Laura bought a house in Boston with her husband Mark.", "relations": [{"dep": 0, "dest": 1, "relation": "LivesIn"}, {"dep": 2, "dest": 1, "relation": "Visits"}]}
+{"text": "Laura travelled through South America by bike.", "relations": [{"dep": 0, "dest": 1, "relation": "Visits"}]}
