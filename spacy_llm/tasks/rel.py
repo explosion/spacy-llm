@@ -46,7 +46,7 @@ def _preannotate(doc: Doc) -> str:
 
 @registry.llm_tasks("spacy.REL.v1")
 class RELTask:
-    """Simple REL task."""
+    """Simple REL task. Populates a `Doc._.rel` custom attribute."""
 
     _TEMPLATE_STR = read_template("rel")
 
@@ -67,7 +67,7 @@ class RELTask:
             self._normalizer(label): label for label in labels.split(",")
         }
         self._label_definitions = label_definitions
-        self._examples = [RELExample(**eg) for eg in examples()] if examples else None
+        self._examples = examples and [RELExample.parse_obj(eg) for eg in examples()]
 
         self._verbose = verbose
 
