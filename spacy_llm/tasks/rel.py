@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Iterable, List, Optional
 
 import jinja2
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, Field, ValidationError, validator
 from spacy.tokens import Doc
 from wasabi import msg
 
@@ -21,13 +21,20 @@ class RelationItem(BaseModel):
         return value
 
 
+class EntityItem(BaseModel):
+    start_char: int
+    end_char: int
+    label_: str = Field(alias="label")
+
+
 class RELExample(BaseModel):
     text: str
+    ents: List[EntityItem]
     relations: List[RelationItem]
 
 
-def _preannotate(doc: Doc) -> str:
-    """Creates a version of the document with annotated entities."""
+def _preannotate(doc: Doc | RELExample) -> str:
+    """Creates a text version of the document with annotated entities."""
     offset = 0
 
     text = doc.text
@@ -80,6 +87,7 @@ class RELTask:
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
                 examples=self._examples,
+                preannotate=_preannotate,
             )
             yield prompt
 
