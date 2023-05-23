@@ -66,6 +66,7 @@ def test_openai(model: str):
     assert docs[1].text == "test 2"
 
 
+@pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_model_backend_compatibility():
     """Tests whether incompatible model and backend are detected as expected."""
