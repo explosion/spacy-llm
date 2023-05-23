@@ -145,6 +145,7 @@ Of course, this particular backend is not very realistic
 But it does show how you would go about writing custom
 and arbitrary logic to interact with any LLM implementation.
 
-Note that at the moment, all built-in tasks generate text-based prompts
-and expect text response. Therefore, built-in tasks and backends
-are currently inter-operable.
+Note that in all built-in tasks and backends prompts and responses are expected to be of type `string` 
+- all built-in tasks and backends are therefore inter-operable. It's possible to work with arbitrary objects 
+instead of `string` though - which might be useful if you want some third-party abstractions for prompts
+or responses.
