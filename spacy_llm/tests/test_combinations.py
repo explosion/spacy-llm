@@ -17,7 +17,7 @@ PIPE_CFG = {
 }
 
 
-@pytest.mark.external
+# @pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize("n_process", [1, 2])
@@ -45,4 +45,4 @@ def test_combinations(n_process: int):
         nlp = spacy.blank("en")
         nlp.add_pipe("llm", config=config)
         nlp("This is a test.")
-        nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process, batch_size=1)
+        list(nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process))
