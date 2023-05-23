@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 from pathlib import Path
 
 import pytest
