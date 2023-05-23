@@ -100,8 +100,11 @@ you [downloaded it from the Hugging Face Hub](../README.md#spacydollyhfv1)
 directly or finetuned it with proprietary data.
 
 `spacy-llm` lets you implement your own custom backend so you can try out the
-latest LLM interface out there. It should be consistent with a given task since
-behind the scenes, `spacy-llm` roughly performs the following pseudo-code:
+latest LLM interface out there. Bear in mind that tasks are responsible for
+creating the prompt and parsing the response – and both can be arbitrary objects.
+Hence, a backend should be consistent with the task you'd like it to run with.
+
+In other words, `spacy-llm` roughly performs the following pseudo-code behind the scenes:
 
 ```python
 prompts = task.generate_prompts(docs)
@@ -145,7 +148,7 @@ Of course, this particular backend is not very realistic
 But it does show how you would go about writing custom
 and arbitrary logic to interact with any LLM implementation.
 
-Note that in all built-in tasks and backends prompts and responses are expected to be of type `string` 
-- all built-in tasks and backends are therefore inter-operable. It's possible to work with arbitrary objects 
+Note that in all built-in tasks and backends prompts and responses are expected to be of type `string` -
+all built-in tasks and backends are therefore inter-operable. It's possible to work with arbitrary objects
 instead of `string` though - which might be useful if you want some third-party abstractions for prompts
 or responses.
