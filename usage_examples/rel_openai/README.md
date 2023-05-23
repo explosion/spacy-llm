@@ -1,7 +1,7 @@
 # Relation extraction using LLMs
 
 This example shows how you can use a model from OpenAI for relation extraction in
-zero- or few-shot settings.
+zero- and few-shot settings.
 
 Here, we use the pretrained [`en_core_web_sm` model](https://spacy.io/models/en#en_core_web_sm)
 to perform Named Entity Recognition (NER) using a fast and properly evaluated pipeline.
