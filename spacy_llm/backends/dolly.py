@@ -79,8 +79,7 @@ def backend_dolly_hf(
         config = _compile_default_config()
 
     llm_pipeline = transformers.pipeline(model=model, **config)
-    backend = DollyBackend(llm_pipeline)
-    return backend.query
+    return DollyBackend(llm_pipeline).query
 
 
 class DollyBackend:
