@@ -85,4 +85,4 @@ def test_rel_config(cfg_string, request: FixtureRequest):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
-    assert nlp.pipe_names == ["llm"]
+    assert nlp.pipe_names == ["ner", "llm"]
