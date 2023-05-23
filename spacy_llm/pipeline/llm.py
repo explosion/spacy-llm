@@ -258,10 +258,8 @@ class LLMWrapper(Pipe):
         prompts = list(self._task.generate_prompts(noncached_doc_batch))
         responses = list(self._backend(prompts))
         for prompt, response, doc in zip(prompts, responses, noncached_doc_batch):
-            logger.debug("Generated prompt for doc: %s", doc.text)
-            logger.debug(prompt)
-            logger.debug("Backend response for doc: %s", doc.text)
-            logger.debug(response)
+            logger.debug("Generated prompt for doc: %s\n%s", doc.text, prompt)
+            logger.debug("Backend response for doc: %s\n%s", doc.text, response)
 
         modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
         final_docs = []
