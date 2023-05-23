@@ -3,6 +3,7 @@ import itertools
 
 import pytest
 import spacy
+from thinc.api import get_current_ops, NumpyOps
 
 from spacy_llm.compat import has_minichain, has_langchain
 
@@ -19,8 +20,13 @@ PIPE_CFG = {
 @pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
-def test_combinations():
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_combinations(n_process: int):
     """Randomly test combinations of backends and tasks."""
+    ops = get_current_ops()
+    if not isinstance(ops, NumpyOps) and n_process != 1:
+        pytest.skip("Only test multiple processes on CPU")
+
     backends = ("spacy.LangChain.v1", "spacy.MiniChain.v1", "spacy.REST.v1")
     tasks = ("spacy.NER.v1", "spacy.TextCat.v1")
 
@@ -39,3 +45,4 @@ def test_combinations():
         nlp = spacy.blank("en")
         nlp.add_pipe("llm", config=config)
         nlp("This is a test.")
+        nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process, batch_size=1)
