@@ -18,7 +18,7 @@ python run_pipeline.py \
     "Matthew and Maria went to Japan to visit the Nintendo headquarters" \
     ./zeroshot.cfg
 ```
-or,for few-shot:
+or, for few-shot:
 ```sh
 python run_pipeline.py \
     "Matthew and Maria went to Japan to visit the Nintendo headquarters" \

@@ -293,6 +293,32 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
+#### spacy.SpanCat.v1
+
+The built-in SpanCat task is a simple adaptation of the NER task to
+support overlapping entities and store its annotations in `doc.spans`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.SpanCat.v1"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `spans_key`               | `str`                                   | `"sc"`       | Key of the `Doc.spans` dict to save the spans under.                                                                                         |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task.
+Refer to [its documentation](#spacynerv1) for more insight.
+
 #### spacy.TextCat.v1
 
 The built-in TextCat task supports both zero-shot and few-shot prompting.

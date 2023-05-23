@@ -1,0 +1,21 @@
+- text: i want to buy a large mushroom pizza with extra cheese
+  entities:
+    SIZE:
+      - large
+    TYPE:
+      - mushroom
+    TOPPING:
+      - extra cheese
+    PRODUCT:
+      - large mushroom pizza with extra cheese
+  answer: ORDER
+- text: do you make chicago-style pizza?
+  entities:
+    TYPE:
+      - chicago-style
+    PRODUCT:
+      - chicago-style pizza
+  answer: INFORMATION
+- text: do you deliver in my neighborhood
+  answer: INFORMATION
+  entities: {}
