@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -33,7 +33,7 @@ class RELExample(BaseModel):
     relations: List[RelationItem]
 
 
-def _preannotate(doc: Doc | RELExample) -> str:
+def _preannotate(doc: Union[Doc, RELExample]) -> str:
     """Creates a text version of the document with annotated entities."""
     offset = 0
 
