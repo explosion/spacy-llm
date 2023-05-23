@@ -94,7 +94,7 @@ in the `spacy_llm/tasks/` directory. We also recommend checking out the
 ## Writing your own backend
 
 In `spacy-llm`, the [**backend**](../README.md#backend) is responsible for the
-interaction with the actual LLM model. For instance, this can be an
+interaction with the actual LLM model. The latter can be an
 [API-based service](../README.md#spacyrestv1), or a local model - whether
 you [downloaded it from the Hugging Face Hub](../README.md#spacydollyhfv1)
 directly or finetuned it with proprietary data.
