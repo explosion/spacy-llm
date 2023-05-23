@@ -79,8 +79,14 @@ def backend_dolly_hf(
         config = _compile_default_config()
 
     llm_pipeline = transformers.pipeline(model=model, **config)
+    backend = DollyBackend(llm_pipeline)
+    return backend.query
 
-    def query(prompts: Iterable[str]) -> Iterable[str]:
-        return [llm_pipeline(pr)[0]["generated_text"] for pr in prompts]
 
-    return query
+class DollyBackend:
+
+    def __init__(self, pipeline: transformers.Pipeline):
+        self._pipeline = pipeline
+
+    def query(self, prompts: Iterable[str]) -> Iterable[str]:
+        return [self._pipeline(pr)[0]["generated_text"] for pr in prompts]
