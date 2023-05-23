@@ -364,6 +364,45 @@ labels = COMPLIMENT,INSULT
 path = "textcat_examples.json"
 ```
 
+#### spacy.REL.v1
+
+The built-in REL task supports both zero-shot and few-shot prompting.
+It relies on an upstream NER component for entities extraction.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.REL.v1"
+labels = LivesIn,Visits
+```
+
+| Argument            | Type                                    | Default | Description                                                                                                          |
+| ------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | `str`                                   |         | Comma-separated list of relation labels.                                                                             |
+| `label_description` | `Optional[Dict[str, str]]`              | `None`  | Dictionary providind a description for each relation label.                                                          |
+| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                     |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. |
+| `verbose`           | `bool`                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                 |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+{"text": "Laura bought a house in Boston with her husband Mark.", "ents": [{"start_char": 0, "end_char": 5, "label": "PERSON"}, {"start_char": 24, "end_char": 30, "label": "GPE"}, {"start_char": 48, "end_char": 52, "label": "PERSON"}], "relations": [{"dep": 0, "dest": 1, "relation": "LivesIn"}, {"dep": 2, "dest": 1, "relation": "LivesIn"}]}
+{"text": "Michael travelled through South America by bike.", "ents": [{"start_char": 0, "end_char": 7, "label": "PERSON"}, {"start_char": 26, "end_char": 39, "label": "LOC"}], "relations": [{"dep": 0, "dest": 1, "relation": "Visits"}]}
+```
+
+Note: you'll need to add a NER-capable component to your spaCy pipeline
+and put it _before_ the REL component.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.REL.v1"
+labels = LivesIn,Visits
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "rel_examples.jsonl"
+```
+
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.
