@@ -6,6 +6,7 @@ from thinc.compat import has_torch_cuda_gpu
 from ..multitask_openai import run_multitask_openai_pipeline
 from ..ner_dolly import run_ner_dolly_pipeline
 from ..textcat_openai import run_textcat_openai_pipeline
+from ..rel_openai import run_rel_openai_pipeline
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
@@ -51,5 +52,20 @@ def test_multitask_openai(config_name: str):
     run_multitask_openai_pipeline.run_pipeline(
         text="text",
         config_path=_USAGE_EXAMPLE_PATH / "multitask_openai" / config_name,
+        verbose=False,
+    )
+
+
+@pytest.mark.external
+@pytest.mark.parametrize(
+    "config_name", ("openai_rel_fewshot.cfg", "openai_rel_zeroshot.cfg")
+)
+def test_re_openai(config_name: str):
+    """Test REL OpenAI usage example.
+    config_name (str): Name of config file to use.
+    """
+    run_rel_openai_pipeline.run_pipeline(
+        text="text",
+        config_path=_USAGE_EXAMPLE_PATH / "rel_openai" / config_name,
         verbose=False,
     )
