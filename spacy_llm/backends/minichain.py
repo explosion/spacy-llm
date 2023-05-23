@@ -56,15 +56,21 @@ def backend_minichain(
     _check_installation()
 
     if hasattr(minichain.backend, api):
-        backend = getattr(minichain.backend, api)(**config)
-
+        mc_backend = getattr(minichain.backend, api)(**config)
         query_fn = query_minichain() if query is None else query
-
-        def _query(prompts: Iterable[str]) -> Iterable[str]:
-            return query_fn(backend, prompts)
-
-        return _query
+        return MiniChainBackend(mc_backend, query_fn).query
     else:
         raise KeyError(
             f"The requested API {api} is not available in `minichain.backend`."
         )
+
+
+
+class MiniChainBackend:
+
+    def __init__(self, backend: "minichain.backend.Backend", query_fn: Callable[["minichain.backend.Backend", Iterable[Any]], Iterable[Any]]) -> None:
+        self._backend = backend
+        self._query_fn = query_fn
+
+    def query(self, prompts: Iterable[Any]) -> Iterable[Any]:
+        return self._query_fn(self._backend, prompts)
