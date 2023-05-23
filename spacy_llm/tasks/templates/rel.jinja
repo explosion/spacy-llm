@@ -38,9 +38,9 @@ Text:
 {{ example.text }}
 '''
 {# whitespace #}
-{%- for label, substrings in example.entities.items() -%}
+{%- for item in example.relations -%}
 {# whitespace #}
-{{ label }}: {{ ', '.join(substrings) }}
+{{ item.json() }}
 {%- endfor -%}
 {# whitespace #}
 {# whitespace #}
