@@ -6,20 +6,18 @@ import srsly
 from .util import registry
 
 
-@registry.misc("spacy.JinjaReader.v1")
-def jinja_reader(path: Union[str, Path]) -> str:
-    """Read a jinja2 file containing a prompt template
+@registry.misc("spacy.FileReader.v1")
+def file_reader(path: Union[str, Path]) -> str:
+    """Read a file from a path and return its contents
 
-    path (Union[str, Path]): path to a .jinja2 template file
+    path (Union[str, Path]): path to the file
 
-    RETURNS (jinja2.Template): a jinja2 Template that can be rendered
+    RETURNS (str): the contents of the file
     """
     tpl_path = Path(path) if isinstance(path, str) else path
-    if not tpl_path.suffix == ".jinja2":
-        raise ValueError("The JinjaReader expects a .jinja2 file.")
-
     with tpl_path.open("r", encoding="utf8") as tpl_file:
         tpl_text = tpl_file.read()
+
     return tpl_text
 
 

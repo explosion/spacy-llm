@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import strip_normalizer, lowercase_normalizer
-from spacy_llm.registry import fewshot_reader, jinja_reader
+from spacy_llm.registry import fewshot_reader, file_reader
 from spacy_llm.tasks.ner import find_substrings, make_ner_task
 from ..compat import has_openai_key
 
@@ -95,7 +95,7 @@ def ext_template_cfg_string():
     labels = PER,ORG,LOC
 
     [components.llm.task.template]
-    @misc = "spacy.JinjaReader.v1"
+    @misc = "spacy.FileReader.v1"
     path = {str((Path(__file__).parent / "templates" / "ner_template.jinja2"))}
 
     [components.llm.task.normalizer]
@@ -504,7 +504,7 @@ def test_example_not_following_basemodel():
 
 def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "ner_template.jinja2")
-    template = jinja_reader(template_path)
+    template = file_reader(template_path)
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")

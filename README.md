@@ -537,20 +537,21 @@ path = "ner_examples.yml"
 | `path`   | `Union[str, Path]` | Path to an examples file with suffix `.yml`, `.yaml`, `.json` or `.jsonl`. |
 
 
-#### spacy.JinjaReader.v1
+#### spacy.FileReader.v1
 
-This function is registered in spaCy's `misc` registry, and reads a `.jinja2` file that contains the template for the prompt.  It uses
-[`jinja`](https://jinja.palletsprojects.com/en/3.1.x/) to read these files and returns a string to render a template from.
+This function is registered in spaCy's `misc` registry, and reads a file provided to the `path` to return a `str` 
+representation of its contents. This function is typically used to read 
+[Jinja](https://jinja.palletsprojects.com/en/3.1.x/) files containing the prompt template.
 
 ```ini
 [components.llm.task.template]
-@misc = "spacy.JinjaReader.v1"
+@misc = "spacy.FileReader.v1"
 path = "ner_template.jinja2"
 ```
 
 | Argument | Type               | Description                                                                |
 | -------- | ------------------ | -------------------------------------------------------------------------- |
-| `path`   | `Union[str, Path]` | Path to a `.jinja2` template file.                                         |
+| `path`   | `Union[str, Path]` | Path to the file to be read.                                               |
 
 #### Normalizer functions
 
