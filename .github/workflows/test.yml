@@ -84,6 +84,7 @@ jobs:
         run: |
           python -m pip install -U -r requirements.txt
           python -m pip install -U -r requirements-dev.txt
+          python -m spacy download en_core_web_md
 
       - name: Run spacy_llm tests
         shell: bash
