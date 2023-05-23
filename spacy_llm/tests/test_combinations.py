@@ -1,5 +1,5 @@
 import copy
-import itertools
+from typing import Any, Dict
 
 import pytest
 import spacy
@@ -8,7 +8,7 @@ from thinc.api import get_current_ops, NumpyOps
 from spacy_llm.compat import has_minichain, has_langchain
 from spacy_llm.pipeline import LLMWrapper
 
-PIPE_CFG = {
+PIPE_CFG: Dict[str, Any] = {
     "backend": {
         "@llm_backends": None,
         "api": "OpenAI",
