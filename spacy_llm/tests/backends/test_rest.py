@@ -7,8 +7,8 @@ import pytest
 import spacy
 from spacy.tokens import Doc
 
-from ..compat import has_openai_key
 from ...registry import registry
+from ..compat import has_openai_key
 
 PIPE_CFG = {
     "backend": {
@@ -82,8 +82,8 @@ def test_doc_length_error_handling():
         nlp("n" * 5000)
 
 
-# @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-# @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.external
 def test_max_time_error_handling():
     """Test error handling for exceeding max. time."""
     nlp = spacy.blank("en")
