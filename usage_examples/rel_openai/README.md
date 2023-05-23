@@ -3,7 +3,7 @@
 This example shows how you can use a model from OpenAI for relation extraction in
 zero- and few-shot settings.
 
-Here, we use the pretrained [`en_core_web_sm` model](https://spacy.io/models/en#en_core_web_sm)
+Here, we use the pretrained [`en_core_web_md` model](https://spacy.io/models/en#en_core_web_sm)
 to perform Named Entity Recognition (NER) using a fast and properly evaluated pipeline.
 Then, we leverage the OpenAI API to detect the relations between the extracted entities.
 In this example, we focus on two simple relations: `LivesIn` and `Visits`.
