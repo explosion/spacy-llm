@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Iterable, List, Optional
 
 import jinja2
-from pydantic import BaseModel, ConstrainedInt, ValidationError
+from pydantic import BaseModel, ValidationError, validator
 from spacy.tokens import Doc
 from wasabi import msg
 
@@ -9,24 +9,16 @@ from ..registry import lowercase_normalizer, registry
 from .templates import read_template
 
 
-class EntityId(ConstrainedInt):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.clean_ent
-        for val in super().__get_validators__():
-            yield val
+class RelationItem(BaseModel):
+    dep: int
+    dest: int
+    relation: str
 
-    @classmethod
+    @validator("dep", "dest", pre=True)
     def clean_ent(cls, value):
         if isinstance(value, str):
             value = value.strip("ENT")
         return value
-
-
-class RelationItem(BaseModel):
-    dep: EntityId
-    dest: EntityId
-    relation: str
 
 
 class RELExample(BaseModel):
@@ -35,6 +27,7 @@ class RELExample(BaseModel):
 
 
 def _preannotate(doc: Doc) -> str:
+    """Creates a version of the document with annotated entities."""
     offset = 0
 
     text = doc.text
@@ -53,6 +46,8 @@ def _preannotate(doc: Doc) -> str:
 
 @registry.llm_tasks("spacy.REL.v1")
 class RELTask:
+    """Simple REL task."""
+
     _TEMPLATE_STR = read_template("rel")
 
     def __init__(
@@ -61,6 +56,7 @@ class RELTask:
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[Callable[[], Iterable[Dict]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
+        verbose: bool = False,
     ):
 
         if not Doc.has_extension("rel"):
@@ -72,6 +68,8 @@ class RELTask:
         }
         self._label_definitions = label_definitions
         self._examples = [RELExample(**eg) for eg in examples()] if examples else None
+
+        self._verbose = verbose
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
@@ -87,16 +85,22 @@ class RELTask:
 
     def _format_response(self, response: str) -> Iterable[RelationItem]:
         """Parse raw string response into a structured format"""
+        relations = []
         for line in response.strip().split("\n"):
             try:
-                yield RelationItem.parse_raw(line)
+                relations.append(RelationItem.parse_raw(line))
             except ValidationError:
-                msg.warn("Validation issue", line)
+                msg.warn(
+                    "Validation issue",
+                    line,
+                    show=self._verbose,
+                )
+        return relations
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, responses):
-            rels = list(self._format_response(prompt_response))
+            rels = self._format_response(prompt_response)
             doc._.rel = rels
             yield doc
