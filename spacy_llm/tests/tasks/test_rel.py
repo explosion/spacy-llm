@@ -71,10 +71,8 @@ def fewshot_cfg_string():
 @pytest.fixture
 def task():
     text = "Joey rents a place in New York City."
-    labels = "LivesIn,Visits"
     gold_relations = [RelationItem(dep=0, dest=1, relation="LivesIn")]
-    examples_path = str(EXAMPLES_DIR / "rel_examples.jsonl")
-    return text, labels, gold_relations, examples_path
+    return text, gold_relations
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
@@ -86,3 +84,21 @@ def test_rel_config(cfg_string, request: FixtureRequest):
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["ner", "llm"]
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_rel_predict(task, cfg_string, request):
+    """Use OpenAI to get REL results.
+    Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
+    """
+    cfg_string = request.getfixturevalue(cfg_string)
+    orig_config = Config().from_str(cfg_string)
+    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+
+    text, _ = task
+    doc = nlp(text)
+
+    assert doc.ents
+    assert doc._.rel
