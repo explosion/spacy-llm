@@ -84,7 +84,7 @@ def backend_dolly_hf(
 
 class DollyBackend:
 
-    def __init__(self, pipeline: transformers.Pipeline):
+    def __init__(self, pipeline: "transformers.Pipeline"):
         self._pipeline = pipeline
 
     def query(self, prompts: Iterable[str]) -> Iterable[str]:
