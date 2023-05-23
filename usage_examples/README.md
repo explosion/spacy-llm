@@ -106,7 +106,7 @@ behind the scenes, `spacy-llm` roughly performs the following pseudo-code:
 ```python
 prompts = task.generate_prompts(docs)
 responses = backend(prompts)
-task.parse_responses(docs, responses)
+docs = task.parse_responses(docs, responses)
 ```
 
 Let's write a dummy backend that provides a random output for the
