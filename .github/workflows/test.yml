@@ -15,12 +15,11 @@ on:
 env:
   MODULE_NAME: 'spacy_llm'
   RUN_MYPY: 'false'
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
   run:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python_version: ["3.11"]
@@ -94,5 +93,3 @@ jobs:
         shell: bash
         run: |
           python -m pytest --pyargs usage_examples
-          
-      
