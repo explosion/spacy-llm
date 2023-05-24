@@ -1,4 +1,3 @@
-import functools
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 from typing import TYPE_CHECKING
 
