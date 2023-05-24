@@ -8,8 +8,8 @@ from .templates import read_template
 from .util import SpanTask
 
 
-@registry.llm_tasks("spacy.NER.v1")
-def make_ner_task_v1(
+@registry.llm_tasks("spacy.SpanCat.v1")
+def make_spancat_task_v1(
     labels: str,
     examples: Optional[Callable[[], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -29,7 +29,6 @@ def make_ner_task_v1(
     return task
 
 
-@registry.llm_tasks("spacy.SpanCat.v2")
 class SpanCatTask(SpanTask):
     _TEMPLATE_STR = read_template("spancat.v2")
 
