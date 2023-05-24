@@ -238,7 +238,7 @@ return type of the [backend](#backends).
 
 #### spacy.NER.v2
 
-The built-in NER task supports both zero-shot and few-shot prompting. The v2 task also supports explicitly defining the provided labels with custom descriptions.
+The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.
 
 ```ini
 [components.llm.task]
