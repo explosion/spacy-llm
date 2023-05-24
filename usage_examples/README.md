@@ -102,7 +102,7 @@ directly or finetuned it with proprietary data.
 `spacy-llm` lets you implement your own custom backend so you can try out the
 latest LLM interface out there. Bear in mind that tasks are responsible for
 creating the prompt and parsing the response – and both can be arbitrary objects.
-Hence, a backend should be consistent with the task you'd like it to run with.
+Hence, a backend's call signature should be consistent with that of the task you'd like it to run.
 
 In other words, `spacy-llm` roughly performs the following pseudo-code behind the scenes:
 
