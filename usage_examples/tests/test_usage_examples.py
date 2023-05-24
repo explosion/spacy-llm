@@ -3,55 +3,77 @@ from pathlib import Path
 import pytest
 from thinc.compat import has_torch_cuda_gpu
 
-from ..multitask_openai import run_multitask_openai_pipeline
-from ..ner_dolly import run_ner_dolly_pipeline
-from ..textcat_openai import run_textcat_openai_pipeline
+from .. import (
+    ner_dolly,
+    textcat_openai,
+    ner_langchain_openai,
+    ner_minichain_openai,
+    multitask_openai,
+)
 from ..rel_openai import run_rel_openai_pipeline
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
 
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-@pytest.mark.parametrize(
-    "config_name", ("dolly_ner_fewshot.cfg", "dolly_ner_zeroshot.cfg")
-)
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_ner_dolly(config_name: str):
     """Test NER Dolly usage example.
     config_name (str): Name of config file to use.
     """
-    run_ner_dolly_pipeline.run_pipeline(
+    path = _USAGE_EXAMPLE_PATH / "ner_dolly"
+    ner_dolly.run_pipeline(
         text="text",
-        config_path=_USAGE_EXAMPLE_PATH / "ner_dolly" / config_name,
+        config_path=path / config_name,
+        examples_path=None if config_name == "zeroshot.cfg" else path / "examples.yml",
         verbose=False,
     )
 
 
 @pytest.mark.external
-@pytest.mark.parametrize(
-    "config_name", ("openai_textcat_fewshot.cfg", "openai_textcat_zeroshot.cfg")
-)
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_textcat_openai(config_name: str):
     """Test NER Dolly usage example.
     config_name (str): Name of config file to use.
     """
-    run_textcat_openai_pipeline.run_pipeline(
+    path = _USAGE_EXAMPLE_PATH / "textcat_openai"
+    textcat_openai.run_pipeline(
         text="text",
-        config_path=_USAGE_EXAMPLE_PATH / "textcat_openai" / config_name,
+        config_path=path / config_name,
+        examples_path=None
+        if config_name == "zeroshot.cfg"
+        else path / "examples.jsonl",
         verbose=False,
     )
 
 
 @pytest.mark.external
-@pytest.mark.parametrize(
-    "config_name", ("openai_multitask_fewshot.cfg", "openai_multitask_zeroshot.cfg")
-)
+def test_ner_langchain_openai():
+    """Test NER LangChain OpenAI usage example."""
+    ner_langchain_openai.run_pipeline(
+        "text", _USAGE_EXAMPLE_PATH / "ner_langchain_openai" / "ner.cfg", False
+    )
+
+
+@pytest.mark.external
+def test_ner_minichain_openai():
+    """Test NER LangChain OpenAI usage example."""
+    ner_minichain_openai.run_pipeline(
+        "text", _USAGE_EXAMPLE_PATH / "ner_minichain_openai" / "ner.cfg", False
+    )
+
+
+@pytest.mark.external
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_multitask_openai(config_name: str):
-    """Test multi-task OpenAI usage example.
+    """Test multitask OpenAI example.
     config_name (str): Name of config file to use.
     """
-    run_multitask_openai_pipeline.run_pipeline(
+    path = _USAGE_EXAMPLE_PATH / "multitask_openai"
+    multitask_openai.run_pipeline(
         text="text",
-        config_path=_USAGE_EXAMPLE_PATH / "multitask_openai" / config_name,
+        config_path=path / config_name,
+        examples_path=None if config_name == "zeroshot.cfg" else path / "examples.yml",
         verbose=False,
     )
 

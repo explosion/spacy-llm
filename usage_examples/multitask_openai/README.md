@@ -27,18 +27,25 @@ export OPENAI_API_ORG="org-..."
 Then, you can run the pipeline on a sample text via:
 
 ```sh
-python run_multitask_openai_pipeline.py [TEXT] [PATH TO CONFIG]
+python run_pipeline.py [TEXT] [PATH TO CONFIG] [PATH TO FILE WITH EXAMPLES]
 ```
 
 For example:
 
 ```sh
-python run_multitask_openai_pipeline.py \
+python run_pipeline.py \
     "I'd like to order a small margherita pizza" \
-    ./openai_multitask_zeroshot.cfg
+    ./zeroshot.cfg
+```
+or, for few-shot:
+```sh
+python run_pipeline.py \
+    "I'd like to order a small margherita pizza" \
+    ./fewshot.cfg \
+    ./examples.yml
 ```
 
 You can also include examples to perform few-shot annotation. To do so, use the
-`openai_multitask_fewshot.cfg` file instead. You can find the few-shot examples in
+`fewshot.cfg` file instead. You can find the few-shot examples in
 the `examples.yml` file. Feel free to change and update it to your liking.
 We also support other file formats, including `.yaml`, `.jsonl` and `.json`.

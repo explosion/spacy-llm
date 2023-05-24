@@ -11,7 +11,7 @@ Opt = typer.Option
 
 def run_pipeline(
     # fmt: off
-    text: str = Arg("", help="Text to perform text categorization on."),
+    text: str = Arg("", help="Text to perform NER on."),
     config_path: Path = Arg(..., help="Path to the configuration file to use."),
     verbose: bool = Opt(False, "--verbose", "-v", help="Show extra information."),
     # fmt: on
@@ -25,19 +25,11 @@ def run_pipeline(
 
     msg.text(f"Loading config from {config_path}", show=verbose)
     config = util.load_config(config_path)
-    # Reload config with dynamic path for examples, if available in config.
-    if "examples" in config.get("paths", {}):
-        config = util.load_config(
-            config_path,
-            overrides={"paths.examples": str(Path(__file__).parent / "examples.yml")},
-        )
-
     nlp = util.load_model_from_config(config, auto_fill=True)
     doc = nlp(text)
 
     msg.text(f"Text: {doc.text}")
-    msg.text(f"Intent: {doc.cats}")
-    msg.text(f"Entities: {[(ent.text, ent.label_) for ent in doc.ents]}")
+    msg.text(f"Entities: {doc.ents}")
 
 
 if __name__ == "__main__":
