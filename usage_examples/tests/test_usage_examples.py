@@ -9,8 +9,8 @@ from .. import (
     ner_langchain_openai,
     ner_minichain_openai,
     multitask_openai,
+    rel_openai,
 )
-from ..rel_openai import run_rel_openai_pipeline
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
@@ -79,15 +79,17 @@ def test_multitask_openai(config_name: str):
 
 
 @pytest.mark.external
-@pytest.mark.parametrize(
-    "config_name", ("openai_rel_fewshot.cfg", "openai_rel_zeroshot.cfg")
-)
-def test_re_openai(config_name: str):
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
+def test_rel_openai(config_name: str):
     """Test REL OpenAI usage example.
     config_name (str): Name of config file to use.
     """
-    run_rel_openai_pipeline.run_pipeline(
+    path = _USAGE_EXAMPLE_PATH / "rel_openai"
+    rel_openai.run_pipeline(
         text="text",
-        config_path=_USAGE_EXAMPLE_PATH / "rel_openai" / config_name,
+        config_path=path / config_name,
+        examples_path=None
+        if config_name == "zeroshot.cfg"
+        else path / "examples.jsonl",
         verbose=False,
     )

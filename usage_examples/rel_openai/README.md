@@ -21,15 +21,22 @@ export OPENAI_API_ORG="org-..."
 Then, you can run the pipeline on a sample text via:
 
 ```sh
-python run_rel_openai_pipeline.py [TEXT] [PATH TO CONFIG]
+python run_pipeline.py [TEXT] [PATH TO CONFIG]
 ```
 
 For example:
 
 ```sh
-python run_rel_openai_pipeline.py \
+python run_pipeline.py \
     "Laura just bought an apartment in Boston." \
-    ./openai_rel_zeroshot.cfg
+    ./zeroshot.cfg
+```
+or, with few-shot:
+```sh
+python run_pipeline.py \
+    "Laura just bought an apartment in Boston." \
+    ./fewshot.cfg
+    ./examples.jsonl
 ```
 
 You can also include examples to perform few-shot annotation. To do so, use the
