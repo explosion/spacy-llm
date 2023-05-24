@@ -366,9 +366,37 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
-#### spacy.SpanCat.v1
+#### spacy.SpanCat.v2
 
 The built-in SpanCat task is a simple adaptation of the NER task to
+support overlapping entities and store its annotations in `doc.spans`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.SpanCat.v2"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `label_definitions`      | `Optional[Dict[str, str]]`              | `None`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract.                                                                                                              |
+| `spans_key`               | `str`                                   | `"sc"`       | Key of the `Doc.spans` dict to save the spans under.                                                                                         |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task.
+Refer to [its documentation](#spacynerv2) for more insight.
+
+
+#### spacy.SpanCat.v1
+
+The built-in SpanCat task is a simple adaptation of the v1 NER task to
 support overlapping entities and store its annotations in `doc.spans`.
 
 ```ini
@@ -456,20 +484,20 @@ but specific implementations can have other signatures, like `Callable[[Iterable
 All built-in backends are registered in `llm_backends`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
 using the built-in REST protocol, and accesses the `"gpt-3.5-turbo"` model.
 
-> :question: _Why are there backends for third-party libraries in addition to a native REST backend and which should 
+> :question: _Why are there backends for third-party libraries in addition to a native REST backend and which should
 > I choose?_
-> 
-> Third-party libraries like `langchain` or `minichain` focus on prompt management, integration of many different LLM 
+>
+> Third-party libraries like `langchain` or `minichain` focus on prompt management, integration of many different LLM
 > APIs, and other related features such as conversational memory or agents. `spacy-llm` on the other hand emphasizes
-> features we consider useful in the context of NLP pipelines utilizing LLMs to process documents (mostly) independent 
-> from each other. It makes sense that the feature set of such third-party libraries and `spacy-llm` is not identical - 
-> and users might want to take advantage of features not available in `spacy-llm`. 
->  
-> The advantage of offering our own REST backend is that we can ensure a larger degree of stability of robustness, as 
+> features we consider useful in the context of NLP pipelines utilizing LLMs to process documents (mostly) independent
+> from each other. It makes sense that the feature set of such third-party libraries and `spacy-llm` is not identical -
+> and users might want to take advantage of features not available in `spacy-llm`.
+>
+> The advantage of offering our own REST backend is that we can ensure a larger degree of stability of robustness, as
 > we can guarantee backwards-compatibility and more smoothly integrated error handling.
-> 
-> Ultimately we recommend trying to implement your use case using the REST backend first (which is configured as the 
-> default backend). If however there are features or APIs not covered by `spacy-llm`, it's trivial to switch to the 
+>
+> Ultimately we recommend trying to implement your use case using the REST backend first (which is configured as the
+> default backend). If however there are features or APIs not covered by `spacy-llm`, it's trivial to switch to the
 > backend of a third-party library - and easy to customize the prompting mechanism, if so required.
 
 #### OpenAI
