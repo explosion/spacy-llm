@@ -65,10 +65,12 @@ def backend_minichain(
         )
 
 
-
 class MiniChainBackend:
-
-    def __init__(self, backend: "minichain.backend.Backend", query_fn: Callable[["minichain.backend.Backend", Iterable[Any]], Iterable[Any]]) -> None:
+    def __init__(
+        self,
+        backend: "minichain.backend.Backend",
+        query_fn: Callable[["minichain.backend.Backend", Iterable[Any]], Iterable[Any]],
+    ) -> None:
         self._backend = backend
         self._query_fn = query_fn
 

@@ -83,7 +83,6 @@ def backend_dolly_hf(
 
 
 class DollyBackend:
-
     def __init__(self, pipeline: "transformers.Pipeline"):
         self._pipeline = pipeline
 

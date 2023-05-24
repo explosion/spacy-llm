@@ -45,7 +45,9 @@ def test_llm_pipe(nlp: Language, n_process: int):
     ops = get_current_ops()
     if not isinstance(ops, NumpyOps) and n_process != 1:
         pytest.skip("Only test multiple processes on CPU")
-    docs = list(nlp.pipe(texts=["This is a test", "This is another test"], n_process=n_process))
+    docs = list(
+        nlp.pipe(texts=["This is a test", "This is another test"], n_process=n_process)
+    )
     assert len(docs) == 2
 
 

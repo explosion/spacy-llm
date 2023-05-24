@@ -65,8 +65,11 @@ def backend_langchain(
 
 
 class LangChainBackend:
-
-    def __init__(self, backend: "BaseLLM", query_fn: Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]) -> None:
+    def __init__(
+        self,
+        backend: "BaseLLM",
+        query_fn: Callable[["BaseLLM", Iterable[Any]], Iterable[Any]],
+    ) -> None:
         self._backend = backend
         self._query_fn = query_fn
 

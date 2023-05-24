@@ -21,8 +21,14 @@ PIPE_CFG: Dict[str, Any] = {
 @pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
-@pytest.mark.parametrize("backend", ["spacy.LangChain.v1", "spacy.MiniChain.v1", "spacy.REST.v1"], ids=["langchain", "minichain", "rest"])
-@pytest.mark.parametrize("task", ["spacy.NER.v1", "spacy.TextCat.v1"], ids=["ner", "textcat"])
+@pytest.mark.parametrize(
+    "backend",
+    ["spacy.LangChain.v1", "spacy.MiniChain.v1", "spacy.REST.v1"],
+    ids=["langchain", "minichain", "rest"],
+)
+@pytest.mark.parametrize(
+    "task", ["spacy.NER.v1", "spacy.TextCat.v1"], ids=["ner", "textcat"]
+)
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_combinations(backend: str, task: str, n_process: int):
     """Randomly test combinations of backends and tasks."""
@@ -48,4 +54,6 @@ def test_combinations(backend: str, task: str, n_process: int):
     assert isinstance(component, LLMWrapper)
 
     nlp("This is a test.")
-    list(nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process))
+    list(
+        nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process)
+    )
