@@ -25,6 +25,8 @@ class LLMTask(Protocol):
 
 @runtime_checkable
 class Cache(Protocol):
+    """Defines minimal set of operations a cache implementiation needs to support."""
+
     @property
     def vocab(self) -> Optional[Vocab]:
         """Vocab used for deserializing docs.
