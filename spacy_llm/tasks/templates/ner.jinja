@@ -1,0 +1,34 @@
+From the text below, extract the following entities in the following format:
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}: <comma delimited list of strings>
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{%- for label, substrings in example.entities.items() -%}
+{{ label }}: {{ ', '.join(substrings) }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''

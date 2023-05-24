@@ -1,36 +1,35 @@
 from typing import Callable, List, Optional
 
 from spacy.tokens import Doc, Span
-from spacy.util import filter_spans
 
-from .templates import read_template
-from .util import SpanTask, SpanExample
+from ..ty import ExamplesConfigType
 from ..compat import Literal
 from ..registry import registry
-from ..ty import ExamplesConfigType
 from ..util import split_labels
+from .templates import read_template
+from .util import SpanTask, SpanExample
 
 
-_DEFAULT_NER_TEMPLATE = read_template("ner")
+_DEFAULT_SPANCAT_TEMPLATE = read_template("spancat")
 
 
-@registry.llm_tasks("spacy.NER.v1")
-def make_ner_task(
+@registry.llm_tasks("spacy.SpanCat.v1")
+def make_spancat_task(
     labels: str,
-    template: str = _DEFAULT_NER_TEMPLATE,
+    template: str = _DEFAULT_SPANCAT_TEMPLATE,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
     case_sensitive_matching: bool = False,
     single_match: bool = False,
-) -> "NERTask":
+) -> "SpanCatTask":
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
-    ner_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None
-    return NERTask(
+    span_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None
+    return SpanCatTask(
         labels=labels_list,
         template=template,
-        examples=ner_examples,
+        examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -38,11 +37,12 @@ def make_ner_task(
     )
 
 
-class NERTask(SpanTask):
+class SpanCatTask(SpanTask):
     def __init__(
         self,
         labels: List[str],
-        template: str = _DEFAULT_NER_TEMPLATE,
+        template: str = _DEFAULT_SPANCAT_TEMPLATE,
+        spans_key: str = "sc",
         examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
@@ -51,10 +51,10 @@ class NERTask(SpanTask):
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        """Default NER task.
+        """Default SpanCat task.
 
         labels (str): Comma-separated list of labels to pass to the template.
-        template (str): Prompt template passed to the model.
+        spans_key (str): Key of the `Doc.spans` dict to save under.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
@@ -64,7 +64,7 @@ class NERTask(SpanTask):
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         """
-        super().__init__(
+        super(SpanCatTask, self).__init__(
             labels=labels,
             template=template,
             examples=examples,
@@ -73,6 +73,7 @@ class NERTask(SpanTask):
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
+        self._spans_key = spans_key
 
     def assign_spans(
         self,
@@ -80,4 +81,4 @@ class NERTask(SpanTask):
         spans: List[Span],
     ) -> None:
         """Assign spans to the document."""
-        doc.set_ents(filter_spans(spans))
+        doc.spans[self._spans_key] = sorted(spans)  # type: ignore [type-var]
