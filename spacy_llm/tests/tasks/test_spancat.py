@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
-from spacy_llm.tasks.ner import NERTask
+from spacy_llm.tasks import SpanCatTask
 from spacy_llm.tasks.util import find_substrings
 
 from ..compat import has_openai_key
@@ -30,40 +30,8 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v1"
+    @llm_tasks = "spacy.SpanCat.v1"
     labels = PER,ORG,LOC
-
-    [components.llm.task.normalizer]
-    @misc = "spacy.LowercaseNormalizer.v1"
-
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
-    """
-
-
-@pytest.fixture
-def zeroshot_cfg_string_v2_lds():
-    return """
-    [nlp]
-    lang = "en"
-    pipeline = ["llm"]
-    batch_size = 128
-
-    [components]
-
-    [components.llm]
-    factory = "llm"
-
-    [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
-    labels = PER,ORG,LOC
-
-    [components.llm.task.label_definitions]
-    PER = "Any named individual in the text"
-    ORG = "Any named organization in the text"
-    LOC = "The name of any politically or geographically defined location"
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -89,38 +57,7 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v1"
-    labels = PER,ORG,LOC
-
-    [components.llm.task.examples]
-    @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
-
-    [components.llm.task.normalizer]
-    @misc = "spacy.LowercaseNormalizer.v1"
-
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config: {{}}
-    """
-
-
-@pytest.fixture
-def fewshot_cfg_string_v2():
-    return f"""
-    [nlp]
-    lang = "en"
-    pipeline = ["llm"]
-    batch_size = 128
-
-    [components]
-
-    [components.llm]
-    factory = "llm"
-
-    [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
+    @llm_tasks = "spacy.SpanCat.v1"
     labels = PER,ORG,LOC
 
     [components.llm.task.examples]
@@ -139,42 +76,17 @@ def fewshot_cfg_string_v2():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize(
-    "cfg_string",
-    [
-        "zeroshot_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
-        "fewshot_cfg_string",
-        "fewshot_cfg_string_v2",
-    ],
-)
-def test_ner_config(cfg_string, request):
+@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string", "zeroshot_cfg_string"])
+def test_spancat_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
-    # also test nlp config from a dict in add_pipe
-    component_cfg = dict(orig_config["components"]["llm"])
-    component_cfg.pop("factory")
-
-    nlp2 = spacy.blank("en")
-    nlp2.add_pipe("llm", config=component_cfg)
-    assert nlp2.pipe_names == ["llm"]
-
 
 @pytest.mark.external
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize(
-    "cfg_string",
-    [
-        "zeroshot_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
-        "fewshot_cfg_string",
-        "fewshot_cfg_string_v2",
-    ],
-)
-def test_ner_predict(cfg_string, request):
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_spancat_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
@@ -183,22 +95,14 @@ def test_ner_predict(cfg_string, request):
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     text = "Marc and Bob both live in Ireland."
     doc = nlp(text)
-    assert len(doc.ents) > 0
-    for ent in doc.ents:
+    assert len(doc.spans["sc"]) > 0
+    for ent in doc.spans["sc"]:
         assert ent.label_ in ["PER", "ORG", "LOC"]
 
 
 @pytest.mark.external
-@pytest.mark.parametrize(
-    "cfg_string",
-    [
-        "zeroshot_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
-        "fewshot_cfg_string",
-        "fewshot_cfg_string_v2",
-    ],
-)
-def test_ner_io(cfg_string, request):
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+def test_spancat_io(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
@@ -210,8 +114,8 @@ def test_ner_io(cfg_string, request):
     assert nlp2.pipe_names == ["llm"]
     text = "Marc and Bob both live in Ireland."
     doc = nlp2(text)
-    assert len(doc.ents) > 0
-    for ent in doc.ents:
+    assert len(doc.spans["sc"]) > 0
+    for ent in doc.spans["sc"]:
         assert ent.label_ in ["PER", "ORG", "LOC"]
 
 
@@ -251,7 +155,7 @@ def test_ensure_offsets_correspond_to_substrings(
 
 
 @pytest.mark.parametrize(
-    "text,response,gold_ents",
+    "text,response,gold_spans",
     [
         # simple
         (
@@ -259,11 +163,15 @@ def test_ensure_offsets_correspond_to_substrings(
             "PER: Jean Jacques, Jaime\nLOC: library",
             [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "LOC")],
         ),
-        # overlapping: should only return the longest span
+        # overlapping: should only return all spans
         (
             "The Manila Observatory was founded in 1865.",
             "LOC: The Manila Observatory, Manila, Manila Observatory",
-            [("The Manila Observatory", "LOC")],
+            [
+                ("The Manila Observatory", "LOC"),
+                ("Manila", "LOC"),
+                ("Manila Observatory", "LOC"),
+            ],
         ),
         # flipped: order shouldn't matter
         (
@@ -273,21 +181,21 @@ def test_ensure_offsets_correspond_to_substrings(
         ),
     ],
 )
-def test_ner_zero_shot_task(text, response, gold_ents):
+def test_spancat_zero_shot_task(text, response, gold_spans):
     labels = "PER,ORG,LOC"
-    llm_ner = NERTask(labels=labels)
+    llm_spancat = SpanCatTask(labels=labels)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
-    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
-    assert pred_ents == gold_ents
+    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
+    assert pred_spans == gold_spans
 
 
 @pytest.mark.parametrize(
-    "response,normalizer,gold_ents",
+    "response,normalizer,gold_spans",
     [
         (
             "PER: Jean Jacques, Jaime",
@@ -331,22 +239,22 @@ def test_ner_zero_shot_task(text, response, gold_ents):
         ),
     ],
 )
-def test_ner_labels(response, normalizer, gold_ents):
+def test_spancat_labels(response, normalizer, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = NERTask(labels=labels, normalizer=normalizer)
+    llm_spancat = SpanCatTask(labels=labels, normalizer=normalizer)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
-    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
-    assert pred_ents == gold_ents
+    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
+    assert pred_spans == gold_spans
 
 
 @pytest.mark.parametrize(
-    "response,alignment_mode,gold_ents",
+    "response,alignment_mode,gold_spans",
     [
         (
             "PER: Jacq",
@@ -380,28 +288,28 @@ def test_ner_labels(response, normalizer, gold_ents):
         ),
     ],
 )
-def test_ner_alignment(response, alignment_mode, gold_ents):
+def test_spancat_alignment(response, alignment_mode, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = NERTask(labels=labels, alignment_mode=alignment_mode)
+    llm_spancat = SpanCatTask(labels=labels, alignment_mode=alignment_mode)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
-    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
-    assert pred_ents == gold_ents
+    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
+    assert pred_spans == gold_spans
 
 
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        NERTask(labels=labels, alignment_mode="invalid")
+        SpanCatTask(labels=labels, alignment_mode="invalid")
 
 
 @pytest.mark.parametrize(
-    "response,case_sensitive,single_match,gold_ents",
+    "response,case_sensitive,single_match,gold_spans",
     [
         (
             "PER: Jean",
@@ -429,10 +337,10 @@ def test_invalid_alignment_mode():
         ),
     ],
 )
-def test_ner_matching(response, case_sensitive, single_match, gold_ents):
+def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
-    llm_ner = NERTask(
+    llm_spancat = SpanCatTask(
         labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
     )
     # Prepare doc
@@ -440,9 +348,9 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
-    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
-    assert pred_ents == gold_ents
+    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
+    assert pred_spans == gold_spans
 
 
 def test_jinja_template_rendering_without_examples():
@@ -455,13 +363,14 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = NERTask(labels=labels, examples=None)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    llm_spancat = SpanCatTask(labels=labels, examples=None)
+    prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
         == """
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+The entities you extract for each label can overlap with each other.
 From the Text input provided, extract named entities for each label in the following format:
 
 PER: <comma delimited list of strings>
@@ -498,13 +407,14 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)
-    llm_ner = NERTask(labels=labels, examples=examples)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    llm_spancat = SpanCatTask(labels=labels, examples=examples)
+    prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
         == """
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+The entities you extract for each label can overlap with each other.
 From the Text input provided, extract named entities for each label in the following format:
 
 PER: <comma delimited list of strings>
@@ -546,52 +456,6 @@ Alice and Bob went to the supermarket
     )
 
 
-def test_jinja_template_rendering_with_label_definitions():
-    """Test if jinja2 template renders as expected
-
-    We apply the .strip() method for each prompt so that we don't have to deal
-    with annoying newlines and spaces at the edge of the text.
-    """
-    labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
-    doc = nlp.make_doc("Alice and Bob went to the supermarket")
-    llm_ner = NERTask(
-        labels=labels,
-        label_definitions={
-            "PER": "Person definition",
-            "ORG": "Organization definition",
-            "LOC": "Location definition",
-        },
-    )
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
-
-    assert (
-        prompt.strip()
-        == """
-You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
-From the Text input provided, extract named entities for each label in the following format:
-
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
-LOC: <comma delimited list of strings>
-
-Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
-Assume these definitions are written by an expert and follow them closely.
-
-PER: Person definition
-ORG: Organization definition
-LOC: Location definition
-
-
-Here is the text that needs labeling:
-
-Text:
-'''
-Alice and Bob went to the supermarket
-'''""".strip()
-    )
-
-
 def test_example_not_following_basemodel():
     wrong_example = [
         {
@@ -605,4 +469,4 @@ def test_example_not_following_basemodel():
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValidationError):
-            NERTask(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+            SpanCatTask(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))

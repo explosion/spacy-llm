@@ -366,6 +366,32 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
+#### spacy.SpanCat.v1
+
+The built-in SpanCat task is a simple adaptation of the NER task to
+support overlapping entities and store its annotations in `doc.spans`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.SpanCat.v1"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `spans_key`               | `str`                                   | `"sc"`       | Key of the `Doc.spans` dict to save the spans under.                                                                                         |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task.
+Refer to [its documentation](#spacynerv1) for more insight.
+
 #### spacy.TextCat.v1
 
 The built-in TextCat task supports both zero-shot and few-shot prompting.
@@ -430,6 +456,22 @@ but specific implementations can have other signatures, like `Callable[[Iterable
 All built-in backends are registered in `llm_backends`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
 using the built-in REST protocol, and accesses the `"gpt-3.5-turbo"` model.
 
+> :question: _Why are there backends for third-party libraries in addition to a native REST backend and which should 
+> I choose?_
+> 
+> Third-party libraries like `langchain` or `minichain` focus on prompt management, integration of many different LLM 
+> APIs, and other related features such as conversational memory or agents. `spacy-llm` on the other hand emphasizes
+> features we consider useful in the context of NLP pipelines utilizing LLMs to process documents (mostly) independent 
+> from each other. It makes sense that the feature set of such third-party libraries and `spacy-llm` is not identical - 
+> and users might want to take advantage of features not available in `spacy-llm`. 
+>  
+> The advantage of offering our own REST backend is that we can ensure a larger degree of stability of robustness, as 
+> we can guarantee backwards-compatibility and more smoothly integrated error handling.
+> 
+> Ultimately we recommend trying to implement your use case using the REST backend first (which is configured as the 
+> default backend). If however there are features or APIs not covered by `spacy-llm`, it's trivial to switch to the 
+> backend of a third-party library - and easy to customize the prompting mechanism, if so required.
+
 #### OpenAI
 
 When the backend uses OpenAI, you have to get an API key from openai.com, and ensure that the keys are set as
@@ -485,6 +527,8 @@ To use [MiniChain](https://github.com/srush/MiniChain) for the API retrieval par
 
 ```shell
 python -m pip install "minichain>=0.3,<0.4"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[minichain]"
 ```
 
 Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
@@ -514,6 +558,8 @@ To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval
 
 ```shell
 python -m pip install "langchain>=0.0.144,<0.1"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[langchain]"
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
@@ -542,9 +588,10 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 ```shell
-python -m pip install "cupy-cuda11x"
 python -m pip install "torch>=1.13.1,<2.0"
 python -m pip install "transformers>=4.28.1,<5.0"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[transformers]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
