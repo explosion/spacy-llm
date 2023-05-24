@@ -11,7 +11,6 @@ def assemble(
     *,
     overrides: Dict[str, Any] = SimpleFrozenDict(),
 ):
-    config: Config
 
     if isinstance(config_or_path, Config):
         config = config_or_path
