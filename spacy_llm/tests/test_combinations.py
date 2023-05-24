@@ -43,7 +43,7 @@ def test_combinations(backend: str, task: str, n_process: int):
     # Configure task-specific settings.
     if task.startswith("spacy.NER"):
         config["task"]["labels"] = "PER,ORG,LOC"
-    elif backend.startswith("spacy.TextCat"):
+    elif task.startswith("spacy.TextCat"):
         config["task"]["labels"] = "Recipe"
         config["task"]["exclusive_classes"] = True
 

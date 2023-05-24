@@ -4,8 +4,9 @@ from typing import Any, Callable, Dict, Iterable
 from spacy.util import SimpleFrozenList, SimpleFrozenDict
 from thinc.compat import has_torch_cuda_gpu
 
-from ..compat import has_accelerate, has_torch, has_transformers, torch, transformers
-from ..registry.util import registry
+from . import Backend
+from ...compat import has_accelerate, has_torch, has_transformers, torch, transformers
+from ...registry.util import registry
 
 
 supported_models = SimpleFrozenList(
@@ -62,6 +63,17 @@ def _compile_default_config() -> Dict[Any, Any]:
     return default_cfg
 
 
+def query_dolly(
+    pipeline: "transformers.pipeline", prompts: Iterable[str]
+) -> Iterable[str]:
+    """Queries Dolly HF model.
+    pipeline (transformers.pipeline): Transformers pipeline to query.
+    prompts (Iterable[str]): Prompts to query Dolly model with.
+    RETURNS (Iterable[str]): Prompt responses.
+    """
+    return [pipeline(pr)[0]["generated_text"] for pr in prompts]
+
+
 @registry.llm_backends("spacy.DollyHF.v1")
 def backend_dolly_hf(
     model: str,
@@ -78,13 +90,6 @@ def backend_dolly_hf(
     if not config or len(config) == 0:
         config = _compile_default_config()
 
-    llm_pipeline = transformers.pipeline(model=model, **config)
-    return DollyBackend(llm_pipeline).query
-
-
-class DollyBackend:
-    def __init__(self, pipeline: "transformers.Pipeline"):
-        self._pipeline = pipeline
-
-    def query(self, prompts: Iterable[str]) -> Iterable[str]:
-        return [self._pipeline(pr)[0]["generated_text"] for pr in prompts]
+    return Backend["transformers.Pipeline", str, str](
+        integration=transformers.pipeline(model=model, **config), query=query_dolly
+    )

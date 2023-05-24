@@ -3,7 +3,7 @@ from typing import Type, Dict
 from . import base, openai, noop
 
 supported_apis: Dict[str, Type[base.Backend]] = {
-    "OpenAI": openai.OpenAIBackend,
+    "OpenAI": openai.OpenAIRESTBackend,
     "NoOp": noop.NoOpBackend,
 }
 

@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 
 from spacy.util import SimpleFrozenDict
 
-from ..compat import has_langchain, langchain
-from ..registry import registry
+from . import Backend
+from ...compat import has_langchain, langchain
+from ...registry import registry
 
 if TYPE_CHECKING and has_langchain:
     from langchain.llms.base import BaseLLM  # type: ignore[import]
@@ -55,23 +56,11 @@ def backend_langchain(
     type_to_cls_dict: Dict[str, Type[BaseLLM]] = langchain.llms.type_to_cls_dict
 
     if api in type_to_cls_dict:
-        lc_backend = type_to_cls_dict[api](**config)
-        query_fn = query_langchain() if query is None else query
-        return LangChainBackend(lc_backend, query_fn).query
+        return Backend["BaseLLM", Any, Any](
+            integration=type_to_cls_dict[api](**config),
+            query=query_langchain() if query is None else query,
+        )
     else:
         raise KeyError(
             f"The requested API {api} is not available in `langchain.llms.type_to_cls_dict`."
         )
-
-
-class LangChainBackend:
-    def __init__(
-        self,
-        backend: "BaseLLM",
-        query_fn: Callable[["BaseLLM", Iterable[Any]], Iterable[Any]],
-    ) -> None:
-        self._backend = backend
-        self._query_fn = query_fn
-
-    def query(self, prompts: Iterable[Any]) -> Iterable[Any]:
-        return self._query_fn(self._backend, prompts)

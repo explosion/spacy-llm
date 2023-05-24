@@ -2,8 +2,9 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
-from ..compat import has_minichain, minichain
-from ..registry import registry
+from . import Backend
+from ...compat import has_minichain, minichain
+from ...registry import registry
 
 
 def _check_installation() -> None:
@@ -56,23 +57,11 @@ def backend_minichain(
     _check_installation()
 
     if hasattr(minichain.backend, api):
-        mc_backend = getattr(minichain.backend, api)(**config)
-        query_fn = query_minichain() if query is None else query
-        return MiniChainBackend(mc_backend, query_fn).query
+        return Backend["minichain.backend.Backend", Any, Any](
+            integration=getattr(minichain.backend, api)(**config),
+            query=query_minichain() if query is None else query,
+        )
     else:
         raise KeyError(
             f"The requested API {api} is not available in `minichain.backend`."
         )
-
-
-class MiniChainBackend:
-    def __init__(
-        self,
-        backend: "minichain.backend.Backend",
-        query_fn: Callable[["minichain.backend.Backend", Iterable[Any]], Iterable[Any]],
-    ) -> None:
-        self._backend = backend
-        self._query_fn = query_fn
-
-    def query(self, prompts: Iterable[Any]) -> Iterable[Any]:
-        return self._query_fn(self._backend, prompts)

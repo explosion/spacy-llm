@@ -14,7 +14,7 @@ class Endpoints(str, Enum):
     NON_CHAT = "https://api.openai.com/v1/completions"
 
 
-class OpenAIBackend(Backend):
+class OpenAIRESTBackend(Backend):
     @property
     def supported_models(self) -> Dict[str, str]:
         """Returns supported models with their endpoints.
