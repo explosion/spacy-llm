@@ -31,7 +31,9 @@ python run_pipeline.py \
     "Laura just bought an apartment in Boston." \
     ./zeroshot.cfg
 ```
+
 or, with few-shot:
+
 ```sh
 python run_pipeline.py \
     "Laura just bought an apartment in Boston." \
