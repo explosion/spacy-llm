@@ -6,6 +6,7 @@ from confection import Config
 from pytest import FixtureRequest
 
 from spacy_llm.tasks.rel import RelationItem
+from spacy_llm.util import assemble
 
 from ..compat import has_openai_key
 
@@ -82,7 +83,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    nlp = assemble(orig_config)
     assert nlp.pipe_names == ["ner", "llm"]
 
 
@@ -95,7 +96,7 @@ def test_rel_predict(task, cfg_string, request):
     """
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    nlp = assemble(orig_config)
 
     text, _ = task
     doc = nlp(text)
