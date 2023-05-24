@@ -93,8 +93,7 @@ def test_example_3_python():
     print([(ent.text, ent.label_) for ent in doc.ents])  # noqa: T201
 
 
-@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_example_4_custom_backend_hf():
+def test_example_4_custom_backend():
     import random
 
     @registry.llm_backends("RandomClassification.v1")
