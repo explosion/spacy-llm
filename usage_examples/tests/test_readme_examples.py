@@ -5,7 +5,7 @@ import spacy
 from spacy import util
 from thinc.compat import has_torch_cuda_gpu
 
-from spacy_llm import registry
+from spacy_llm.registry import registry
 
 
 @pytest.mark.external
