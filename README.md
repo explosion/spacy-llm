@@ -494,6 +494,8 @@ To use [MiniChain](https://github.com/srush/MiniChain) for the API retrieval par
 
 ```shell
 python -m pip install "minichain>=0.3,<0.4"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[minichain]"
 ```
 
 Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
@@ -523,6 +525,8 @@ To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval
 
 ```shell
 python -m pip install "langchain>=0.0.144,<0.1"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[langchain]"
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
@@ -551,9 +555,10 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 ```shell
-python -m pip install "cupy-cuda11x"
 python -m pip install "torch>=1.13.1,<2.0"
 python -m pip install "transformers>=4.28.1,<5.0"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[transformers]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
