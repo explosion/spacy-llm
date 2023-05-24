@@ -515,7 +515,6 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 ```shell
-python -m pip install "cupy-cuda11x"
 python -m pip install "torch>=1.13.1,<2.0"
 python -m pip install "transformers>=4.28.1,<5.0"
 # Or install with spacy-llm directly
