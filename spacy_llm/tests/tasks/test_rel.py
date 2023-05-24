@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-import spacy
 from confection import Config
 from pytest import FixtureRequest
 
@@ -36,6 +35,9 @@ def zeroshot_cfg_string():
     [components.llm.backend]
     @llm_backends = "spacy.REST.v1"
     api = "OpenAI"
+
+    [initialize]
+    vectors = "en_core_web_md"
     """
 
 
@@ -66,6 +68,9 @@ def fewshot_cfg_string():
     [components.llm.backend]
     @llm_backends = "spacy.REST.v1"
     api = "OpenAI"
+
+    [initialize]
+    vectors = "en_core_web_md"
     """
 
 
