@@ -74,6 +74,7 @@ def fewshot_cfg_string():
     """
 
 
+@pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string", "zeroshot_cfg_string"])
 def test_spancat_config(cfg_string, request):
