@@ -30,7 +30,7 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v1"
+    @llm_tasks = "spacy.SpanCat.v2"
     labels = PER,ORG,LOC
 
     [components.llm.task.normalizer]
@@ -57,7 +57,7 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v1"
+    @llm_tasks = "spacy.SpanCat.v2"
     labels = PER,ORG,LOC
 
     [components.llm.task.examples]
