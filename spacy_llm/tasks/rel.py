@@ -66,9 +66,6 @@ class RELTask:
         verbose: bool = False,
     ):
 
-        if not Doc.has_extension("rel"):
-            Doc.set_extension("rel", default=[])
-
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in labels.split(",")
@@ -77,6 +74,12 @@ class RELTask:
         self._examples = examples and [RELExample.parse_obj(eg) for eg in examples()]
 
         self._verbose = verbose
+
+    @classmethod
+    def _check_rel_extention(cls):
+        """Add `rel` extension if need be."""
+        if not Doc.has_extension("rel"):
+            Doc.set_extension("rel", default=[])
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
@@ -108,6 +111,8 @@ class RELTask:
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
+        self._check_rel_extention()
+
         for doc, prompt_response in zip(docs, responses):
             rels = self._format_response(prompt_response)
             doc._.rel = rels
