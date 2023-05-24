@@ -518,7 +518,7 @@ This allows you to have the setting `device=cuda:0` in your config, which ensure
 python -m pip install "torch>=1.13.1,<2.0"
 python -m pip install "transformers>=4.28.1,<5.0"
 # Or install with spacy-llm directly
-python -m pip install "spacy-llm[hf]"
+python -m pip install "spacy-llm[transformers]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
