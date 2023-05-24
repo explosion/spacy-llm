@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, Callable, Iterable, Optional, Type, Dict, Generic
+from typing import Any, Callable, Iterable, Optional, Type, Dict
 
 import typing
 
@@ -55,7 +55,10 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
     """
     if hasattr(backend, "__call__"):
         signature = typing.get_type_hints(backend.__call__)
-        if not isinstance(backend, Generic):  # type: ignore[arg-type]
+        # We want to check whether the supplied backend is a Generic type, because that requires a different approach to
+        # extracting the proper signature types. There doesn't seem to be an official way to do this for Python 3.6, so
+        # for compatibility we check for __orig_class__.
+        if not hasattr(backend, "__orig_class__"):
             return signature
 
         # If __call__() uses generic types, typing.get_type_hints() only yields generic aliases, which we aren't
