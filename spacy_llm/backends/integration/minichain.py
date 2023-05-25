@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
-from . import Backend
+from .base import Backend
 from ...compat import has_minichain, minichain
 from ...registry import registry
 

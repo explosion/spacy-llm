@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from spacy.util import SimpleFrozenDict
 
-from . import Backend
+from .base import Backend
 from ...compat import has_langchain, langchain
 from ...registry import registry
 

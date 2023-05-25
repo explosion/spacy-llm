@@ -12,5 +12,8 @@ minichain>=0.3,<0.4; python_version>="3.8" and python_version<"3.11"
 # Necessary for running all local models on GPU.
 transformers>=4.0.0,<5.0.0
 torch
+# Necessary to run OpenLLaMa.
+sentencepiece>=0.1.0,<0.2.0
+xformers<0.1.0
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
