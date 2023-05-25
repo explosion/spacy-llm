@@ -4,6 +4,7 @@ import pytest
 import spacy
 from thinc.compat import has_torch_cuda_gpu
 
+from spacy import util
 from spacy_llm.registry import registry
 from spacy_llm.util import assemble
 
