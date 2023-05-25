@@ -11,7 +11,7 @@ from ..util import split_labels
 from .templates import read_template
 
 
-_DEFAULT_TEXTCAT_TEMPLATE = read_template("textcat.jinja")
+_DEFAULT_TEXTCAT_TEMPLATE = read_template("textcat")
 
 
 class TextCatExample(BaseModel):
@@ -21,6 +21,31 @@ class TextCatExample(BaseModel):
 
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
+    labels: str,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+) -> "TextCatTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
+    return TextCatTask(
+        labels=labels_list,
+        template=_DEFAULT_TEXTCAT_TEMPLATE,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
+
+
+@registry.llm_tasks("spacy.TextCat.v2")
+def make_textcat_task_v2(
     labels: str,
     template: str = _DEFAULT_TEXTCAT_TEMPLATE,
     examples: ExamplesConfigType = None,
