@@ -44,7 +44,7 @@ class OpenLLaMaHFBackend(HuggingFaceBackend):
 
 
 def query_openllama(
-    pipeline: "transformers.pipeline", prompts: Iterable[str]
+    model: "transformers.AutoTokenizer", prompts: Iterable[str]
 ) -> Iterable[str]:
     """Queries OpenLLaMa HF model.
     pipeline (transformers.pipeline): Transformers pipeline to query.
@@ -60,10 +60,11 @@ def query_openllama(
     #     )
     #     for k, v in inputs.items():
     #         inputs[k] = v.cuda()
-    # pred = model.generate(**inputs, max_new_tokens=512, do_sample=True)
+    # preds = [model.generate(**pr, max_new_tokens=512, do_sample=True) for pr in prompts]
     # print(tokenizer.decode(pred.cpu()[0], skip_special_tokens=True))
 
-    return [pipeline(pr)[0]["generated_text"] for pr in prompts]
+    # return [pipeline(pr)[0]["generated_text"] for pr in prompts]
+    return []
 
 
 @registry.llm_backends("spacy.OpenLLaMaHF.v1")
