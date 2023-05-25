@@ -25,7 +25,7 @@ jobs:
 
       - name: Install pre-commit
         run: |
-          pip install '$PRECOMMIT'
+          pip install '${{ env.PRECOMMIT }}'
           pre-commit install
 
       - name: Run all pre-commit checks
