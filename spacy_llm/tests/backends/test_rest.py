@@ -7,8 +7,8 @@ import pytest
 import spacy
 from spacy.tokens import Doc
 
-from ..compat import has_openai_key
 from ...registry import registry
+from ..compat import has_openai_key
 
 PIPE_CFG = {
     "backend": {

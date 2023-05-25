@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from spacy import util
 from wasabi import msg
 
+from spacy_llm.util import assemble
 
 Arg = typer.Argument
 Opt = typer.Option
@@ -19,13 +19,12 @@ def run_pipeline(
     # fmt: on
 ):
     msg.text(f"Loading config from {config_path}", show=verbose)
-    config = util.load_config(
+    nlp = assemble(
         config_path,
         overrides={}
         if examples_path is None
         else {"paths.examples": str(examples_path)},
     )
-    nlp = util.load_model_from_config(config, auto_fill=True)
     doc = nlp(text)
 
     msg.text(f"Text: {doc.text}")
