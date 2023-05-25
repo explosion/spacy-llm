@@ -1,8 +1,7 @@
 import typing
 import warnings
 from pathlib import Path
-from typing import Iterable, Tuple, Iterator, Type
-from typing import cast, Optional, Any
+from typing import Any, Iterable, Iterator, Optional, Tuple, Type, cast
 
 import spacy
 from spacy.language import Language
@@ -11,7 +10,7 @@ from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
-from ..cache import Cache
+from ..ty import Cache
 from ..compat import TypedDict
 from ..ty import LLMTask, PromptExecutor
 
@@ -34,7 +33,12 @@ class CacheConfigType(TypedDict):
             "config": {"model": "gpt-3.5-turbo"},
             "strict": True,
         },
-        "cache": {"path": None, "batch_size": 64, "max_batches_in_mem": 4},
+        "cache": {
+            "@llm_misc": "spacy.BatchCache.v1",
+            "path": None,
+            "batch_size": 64,
+            "max_batches_in_mem": 4,
+        },
     },
 )
 def make_llm(
@@ -42,7 +46,7 @@ def make_llm(
     name: str,
     task: Optional[LLMTask],
     backend: PromptExecutor,
-    cache: CacheConfigType,
+    cache: Cache,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -52,14 +56,12 @@ def make_llm(
     task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
     backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
-    cache (Dict[str, Union[Optional[str], bool, int]]): Cache config. If the cache directory `cache["path"]` is None, no
-        data will be cached. If a path is set, processed docs will be serialized in the cache directory as binary .spacy
-        files. Docs found in the cache directory won't be reprocessed.
+    cache (Cache): Cache to use for caching prompts and responses per doc (batch).
     """
     if task is None:
         raise ValueError(
             "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
-            "'spacy.NER.v1'})."
+            "'spacy.NER.v2'})."
         )
     _validate_types(task, backend)
 
@@ -186,7 +188,7 @@ class LLMWrapper(Pipe):
         vocab: Vocab,
         task: LLMTask,
         backend: PromptExecutor,
-        cache: CacheConfigType,
+        cache: Cache,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -197,19 +199,13 @@ class LLMWrapper(Pipe):
         task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
             structured information and set that back on the docs.
         backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
-        cache (Dict[str, Union[Optional[str], bool, int]]): Cache config. If the cache directory `cache["path"]` is
-            None, no data will be cached. If a path is set, processed docs will be serialized in the cache directory as
-            binary .spacy files. Docs found in the cache directory won't be reprocessed.
+        cache (Cache): Cache to use for caching prompts and responses per doc (batch).
         """
         self._name = name
         self._task = task
         self._backend = backend
-        self._cache = Cache(
-            path=cache["path"],
-            batch_size=int(cache["batch_size"]),
-            max_batches_in_mem=int(cache["max_batches_in_mem"]),
-            vocab=vocab,
-        )
+        self._cache = cache
+        self._cache.vocab = vocab
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -240,14 +236,16 @@ class LLMWrapper(Pipe):
         for doc_batch in spacy.util.minibatch(stream, batch_size):
             is_cached = [doc in self._cache for doc in doc_batch]
             noncached_doc_batch = [
-                doc for i, doc in enumerate(doc_batch) if not is_cached[i]
+                doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
             try:
                 prompts = self._task.generate_prompts(noncached_doc_batch)
                 responses = self._backend(prompts)
-                modified_docs = iter(self._task.parse_responses(doc_batch, responses))
-                for i, doc in enumerate(doc_batch):
-                    if is_cached[i]:
+                modified_docs = iter(
+                    self._task.parse_responses(noncached_doc_batch, responses)
+                )
+                for doc, cached_doc in zip(doc_batch, is_cached):
+                    if cached_doc:
                         doc = self._cache[doc]
                         assert isinstance(doc, Doc)
                         yield doc

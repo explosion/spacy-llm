@@ -15,7 +15,6 @@ on:
 env:
   MODULE_NAME: 'spacy_llm'
   RUN_MYPY: 'false'
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
   run:
@@ -84,6 +83,7 @@ jobs:
         run: |
           python -m pip install -U -r requirements.txt
           python -m pip install -U -r requirements-dev.txt
+          python -m spacy download en_core_web_md
 
       - name: Run spacy_llm tests
         shell: bash
@@ -94,5 +94,3 @@ jobs:
         shell: bash
         run: |
           python -m pytest --pyargs usage_examples
-          
-      

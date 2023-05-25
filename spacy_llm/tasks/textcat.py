@@ -8,55 +8,10 @@ from wasabi import msg
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType, TemplateConfigType
 from ..util import split_labels
+from .templates import read_template
 
 
-_DEFAULT_TEXTCAT_TEMPLATE = """
-{%- if labels|length == 1 -%}
-{%- set label = labels[0] -%}
-Classify whether the text below belongs to the {{ label }} category or not.
-If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer `NEG`.
-{%- else -%}
-Classify the text below to any of the following labels: {{ labels|join(", ") }}
-{# whitespace #}
-{%- if exclusive_classes -%}
-The task is exclusive, so only choose one label from what I provided.
-{%- else -%}
-The task is non-exclusive, so you can provide more than one label as long as
-they're comma-delimited. For example: Label1, Label2, Label3.
-{%- if allow_none -%}
-{# whitespace #}
-If the text cannot be classified into any of the provided labels, answer `==NONE==`.
-{%- endif -%}
-{%- endif -%}
-{# whitespace #}
-{%- endif -%}
-{# whitespace #}
-{%- if examples -%}
-{# whitespace #}
-Below are some examples (only use these as a guide):
-{# whitespace #}
-{# whitespace #}
-{%- for example in examples -%}
-{# whitespace #}
-Text:
-'''
-{{ example.text }}
-'''
-{# whitespace #}
-{{ example.answer }}
-{# whitespace #}
-{%- endfor -%}
-{%- endif -%}
-{# whitespace #}
-{# whitespace #}
-Here is the text that needs classification
-{# whitespace #}
-{# whitespace #}
-Text:
-'''
-{{ text }}
-'''
-"""
+_DEFAULT_TEXTCAT_TEMPLATE = read_template("textcat")
 
 
 class TextCatExample(BaseModel):
@@ -67,6 +22,31 @@ class TextCatExample(BaseModel):
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
     labels: str,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+) -> "TextCatTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
+    return TextCatTask(
+        labels=labels_list,
+        template=_DEFAULT_TEXTCAT_TEMPLATE,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
+
+
+@registry.llm_tasks("spacy.TextCat.v2")
+def make_textcat_task_v2(
+    labels: str,
     template: TemplateConfigType = _DEFAULT_TEXTCAT_TEMPLATE,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -75,12 +55,10 @@ def make_textcat_task(
     verbose: bool = False,
 ) -> "TextCatTask":
     labels_list = split_labels(labels)
-    # Load examples
     raw_examples = examples() if callable(examples) else examples
     textcat_examples = (
         [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
     )
-    # Load templates
     if template is None:
         raise ValueError("A template must be supplied. It cannot be 'None'.")
     task_template = template() if callable(template) else template

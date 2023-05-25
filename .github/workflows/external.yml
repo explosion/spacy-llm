@@ -26,22 +26,23 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+          python -m spacy download en_core_web_md
 
       - name: Run tests
         shell: bash
-        run: pytest spacy_llm/tests --external
+        run: pytest spacy_llm/tests -x --external
 
       - name: Run usage tests
         shell: bash
-        run: pytest usage_examples --external
+        run: pytest usage_examples -x --external
 
-      - name: Report Status
-        if: always()
-        uses: ravsamhq/notify-slack-action@v1
-        with:
-          status: ${{ job.status }}
-          notification_title: "{workflow} have {status_message}"
-          message_format: "{emoji} external workflow has {status_message}"
-          notify_when: "failure"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_MONITORING_WEBHOOK_URL }}
+#      - name: Report Status
+#        if: always()
+#        uses: ravsamhq/notify-slack-action@v1
+#        with:
+#          status: ${{ job.status }}
+#          notification_title: "{workflow} have {status_message}"
+#          message_format: "{emoji} external workflow has {status_message}"
+#          notify_when: "failure"
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_MONITORING_WEBHOOK_URL }}

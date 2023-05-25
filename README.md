@@ -2,14 +2,14 @@
 
 # spacy-llm: Integrating LLMs into structured NLP pipelines
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/external.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/external.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/test.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/test.yml)
 [![pypi Version](https://img.shields.io/pypi/v/spacy-llm.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy-llm/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
 This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.io), featuring a modular system for **fast prototyping** and **prompting**, and turning unstructured responses into **robust outputs** for various NLP tasks, **no training data** required.
 
 - Serializable `llm` **component** to integrate prompts into your pipeline
-- **Modular functions** to define the [**task**](#Tasks) (prompting and parsing) and [**backend**](#Backends) (model to use)
+- **Modular functions** to define the [**task**](#tasks) (prompting and parsing) and [**backend**](#backends) (model to use)
 - Support for **hosted APIs** and self-hosted **open-source models**
 - Integration with [`MiniChain`](https://github.com/srush/MiniChain) and [`LangChain`](https://github.com/hwchase17/langchain)
 - Access to **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**, including GPT-4 and various GPT-3 models
@@ -48,7 +48,7 @@ functionality, as detailed in the [API](#-api) documentation.
 ### Example 1: Add a text classifier using a GPT-3 model from OpenAI
 
 Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
-For more background information, see the [OpenAI](#OpenAI) section.
+For more background information, see the [OpenAI](#openai) section.
 
 Create a config file `config.cfg` containing at least the following
 (or see the full example [here](usage_examples/textcat_openai)):
@@ -64,7 +64,7 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.TextCat.v1"
+@llm_tasks = "spacy.TextCat.v2"
 labels = COMPLIMENT,INSULT
 
 [components.llm.backend]
@@ -103,7 +103,7 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.NER.v1"
+@llm_tasks = "spacy.NER.v2"
 labels = PERSON,ORGANISATION,LOCATION
 
 [components.llm.backend]
@@ -141,7 +141,7 @@ nlp.add_pipe(
     "llm",
     config={
         "task": {
-            "@llm_tasks": "spacy.NER.v1",
+            "@llm_tasks": "spacy.NER.v2",
             "labels": "PERSON,ORGANISATION,LOCATION"
         },
         "backend": {
@@ -165,8 +165,7 @@ To write a
 need to implement two functions: `generate_prompts` that takes a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transforms
 them into a list of prompts, and `parse_responses` that transforms the LLM outputs into annotations on the [`Doc`](https://spacy.io/api/doc), e.g. entity spans, text categories and more.
 
-To register your custom task with spaCy, decorate a factory function using the `spacy_llm.registry.llm_tasks`
-with a custom name that you can refer to in your config.
+To register your custom task with spaCy, decorate a factory function using the `spacy_llm.registry.llm_tasks` decorator with a custom name that you can refer to in your config.
 
 > 📖 For more details, see the [**usage example on writing your own task**](usage_examples/README.md#writing-your-own-task)
 
@@ -206,10 +205,13 @@ my_other_config_val = 0.3
 
 Each `llm` component is defined by two main settings:
 
-- A [**task**](#Tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
+- A [**task**](#tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
-- A [**backend**](#Backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
+- A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
+
+Moreover, the component also implements [**caching**](#cache) functionality to avoid running
+the same document through an LLM service (be it local or through a REST API) more than once.
 
 ### Tasks
 
@@ -244,9 +246,83 @@ return type of the [backend](#backends).
 | `responses` | `Iterable[Any]` | The generated prompts.   |
 | **RETURNS** | `Iterable[Doc]` | The annotated documents. |
 
+#### spacy.NER.v2
+
+The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `template`          | str                                     | [ner.v2.jinja](./spacy_llm/tasks/templates/ner.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `label_definitions`      | `Optional[Dict[str, str]]`              | `None`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract.                                                                                                              |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+The NER task implementation doesn't currently ask the LLM for specific offsets, but simply expects a list of strings that represent the enties in the document.
+This means that a form of string matching is required. This can be configured by the following parameters:
+
+- The `single_match` parameter is typically set to `False` to allow for multiple matches. For instance, the response from the LLM might only mention the entity "Paris" once, but you'd still
+  want to mark it every time it occurs in the document.
+- The case-sensitive matching is typically set to `False` to be robust against case variances in the LLM's output.
+- The `alignment_mode` argument is used to match entities as returned by the LLM to the tokens from the original `Doc` - specifically it's used as argument
+  in the call to [`doc.char_span()`](https://spacy.io/api/doc#char_span). The `"strict"` mode will only keep spans that strictly adhere to the given token boundaries.
+  `"contract"` will only keep those tokens that are fully within the given range, e.g. reducing `"New Y"` to `"New"`.
+  Finally, `"expand"` will expand the span to the next token boundaries, e.g. expanding `"New Y"` out to `"New York"`.
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: Jack and Jill went up the hill.
+  entities:
+    PERSON:
+      - Jack
+      - Jill
+    LOCATION:
+      - hill
+- text: Jack fell down and broke his crown.
+  entities:
+    PERSON:
+      - Jack
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+If you don't have specific examples to provide to the LLM, you can write definitions for each label and provide them via the `label_definitions` argument. This lets you tell the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name. Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief description along with some examples and counter examples seems to work quite well.
+
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,SPORTS_TEAM
+[components.llm.task.label_definitions]
+PERSON = "Extract any named individual in the text."
+SPORTS_TEAM = "Extract the names of any professional sports team. e.g. Golden State Warriors, LA Lakers, Man City, Real Madrid"
+```
+
+> Label descriptions can also be used with explicit examples to give as much info to the LLM backend as possible.
+
+
 #### spacy.NER.v1
 
-The built-in NER task supports both zero-shot and few-shot prompting.
+The original version of the built-in NER task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
@@ -304,9 +380,110 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
-#### spacy.TextCat.v1
+#### spacy.SpanCat.v2
+
+The built-in SpanCat task is a simple adaptation of the NER task to
+support overlapping entities and store its annotations in `doc.spans`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.SpanCat.v2"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `template`          | str                                     | [spancat.v2.jinja](./spacy_llm/tasks/templates/spancat.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `label_definitions`      | `Optional[Dict[str, str]]`              | `None`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract.                                                                                                              |
+| `spans_key`               | `str`                                   | `"sc"`       | Key of the `Doc.spans` dict to save the spans under.                                                                                         |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task.
+Refer to [its documentation](#spacynerv2) for more insight.
+
+
+#### spacy.SpanCat.v1
+
+The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to
+support overlapping entities and store its annotations in `doc.spans`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.SpanCat.v1"
+labels = PERSON,ORGANISATION,LOCATION
+examples = null
+```
+
+| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
+| `spans_key`               | `str`                                   | `"sc"`       | Key of the `Doc.spans` dict to save the spans under.                                                                                         |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task.
+Refer to [its documentation](#spacynerv1) for more insight.
+
+#### spacy.TextCat.v2
 
 The built-in TextCat task supports both zero-shot and few-shot prompting.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v2"
+labels = COMPLIMENT,INSULT
+examples = null
+```
+
+| Argument            | Type                                    | Default | Description                                                                                                                                      |
+| ------------------- | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`            | str                                     |         | Comma-separated list of labels.                                                                                                                  |
+| `template`          | str                                     | [textcat.jinja](./spacy_llm/tasks/templates/textcat.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                                                 |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
+| `exclusive_classes` | `bool`                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
+| `allow_none`        | `bool`                                  | `True`  | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
+| `verbose`           | `bool`                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v2"
+labels = COMPLIMENT,INSULT
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
+#### spacy.TextCat.v1
+
+The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
@@ -353,6 +530,47 @@ labels = COMPLIMENT,INSULT
 path = "textcat_examples.json"
 ```
 
+#### spacy.REL.v1
+
+The built-in REL task supports both zero-shot and few-shot prompting.
+It relies on an upstream NER component for entities extraction.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.REL.v1"
+labels = LivesIn,Visits
+```
+
+| Argument            | Type                                    | Default | Description                                                                                                          |
+| ------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | `str`                                   |         | Comma-separated list of relation labels.                                                                             |
+| `template`          | str                                     | [rel.jinja](./spacy_llm/tasks/templates/rel.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `label_description` | `Optional[Dict[str, str]]`              | `None`  | Dictionary providing a description for each relation label.                                                          |
+| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                     |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. |
+| `verbose`           | `bool`                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                 |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+{"text": "Laura bought a house in Boston with her husband Mark.", "ents": [{"start_char": 0, "end_char": 5, "label": "PERSON"}, {"start_char": 24, "end_char": 30, "label": "GPE"}, {"start_char": 48, "end_char": 52, "label": "PERSON"}], "relations": [{"dep": 0, "dest": 1, "relation": "LivesIn"}, {"dep": 2, "dest": 1, "relation": "LivesIn"}]}
+{"text": "Michael travelled through South America by bike.", "ents": [{"start_char": 0, "end_char": 7, "label": "PERSON"}, {"start_char": 26, "end_char": 39, "label": "LOC"}], "relations": [{"dep": 0, "dest": 1, "relation": "Visits"}]}
+```
+
+Note: the REL task relies on pre-extracted entities to make its prediction.
+Hence, you'll need to add a component that populates `doc.ents` with recognized
+spans to your spaCy pipeline and put it _before_ the REL component.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.REL.v1"
+labels = LivesIn,Visits
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "rel_examples.jsonl"
+```
+
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.
@@ -371,6 +589,22 @@ but specific implementations can have other signatures, like `Callable[[Iterable
 
 All built-in backends are registered in `llm_backends`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
 using the built-in REST protocol, and accesses the `"gpt-3.5-turbo"` model.
+
+> :question: _Why are there backends for third-party libraries in addition to a native REST backend and which should
+> I choose?_
+>
+> Third-party libraries like `langchain` or `minichain` focus on prompt management, integration of many different LLM
+> APIs, and other related features such as conversational memory or agents. `spacy-llm` on the other hand emphasizes
+> features we consider useful in the context of NLP pipelines utilizing LLMs to process documents (mostly) independent
+> from each other. It makes sense that the feature set of such third-party libraries and `spacy-llm` is not identical -
+> and users might want to take advantage of features not available in `spacy-llm`.
+>
+> The advantage of offering our own REST backend is that we can ensure a larger degree of stability of robustness, as
+> we can guarantee backwards-compatibility and more smoothly integrated error handling.
+>
+> Ultimately we recommend trying to implement your use case using the REST backend first (which is configured as the
+> default backend). If however there are features or APIs not covered by `spacy-llm`, it's trivial to switch to the
+> backend of a third-party library - and easy to customize the prompting mechanism, if so required.
 
 #### OpenAI
 
@@ -427,6 +661,8 @@ To use [MiniChain](https://github.com/srush/MiniChain) for the API retrieval par
 
 ```shell
 python -m pip install "minichain>=0.3,<0.4"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[minichain]"
 ```
 
 Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
@@ -456,6 +692,8 @@ To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval
 
 ```shell
 python -m pip install "langchain>=0.0.144,<0.1"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[langchain]"
 ```
 
 Note that LangChain currently only supports Python 3.9 and beyond.
@@ -484,9 +722,10 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 ```shell
-python -m pip install "cupy-cuda11x"
 python -m pip install "torch>=1.13.1,<2.0"
 python -m pip install "transformers>=4.28.1,<5.0"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[transformers]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
@@ -518,6 +757,32 @@ Supported models (see the [Databricks models page](https://huggingface.co/databr
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
+
+### Cache
+
+Interacting with LLMs, either through an external API or a local instance, is costly.
+Since developing an NLP pipeline generally means a lot of exploration and prototyping,
+`spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run.
+
+Example config block:
+
+```ini
+[components.llm.cache]
+@llm_misc = "spacy.BatchCache.v1",
+path = "path/to/cache"
+batch_size = 64
+max_batches_in_mem = 4
+```
+
+| Argument             | Type            | Default | Description                                          |
+| -------------------- | --------------- | ------- | ---------------------------------------------------- |
+| `path`               | `Optional[str]` | `None`  | Cache directory. If `None`, no caching is performed. |
+| `batch_size`         | `int`           | 64      | Number of docs in one batch (file).                  |
+| `max_batches_in_mem` | `int`           | 4       | Max. number of batches to hold in memory.            |
+
+Note that since the cache is generated by a registered function, you can also provide your own registered function
+returning your own cache implementation. If you wish to do so, ensure that your cache object has to adhere to the
+`Protocol` defined in `spacy_llm.ty.Cache`.
 
 ### Various functions
 

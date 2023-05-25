@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 from pathlib import Path
 
 import pytest
@@ -10,9 +9,9 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import lowercase_normalizer
 from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.tasks.textcat import make_textcat_task
-from ..compat import has_openai_key
+from spacy_llm.tasks.textcat import make_textcat_task_v2
 
+from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -142,6 +141,7 @@ def multilabel_nonexcl():
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
+@pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize(
     "task",
@@ -171,6 +171,7 @@ def test_textcat_config(task, cfg_string, request):
 
 
 @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize(
     "cfg_string",
@@ -201,6 +202,7 @@ def test_textcat_predict(task, cfg_string, request):
 
 
 @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize(
     "cfg_string",
@@ -235,7 +237,7 @@ def test_textcat_io(task, cfg_string, request):
 
 def test_textcat_sets_exclusive_classes_if_binary():
     """Test if the textcat task automatically sets exclusive classes to True if binary"""
-    llm_textcat = make_textcat_task(labels="Recipe", exclusive_classes=False)
+    llm_textcat = make_textcat_task_v2(labels="Recipe", exclusive_classes=False)
     assert llm_textcat._exclusive_classes
 
 
@@ -256,7 +258,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
     label is an empty dictionary
     """
     label = "Recipe"
-    llm_textcat = make_textcat_task(
+    llm_textcat = make_textcat_task_v2(
         labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
@@ -287,7 +289,7 @@ def test_textcat_multilabel_labels_are_correct(
     text, exclusive_classes, response, expected
 ):
     labels = "Recipe,Comment,Feedback"
-    llm_textcat = make_textcat_task(
+    llm_textcat = make_textcat_task_v2(
         labels=labels,
         exclusive_classes=exclusive_classes,
         normalizer=lowercase_normalizer(),
@@ -319,7 +321,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task(
+    llm_textcat = make_textcat_task_v2(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -328,8 +330,12 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     assert (
         prompt.strip()
         == """
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
 Classify whether the text below belongs to the Recipe category or not.
 If it is a Recipe, answer `POS`. If it is not a Recipe, answer `NEG`.
+Do not put any other text in your answer, only one of 'POS' or 'NEG' with nothing before or after.
 Below are some examples (only use these as a guide):
 
 
@@ -381,7 +387,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task(
+    llm_textcat = make_textcat_task_v2(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -390,8 +396,12 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     assert (
         prompt.strip()
         == """
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
 Classify the text below to any of the following labels: Recipe, Feedback, Comment
 The task is exclusive, so only choose one label from what I provided.
+Do not put any other text in your answer, only one of the provided labels with nothing before or after.
 Below are some examples (only use these as a guide):
 
 
@@ -443,7 +453,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task(
+    llm_textcat = make_textcat_task_v2(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -452,9 +462,13 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     assert (
         prompt.strip()
         == """
-    Classify the text below to any of the following labels: Recipe, Feedback, Comment
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
+Classify the text below to any of the following labels: Recipe, Feedback, Comment
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
+Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
 If the text cannot be classified into any of the provided labels, answer `==NONE==`.
 Below are some examples (only use these as a guide):
 
@@ -507,7 +521,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValidationError):
-            make_textcat_task(
+            make_textcat_task_v2(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
@@ -521,7 +535,7 @@ def test_external_template_actually_loads():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
-    llm_textcat = make_textcat_task(labels=labels, template=template)
+    llm_textcat = make_textcat_task_v2(labels=labels, template=template)
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
     assert (
         prompt.strip()
@@ -539,4 +553,4 @@ def test_none_template_raises_an_error():
     template = None
     labels = "Recipe"
     with pytest.raises(ValueError):
-        make_textcat_task(labels=labels, template=template)
+        make_textcat_task_v2(labels=labels, template=template)

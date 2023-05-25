@@ -1,7 +1,11 @@
+from typing import Iterable
+
 import pytest
 import spacy
 from spacy import util
 from thinc.compat import has_torch_cuda_gpu
+
+from spacy_llm.registry import registry
 
 
 @pytest.mark.external
@@ -18,7 +22,7 @@ def test_example_1_classifier():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.TextCat.v1"
+        @llm_tasks = "spacy.TextCat.v2"
         labels = COMPLIMENT,INSULT
 
         [components.llm.backend]
@@ -50,7 +54,7 @@ def test_example_2_ner_hf():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.NER.v1"
+        @llm_tasks = "spacy.NER.v2"
         labels = PERSON,ORGANISATION,LOCATION
 
         [components.llm.backend]
@@ -75,7 +79,7 @@ def test_example_3_python():
         "llm",
         config={
             "task": {
-                "@llm_tasks": "spacy.NER.v1",
+                "@llm_tasks": "spacy.NER.v2",
                 "labels": "PERSON,ORGANISATION,LOCATION",
             },
             "backend": {
@@ -87,3 +91,44 @@ def test_example_3_python():
     )
     doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
     print([(ent.text, ent.label_) for ent in doc.ents])  # noqa: T201
+
+
+def test_example_4_custom_backend():
+    import random
+
+    @registry.llm_backends("RandomClassification.v1")
+    def random_textcat(labels: str):
+        labels = labels.split(",")
+
+        def _classify(prompts: Iterable[str]) -> Iterable[str]:
+            for _ in prompts:
+                yield random.choice(labels)
+
+        return _classify
+
+    with util.make_tempdir() as tmpdir:
+        cfg_str = """
+        [nlp]
+        lang = "en"
+        pipeline = ["llm"]
+
+        [components]
+
+        [components.llm]
+        factory = "llm"
+
+        [components.llm.task]
+        @llm_tasks = "spacy.TextCat.v2"
+        labels = ORDER,INFORMATION
+
+        [components.llm.backend]
+        @llm_backends = "RandomClassification.v1"
+        labels = ${components.llm.task.labels}
+        """
+
+        with open(tmpdir / "cfg", "w") as text_file:
+            text_file.write(cfg_str)
+
+        config = util.load_config(tmpdir / "cfg")
+        nlp = util.load_model_from_config(config, auto_fill=True)
+        nlp("i'd like a large margherita pizza please")
