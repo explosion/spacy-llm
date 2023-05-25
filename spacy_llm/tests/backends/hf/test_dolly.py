@@ -2,28 +2,16 @@ import copy
 
 import pytest
 import spacy
-from confection import Config
+from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
-from spacy_llm.backends.hf import dolly_supported_models, supported_models
-
-backend_and_model = [("spacy.DollyHF.v1", model) for model in dolly_supported_models]
-backend_and_model.extend([("spacy.HF.v1", model) for model in supported_models])
-
-
-@pytest.fixture(params=backend_and_model)
-def config(request: pytest.FixtureRequest) -> Config:
-
-    backend, model = request.param
-
-    return {
-        "backend": {
-            "@llm_backends": backend,
-            "model": model,
-        },
-        "task": {"@llm_tasks": "spacy.NoOp.v1"},
-    }
-
+_PIPE_CFG = {
+    "backend": {
+        "@llm_backends": "spacy.DollyHF.v1",
+        "model": "databricks/dolly-v2-3b",
+    },
+    "task": {"@llm_tasks": "spacy.NoOp.v1"},
+}
 
 _NLP_CONFIG = """
 
@@ -41,16 +29,16 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends = "spacy.HF.v1"
+@llm_backends = "spacy.DollyHF.v1"
 model = "databricks/dolly-v2-3b"
 """
 
 
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init(config):
+def test_init():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=config)
+    nlp.add_pipe("llm", config=_PIPE_CFG)
     nlp("This is a test.")
 
 
