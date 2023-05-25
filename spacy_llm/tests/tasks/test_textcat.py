@@ -178,9 +178,9 @@ def test_textcat_config(task, cfg_string, request):
     ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
 )
 def test_textcat_predict(task, cfg_string, request):
-    """Use OpenAI to get Textcat results
+    """Use OpenAI to get Textcat results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed
-    to be consistent/predictable
+    to be consistent/predictable.
     """
     task = request.getfixturevalue(task)
     text, labels, gold_cats, exclusive_classes, examples = task
