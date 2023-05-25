@@ -22,7 +22,7 @@ PIPE_CFG = {
 def test_combinations():
     """Randomly test combinations of backends and tasks."""
     backends = ("spacy.LangChain.v1", "spacy.MiniChain.v1", "spacy.REST.v1")
-    tasks = ("spacy.NER.v1", "spacy.TextCat.v1")
+    tasks = ("spacy.NER.v1", "spacy.NER.v2", "spacy.TextCat.v1")
 
     for combination in list(itertools.product(backends, tasks)):
         config = copy.deepcopy(PIPE_CFG)
