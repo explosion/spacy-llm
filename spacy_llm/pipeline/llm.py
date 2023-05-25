@@ -26,6 +26,7 @@ class CacheConfigType(TypedDict):
     assigns=[],
     default_config={
         "task": None,
+        "save_io": False,
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
@@ -44,6 +45,7 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
+    save_io: bool,
     backend: PromptExecutor,
     cache: Cache,
 ) -> "LLMWrapper":
@@ -54,6 +56,7 @@ def make_llm(
         losses during training.
     task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
+    save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
     backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
     """
@@ -67,6 +70,7 @@ def make_llm(
     return LLMWrapper(
         name=name,
         task=task,
+        save_io=save_io,
         backend=backend,
         cache=cache,
         vocab=nlp.vocab,
@@ -184,6 +188,7 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
+        save_io: bool,
         vocab: Vocab,
         task: LLMTask,
         backend: PromptExecutor,
@@ -202,6 +207,7 @@ class LLMWrapper(Pipe):
         """
         self._name = name
         self._task = task
+        self._save_io = save_io
         self._backend = backend
         self._cache = cache
         self._cache.vocab = vocab
