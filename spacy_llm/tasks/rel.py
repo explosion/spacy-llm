@@ -68,12 +68,9 @@ def make_rel_task(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     rel_examples = [RELExample(**eg) for eg in raw_examples] if raw_examples else None
-    if template is None:
-        raise ValueError("A template must be supplied. It cannot be 'None'.")
-    task_template = template() if callable(template) else template
     return RELTask(
         labels=labels_list,
-        template=task_template,
+        template=template,
         label_definitions=label_definitions,
         examples=rel_examples,
         normalizer=normalizer,

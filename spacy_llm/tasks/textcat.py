@@ -59,12 +59,9 @@ def make_textcat_task_v2(
     textcat_examples = (
         [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
     )
-    if template is None:
-        raise ValueError("A template must be supplied. It cannot be 'None'.")
-    task_template = template() if callable(template) else template
     return TextCatTask(
         labels=labels_list,
-        template=task_template,
+        template=template,
         examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,

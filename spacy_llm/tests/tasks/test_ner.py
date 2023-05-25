@@ -664,11 +664,3 @@ LOC
 Here is the text: Alice and Bob went to the supermarket
 """.strip()
     )
-
-
-def test_none_template_raises_an_error():
-    """This is a user-error, they cannot pass None templates"""
-    template = None
-    labels = "PER,ORG,LOC"
-    with pytest.raises(ValueError):
-        make_ner_task_v2(labels=labels, template=template)

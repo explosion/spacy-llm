@@ -546,11 +546,3 @@ Recipe
 Here is the text: Combine 2 cloves of garlic with soy sauce
 """.strip()
     )
-
-
-def test_none_template_raises_an_error():
-    """This is a user-error, they cannot pass None templates"""
-    template = None
-    labels = "Recipe"
-    with pytest.raises(ValueError):
-        make_textcat_task_v2(labels=labels, template=template)
