@@ -7,7 +7,7 @@ from .templates import read_template
 from .util import SpanTask, SpanExample
 from ..compat import Literal
 from ..registry import registry
-from ..ty import ExamplesConfigType, TemplateConfigType
+from ..ty import ExamplesConfigType
 from ..util import split_labels
 
 
@@ -42,7 +42,7 @@ def make_ner_task(
 @registry.llm_tasks("spacy.NER.v2")
 def make_ner_task_v2(
     labels: str,
-    template: TemplateConfigType = _DEFAULT_NER_TEMPLATE_V2,
+    template: str = _DEFAULT_NER_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,

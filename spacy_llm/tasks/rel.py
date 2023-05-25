@@ -6,7 +6,7 @@ from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
-from ..ty import ExamplesConfigType, TemplateConfigType
+from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 
@@ -59,7 +59,7 @@ _DEFAULT_REL_TEMPLATE = read_template("rel")
 @registry.llm_tasks("spacy.REL.v1")
 def make_rel_task(
     labels: str,
-    template: TemplateConfigType = _DEFAULT_REL_TEMPLATE,
+    template: str = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,

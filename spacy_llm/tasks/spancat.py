@@ -4,7 +4,7 @@ from spacy.tokens import Doc, Span
 
 from ..compat import Literal
 from ..registry import registry
-from ..ty import ExamplesConfigType, TemplateConfigType
+from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 from .util import SpanTask, SpanExample
@@ -41,7 +41,7 @@ def make_spancat_task(
 @registry.llm_tasks("spacy.SpanCat.v2")
 def make_spancat_task_v2(
     labels: str,
-    template: TemplateConfigType = _DEFAULT_SPANCAT_TEMPLATE_V2,
+    template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
