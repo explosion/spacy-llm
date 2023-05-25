@@ -6,6 +6,10 @@ from ..registry import registry
 
 
 @registry.llm_tasks("spacy.NoOp.v1")
+def make_noop_task():
+    return NoopTask()
+
+
 class NoopTask:
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         for _ in docs:

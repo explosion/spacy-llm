@@ -22,7 +22,7 @@ def test_example_1_classifier():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.TextCat.v1"
+        @llm_tasks = "spacy.TextCat.v2"
         labels = COMPLIMENT,INSULT
 
         [components.llm.backend]
@@ -118,7 +118,7 @@ def test_example_4_custom_backend():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.TextCat.v1"
+        @llm_tasks = "spacy.TextCat.v2"
         labels = ORDER,INFORMATION
 
         [components.llm.backend]

@@ -6,6 +6,8 @@ from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
+from ..ty import ExamplesConfigType
+from ..util import split_labels
 from .templates import read_template
 
 
@@ -51,28 +53,48 @@ def _preannotate(doc: Union[Doc, RELExample]) -> str:
     return text
 
 
+_DEFAULT_REL_TEMPLATE = read_template("rel")
+
+
 @registry.llm_tasks("spacy.REL.v1")
+def make_rel_task(
+    labels: str,
+    template: str = _DEFAULT_REL_TEMPLATE,
+    label_definitions: Optional[Dict[str, str]] = None,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    verbose: bool = False,
+) -> "RELTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    rel_examples = [RELExample(**eg) for eg in raw_examples] if raw_examples else None
+    return RELTask(
+        labels=labels_list,
+        template=template,
+        label_definitions=label_definitions,
+        examples=rel_examples,
+        normalizer=normalizer,
+        verbose=verbose,
+    )
+
+
 class RELTask:
     """Simple REL task. Populates a `Doc._.rel` custom attribute."""
 
-    _TEMPLATE_STR = read_template("rel")
-
     def __init__(
         self,
-        labels: str,
+        labels: List[str],
+        template: str = _DEFAULT_REL_TEMPLATE,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[Callable[[], Iterable[Dict]]] = None,
+        examples: Optional[List[RELExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         verbose: bool = False,
     ):
-
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in labels.split(",")
-        }
+        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._template = template
         self._label_definitions = label_definitions
-        self._examples = examples and [RELExample.parse_obj(eg) for eg in examples()]
-
+        self._examples = examples
         self._verbose = verbose
 
     @classmethod
@@ -83,7 +105,7 @@ class RELTask:
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
-        _template = environment.from_string(self._TEMPLATE_STR)
+        _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
                 text=_preannotate(doc),
