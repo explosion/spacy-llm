@@ -1,7 +1,7 @@
+from .hf import backend_hf
 from .langchain import backend_langchain, query_langchain
 from .minichain import backend_minichain, query_minichain
 from .rest import backend_rest
-from .hf import backend_dolly_hf, backend_hf
 
 __all__ = [
     "query_minichain",
