@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from spacy.tokens import Doc, Span
 
@@ -9,12 +9,33 @@ from .util import SpanTask
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
+def make_spancat_task_v1(
+    labels: str,
+    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
+):
+    task = SpanCatTask(
+        labels=labels,
+        examples=examples,
+        normalizer=normalizer,
+        alignment_mode=alignment_mode,
+        case_sensitive_matching=case_sensitive_matching,
+        single_match=single_match,
+    )
+    task._TEMPLATE_STR = read_template("spancat")
+    return task
+
+
 class SpanCatTask(SpanTask):
-    _TEMPLATE_STR = read_template("spancat")
+    _TEMPLATE_STR = read_template("spancat.v2")
 
     def __init__(
         self,
         labels: str,
+        label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
         examples: Optional[Callable[[], Iterable[Any]]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
@@ -39,6 +60,7 @@ class SpanCatTask(SpanTask):
         """
         super(SpanCatTask, self).__init__(
             labels=labels,
+            label_definitions=label_definitions,
             examples=examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,

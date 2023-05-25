@@ -54,7 +54,7 @@ def test_example_2_ner_hf():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.NER.v1"
+        @llm_tasks = "spacy.NER.v2"
         labels = PERSON,ORGANISATION,LOCATION
 
         [components.llm.backend]
@@ -79,7 +79,7 @@ def test_example_3_python():
         "llm",
         config={
             "task": {
-                "@llm_tasks": "spacy.NER.v1",
+                "@llm_tasks": "spacy.NER.v2",
                 "labels": "PERSON,ORGANISATION,LOCATION",
             },
             "backend": {

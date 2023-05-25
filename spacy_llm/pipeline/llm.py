@@ -59,7 +59,7 @@ def make_llm(
     if task is None:
         raise ValueError(
             "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
-            "'spacy.NER.v1'})."
+            "'spacy.NER.v2'})."
         )
     validate_types(task, backend)
 

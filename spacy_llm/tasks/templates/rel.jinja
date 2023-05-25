@@ -1,0 +1,57 @@
+The text below contains pre-extracted entities, denoted in the following format within the text:
+{# whitespace #}
+<entity text>[ENT<entity id>:<entity label>]
+{# whitespace #}
+From the text below, extract the following relations between entities:
+{# whitespace #}
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+The extraction has to use the following format, with one line for each detected relation:
+{# whitespace #}
+{"dep": <entity id>, "dest": <entity id>, "relation": <relation label>}
+{# whitespace #}
+Make sure that only relevant relations are listed, and that each line is a valid JSON object.
+{# whitespace #}
+{%- if label_definitions -%}
+Below are definitions of each label to help aid you in what kinds of relationship to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
+{# whitespace #}
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+{%- if examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+Text:
+'''
+{{ preannotate(example) }}
+'''
+{# whitespace #}
+{%- for item in example.relations -%}
+{# whitespace #}
+{{ item.json() }}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''

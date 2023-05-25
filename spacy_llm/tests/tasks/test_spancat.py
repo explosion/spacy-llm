@@ -30,7 +30,7 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v1"
+    @llm_tasks = "spacy.SpanCat.v2"
     labels = PER,ORG,LOC
 
     [components.llm.task.normalizer]
@@ -57,7 +57,7 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v1"
+    @llm_tasks = "spacy.SpanCat.v2"
     labels = PER,ORG,LOC
 
     [components.llm.task.examples]
@@ -369,10 +369,14 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == """
-From the text below, extract the following (possibly overlapping) entities in the following format:
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+The entities you extract for each label can overlap with each other.
+From the Text input provided, extract named entities for each label in the following format:
+
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+
 
 Here is the text that needs labeling:
 
@@ -409,33 +413,37 @@ def test_jinja_template_rendering_with_examples(examples_path):
     assert (
         prompt.strip()
         == """
-From the text below, extract the following (possibly overlapping) entities in the following format:
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+The entities you extract for each label can overlap with each other.
+From the Text input provided, extract named entities for each label in the following format:
+
 PER: <comma delimited list of strings>
 ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
 
-Below are some examples (only use these as a guide):
 
+Below are some examples (only use these as a guide):
 
 Text:
 '''
 Jack and Jill went up the hill.
 '''
+
 PER: Jack, Jill
 LOC: hill
-
 
 Text:
 '''
 Jack fell down and broke his crown.
 '''
-PER: Jack
 
+PER: Jack
 
 Text:
 '''
 Jill came tumbling after.
 '''
+
 PER: Jill
 
 
