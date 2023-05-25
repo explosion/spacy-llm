@@ -26,7 +26,6 @@ class CacheConfigType(TypedDict):
     assigns=[],
     default_config={
         "task": None,
-        "save_io": False,
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
@@ -45,7 +44,6 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
-    save_io: bool,
     backend: PromptExecutor,
     cache: Cache,
 ) -> "LLMWrapper":
@@ -56,7 +54,6 @@ def make_llm(
         losses during training.
     task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
-    save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
     backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
     """
@@ -70,7 +67,6 @@ def make_llm(
     return LLMWrapper(
         name=name,
         task=task,
-        save_io=save_io,
         backend=backend,
         cache=cache,
         vocab=nlp.vocab,
@@ -188,7 +184,6 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        save_io: bool,
         vocab: Vocab,
         task: LLMTask,
         backend: PromptExecutor,
@@ -207,7 +202,6 @@ class LLMWrapper(Pipe):
         """
         self._name = name
         self._task = task
-        self._save_io = save_io
         self._backend = backend
         self._cache = cache
         self._cache.vocab = vocab
@@ -238,7 +232,7 @@ class LLMWrapper(Pipe):
         YIELDS (Doc): Processed documents in order.
         """
         if not Doc.has_extension("llm_io"):
-            Doc.set_extension("llm_io", default=dict())
+            Doc.set_extension("llm_io", default=None)
 
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
@@ -250,7 +244,9 @@ class LLMWrapper(Pipe):
                 prompts = list(self._task.generate_prompts(noncached_doc_batch))
                 iter_prompts = iter(prompts)
 
-                responses = self._backend(prompts)
+                responses = list(self._backend(prompts))
+                iter_responses = iter(responses)
+
                 modified_docs = iter(
                     self._task.parse_responses(noncached_doc_batch, responses)
                 )
@@ -260,12 +256,13 @@ class LLMWrapper(Pipe):
                         assert isinstance(doc, Doc)
                         yield doc
                     else:
-                        doc, response = next(modified_docs)
+                        doc = next(modified_docs)
 
                         if self._save_io:
-                            prompt = next(iter_prompts)
-                            doc._.llm_io[self._name]["prompt"] = prompt
-                            doc._.llm_io[self._name]["response"] = response
+                            doc._.llm_io[self._name] = dict(
+                                prompt=next(iter_prompts),
+                                response=next(iter_responses),
+                            )
 
                         self._cache.add(doc)
                         yield doc
