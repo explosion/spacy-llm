@@ -60,12 +60,20 @@ need to implement two functions:
 
 The `spacy-llm` library requires tasks to be defined as a class and registered in the `llm_tasks` registry:
 
+
 ```python
 from spacy_llm.registry import registry
+from spacy_llm.util import split_labels
 
-@registry.llm_tasks("spacy.MyTask.v1")
+
+@registry.llm_tasks("my_namespace.MyTask.v1")
+def make_my_task(labels: str, my_other_config_val: float) -> "MyTask":
+    labels_list = split_labels(labels)
+    return MyTask(labels=labels_list, my_other_config_val=my_other_config_val)
+
+
 class MyTask:
-    def __init__(self, labels: str):
+    def __init__(self, labels: List[str], my_other_config_val: float):
         ...
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
@@ -77,14 +85,12 @@ class MyTask:
         ...
 ```
 
-(and in the config)
-
 ```ini
-...
+# config.cfg (excerpt)
 [components.llm.task]
-@llm_tasks = "spacy.MyTask.v1"
+@llm_tasks = "my_namespace.MyTask.v1"
 labels = LABEL1,LABEL2,LABEL3
-...
+my_other_config_val = 0.3
 ```
 
 You can check sample tasks for Named Entity Recognition and text categorization

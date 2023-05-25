@@ -11,7 +11,7 @@ from thinc.api import NumpyOps, get_current_ops
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from spacy_llm.tasks import NoopTask
+from spacy_llm.tasks import make_noop_task
 
 from ..compat import has_openai_key
 from ...cache import BatchCache
@@ -93,7 +93,7 @@ def test_llm_pipe_empty(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        task=NoopTask(),
+        task=make_noop_task(),
         backend=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
@@ -103,7 +103,7 @@ def test_llm_serialize_bytes():
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        task=NoopTask(),
+        task=make_noop_task(),
         backend=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore

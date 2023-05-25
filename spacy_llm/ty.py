@@ -1,10 +1,10 @@
 import inspect
 import typing
 import warnings
-from typing import Any, Callable, Iterable, Optional, Type, Dict, List
+from typing import Any, Callable, Dict, Iterable, Optional, Union, Type, List
 
-from spacy import Vocab
 from spacy.tokens import Doc
+from spacy.vocab import Vocab
 
 from .backends import integration
 from .compat import Protocol, runtime_checkable
@@ -13,6 +13,9 @@ _Prompt = Any
 _Response = Any
 
 PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
+ExamplesConfigType = Union[
+    Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
+]
 
 
 @runtime_checkable

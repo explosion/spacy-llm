@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, List, Iterable, Optional
 
 import jinja2
 from pydantic import BaseModel
@@ -6,6 +6,12 @@ from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
+from ..ty import ExamplesConfigType
+from ..util import split_labels
+from .templates import read_template
+
+
+_DEFAULT_TEXTCAT_TEMPLATE = read_template("textcat")
 
 
 class TextCatExample(BaseModel):
@@ -14,66 +20,62 @@ class TextCatExample(BaseModel):
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
-class TextCatTask:
-    _TEMPLATE_STR = """
-You are an expert Text Classification system. Your task is to accept Text as input
-and provide a category for the text based on the predefined labels.
-{# whitespace #}
-{# whitespace #}
-{%- if labels|length == 1 -%}
-{%- set label = labels[0] -%}
-Classify whether the text below belongs to the {{ label }} category or not.
-If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer `NEG`.
-Do not put any other text in your answer, only one of 'POS' or 'NEG' with nothing before or after.
-{%- else -%}
-Classify the text below to any of the following labels: {{ labels|join(", ") }}
-{# whitespace #}
-{%- if exclusive_classes -%}
-The task is exclusive, so only choose one label from what I provided.
-Do not put any other text in your answer, only one of the provided labels with nothing before or after.
-{%- else -%}
-The task is non-exclusive, so you can provide more than one label as long as
-they're comma-delimited. For example: Label1, Label2, Label3.
-Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
-{%- if allow_none -%}
-{# whitespace #}
-If the text cannot be classified into any of the provided labels, answer `==NONE==`.
-{%- endif -%}
-{%- endif -%}
-{# whitespace #}
-{%- endif -%}
-{# whitespace #}
-{%- if examples -%}
-{# whitespace #}
-Below are some examples (only use these as a guide):
-{# whitespace #}
-{# whitespace #}
-{%- for example in examples -%}
-{# whitespace #}
-Text:
-'''
-{{ example.text }}
-'''
-{# whitespace #}
-{{ example.answer }}
-{# whitespace #}
-{%- endfor -%}
-{%- endif -%}
-{# whitespace #}
-{# whitespace #}
-Here is the text that needs classification
-{# whitespace #}
-{# whitespace #}
-Text:
-'''
-{{ text }}
-'''
-    """
+def make_textcat_task(
+    labels: str,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+) -> "TextCatTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
+    return TextCatTask(
+        labels=labels_list,
+        template=_DEFAULT_TEXTCAT_TEMPLATE,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
 
+
+@registry.llm_tasks("spacy.TextCat.v2")
+def make_textcat_task_v2(
+    labels: str,
+    template: str = _DEFAULT_TEXTCAT_TEMPLATE,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+) -> "TextCatTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
+    return TextCatTask(
+        labels=labels_list,
+        template=template,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
+
+
+class TextCatTask:
     def __init__(
         self,
-        labels: str,
-        examples: Optional[Callable[[], Iterable[Any]]] = None,
+        labels: List[str],
+        template: str = _DEFAULT_TEXTCAT_TEMPLATE,
+        examples: Optional[List[TextCatExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
         allow_none: bool = True,
@@ -96,6 +98,7 @@ Text:
 
         labels (str): Comma-separated list of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
+        template (str): Prompt template passed to the model.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
@@ -105,13 +108,10 @@ Text:
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
         """
+        self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in labels.split(",")
-        }
-        self._examples = (
-            [TextCatExample(**eg) for eg in examples()] if examples else None
-        )
+        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._examples = examples
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
@@ -127,7 +127,7 @@ Text:
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
-        _template = environment.from_string(self._TEMPLATE_STR)
+        _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,
