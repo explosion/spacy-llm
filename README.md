@@ -165,8 +165,7 @@ To write a
 need to implement two functions: `generate_prompts` that takes a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transforms
 them into a list of prompts, and `parse_responses` that transforms the LLM outputs into annotations on the [`Doc`](https://spacy.io/api/doc), e.g. entity spans, text categories and more.
 
-To register your custom task with spaCy, decorate a factory function using the `spacy_llm.registry.llm_tasks`
-with a custom name that you can refer to in your config.
+To register your custom task with spaCy, decorate a factory function using the `spacy_llm.registry.llm_tasks` decorator with a custom name that you can refer to in your config.
 
 > 📖 For more details, see the [**usage example on writing your own task**](usage_examples/README.md#writing-your-own-task)
 
