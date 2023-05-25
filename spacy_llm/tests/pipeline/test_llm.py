@@ -91,6 +91,7 @@ def test_llm_pipe_empty(nlp):
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
         task=NoopTask(),
+        save_io=False,
         backend=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
@@ -101,6 +102,7 @@ def test_llm_serialize_bytes():
 def test_llm_serialize_disk():
     llm = LLMWrapper(
         task=NoopTask(),
+        save_io=False,
         backend=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
