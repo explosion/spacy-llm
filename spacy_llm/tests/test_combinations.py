@@ -27,7 +27,9 @@ PIPE_CFG: Dict[str, Any] = {
     ids=["langchain", "minichain", "rest"],
 )
 @pytest.mark.parametrize(
-    "task", ["spacy.NER.v1", "spacy.NER.v2", "spacy.TextCat.v1"], ids=["ner", "textcat"]
+    "task",
+    ["spacy.NER.v1", "spacy.NER.v2", "spacy.TextCat.v1"],
+    ids=["ner.v1", "ner.v2", "textcat"],
 )
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_combinations(backend: str, task: str, n_process: int):
