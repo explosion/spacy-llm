@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import jinja2
 from spacy.tokens import Doc, Span
@@ -12,12 +12,11 @@ from .parsing import find_substrings
 class SpanTask:
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
-    _TEMPLATE_STR: str
-
     def __init__(
         self,
         labels: List[str],
         template: str,
+        label_definitions: Optional[Dict[str, str]] = {},
         examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
@@ -29,6 +28,7 @@ class SpanTask:
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {self._normalizer(label): label for label in labels}
         self._template = template
+        self._label_definitions = label_definitions
         self._examples = examples
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
@@ -50,6 +50,7 @@ class SpanTask:
             prompt = _template.render(
                 text=doc.text,
                 labels=list(self._label_dict.values()),
+                label_definitions=self._label_definitions,
                 examples=self._examples,
             )
             yield prompt

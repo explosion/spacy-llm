@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from thinc.compat import has_torch_cuda_gpu
+from spacy_llm import cache  # noqa: F401
 
 from .. import (
     ner_dolly,
@@ -9,6 +10,7 @@ from .. import (
     ner_langchain_openai,
     ner_minichain_openai,
     multitask_openai,
+    rel_openai,
 )
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
@@ -73,5 +75,22 @@ def test_multitask_openai(config_name: str):
         text="text",
         config_path=path / config_name,
         examples_path=None if config_name == "zeroshot.cfg" else path / "examples.yml",
+        verbose=False,
+    )
+
+
+@pytest.mark.external
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
+def test_rel_openai(config_name: str):
+    """Test REL OpenAI usage example.
+    config_name (str): Name of config file to use.
+    """
+    path = _USAGE_EXAMPLE_PATH / "rel_openai"
+    rel_openai.run_pipeline(
+        text="text",
+        config_path=path / config_name,
+        examples_path=None
+        if config_name == "zeroshot.cfg"
+        else path / "examples.jsonl",
         verbose=False,
     )

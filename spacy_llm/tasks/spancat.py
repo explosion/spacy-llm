@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from spacy.tokens import Doc, Span
 
@@ -10,25 +10,52 @@ from .templates import read_template
 from .util import SpanTask, SpanExample
 
 
-_DEFAULT_SPANCAT_TEMPLATE = read_template("spancat")
+_DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")
+_DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat")
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
 def make_spancat_task(
     labels: str,
-    template: str = _DEFAULT_SPANCAT_TEMPLATE,
+    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
+):
+    labels_list = split_labels(labels)
+    span_examples = (
+        [SpanExample(**eg) for eg in examples()] if callable(examples) else examples
+    )
+    return SpanCatTask(
+        labels=labels_list,
+        template=_DEFAULT_SPANCAT_TEMPLATE_V1,
+        examples=span_examples,
+        normalizer=normalizer,
+        alignment_mode=alignment_mode,
+        case_sensitive_matching=case_sensitive_matching,
+        single_match=single_match,
+    )
+
+
+@registry.llm_tasks("spacy.SpanCat.v2")
+def make_spancat_task_v2(
+    labels: str,
+    template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
+    label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
     case_sensitive_matching: bool = False,
     single_match: bool = False,
-) -> "SpanCatTask":
+):
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     span_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None
     return SpanCatTask(
         labels=labels_list,
         template=template,
+        label_definitions=label_definitions,
         examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
@@ -41,7 +68,8 @@ class SpanCatTask(SpanTask):
     def __init__(
         self,
         labels: List[str],
-        template: str = _DEFAULT_SPANCAT_TEMPLATE,
+        template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
+        label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
         examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
@@ -67,6 +95,7 @@ class SpanCatTask(SpanTask):
         super(SpanCatTask, self).__init__(
             labels=labels,
             template=template,
+            label_definitions=label_definitions,
             examples=examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
