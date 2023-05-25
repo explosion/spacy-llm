@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from thinc.compat import has_torch_cuda_gpu
+from spacy_llm import cache  # noqa: F401
 
 from .. import (
     ner_dolly,

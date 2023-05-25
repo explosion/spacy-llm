@@ -12,6 +12,7 @@ from spacy_llm.registry import registry
 from spacy_llm.tasks import NoopTask
 
 from ..compat import has_openai_key
+from ...cache import BatchCache
 
 
 @pytest.fixture
@@ -82,7 +83,7 @@ def test_llm_serialize_bytes():
     llm = LLMWrapper(
         task=NoopTask(),
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
+        cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
@@ -92,7 +93,7 @@ def test_llm_serialize_disk():
     llm = LLMWrapper(
         task=NoopTask(),
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
+        cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
 

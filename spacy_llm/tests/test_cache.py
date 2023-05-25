@@ -9,7 +9,7 @@ from spacy import Language
 from spacy.tokens import DocBin
 import copy
 
-from ..cache import Cache
+from ..cache import BatchCache
 
 
 _DEFAULT_CFG = {
@@ -59,12 +59,12 @@ def test_caching(use_pipe: bool) -> None:
         assert cache._stats["persisted"] == n
         # Check whether docs are in the batch files they are supposed to be in.
         for doc in docs:
-            doc_id = Cache._doc_id(doc)
+            doc_id = BatchCache._doc_id(doc)
             batch_id = index_dict[doc_id]
             batch_path = cache._batch_path(batch_id)
             batch_docs = DocBin().from_disk(batch_path).get_docs(nlp.vocab)
-            doc_ids = [Cache._doc_id(d) for d in batch_docs]
-            assert Cache._batch_id(doc_ids) == batch_id
+            doc_ids = [BatchCache._doc_id(d) for d in batch_docs]
+            assert BatchCache._batch_id(doc_ids) == batch_id
             assert doc_id in doc_ids
 
         #######################################################
