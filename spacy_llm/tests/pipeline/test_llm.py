@@ -7,12 +7,14 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
 
+from spacy_llm.backends.rest.backend.noop import NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import NoopTask
+from spacy_llm.tasks.noop import NOOP_PROMPT
 
-from ..compat import has_openai_key
 from ...cache import BatchCache
+from ..compat import has_openai_key
 
 
 @pytest.fixture
@@ -21,6 +23,7 @@ def noop_config() -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): NoOp config.
     """
     return {
+        "save_io": True,
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
         "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
     }
@@ -42,6 +45,12 @@ def test_llm_pipe(nlp):
     """Test call .pipe()."""
     docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
     assert len(docs) == 2
+
+    for doc in docs:
+        llm_io = doc._.llm_io
+
+        assert llm_io["llm"]["prompt"] == NOOP_PROMPT
+        assert llm_io["llm"]["response"] == NOOP_RESPONSE
 
 
 def test_llm_pipe_with_cache(tmp_path: Path):
