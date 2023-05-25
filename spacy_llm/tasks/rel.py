@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -110,10 +110,10 @@ class RELTask:
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
+    ) -> Iterable[Tuple[Doc, str]]:
         self._check_rel_extention()
 
         for doc, prompt_response in zip(docs, responses):
             rels = self._format_response(prompt_response)
             doc._.rel = rels
-            yield doc
+            yield doc, prompt_response

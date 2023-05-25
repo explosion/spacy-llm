@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional, Tuple
 
 from spacy import Vocab
 from spacy.tokens import Doc
@@ -19,7 +19,7 @@ class LLMTask(Protocol):
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[_Response]
-    ) -> Iterable[Doc]:
+    ) -> Iterable[Tuple[Doc, _Response]]:
         ...
 
 

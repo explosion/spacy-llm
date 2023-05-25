@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 
 from spacy.tokens import Doc
 
@@ -13,6 +13,6 @@ class NoopTask:
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
+    ) -> Iterable[Tuple[Doc, str]]:
         # Not doing anything
-        return docs
+        return zip(docs, responses)

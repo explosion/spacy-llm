@@ -84,7 +84,7 @@ class SpanTask:
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
+    ) -> Iterable[Tuple[Doc, str]]:
         for doc, prompt_response in zip(docs, responses):
             spans = []
             for label, phrases in self._format_response(prompt_response):
@@ -104,4 +104,4 @@ class SpanTask:
                         spans.append(span)
 
             self.assign_spans(doc, spans)
-            yield doc
+            yield doc, prompt_response

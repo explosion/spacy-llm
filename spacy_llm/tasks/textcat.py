@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 import jinja2
 from pydantic import BaseModel
@@ -173,8 +173,8 @@ Text:
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
+    ) -> Iterable[Tuple[Doc, str]]:
         for doc, prompt_response in zip(docs, responses):
             cats = self._format_response(prompt_response)
             doc.cats = cats
-            yield doc
+            yield doc, prompt_response
