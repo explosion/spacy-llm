@@ -13,11 +13,20 @@ jobs:
           python-version: 3.9
           cache: "pip" # caching pip dependencies
 
-      - name: Install dependencies
+      - name: Set env variables
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "PRECOMMIT=$(cat requirements-dev.txt | grep pre-commit)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ env.PY }}|${{ env.PRECOMMIT }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: |
+          pip install '$PRECOMMIT'
+          pre-commit install
 
       - name: Run all pre-commit checks
         run: pre-commit run --all-files --hook-stage manual -c .pre-commit-config.yaml
