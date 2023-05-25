@@ -90,6 +90,6 @@ def backend_dolly_hf(
     if not config or len(config) == 0:
         config = _compile_default_config()
 
-    return Backend["transformers.Pipeline", str, str](
-        integration=transformers.pipeline(model=model, **config), query=query_dolly
+    return Backend(
+        integration=transformers.pipeline(model=model, **config), query=query_dolly  # type: ignore[arg-type]
     )

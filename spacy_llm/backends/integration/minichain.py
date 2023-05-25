@@ -57,7 +57,7 @@ def backend_minichain(
     _check_installation()
 
     if hasattr(minichain.backend, api):
-        return Backend["minichain.backend.Backend", Any, Any](
+        return Backend(
             integration=getattr(minichain.backend, api)(**config),
             query=query_minichain() if query is None else query,
         )

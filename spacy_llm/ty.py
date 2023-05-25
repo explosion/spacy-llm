@@ -54,27 +54,25 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): Type per argument name.
     """
     if hasattr(backend, "__call__"):
-        signature = typing.get_type_hints(backend.__call__)
-        # We want to check whether the supplied backend is a Generic type, because that requires a different approach to
-        # extracting the proper signature types. There doesn't seem to be an official way to do this for Python 3.6, so
-        # for compatibility we check for __orig_class__.
-        if not hasattr(backend, "__orig_class__"):
-            return signature
-
-        # If __call__() uses generic types, typing.get_type_hints() only yields generic aliases, which we aren't
-        # interested in. In this case we have to do some type trickery to fetch the actual types.
-        # We also prohibit the usage of any generic objects apart from integration.Backend, as this would make type
-        # checking more complicated (and there probably isn't much demand for this anyway).
+        # Assume that __call__() has the necessary type info - except in the case of integration.Backend, for which
+        # we know this is not the case.
         if not isinstance(backend, integration.Backend):
-            raise ValueError(
-                "Generics in backend objects are currently not supported when not using spacy_llm."
-                "backends.integration.Backend."
-            )
-        return {
-            "input": Iterable[backend.__orig_class__.__args__[1]],  # type: ignore[name-defined]
-            "return": Iterable[backend.__orig_class__.__args__[2]],  # type: ignore[name-defined]
+            return typing.get_type_hints(backend.__call__)
+
+        # If this is an instance of integrations.Backend: read type information from .query() instead, only keep
+        # information on Iterable args.
+        signature = {
+            k: v
+            for k, v in typing.get_type_hints(backend.query).items()
+            # In Python 3.8+ (or 3.6+ if typing_utils is installed) the check for the origin class should be done using
+            # typing.get_origin().
+            if hasattr(v, "__origin__") and issubclass(v.__origin__, Iterable)
         }
+        assert len(signature) == 2
+        assert "return" in signature
+        return signature
     else:
+        # If this is a function: return type hints directly.
         return typing.get_type_hints(backend)
 
 

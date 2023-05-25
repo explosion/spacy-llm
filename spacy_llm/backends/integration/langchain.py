@@ -56,7 +56,7 @@ def backend_langchain(
     type_to_cls_dict: Dict[str, Type[BaseLLM]] = langchain.llms.type_to_cls_dict
 
     if api in type_to_cls_dict:
-        return Backend["BaseLLM", Any, Any](
+        return Backend(
             integration=type_to_cls_dict[api](**config),
             query=query_langchain() if query is None else query,
         )
