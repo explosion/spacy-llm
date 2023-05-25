@@ -378,7 +378,7 @@ labels = LivesIn,Visits
 | Argument            | Type                                    | Default | Description                                                                                                          |
 | ------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | `labels`            | `str`                                   |         | Comma-separated list of relation labels.                                                                             |
-| `label_description` | `Optional[Dict[str, str]]`              | `None`  | Dictionary providind a description for each relation label.                                                          |
+| `label_description` | `Optional[Dict[str, str]]`              | `None`  | Dictionary providing a description for each relation label.                                                          |
 | `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                     |
 | `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. |
 | `verbose`           | `bool`                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                 |
