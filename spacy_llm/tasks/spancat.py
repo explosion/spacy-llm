@@ -11,7 +11,7 @@ from .util import SpanTask, SpanExample
 
 
 _DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")
-_DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat")
+_DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
