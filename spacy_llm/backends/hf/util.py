@@ -1,21 +1,9 @@
 import warnings
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Collection, Dict
 
-from spacy.util import SimpleFrozenDict, SimpleFrozenList
 from thinc.compat import has_torch_cuda_gpu
 
-from ..compat import has_accelerate, has_torch, has_transformers, torch, transformers
-from ..registry.util import registry
-
-supported_models = SimpleFrozenList(
-    [
-        "databricks/dolly-v2-3b",
-        "databricks/dolly-v2-7b",
-        "databricks/dolly-v2-12b",
-        "stabilityai/stablelm-tuned-alpha-3b",
-        "stabilityai/stablelm-tuned-alpha-7b",
-    ]
-)
+from ...compat import has_accelerate, has_torch, has_transformers, torch
 
 
 def _check_installation() -> None:
@@ -32,7 +20,7 @@ def _check_installation() -> None:
         )
 
 
-def _check_model(model: str) -> None:
+def _check_model(model: str, supported_models: Collection[str]) -> None:
     if model not in supported_models:
         raise ValueError(
             f"Model '{model}' is not supported - select one of {supported_models} instead"
@@ -65,28 +53,3 @@ def _compile_default_config() -> Dict[Any, Any]:
                 "distribute the LLM on the CPU or even the hard disk. The latter may be slow."
             )
     return default_cfg
-
-
-@registry.llm_backends("spacy.DollyHF.v1")  # For backward-compatibility
-@registry.llm_backends("spacy.HF.v1")
-def backend_hf(
-    model: str,
-    config: Dict[Any, Any] = SimpleFrozenDict(),
-) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Returns Callable that can execute a set of prompts and return the raw responses.
-    model (str): Name of the HF model.
-    config (Dict[Any, Any]): config arguments passed on to the initialization of transformers.pipeline instance.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
-    """
-    _check_installation()
-    _check_model(model)
-
-    if not config or len(config) == 0:
-        config = _compile_default_config()
-
-    llm_pipeline = transformers.pipeline(model=model, **config)
-
-    def query(prompts: Iterable[str]) -> Iterable[str]:
-        return [llm_pipeline(pr)[0]["generated_text"] for pr in prompts]
-
-    return query
