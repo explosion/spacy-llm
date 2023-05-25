@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
+import numpy
 
 import srsly  # type: ignore[import]
 from spacy.tokens import Doc, DocBin
@@ -114,7 +115,7 @@ class BatchCache:
         doc (Doc): Doc to generate a unique ID for.
         RETURN (int): Unique ID for this doc.
         """
-        return sum(token.orth for token in doc)
+        return numpy.sum(doc.to_array(["ORTH"]), dtype=numpy.uint64).item()
 
     @staticmethod
     def _batch_id(doc_ids: Iterable[int]) -> int:
@@ -122,7 +123,9 @@ class BatchCache:
         doc_ids (Iterable[int]): doc ids
         RETURN (int): Unique ID for this batch.
         """
-        return sum(doc_id for doc_id in doc_ids)
+        return numpy.sum(
+            numpy.asarray(doc_ids, dtype=numpy.uint64), dtype=numpy.uint64
+        ).item()
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc. Note: Adding a doc does _not_ mean that this doc is immediately persisted to disk. This
