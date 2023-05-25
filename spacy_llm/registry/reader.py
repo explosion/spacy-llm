@@ -31,7 +31,7 @@ def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, An
             raise ValueError(
                 "The examples file expects a .yml, .yaml, .json, or .jsonl file type."
             )
-        if not isinstance(data, list):
+        if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
             raise ValueError(
                 f"Cannot interpret prompt examples from {path}. Please check your formatting"
             )
