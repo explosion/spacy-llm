@@ -265,6 +265,8 @@ class LLMWrapper(Pipe):
                         doc = next(modified_docs)
 
                         if self._save_io:
+                            if doc._.llm_io is None:
+                                doc._.llm_io = dict()
                             doc._.llm_io[self._name] = dict(
                                 prompt=next(iter_prompts),
                                 response=next(iter_responses),
