@@ -8,7 +8,7 @@ from .util import registry
 
 @registry.misc("spacy.FileReader.v1")
 def file_reader(path: Union[str, Path]) -> str:
-    """Read a file from a path and return its contents
+    """Read a file from a path and return its contents.
 
     path (Union[str, Path]): path to the file
 
