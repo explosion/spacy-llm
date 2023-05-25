@@ -247,7 +247,9 @@ class LLMWrapper(Pipe):
                 doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
             try:
-                prompts = self._task.generate_prompts(noncached_doc_batch)
+                prompts = list(self._task.generate_prompts(noncached_doc_batch))
+                iter_prompts = iter(prompts)
+
                 responses = self._backend(prompts)
                 modified_docs = iter(
                     self._task.parse_responses(noncached_doc_batch, responses)
@@ -259,10 +261,12 @@ class LLMWrapper(Pipe):
                         yield doc
                     else:
                         doc, response = next(modified_docs)
+
                         if self._save_io:
-                            prompt = next(prompts)
+                            prompt = next(iter_prompts)
                             doc._.llm_io[self._name]["prompt"] = prompt
                             doc._.llm_io[self._name]["response"] = response
+
                         self._cache.add(doc)
                         yield doc
             except Exception as e:
