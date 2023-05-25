@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from spacy.tokens import Doc, Span
 
-from ..ty import ExamplesConfigType
 from ..compat import Literal
 from ..registry import registry
+from ..ty import ExamplesConfigType, TemplateConfigType
 from ..util import split_labels
 from .templates import read_template
 from .util import SpanTask, SpanExample
@@ -41,7 +41,7 @@ def make_spancat_task(
 @registry.llm_tasks("spacy.SpanCat.v2")
 def make_spancat_task_v2(
     labels: str,
-    template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
+    template: TemplateConfigType = _DEFAULT_SPANCAT_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -52,9 +52,12 @@ def make_spancat_task_v2(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     span_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None
+    if template is None:
+        raise ValueError("A template must be supplied. It cannot be 'None'.")
+    task_template = template() if callable(template) else template
     return SpanCatTask(
         labels=labels_list,
-        template=template,
+        template=task_template,
         label_definitions=label_definitions,
         examples=span_examples,
         normalizer=normalizer,

@@ -6,7 +6,7 @@ from spacy.tokens import Doc
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
-from ..ty import ExamplesConfigType
+from ..ty import ExamplesConfigType, TemplateConfigType
 from ..util import split_labels
 from .templates import read_template
 
@@ -59,7 +59,7 @@ _DEFAULT_REL_TEMPLATE = read_template("rel")
 @registry.llm_tasks("spacy.REL.v1")
 def make_rel_task(
     labels: str,
-    template: str = _DEFAULT_REL_TEMPLATE,
+    template: TemplateConfigType = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -68,9 +68,12 @@ def make_rel_task(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     rel_examples = [RELExample(**eg) for eg in raw_examples] if raw_examples else None
+    if template is None:
+        raise ValueError("A template must be supplied. It cannot be 'None'.")
+    task_template = template() if callable(template) else template
     return RELTask(
         labels=labels_list,
-        template=template,
+        template=task_template,
         label_definitions=label_definitions,
         examples=rel_examples,
         normalizer=normalizer,
