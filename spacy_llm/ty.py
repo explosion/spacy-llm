@@ -1,6 +1,6 @@
 import typing
 import warnings
-from typing import Any, Callable, Iterable, Optional, Type, Dict
+from typing import Any, Callable, Iterable, Optional, Type, Dict, List
 
 from spacy import Vocab
 from spacy.tokens import Doc
@@ -95,6 +95,12 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
 
         # If this is an instance of integrations.Backend: read type information from .query() instead, only keep
         # information on Iterable args.
+        signature = typing.get_type_hints(backend.query).items()
+        to_ignore: List[str] = []
+        for k, v in signature:
+            if not (hasattr(v, "__origin__") and issubclass(v.__origin__, Iterable)):
+                to_ignore.append(k)
+
         signature = {
             k: v
             for k, v in typing.get_type_hints(backend.query).items()

@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Callable
 
 import pytest
 import spacy
@@ -97,7 +97,7 @@ def test_example_4_custom_backend():
     import random
 
     @registry.llm_backends("RandomClassification.v1")
-    def random_textcat(labels: str):
+    def random_textcat(labels: str) -> Callable[[Iterable[str]], Iterable[str]]:
         labels = labels.split(",")
 
         def _classify(prompts: Iterable[str]) -> Iterable[str]:
