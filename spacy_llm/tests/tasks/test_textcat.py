@@ -1,15 +1,22 @@
 from pathlib import Path
+from typing import Iterable
 
 import pytest
 import spacy
 import srsly
 from confection import Config
 from pydantic import ValidationError
+from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import lowercase_normalizer
-from spacy_llm.registry import fewshot_reader, file_reader
+from spacy_llm.registry import (
+    fewshot_reader,
+    file_reader,
+    lowercase_normalizer,
+    registry,
+)
 from spacy_llm.tasks.textcat import make_textcat_task_v2
+from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
 
@@ -546,3 +553,65 @@ Recipe
 Here is the text: Combine 2 cloves of garlic with soy sauce
 """.strip()
     )
+
+
+INSULTS = [
+    "Gobbledygooks!",
+    "Filibusters!",
+    "Slubberdegullions!",
+    "Vampires!",
+    "Sycophant!",
+    "Kleptomaniacs!",
+    "Egoists!",
+    "Tramps!",
+    "Monopolizers!",
+    "Pockmarks!",
+    "Belemnite!",
+    "Crooks!",
+    "Miserable earthworms!",
+    "Harlequin!",
+    "Parasites!",
+    "Macrocephalic baboon!",
+    "Brutes!",
+    "Pachyrhizus!",
+    "Toads!",
+    "Gyroscope!",
+    "Bougainvillea!",
+    "Bloodsuckers!",
+    "Nincompoop!",
+    "Shipwreckers!",
+]
+
+
+@pytest.mark.parametrize("n_insults", range(len(INSULTS) + 1))
+def test_textcat_scoring(zeroshot_cfg_string, n_insults):
+    @registry.llm_backends("Dummy")
+    def factory():
+        def b(prompts: Iterable[str]) -> Iterable[str]:
+            for _ in prompts:
+                yield "POS"
+
+        return b
+
+    config = Config().from_str(zeroshot_cfg_string)
+    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    config["components"]["llm"]["task"]["labels"] = "Insult"
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for i, text in enumerate(INSULTS):
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        reference.cats = {"Insult": 1.0 if i < n_insults else 0.0}
+
+        examples.append(Example(predicted, reference))
+
+    scores = nlp.evaluate(examples)
+
+    pos = n_insults / len(INSULTS)
+    1 - pos
+
+    assert scores["cats_micro_p"] == pos
+    assert not n_insults or scores["cats_micro_r"] == 1
