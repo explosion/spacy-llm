@@ -119,6 +119,5 @@ class NERTask(SpanTask):
     def scorer(
         self,
         examples: Iterable[Example],
-        **cfg,
     ) -> Dict[str, Any]:
-        return Scorer.score_spans(examples, attr="ents", **cfg)
+        return Scorer.score_spans(examples, attr="ents")

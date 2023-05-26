@@ -130,12 +130,7 @@ class LLMWrapper(Pipe):
         DOCS: https://spacy.io/api/pipe#score
         """
         if hasattr(self._task, "scorer") and self._task.scorer is not None:
-            scorer_kwargs = {}
-            if hasattr(self._task, "labels"):
-                scorer_kwargs["labels"] = self.labels
-            # override with kwargs settings
-            scorer_kwargs.update(kwargs)
-            return self._task.scorer(examples, **scorer_kwargs)
+            return self._task.scorer(examples)
         return {}
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:

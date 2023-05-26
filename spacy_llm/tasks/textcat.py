@@ -183,11 +183,9 @@ class TextCatTask:
     def scorer(
         self,
         examples: Iterable[Example],
-        **cfg,
     ) -> Dict[str, Any]:
         return Scorer.score_cats(
             examples,
             attr="cats",
             labels=self._label_dict.values(),
-            **cfg,
         )

@@ -116,6 +116,5 @@ class SpanCatTask(SpanTask):
     def scorer(
         self,
         examples: Iterable[Example],
-        **cfg,
     ) -> Dict[str, Any]:
-        return spancat_score(examples, spans_key=self._spans_key, **cfg)
+        return spancat_score(examples, spans_key=self._spans_key)
