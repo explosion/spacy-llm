@@ -144,10 +144,12 @@ class LLMWrapper(Pipe):
                 doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
             try:
-                # We need to use tee to store generated prompts/responses
-                # Otherwise, they will be consumed
-                prompts = tee(self._task.generate_prompts(noncached_doc_batch))
-                responses = tee(self._backend(prompts))
+                prompts = self._task.generate_prompts(noncached_doc_batch)
+                responses = self._backend(prompts)
+
+                if self._save_io:
+                    prompts, iter_prompts = tee(prompts)
+                    responses, iter_responses = tee(responses)
 
                 modified_docs = iter(
                     self._task.parse_responses(noncached_doc_batch, responses)
