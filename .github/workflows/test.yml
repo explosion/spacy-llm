@@ -82,7 +82,7 @@ jobs:
       - name: Get pip cache dir
         id: pip-cache-dir
         run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+          echo "dir=$(python -m pip cache dir)" >> $GITHUB_OUTPUT
           echo "py=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
         
       - name: Test
