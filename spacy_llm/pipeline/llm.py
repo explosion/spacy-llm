@@ -262,7 +262,7 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-        return spacy.util.to_bytes({}, exclude)
+        return b""
 
     def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
@@ -271,34 +271,23 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        spacy.util.from_bytes(bytes_data, {}, exclude)
         return self
 
     def to_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
     ) -> None:
         """Serialize the LLMWrapper to disk.
-        path (Path): A path to a JSON file, which will be created if it doesn’t exist. Paths may be either strings or
-            Path-like objects.
+        path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-        spacy.util.to_disk(
-            spacy.util.ensure_path(path).with_suffix(".json"),
-            {},
-            exclude,
-        )
+        return None
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
     ) -> "LLMWrapper":
         """Load the LLMWrapper from disk.
-        path (Path): A path to a JSON file. Paths may be either strings or Path-like objects.
+        path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        spacy.util.from_disk(
-            spacy.util.ensure_path(path).with_suffix(".json"),
-            {},
-            exclude,
-        )
         return self
