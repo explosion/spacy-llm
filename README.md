@@ -65,7 +65,7 @@ factory = "llm"
 
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v2"
-labels = COMPLIMENT,INSULT
+labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.backend]
 @llm_backends = "spacy.REST.v1"
@@ -103,7 +103,7 @@ factory = "llm"
 
 [components.llm.task]
 @llm_tasks = "spacy.NER.v2"
-labels = PERSON,ORGANISATION,LOCATION
+labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.backend]
 @llm_backends = "spacy.DollyHF.v1"
@@ -140,7 +140,7 @@ nlp.add_pipe(
     config={
         "task": {
             "@llm_tasks": "spacy.NER.v2",
-            "labels": "PERSON,ORGANISATION,LOCATION"
+            "labels": ["PERSON", "ORGANISATION", "LOCATION"]
         },
         "backend": {
             "@llm_backends": "spacy.REST.v1",
