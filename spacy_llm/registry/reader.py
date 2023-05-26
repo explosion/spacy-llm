@@ -1,3 +1,4 @@
+import functools
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Union, cast
 
@@ -29,27 +30,26 @@ def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, An
 
     RETURNS (Iterable[Dict[str, Any]]): an iterable of examples to be parsed by the template
     """
-
-    # typecast string path so that we can use pathlib functionality
     eg_path = Path(path) if isinstance(path, str) else path
+    return functools.partial(_fewshot_reader, eg_path=eg_path)
 
-    def reader() -> Iterable[Dict[str, Any]]:
-        if eg_path is None:
-            data = []
-        elif eg_path.suffix in (".yml", ".yaml"):
-            data = srsly.read_yaml(eg_path)
-        elif eg_path.suffix == ".json":
-            data = srsly.read_json(eg_path)
-        elif eg_path.suffix == ".jsonl":
-            data = list(srsly.read_jsonl(eg_path))
-        else:
-            raise ValueError(
-                "The examples file expects a .yml, .yaml, .json, or .jsonl file type."
-            )
-        if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
-            raise ValueError(
-                f"Cannot interpret prompt examples from {path}. Please check your formatting"
-            )
-        return cast(Iterable[Dict[str, Any]], data)
 
-    return reader
+def _fewshot_reader(eg_path: Path) -> Iterable[Any]:
+    if eg_path is None:
+        data = []
+    elif eg_path.suffix in (".yml", ".yaml"):
+        data = srsly.read_yaml(eg_path)
+    elif eg_path.suffix == ".json":
+        data = srsly.read_json(eg_path)
+    elif eg_path.suffix == ".jsonl":
+        data = list(srsly.read_jsonl(eg_path))
+    else:
+        raise ValueError(
+            "The examples file expects a .yml, .yaml, .json, or .jsonl file type."
+        )
+
+    if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
+        raise ValueError(
+            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting"
+        )
+    return cast(Iterable[Dict[str, Any]], data)

@@ -7,6 +7,8 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
 
+from thinc.api import NumpyOps, get_current_ops
+
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import make_noop_task
@@ -38,14 +40,24 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
-def test_llm_pipe(nlp):
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_llm_pipe(nlp: Language, n_process: int):
     """Test call .pipe()."""
-    docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
+    ops = get_current_ops()
+    if not isinstance(ops, NumpyOps) and n_process != 1:
+        pytest.skip("Only test multiple processes on CPU")
+    docs = list(
+        nlp.pipe(texts=["This is a test", "This is another test"], n_process=n_process)
+    )
     assert len(docs) == 2
 
 
-def test_llm_pipe_with_cache(tmp_path: Path):
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_llm_pipe_with_cache(tmp_path: Path, n_process: int):
     """Test call .pipe() with pre-cached docs"""
+    ops = get_current_ops()
+    if not isinstance(ops, NumpyOps) and n_process != 1:
+        pytest.skip("Only test multiple processes on CPU")
 
     path = tmp_path / "cache"
 
@@ -70,7 +82,7 @@ def test_llm_pipe_with_cache(tmp_path: Path):
     texts = [cached_text, "This is a test", "This is another test"]
 
     # Run it again, along with other documents
-    docs = list(nlp.pipe(texts=texts))
+    docs = list(nlp.pipe(texts=texts, n_process=n_process))
     assert [doc.text for doc in docs] == texts
 
 

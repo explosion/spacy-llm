@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 
 from spacy.util import SimpleFrozenDict
 
-from ..compat import has_langchain, langchain
-from ..registry import registry
+from . import Backend
+from ...compat import has_langchain, langchain
+from ...registry import registry
 
 if TYPE_CHECKING and has_langchain:
     from langchain.llms.base import BaseLLM  # type: ignore[import]
@@ -25,11 +26,11 @@ def query_langchain() -> Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]:
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
         the specified LangChain backend.
     """
+    return _prompt_langchain
 
-    def prompt(backend: "BaseLLM", prompts: Iterable[Any]) -> Iterable[Any]:
-        return [backend(pr) for pr in prompts]
 
-    return prompt
+def _prompt_langchain(backend: "BaseLLM", prompts: Iterable[Any]) -> Iterable[Any]:
+    return [backend(pr) for pr in prompts]
 
 
 @registry.llm_backends("spacy.LangChain.v1")
@@ -55,14 +56,10 @@ def backend_langchain(
     type_to_cls_dict: Dict[str, Type[BaseLLM]] = langchain.llms.type_to_cls_dict
 
     if api in type_to_cls_dict:
-        backend = type_to_cls_dict[api](**config)
-
-        query_fn = query_langchain() if query is None else query
-
-        def _query(prompts: Iterable[Any]) -> Iterable[Any]:
-            return query_fn(backend, prompts)
-
-        return _query
+        return Backend(
+            integration=type_to_cls_dict[api](**config),
+            query=query_langchain() if query is None else query,
+        )
     else:
         raise KeyError(
             f"The requested API {api} is not available in `langchain.llms.type_to_cls_dict`."
