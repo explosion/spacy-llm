@@ -93,7 +93,7 @@ def ext_template_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.TextCat.v1"
+    @llm_tasks = "spacy.TextCat.v2"
     labels = "Recipe"
     exclusive_classes = true
 
