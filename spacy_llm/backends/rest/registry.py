@@ -37,8 +37,4 @@ def backend_rest(
         interval=interval,
         max_request_time=max_request_time,
     )
-
-    def _query(prompts: Iterable[str]) -> Iterable[str]:
-        return backend(prompts)
-
-    return _query
+    return backend

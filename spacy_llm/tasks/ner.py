@@ -3,14 +3,20 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 from spacy.tokens import Doc, Span
 from spacy.util import filter_spans
 
+from .templates import read_template
+from .util import SpanTask, SpanExample
 from ..compat import Literal
 from ..registry import registry
-from .templates import read_template
-from .util import SpanTask
+from ..ty import ExamplesConfigType
+from ..util import split_labels
+
+
+_DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
+_DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
 
 
 @registry.llm_tasks("spacy.NER.v1")
-def make_ner_task_v1(
+def make_ner_task(
     labels: str,
     examples: Optional[Callable[[], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -18,27 +24,54 @@ def make_ner_task_v1(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
-    task = NERTask(
-        labels=labels,
-        examples=examples,
+    labels_list = split_labels(labels)
+    span_examples = (
+        [SpanExample(**eg) for eg in examples()] if callable(examples) else examples
+    )
+    return NERTask(
+        labels=labels_list,
+        template=_DEFAULT_NER_TEMPLATE_V1,
+        examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
         single_match=single_match,
     )
-    task._TEMPLATE_STR = read_template("ner")
-    return task
 
 
 @registry.llm_tasks("spacy.NER.v2")
-class NERTask(SpanTask):
-    _TEMPLATE_STR: str = read_template("ner.v2")
+def make_ner_task_v2(
+    labels: str,
+    template: str = _DEFAULT_NER_TEMPLATE_V2,
+    label_definitions: Optional[Dict[str, str]] = None,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    case_sensitive_matching: bool = False,
+    single_match: bool = False,
+):
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    span_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None
+    return NERTask(
+        labels=labels_list,
+        template=template,
+        label_definitions=label_definitions,
+        examples=span_examples,
+        normalizer=normalizer,
+        alignment_mode=alignment_mode,
+        case_sensitive_matching=case_sensitive_matching,
+        single_match=single_match,
+    )
 
+
+class NERTask(SpanTask):
     def __init__(
         self,
-        labels: str,
+        labels: List[str],
+        template: str = _DEFAULT_NER_TEMPLATE_V2,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[Callable[[], Iterable[Any]]] = None,
+        examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -49,6 +82,7 @@ class NERTask(SpanTask):
         """Default NER task.
 
         labels (str): Comma-separated list of labels to pass to the template.
+        template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
@@ -64,6 +98,7 @@ class NERTask(SpanTask):
         """
         super().__init__(
             labels=labels,
+            template=template,
             label_definitions=label_definitions,
             examples=examples,
             normalizer=normalizer,
