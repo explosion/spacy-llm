@@ -203,14 +203,24 @@ my_other_config_val = 0.3
 
 ## 📓 API
 
-Each `llm` component is defined by two main settings:
+`spacy-llm` exposes a `llm` factory that accepts the following arguments:
+
+| Argument  | Type                                        | Description                                                                         |
+| --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `name`    | `str`                                       | The name of the component.                                                          |
+| `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
+| `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
+| `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
+| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc._.llm_io`                             |
+
+An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
 - A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
 
-Moreover, the component also implements [**caching**](#cache) functionality to avoid running
+Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality to avoid running
 the same document through an LLM service (be it local or through a REST API) more than once.
 
 Finally, you can choose to save a stringified version of LLM prompts/responses
@@ -343,7 +353,6 @@ examples = null
 | `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
 | `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
 | `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
-
 
 The NER task implementation doesn't currently ask the LLM for specific offsets, but simply expects a list of strings that represent the enties in the document.
 This means that a form of string matching is required. This can be configured by the following parameters:
@@ -546,7 +555,6 @@ examples = null
 | `exclusive_classes` | `bool`                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
 | `allow_none`        | `bool`                                  | `True`  | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
 | `verbose`           | `bool`                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
-
 
 To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
