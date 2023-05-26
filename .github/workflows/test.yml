@@ -78,12 +78,32 @@ jobs:
         shell: bash
         run: |
           python -c "import $MODULE_NAME" -Werror
+        
+      - name: Get pip cache dir
+        id: pip-cache-dir
+        run: |
+          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Restore Pip Cache
+        id: pip-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ steps.pip-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ hashFiles('**/requirements-dev.txt') }}
 
       - name: Install test requirements
+        # Although the environment is cached, dependencies are still updated
         run: |
           python -m pip install -U -r requirements.txt
           python -m pip install -U -r requirements-dev.txt
           python -m spacy download en_core_web_md
+      
+      - name: Save Pip Cache
+        id: pip-cache-save
+        uses: actions/cache/save@v3
+        with:
+          path: ${{ steps.pip-cache-dir.outputs.dir }}
+          key: ${{ steps.pip-cache-restore.outputs.cache-primary-key }}
 
       - name: Run spacy_llm tests
         shell: bash
