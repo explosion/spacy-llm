@@ -117,7 +117,8 @@ class NERTask(SpanTask):
         doc.set_ents(filter_spans(spans))
 
     def scorer(
+        self,
         examples: Iterable[Example],
         **cfg,
     ) -> Dict[str, Any]:
-        return Scorer.score_spans(examples, "ents", **cfg)
+        return Scorer.score_spans(examples, attr="ents", **cfg)
