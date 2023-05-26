@@ -40,6 +40,7 @@ def test_combinations(backend: str, task: str, n_process: int):
 
     config = copy.deepcopy(PIPE_CFG)
     config["backend"]["@llm_backends"] = backend
+    config["backend"]["config"] = {"model": "ada"}
     config["task"]["@llm_tasks"] = task
 
     # Configure task-specific settings.

@@ -52,6 +52,9 @@ def backend_langchain(
     """
     _check_installation()
 
+    if "model" not in config:
+        raise ValueError("The LLM model must be specified in the config.")
+
     # langchain.llms.type_to_cls_dict contains all API names in lowercase, so this allows to be more forgiving and make
     # "OpenAI" work as well "openai".
     api = api.lower()
@@ -60,8 +63,9 @@ def backend_langchain(
     ] = langchain.llms.type_to_cls_dict
 
     if api in type_to_cls_dict:
+        model = config.pop("model")
         return Backend(
-            integration=type_to_cls_dict[api](**config),
+            integration=type_to_cls_dict[api](model=model, **config),
             query=query_langchain() if query is None else query,
         )
     else:
