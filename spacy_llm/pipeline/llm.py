@@ -1,3 +1,5 @@
+from collections import defaultdict
+from itertools import tee
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Tuple, cast
 
@@ -93,6 +95,7 @@ class LLMWrapper(Pipe):
 
         name (str): The component instance name, used to add entries to the
             losses during training.
+        save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
         vocab (Vocab): Pipeline vocabulary.
         task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
             structured information and set that back on the docs.
@@ -132,7 +135,7 @@ class LLMWrapper(Pipe):
         YIELDS (Doc): Processed documents in order.
         """
         if not Doc.has_extension("llm_io"):
-            Doc.set_extension("llm_io", default=None)
+            Doc.set_extension("llm_io", default=defaultdict(dict))
 
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
@@ -141,15 +144,19 @@ class LLMWrapper(Pipe):
                 doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
             try:
-                prompts = list(self._task.generate_prompts(noncached_doc_batch))
-                iter_prompts = iter(prompts)
-
-                responses = list(self._backend(prompts))
-                iter_responses = iter(responses)
+                # We need to use tee to store generated prompts/responses
+                # Otherwise, they will be consumed
+                prompts = tee(self._task.generate_prompts(noncached_doc_batch))
+                responses = tee(self._backend(prompts))
 
                 modified_docs = iter(
                     self._task.parse_responses(noncached_doc_batch, responses)
                 )
+
+                if self._save_io:
+                    iter_prompts = iter(prompts)
+                    iter_responses = iter(responses)
+
                 for doc, cached_doc in zip(doc_batch, is_cached):
                     if cached_doc:
                         doc = self._cache[doc]
@@ -159,12 +166,9 @@ class LLMWrapper(Pipe):
                         doc = next(modified_docs)
 
                         if self._save_io:
-                            if doc._.llm_io is None:
-                                doc._.llm_io = dict()
-                            doc._.llm_io[self._name] = dict(
-                                prompt=next(iter_prompts),
-                                response=next(iter_responses),
-                            )
+                            llm_io = doc._.llm_io[self._name]
+                            llm_io["prompt"] = next(iter_prompts)
+                            llm_io["response"] = next(iter_responses)
 
                         self._cache.add(doc)
                         yield doc
