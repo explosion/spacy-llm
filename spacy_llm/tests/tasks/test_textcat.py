@@ -112,6 +112,37 @@ def ext_template_cfg_string():
 
 
 @pytest.fixture
+def zeroshot_cfg_string_v2_lds():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.TextCat.v2"
+    labels = "Recipe"
+    exclusive_classes = true
+
+    [components.llm.task.label_definitions]
+    Recipe = "A recipe is a set of instructions for preparing a meal, including a list of the ingredients required."
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
+    """
+
+
+@pytest.fixture
 def binary():
     text = "Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream"
     labels = "Recipe"
@@ -149,7 +180,12 @@ def multilabel_nonexcl():
 )
 @pytest.mark.parametrize(
     "cfg_string",
-    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+    [
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+        "zeroshot_cfg_string_v2_lds",
+    ],
 )
 def test_textcat_config(task, cfg_string, request):
     """Simple test to check if the config loads properly given different settings"""
@@ -175,7 +211,12 @@ def test_textcat_config(task, cfg_string, request):
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize(
     "cfg_string",
-    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+    [
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+        "zeroshot_cfg_string_v2_lds",
+    ],
 )
 def test_textcat_predict(task, cfg_string, request):
     """Use OpenAI to get Textcat results.
@@ -206,7 +247,12 @@ def test_textcat_predict(task, cfg_string, request):
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize(
     "cfg_string",
-    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+    [
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+        "zeroshot_cfg_string_v2_lds",
+    ],
 )
 def test_textcat_io(task, cfg_string, request):
     task = request.getfixturevalue(task)
@@ -400,6 +446,7 @@ You are an expert Text Classification system. Your task is to accept Text as inp
 and provide a category for the text based on the predefined labels.
 
 Classify the text below to any of the following labels: Recipe, Feedback, Comment
+
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
 Below are some examples (only use these as a guide):
@@ -466,6 +513,7 @@ You are an expert Text Classification system. Your task is to accept Text as inp
 and provide a category for the text based on the predefined labels.
 
 Classify the text below to any of the following labels: Recipe, Feedback, Comment
+
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
 Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
@@ -545,4 +593,48 @@ Recipe
 
 Here is the text: Combine 2 cloves of garlic with soy sauce
 """.strip()
+    )
+
+
+def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
+    text, labels, _, exclusive_classes, _ = multilabel_excl
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+
+    llm_textcat = make_textcat_task_v2(
+        labels=labels,
+        label_definitions={
+            "Recipe": "A Recipe is a set of instructions to make a food of some kind",
+            "Feedback": "Feedback description",
+            "Comment": "Comment description",
+        },
+        exclusive_classes=exclusive_classes,
+    )
+    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
+Classify the text below to any of the following labels: Recipe, Feedback, Comment
+
+The task is exclusive, so only choose one label from what I provided.
+Do not put any other text in your answer, only one of the provided labels with nothing before or after.
+
+Below are definitions of each label to help aid you in correctly classifying the text.
+Assume these definitions are written by an expert and follow them closely.
+
+Recipe: A Recipe is a set of instructions to make a food of some kind
+Feedback: Feedback description
+Comment: Comment description
+
+
+Here is the text that needs classification
+
+
+Text:
+'''
+You need to increase the temperature when baking, it looks undercooked.
+'''""".strip()
     )
