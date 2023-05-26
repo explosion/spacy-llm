@@ -145,10 +145,11 @@ class LLMWrapper(Pipe):
             ]
             try:
                 prompts = self._task.generate_prompts(noncached_doc_batch)
-                responses = self._backend(prompts)
-
                 if self._save_io:
                     prompts, iter_prompts = tee(prompts)
+
+                responses = self._backend(prompts)
+                if self._save_io:
                     responses, iter_responses = tee(responses)
 
                 modified_docs = iter(
