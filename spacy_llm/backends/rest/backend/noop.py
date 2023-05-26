@@ -3,7 +3,7 @@ from typing import Dict, Iterable
 
 from .base import Backend
 
-NOOP_RESPONSE = ""
+_NOOP_RESPONSE = ""
 
 
 class NoOpBackend(Backend):
@@ -22,4 +22,4 @@ class NoOpBackend(Backend):
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         # Assume time penalty for API calls.
         time.sleep(NoOpBackend._CALL_TIMEOUT)
-        return [NOOP_RESPONSE] * len(list(prompts))
+        return [_NOOP_RESPONSE] * len(list(prompts))

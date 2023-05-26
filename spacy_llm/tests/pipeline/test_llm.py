@@ -8,11 +8,11 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from thinc.api import NumpyOps, get_current_ops
 
-from spacy_llm.backends.rest.backend.noop import NOOP_RESPONSE
+from spacy_llm.backends.rest.backend.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import make_noop_task
-from spacy_llm.tasks.noop import NOOP_PROMPT
+from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
 from ..compat import has_openai_key
@@ -56,8 +56,8 @@ def test_llm_pipe(nlp: Language, n_process: int):
     for doc in docs:
         llm_io = doc._.llm_io
 
-        assert llm_io["llm"]["prompt"] == NOOP_PROMPT
-        assert llm_io["llm"]["response"] == NOOP_RESPONSE
+        assert llm_io["llm"]["prompt"] == _NOOP_PROMPT
+        assert llm_io["llm"]["response"] == _NOOP_RESPONSE
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
