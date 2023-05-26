@@ -170,8 +170,8 @@ class LLMWrapper(Pipe):
 
                         if self._save_io:
                             llm_io = doc._.llm_io[self._name]
-                            llm_io["prompt"] = next(iter_prompts)
-                            llm_io["response"] = next(iter_responses)
+                            llm_io["prompt"] = str(next(iter_prompts))
+                            llm_io["response"] = str(next(iter_responses))
 
                         self._cache.add(doc)
                         yield doc
