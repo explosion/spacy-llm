@@ -17,10 +17,11 @@ st.markdown(
     tasks.
     """
 )
+
 os.environ["OPENAI_API_KEY"] = st.text_input("Your OpenAI API key", type="password")
 text = st.text_area("Text to analyze", DEFAULT_TEXT, height=70)
 
-if os.environ["OPENAI_API_KEY"]:
+if os.environ.get("OPENAI_API_KEY"):
     textcat_config = util.load_config(
         "usage_examples/streamlit/openai_textcat_zeroshot.cfg"
     )
