@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from spacy.tokens import Doc, Span
 
-from ..ty import ExamplesConfigType
 from ..compat import Literal
 from ..registry import registry
+from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 from .util import SpanTask, SpanExample

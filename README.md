@@ -260,7 +260,7 @@ examples = null
 | Argument                  | Type                                    | Default      | Description                                                                                                                                  |
 | ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
-| `template`          | str                                     | [ner.v2.jinja](./spacy_llm/tasks/templates/ner.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `template`                | `str`                                   | [ner.v2.jinja](./spacy_llm/tasks/templates/ner.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
 | `label_definitions`      | `Optional[Dict[str, str]]`              | `None`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract.                                                                                                              |
 | `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
 | `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
@@ -331,14 +331,16 @@ labels = PERSON,ORGANISATION,LOCATION
 examples = null
 ```
 
-| Argument                  | Type                                    | Default      | Description                                                                                                                                  |
-| ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
-| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
-| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`       | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
-| `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
-| `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
-| `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+| Argument                  | Type                                    | Default          | Description                                                                                                                                  |
+| ------------------------- | --------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | `str`                                   |                  | Comma-separated list of labels.                                                                                                              |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`           | Optional function that generates examples for few-shot learning.                                                                             |
+| `normalizer`              | `Optional[Callable[[str], str]]`        | `None`           | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`.                           |
+| `alignment_mode`          | `str`                                   | `"contract"`     | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
+| `case_sensitive_matching` | `bool`                                  | `False`          | Whether to search without case sensitivity.                                                                                                  |
+| `single_match`            | `bool`                                  | `False`          | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
+
+[ner]: https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/ner.py#L14
 
 The NER task implementation doesn't currently ask the LLM for specific offsets, but simply expects a list of strings that represent the enties in the document.
 This means that a form of string matching is required. This can be configured by the following parameters:
@@ -392,7 +394,7 @@ examples = null
 | Argument                  | Type                                    | Default      | Description                                                                                                                                  |
 | ------------------------- | --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`                  | `str`                                   |              | Comma-separated list of labels.                                                                                                              |
-| `template`          | str                                     | [spancat.v2.jinja](./spacy_llm/tasks/templates/spancat.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `template`                | `str`                                   | [`spancat.v2.jinja`](./spacy_llm/tasks/templates/spancat.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
 | `label_definitions`      | `Optional[Dict[str, str]]`              | `None`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract.                                                                                                              |
 | `spans_key`               | `str`                                   | `"sc"`       | Key of the `Doc.spans` dict to save the spans under.                                                                                         |
 | `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`       | Optional function that generates examples for few-shot learning.                                                                             |
@@ -445,8 +447,8 @@ examples = null
 
 | Argument            | Type                                    | Default | Description                                                                                                                                      |
 | ------------------- | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `labels`            | str                                     |         | Comma-separated list of labels.                                                                                                                  |
-| `template`          | str                                     | [textcat.jinja](./spacy_llm/tasks/templates/textcat.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `labels`            | `str`                                   |         | Comma-separated list of labels.                                                                                                                  |
+| `template`          | `str`                                   | [`textcat.jinja`](./spacy_llm/tasks/templates/textcat.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
 | `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                                                 |
 | `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
 | `exclusive_classes` | `bool`                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
@@ -516,6 +518,54 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 
 ```ini
 [components.llm.task]
+@llm_tasks = "spacy.TextCat.v2"
+labels = COMPLIMENT,INSULT
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
+#### spacy.TextCat.v1
+
+The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v1"
+labels = COMPLIMENT,INSULT
+examples = null
+```
+
+| Argument            | Type                                    | Default              | Description                                                                                                                                      |
+| ------------------- | --------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`            | str                                     |                      | Comma-separated list of labels.                                                                                                                  |
+| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`               | Optional function that generates examples for few-shot learning.                                                                                 |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`               | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
+| `exclusive_classes` | `bool`                                  | `False`              | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
+| `allow_none`        | `bool`                                  | `True`               | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
+| `verbose`           | `bool`                                  | `False`              | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
+
+
+[textcat]: https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/textcat.py#L13
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
 @llm_tasks = "spacy.TextCat.v1"
 labels = COMPLIMENT,INSULT
 [components.llm.task.examples]
@@ -537,7 +587,7 @@ labels = LivesIn,Visits
 | Argument            | Type                                    | Default | Description                                                                                                          |
 | ------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | `labels`            | `str`                                   |         | Comma-separated list of relation labels.                                                                             |
-| `template`          | str                                     | [rel.jinja](./spacy_llm/tasks/templates/rel.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `template`          | `str`                                   | [`rel.jinja`](./spacy_llm/tasks/templates/rel.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
 | `label_description` | `Optional[Dict[str, str]]`              | `None`  | Dictionary providing a description for each relation label.                                                          |
 | `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                     |
 | `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. |
@@ -793,6 +843,23 @@ path = "ner_examples.yml"
 | Argument | Type               | Description                                                                |
 | -------- | ------------------ | -------------------------------------------------------------------------- |
 | `path`   | `Union[str, Path]` | Path to an examples file with suffix `.yml`, `.yaml`, `.json` or `.jsonl`. |
+
+
+#### spacy.FileReader.v1
+
+This function is registered in spaCy's `misc` registry, and reads a file provided to the `path` to return a `str`
+representation of its contents. This function is typically used to read
+[Jinja](https://jinja.palletsprojects.com/en/3.1.x/) files containing the prompt template.
+
+```ini
+[components.llm.task.template]
+@misc = "spacy.FileReader.v1"
+path = "ner_template.jinja2"
+```
+
+| Argument | Type               | Description                                                                |
+| -------- | ------------------ | -------------------------------------------------------------------------- |
+| `path`   | `Union[str, Path]` | Path to the file to be read.                                               |
 
 #### Normalizer functions
 
