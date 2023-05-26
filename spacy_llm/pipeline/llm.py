@@ -139,7 +139,7 @@ class LLMWrapper(Pipe):
 
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
-            is_cached = [doc in self._cache for  doc in doc_batch]
+            is_cached = [doc in self._cache for doc in doc_batch]
             noncached_doc_batch = [
                 doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
