@@ -76,10 +76,9 @@ config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 Now run:
 
 ```python
-from spacy import util
+from spacy_llm.util import assemble
 
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
+nlp = assemble("config.cfg")
 doc = nlp("You look gorgeous!")
 print(doc.cats)
 ```
@@ -115,10 +114,9 @@ model = "databricks/dolly-v2-3b"
 Now run:
 
 ```python
-from spacy import util
+from spacy_llm.util import assemble
 
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
+nlp = assemble("config.cfg")
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
@@ -151,6 +149,7 @@ nlp.add_pipe(
         },
     },
 )
+nlp.initialize()
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
