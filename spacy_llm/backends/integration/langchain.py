@@ -21,7 +21,9 @@ def _check_installation() -> None:
 
 
 @registry.llm_queries("spacy.CallLangChain.v1")
-def query_langchain() -> Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]:
+def query_langchain() -> Callable[
+    ["langchain.llms.base.BaseLLM", Iterable[Any]], Iterable[Any]
+]:
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
         the specified LangChain backend.
@@ -29,14 +31,18 @@ def query_langchain() -> Callable[["BaseLLM", Iterable[Any]], Iterable[Any]]:
     return _prompt_langchain
 
 
-def _prompt_langchain(backend: "BaseLLM", prompts: Iterable[Any]) -> Iterable[Any]:
+def _prompt_langchain(
+    backend: "langchain.llms.base.BaseLLM", prompts: Iterable[Any]
+) -> Iterable[Any]:
     return [backend(pr) for pr in prompts]
 
 
 @registry.llm_backends("spacy.LangChain.v1")
 def backend_langchain(
     api: str,
-    query: Optional[Callable[["BaseLLM", Iterable[str]], Iterable[str]]] = None,
+    query: Optional[
+        Callable[["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]]
+    ] = None,
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Any]], Iterable[Any]]:
     """Returns Callable using MiniChain backend to prompt specified API.
