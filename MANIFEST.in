@@ -1,4 +1,4 @@
-recursive-include spacy_llm *.py *.txt *.cfg *.jinja *.toml *.yml *.json *.jsonl
+recursive-include spacy_llm *.py *.txt *.cfg *.jinja2 *.jinja *.toml *.yml *.json *.jsonl
 include LICENSE
 include README.md
 include pyproject.toml

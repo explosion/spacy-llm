@@ -2,17 +2,25 @@ from typing import Any, Callable, Dict, Iterable
 
 from spacy.util import SimpleFrozenDict, SimpleFrozenList
 
-from ...compat import transformers
-from ...registry.util import registry
+from ....compat import transformers
+from ....registry.util import registry
+from .. import Backend
 from .util import _check_installation, _check_model, _compile_default_config
 
 supported_models = SimpleFrozenList(
-    [
-        "databricks/dolly-v2-3b",
-        "databricks/dolly-v2-7b",
-        "databricks/dolly-v2-12b",
-    ]
+    ["databricks/dolly-v2-3b", "databricks/dolly-v2-7b", "databricks/dolly-v2-12b"]
 )
+
+
+def query_dolly(
+    pipeline: "transformers.pipeline", prompts: Iterable[str]
+) -> Iterable[str]:
+    """Queries Dolly HF model.
+    pipeline (transformers.pipeline): Transformers pipeline to query.
+    prompts (Iterable[str]): Prompts to query Dolly model with.
+    RETURNS (Iterable[str]): Prompt responses.
+    """
+    return [pipeline(pr)[0]["generated_text"] for pr in prompts]
 
 
 @registry.llm_backends("spacy.DollyHF.v1")
@@ -31,9 +39,6 @@ def backend_dolly_hf(
     if not config or len(config) == 0:
         config = _compile_default_config()
 
-    llm_pipeline = transformers.pipeline(model=model, **config)
-
-    def query(prompts: Iterable[str]) -> Iterable[str]:
-        return [llm_pipeline(pr)[0]["generated_text"] for pr in prompts]
-
-    return query
+    return Backend(
+        integration=transformers.pipeline(model=model, **config), query=query_dolly  # type: ignore[arg-type]
+    )

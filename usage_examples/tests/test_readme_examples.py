@@ -1,11 +1,12 @@
-from typing import Iterable
+from typing import Iterable, Callable
 
 import pytest
 import spacy
-from spacy import util
 from thinc.compat import has_torch_cuda_gpu
 
+from spacy import util
 from spacy_llm.registry import registry
+from spacy_llm.util import assemble
 
 
 @pytest.mark.external
@@ -22,7 +23,7 @@ def test_example_1_classifier():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.TextCat.v1"
+        @llm_tasks = "spacy.TextCat.v2"
         labels = COMPLIMENT,INSULT
 
         [components.llm.backend]
@@ -34,8 +35,7 @@ def test_example_1_classifier():
         with open(tmpdir / "cfg", "w") as text_file:
             text_file.write(cfg_str)
 
-        config = util.load_config(tmpdir / "cfg")
-        nlp = util.load_model_from_config(config, auto_fill=True)
+        nlp = assemble(tmpdir / "cfg")
         doc = nlp("You look gorgeous!")
         print(doc.cats)  # noqa: T201
 
@@ -66,8 +66,7 @@ def test_example_2_ner_hf():
         with open(tmpdir / "cfg", "w") as text_file:
             text_file.write(cfg_str)
 
-        config = util.load_config(tmpdir / "cfg")
-        nlp = util.load_model_from_config(config, auto_fill=True)
+        nlp = assemble(tmpdir / "cfg")
         doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
         print([(ent.text, ent.label_) for ent in doc.ents])  # noqa: T201
 
@@ -89,6 +88,7 @@ def test_example_3_python():
             },
         },
     )
+    nlp.initialize()
     doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
     print([(ent.text, ent.label_) for ent in doc.ents])  # noqa: T201
 
@@ -97,7 +97,7 @@ def test_example_4_custom_backend():
     import random
 
     @registry.llm_backends("RandomClassification.v1")
-    def random_textcat(labels: str):
+    def random_textcat(labels: str) -> Callable[[Iterable[str]], Iterable[str]]:
         labels = labels.split(",")
 
         def _classify(prompts: Iterable[str]) -> Iterable[str]:
@@ -118,7 +118,7 @@ def test_example_4_custom_backend():
         factory = "llm"
 
         [components.llm.task]
-        @llm_tasks = "spacy.TextCat.v1"
+        @llm_tasks = "spacy.TextCat.v2"
         labels = ORDER,INFORMATION
 
         [components.llm.backend]
@@ -129,6 +129,5 @@ def test_example_4_custom_backend():
         with open(tmpdir / "cfg", "w") as text_file:
             text_file.write(cfg_str)
 
-        config = util.load_config(tmpdir / "cfg")
-        nlp = util.load_model_from_config(config, auto_fill=True)
+        nlp = assemble(tmpdir / "cfg")
         nlp("i'd like a large margherita pizza please")

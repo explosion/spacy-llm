@@ -3,7 +3,7 @@ from typing import Any, Collection, Dict
 
 from thinc.compat import has_torch_cuda_gpu
 
-from ...compat import has_accelerate, has_torch, has_transformers, torch
+from ....compat import has_accelerate, has_torch, has_transformers, torch
 
 
 def _check_installation() -> None:
