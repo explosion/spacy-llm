@@ -18,7 +18,7 @@ PIPE_CFG: Dict[str, Any] = {
 }
 
 
-# @pytest.mark.external
+@pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
@@ -41,7 +41,7 @@ def test_combinations(backend: str, task: str, n_process: int):
     config = copy.deepcopy(PIPE_CFG)
     config["backend"]["@llm_backends"] = backend
     config["backend"]["config"] = {
-        "model": "ada" if backend == "spacy.MiniChain.v1" else "gpt-3.5-turbo"
+        "model": "ada" if backend != "spacy.MiniChain.v1" else "gpt-3.5-turbo"
     }
     config["task"]["@llm_tasks"] = task
 
