@@ -156,10 +156,6 @@ class LLMWrapper(Pipe):
                     self._task.parse_responses(noncached_doc_batch, responses)
                 )
 
-                if self._save_io:
-                    iter_prompts = iter(prompts)
-                    iter_responses = iter(responses)
-
                 for doc, cached_doc in zip(doc_batch, is_cached):
                     if cached_doc:
                         doc = self._cache[doc]
