@@ -207,7 +207,6 @@ my_other_config_val = 0.3
 
 | Argument  | Type                                        | Description                                                                         |
 | --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `name`    | `str`                                       | The name of the component.                                                          |
 | `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
 | `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
 | `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
