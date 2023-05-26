@@ -34,6 +34,12 @@ jobs:
             python_version: "3.9"
           - os: windows-latest
             python_version: "3.10"
+          - os: ubuntu-latest
+            pip_path: ~/.cache/pip
+          - os: macos-latest
+            pip_path: ~/Library/Caches/pip
+          - os: windows-latest
+            pip_path: ~\AppData\Local\pip\Cache
 
     runs-on: ${{ matrix.os }}
 
@@ -78,23 +84,13 @@ jobs:
         shell: bash
         run: |
           python -c "import $MODULE_NAME" -Werror
-        
-      - name: Get pip cache dir
-        id: pip-cache-dir
-        run: |
-          echo "dir=$(python -m pip cache dir)" >> $GITHUB_OUTPUT
-          echo "py=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-        
-      - name: Test
-        run: |
-          echo "dir=${{ steps.pip-cache-dir.outputs.dir }}"
 
       - name: Restore Pip Cache
         id: pip-cache-restore
         uses: actions/cache/restore@v3
         with:
-          path: ${{ steps.pip-cache-dir.outputs.dir }}
-          key: test-cache-${{ runner.os }}-${{ steps.pip-cache-dir.outputs.py }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
+          path: ${{ matrix.pip_path }}
+          key: test-cache-${{ runner.os }}-${{ matrix.python_version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
 
       - name: Install test requirements
         run: |
