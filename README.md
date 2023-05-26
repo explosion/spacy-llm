@@ -203,7 +203,7 @@ my_other_config_val = 0.3
 
 ## 📓 API
 
-`spacy-llm` exposes a `llm` factory that accepts the following arguments:
+`spacy-llm` exposes a `llm` factory that accepts the following configuration options:
 
 | Argument  | Type                                        | Description                                                                         |
 | --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
