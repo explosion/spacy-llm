@@ -84,6 +84,10 @@ jobs:
         run: |
           echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
           echo "py=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        
+      - name: Test
+        run: |
+          echo "dir=${{ steps.pip-cache-dir.outputs.dir }}"
 
       - name: Restore Pip Cache
         id: pip-cache-restore
@@ -93,8 +97,8 @@ jobs:
           key: test-cache-${{ runner.os }}-${{ steps.pip-cache-dir.outputs.py }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
 
       - name: Install test requirements
-        # Although the environment is cached, dependencies are still updated
         run: |
+          # Although the environment is cached, dependencies are still updated
           python -m pip install -U -r requirements.txt
           python -m pip install -U -r requirements-dev.txt
           python -m spacy download en_core_web_md
