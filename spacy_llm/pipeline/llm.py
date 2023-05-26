@@ -26,7 +26,6 @@ class CacheConfigType(TypedDict):
     assigns=[],
     default_config={
         "task": None,
-        "save_io": False,
         "backend": {
             "@llm_backends": "spacy.REST.v1",
             "api": "OpenAI",
@@ -39,15 +38,16 @@ class CacheConfigType(TypedDict):
             "batch_size": 64,
             "max_batches_in_mem": 4,
         },
+        "save_io": False,
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
-    save_io: bool,
     backend: PromptExecutor,
     cache: Cache,
+    save_io: bool,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -56,9 +56,9 @@ def make_llm(
         losses during training.
     task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
-    save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
     backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
+    save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
     """
     if task is None:
         raise ValueError(
@@ -84,30 +84,30 @@ class LLMWrapper(Pipe):
         self,
         name: str = "LLMWrapper",
         *,
-        save_io: bool,
         vocab: Vocab,
         task: LLMTask,
         backend: PromptExecutor,
         cache: Cache,
+        save_io: bool,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
 
         name (str): The component instance name, used to add entries to the
             losses during training.
-        save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
         vocab (Vocab): Pipeline vocabulary.
         task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
             structured information and set that back on the docs.
         backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
+        save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
         """
         self._name = name
         self._task = task
-        self._save_io = save_io
         self._backend = backend
         self._cache = cache
         self._cache.vocab = vocab
+        self._save_io = save_io
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
