@@ -83,13 +83,14 @@ jobs:
         id: pip-cache-dir
         run: |
           echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+          echo "py=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
       - name: Restore Pip Cache
         id: pip-cache-restore
         uses: actions/cache/restore@v3
         with:
           path: ${{ steps.pip-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ hashFiles('**/requirements-dev.txt') }}
+          key: test-cache-${{ runner.os }}-${{ steps.pip-cache-dir.outputs.py }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
 
       - name: Install test requirements
         # Although the environment is cached, dependencies are still updated
