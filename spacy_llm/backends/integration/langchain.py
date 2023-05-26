@@ -65,7 +65,7 @@ def backend_langchain(
     if api in type_to_cls_dict:
         model = config.pop("model")
         return Backend(
-            integration=type_to_cls_dict[api](model=model, **config),
+            integration=type_to_cls_dict[api](model_name=model, **config),
             query=query_langchain() if query is None else query,
         )
     else:
