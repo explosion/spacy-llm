@@ -4,10 +4,7 @@ from typing import Any, Callable, Dict, Iterable, Union, cast
 
 import srsly
 
-from .util import registry
 
-
-@registry.misc("spacy.FileReader.v1")
 def file_reader(path: Union[str, Path]) -> str:
     """Read a file from a path and return its contents.
 
@@ -22,7 +19,6 @@ def file_reader(path: Union[str, Path]) -> str:
     return tpl_text
 
 
-@registry.misc("spacy.FewShotReader.v1")
 def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, Any]]]:
     """Read a file containing examples to include in few-shot learning
 
