@@ -139,18 +139,18 @@ class LLMWrapper(Pipe):
 
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
-            is_cached = [doc in self._cache for doc in doc_batch]
+            is_cached = [doc in self._cache for  doc in doc_batch]
             noncached_doc_batch = [
                 doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
             ]
             try:
                 prompts = self._task.generate_prompts(noncached_doc_batch)
                 if self._save_io:
-                    prompts, iter_prompts = tee(prompts)
+                    prompts, saved_prompts = tee(prompts)
 
                 responses = self._backend(prompts)
                 if self._save_io:
-                    responses, iter_responses = tee(responses)
+                    responses, saved_responses = tee(responses)
 
                 modified_docs = iter(
                     self._task.parse_responses(noncached_doc_batch, responses)
@@ -166,8 +166,8 @@ class LLMWrapper(Pipe):
 
                         if self._save_io:
                             llm_io = doc._.llm_io[self._name]
-                            llm_io["prompt"] = str(next(iter_prompts))
-                            llm_io["response"] = str(next(iter_responses))
+                            llm_io["prompt"] = str(next(saved_prompts))
+                            llm_io["response"] = str(next(saved_responses))
 
                         self._cache.add(doc)
                         yield doc
