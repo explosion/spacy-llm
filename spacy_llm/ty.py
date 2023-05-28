@@ -9,6 +9,7 @@ from spacy.vocab import Vocab
 from .backends import integration
 from .compat import Protocol, runtime_checkable
 
+
 _Prompt = Any
 _Response = Any
 
