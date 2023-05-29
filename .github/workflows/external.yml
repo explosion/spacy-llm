@@ -31,7 +31,6 @@ jobs:
       - name: Delete source directory
         shell: bash
         run: |
-          cp $MODULE_NAME/usage_examples usage_examples
           rm -rf $MODULE_NAME
 
       - name: Uninstall all packages
