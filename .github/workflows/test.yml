@@ -88,9 +88,9 @@ jobs:
       - name: Run spacy_llm tests
         shell: bash
         run: |
-          python -m pytest --installed --pyargs $MODULE_NAME
+          python -m pytest --pyargs $MODULE_NAME
 
       - name: Run usage tests
         shell: bash
         run: |
-          python -m pytest --installed --pyargs usage_examples
+          python -m pytest --pyargs usage_examples

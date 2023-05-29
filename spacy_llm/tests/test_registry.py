@@ -7,7 +7,6 @@ FUNCTIONS = [
 ]
 
 
-@pytest.mark.installed
 @pytest.mark.parametrize("reg_name,func_name", FUNCTIONS)
 def test_registry(reg_name, func_name):
     assert registry.has(reg_name, func_name)
