@@ -21,20 +21,48 @@ jobs:
           python-version: 3.9
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Build sdist
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          python -m pip install --upgrade pip
+          python -m pip install -U build pip setuptools
+          python -m pip install -U -r requirements.txt
+          python -m build --sdist
+
+      - name: Delete source directory
+        shell: bash
+        run: |
+          cp $MODULE_NAME/usage_examples usage_examples
+          rm -rf $MODULE_NAME
+
+      - name: Uninstall all packages
+        run: |
+          python -m pip freeze > installed.txt
+          python -m pip uninstall -y -r installed.txt
+
+      - name: Install from sdist
+        shell: bash
+        run: |
+          SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+          python -m pip install dist/$SDIST
+
+      - name: Test import
+        shell: bash
+        run: |
+          python -c "import $MODULE_NAME" -Werror
+
+      - name: Install test requirements
+        run: |
+          python -m pip install -U -r requirements.txt
+          python -m pip install -U -r requirements-dev.txt
           python -m spacy download en_core_web_md
 
       - name: Run tests
         shell: bash
-        run: pytest spacy_llm/tests -x --external
+        run: python -m pytest --pyargs $MODULE_NAME -x --external
 
       - name: Run usage tests
         shell: bash
-        run: pytest usage_examples -x --external
+        run: python -m pytest --pyargs usage_examples -x --external
 
 #      - name: Report Status
 #        if: always()
