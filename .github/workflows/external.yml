@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 env:
+  MODULE_NAME: 'spacy_llm'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
