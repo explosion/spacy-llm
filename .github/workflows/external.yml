@@ -8,6 +8,7 @@ on:
 env:
   MODULE_NAME: 'spacy_llm'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  TEST_EXTERNAL: 1
 
 jobs:
   run:
@@ -58,11 +59,11 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: python -m pytest --pyargs $MODULE_NAME -x --external
+        run: python -m pytest --pyargs $MODULE_NAME -x
 
       - name: Run usage tests
         shell: bash
-        run: python -m pytest --pyargs usage_examples -x --external
+        run: python -m pytest --pyargs usage_examples -x
 
 #      - name: Report Status
 #        if: always()
