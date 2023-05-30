@@ -10,13 +10,13 @@ _PromptType = TypeVar("_PromptType")
 _ResponseType = TypeVar("_ResponseType")
 
 
-class Backend:
+class RemoteBackend:
     def __init__(
         self,
         integration: Any,
         query: Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]],
     ):
-        """Initializes Backend instance.
+        """Initializes Backend instance for remote APIs.
         integration (Any): Object/Callable enabling LLM calls through third-party libraries. This can be a HuggingFace
             model, a LangChain API class, or anything else able to execute LLM prompts directly or indirectly.
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
@@ -33,12 +33,11 @@ class Backend:
         return self.query(self._integration, prompts)
 
 
-class HuggingFaceBackend(Backend, abc.ABC):
+class HuggingFaceBackend(abc.ABC):
     """Backend for HuggingFace models."""
 
     def __init__(
         self,
-        query: Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]],
         model: str,
         config: Dict[Any, Any],
     ):
@@ -48,8 +47,7 @@ class HuggingFaceBackend(Backend, abc.ABC):
         model (str): Name of HF model to load.
         config (Dict[Any, Any]): HF config.
         """
-        super().__init__(integration=None, query=query)
-        self._model = model
+        self._model_name = model
         self._config = config
 
         # Init HF model.
@@ -59,8 +57,14 @@ class HuggingFaceBackend(Backend, abc.ABC):
         if not self._config or len(self._config) == 0:
             self._config = self.compile_default_config()
 
-        if not self._integration:
-            self._integration = self.init_model()
+        self._model = self.init_model()
+
+    @abc.abstractmethod
+    def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
+        """Executes prompts on specified API.
+        prompts (Iterable[_PromptType]): Prompts to execute.
+        RETURNS (Iterable[__ResponseType]): API responses.
+        """
 
     @property
     @abc.abstractmethod
@@ -85,9 +89,9 @@ class HuggingFaceBackend(Backend, abc.ABC):
 
     def check_model(self) -> None:
         """Checks whether model is supported. Raises if it isn't."""
-        if self._model not in self.supported_models:
+        if self._model_name not in self.supported_models:
             raise ValueError(
-                f"Model '{self._model}' is not supported - select one of {self.supported_models} instead"
+                f"Model '{self._model_name}' is not supported - select one of {self.supported_models} instead"
             )
 
     @staticmethod

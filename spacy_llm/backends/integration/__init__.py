@@ -1,11 +1,11 @@
-from .base import Backend, HuggingFaceBackend
+from .base import RemoteBackend, HuggingFaceBackend
 from .langchain import backend_langchain, query_langchain
 from .minichain import backend_minichain, query_minichain
 from .dolly import backend_dolly_hf
 from .stablelm import backend_stablelm_hf
 
 __all__ = [
-    "Backend",
+    "RemoteBackend",
     "HuggingFaceBackend",
     "query_minichain",
     "query_langchain",

@@ -13,7 +13,7 @@ class DollyHFBackend(HuggingFaceBackend):
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        return transformers.pipeline(model=self._model, **self._config)
+        return transformers.pipeline(model=self._model_name, **self._config)
 
     @property
     def supported_models(self) -> Iterable[str]:
@@ -25,6 +25,14 @@ class DollyHFBackend(HuggingFaceBackend):
             ]
         )
 
+    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
+        """Queries Dolly HF model.
+        pipeline (transformers.pipeline): Transformers pipeline to query.
+        prompts (Iterable[str]): Prompts to query Dolly model with.
+        RETURNS (Iterable[str]): Prompt responses.
+        """
+        return [self._model(pr)[0]["generated_text"] for pr in prompts]
+
     @staticmethod
     def compile_default_config() -> Dict[Any, Any]:
         return {
@@ -33,17 +41,6 @@ class DollyHFBackend(HuggingFaceBackend):
             # cf also https://huggingface.co/databricks/dolly-v2-12b
             "trust_remote_code": True,
         }
-
-
-def query_dolly(
-    pipeline: "transformers.pipeline", prompts: Iterable[str]
-) -> Iterable[str]:
-    """Queries Dolly HF model.
-    pipeline (transformers.pipeline): Transformers pipeline to query.
-    prompts (Iterable[str]): Prompts to query Dolly model with.
-    RETURNS (Iterable[str]): Prompt responses.
-    """
-    return [pipeline(pr)[0]["generated_text"] for pr in prompts]
 
 
 @registry.llm_backends("spacy.DollyHF.v1")
@@ -57,7 +54,6 @@ def backend_dolly_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
     return DollyHFBackend(
-        query=query_dolly,  # type: ignore[arg-type]
         model=model,
         config=config,
     )

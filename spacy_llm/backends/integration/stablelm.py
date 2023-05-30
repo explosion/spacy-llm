@@ -1,10 +1,13 @@
-from typing import Iterable, Callable, Any, Dict, Optional, Tuple
+from typing import Iterable, Callable, Any, Dict, Optional, TYPE_CHECKING
 
 from spacy.util import SimpleFrozenList, SimpleFrozenDict
 
-from .base import HuggingFaceBackend, _PromptType, _ResponseType
-from ...compat import transformers, torch
+from .base import HuggingFaceBackend
+from ...compat import transformers, torch, has_transformers
 from ...registry.util import registry
+
+if TYPE_CHECKING and has_transformers:
+    from transformers import StoppingCriteria
 
 
 class StableLMHFBackend(HuggingFaceBackend):
@@ -16,7 +19,7 @@ class StableLMHFBackend(HuggingFaceBackend):
 - StableLM will refuse to participate in anything that could harm a human.
 """
 
-    class StopOnTokens(transformers.StoppingCriteria):
+    class StopOnTokens(StoppingCriteria):
         def __call__(
             self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
         ) -> bool:
@@ -28,21 +31,20 @@ class StableLMHFBackend(HuggingFaceBackend):
 
     def __init__(
         self,
-        query: Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]],
         model: str,
         config: Dict[Any, Any],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_tuned = "tuned" in model
-        super().__init__(query=query, model=model, config=config)
+        super().__init__(model=model, config=config)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model)
+        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._model, **self._config
+            self._model_name, **self._config
         )
         model.half().cuda()
 
@@ -50,21 +52,32 @@ class StableLMHFBackend(HuggingFaceBackend):
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         assert callable(self._tokenizer)
-        return self.query(  # type: ignore[return-value]
-            self._integration,
-            [
-                self._tokenizer(prompt, return_tensors="pt").to("cuda")
-                for prompt in (
-                    # Add prompt formatting for tuned model.
-                    prompts
-                    if not self._is_tuned
-                    else [
-                        f"{StableLMHFBackend._SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
-                        for prompt in prompts
-                    ]
-                )
-            ],
-        )
+        tokenized_prompts = [
+            self._tokenizer(prompt, return_tensors="pt").to("cuda")
+            for prompt in (
+                # Add prompt formatting for tuned model.
+                prompts
+                if not self._is_tuned
+                else [
+                    f"{StableLMHFBackend._SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
+                    for prompt in prompts
+                ]
+            )
+        ]
+
+        assert hasattr(self._model, "generate")
+        return [
+            self._tokenizer.decode(
+                self._model.generate(
+                    **prompt,
+                    max_new_tokens=64,
+                    temperature=0.7,
+                    do_sample=True,
+                )[0],
+                skip_special_tokens=True,
+            )
+            for prompt in tokenized_prompts
+        ]
 
     @property
     def supported_models(self) -> Iterable[str]:
@@ -77,31 +90,11 @@ class StableLMHFBackend(HuggingFaceBackend):
             ]
         )
 
-
-def query_stablelm(
-    model: Tuple["transformers.AutoModelForCausalLM", "transformers.AutoTokenizer"],
-    prompts: Iterable[Dict[Any, Any]],
-) -> Iterable[str]:
-    """Queries StableLM HF model.
-    model (Tuple[transformers.AutoModelForCausalLM, transformers.AutoTokenizer]): HF model and tokenizer (to use on
-        model in-/output).
-    prompts (Iterable[str]): Prompts to query Dolly model with.
-    RETURNS (Iterable[str]): Prompt responses.
-    """
-    (_model, _tokenizer) = model
-    assert hasattr(_model, "generate")
-    return [
-        _tokenizer.decode(
-            _model.generate(
-                **prompt,
-                max_new_tokens=64,
-                temperature=0.7,
-                do_sample=True,
-            )[0],
-            skip_special_tokens=True,
-        )
-        for prompt in prompts
-    ]
+    @staticmethod
+    def compile_default_config() -> Dict[Any, Any]:
+        cfg = HuggingFaceBackend.compile_default_config()
+        cfg.pop("device")
+        return cfg
 
 
 @registry.llm_backends("spacy.OpenLLaMaHF.v1")
@@ -115,7 +108,6 @@ def backend_stablelm_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
     return StableLMHFBackend(
-        query=query_stablelm,  # type: ignore[arg-type]
         model=model,
         config=config,
     )
