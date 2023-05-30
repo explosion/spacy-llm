@@ -54,7 +54,9 @@ def test_caching(use_pipe: bool) -> None:
         assert len(index) == len(index_dict) == n
         cache = nlp.get_pipe("llm")._cache  # type: ignore
         assert cache._stats["hit"] == 0
-        assert cache._stats["missed"] == n
+        assert cache._stats["hit_contains"] == 0
+        assert cache._stats["missed"] == 0
+        assert cache._stats["missed_contains"] == n
         assert cache._stats["added"] == n
         assert cache._stats["persisted"] == n
         # Check whether docs are in the batch files they are supposed to be in.
@@ -75,7 +77,9 @@ def test_caching(use_pipe: bool) -> None:
         [nlp_2(text) for text in texts]
         cache = nlp_2.get_pipe("llm")._cache  # type: ignore
         assert cache._stats["hit"] == n
+        assert cache._stats["hit_contains"] == n
         assert cache._stats["missed"] == 0
+        assert cache._stats["missed_contains"] == 0
         assert cache._stats["added"] == 0
         assert cache._stats["persisted"] == 0
 
@@ -107,7 +111,9 @@ def test_caching_interrupted() -> None:
         # of a full pass.
         assert abs(ref_duration / 2 - pass1_duration) < ref_duration / 2 * 0.3
         assert pass1_cache._stats["hit"] == 0
+        assert pass1_cache._stats["hit"] == 0
         assert pass1_cache._stats["missed"] == n / 2
+        assert pass1_cache._stats["missed_contains"] == n / 2
         assert pass1_cache._stats["added"] == n / 2
         assert pass1_cache._stats["persisted"] == n / 2
 
@@ -121,7 +127,9 @@ def test_caching_interrupted() -> None:
         # the entire doc batch, so max. theoretical speed-up is 50%).
         assert ref_duration - pass2_duration >= ref_duration * 0.3
         assert cache._stats["hit"] == n / 2
+        assert cache._stats["hit_contains"] == n / 2
         assert cache._stats["missed"] == n / 2
+        assert cache._stats["missed_contains"] == n / 2
         assert cache._stats["added"] == n / 2
         assert cache._stats["persisted"] == n / 2
 

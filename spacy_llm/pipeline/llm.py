@@ -147,6 +147,7 @@ class LLMWrapper(Pipe):
                 doc = next(modified_docs)
                 self._cache.add(doc)
                 final_docs.append(doc)
+
         return final_docs
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
