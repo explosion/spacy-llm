@@ -32,7 +32,7 @@ class BatchCache:
         max_batches_in_mem: int,
     ):
         """Initialize Cache instance.
-        path (Path): Cache directory.
+        path (Optional[Union[str,Path]]): Cache directory.
         batch_size (int): Number of docs in one batch (file).
         max_batches_in_mem (int): Max. number of batches to hold in memory.
         """
