@@ -33,11 +33,6 @@ jobs:
         run: |
           rm -rf $MODULE_NAME
 
-      - name: Uninstall all packages
-        run: |
-          python -m pip freeze > installed.txt
-          python -m pip uninstall -y -r installed.txt
-
       - name: Install from sdist
         shell: bash
         run: |
