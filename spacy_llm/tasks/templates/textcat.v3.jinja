@@ -10,6 +10,7 @@ Do not put any other text in your answer, only one of 'POS' or 'NEG' with nothin
 {%- else -%}
 Classify the text below to any of the following labels: {{ labels|join(", ") }}
 {# whitespace #}
+{# whitespace #}
 {%- if exclusive_classes -%}
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
@@ -22,6 +23,20 @@ Do not put any other text in your answer, only one or more of the provided label
 If the text cannot be classified into any of the provided labels, answer `==NONE==`.
 {%- endif -%}
 {%- endif -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{%- if label_definitions -%}
+{# whitespace #}
+{# whitespace #}
+Below are definitions of each label to help aid you in correctly classifying the text.
+Assume these definitions are written by an expert and follow them closely.
+{# whitespace #}
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
+{# whitespace #}
+{%- endfor -%}
 {# whitespace #}
 {%- endif -%}
 {# whitespace #}

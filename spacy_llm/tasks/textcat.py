@@ -13,6 +13,7 @@ from .templates import read_template
 
 _DEFAULT_TEXTCAT_TEMPLATE_V1 = read_template("textcat")
 _DEFAULT_TEXTCAT_TEMPLATE_V2 = read_template("textcat.v2")
+_DEFAULT_TEXTCAT_TEMPLATE_V3 = read_template("textcat.v3")
 
 
 class TextCatExample(BaseModel):
@@ -49,6 +50,32 @@ def make_textcat_task(
 def make_textcat_task_v2(
     labels: str,
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V2,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+) -> "TextCatTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
+    return TextCatTask(
+        labels=labels_list,
+        template=template,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
+
+
+@registry.llm_tasks("spacy.TextCat.v3")
+def make_textcat_task_v3(
+    labels: str,
+    template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -77,7 +104,7 @@ class TextCatTask:
     def __init__(
         self,
         labels: List[str],
-        template: str = _DEFAULT_TEXTCAT_TEMPLATE_V2,
+        template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[TextCatExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,

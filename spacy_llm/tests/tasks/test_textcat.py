@@ -9,7 +9,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import lowercase_normalizer
 from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.tasks.textcat import make_textcat_task_v2
+from spacy_llm.tasks.textcat import make_textcat_task_v3
 
 from ..compat import has_openai_key
 
@@ -112,7 +112,7 @@ def ext_template_cfg_string():
 
 
 @pytest.fixture
-def zeroshot_cfg_string_v2_lds():
+def zeroshot_cfg_string_v3_lds():
     return """
     [nlp]
     lang = "en"
@@ -125,7 +125,7 @@ def zeroshot_cfg_string_v2_lds():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.TextCat.v2"
+    @llm_tasks = "spacy.TextCat.v3"
     labels = "Recipe"
     exclusive_classes = true
 
@@ -184,7 +184,7 @@ def multilabel_nonexcl():
         "zeroshot_cfg_string",
         "fewshot_cfg_string",
         "ext_template_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
+        "zeroshot_cfg_string_v3_lds",
     ],
 )
 def test_textcat_config(task, cfg_string, request):
@@ -215,7 +215,7 @@ def test_textcat_config(task, cfg_string, request):
         "zeroshot_cfg_string",
         "fewshot_cfg_string",
         "ext_template_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
+        "zeroshot_cfg_string_v3_lds",
     ],
 )
 def test_textcat_predict(task, cfg_string, request):
@@ -251,7 +251,7 @@ def test_textcat_predict(task, cfg_string, request):
         "zeroshot_cfg_string",
         "fewshot_cfg_string",
         "ext_template_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
+        "zeroshot_cfg_string_v3_lds",
     ],
 )
 def test_textcat_io(task, cfg_string, request):
@@ -283,7 +283,7 @@ def test_textcat_io(task, cfg_string, request):
 
 def test_textcat_sets_exclusive_classes_if_binary():
     """Test if the textcat task automatically sets exclusive classes to True if binary"""
-    llm_textcat = make_textcat_task_v2(labels="Recipe", exclusive_classes=False)
+    llm_textcat = make_textcat_task_v3(labels="Recipe", exclusive_classes=False)
     assert llm_textcat._exclusive_classes
 
 
@@ -304,7 +304,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
     label is an empty dictionary
     """
     label = "Recipe"
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
@@ -335,7 +335,7 @@ def test_textcat_multilabel_labels_are_correct(
     text, exclusive_classes, response, expected
 ):
     labels = "Recipe,Comment,Feedback"
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         exclusive_classes=exclusive_classes,
         normalizer=lowercase_normalizer(),
@@ -367,7 +367,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -433,7 +433,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -500,7 +500,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -569,7 +569,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValidationError):
-            make_textcat_task_v2(
+            make_textcat_task_v3(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
@@ -583,7 +583,7 @@ def test_external_template_actually_loads():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
-    llm_textcat = make_textcat_task_v2(labels=labels, template=template)
+    llm_textcat = make_textcat_task_v3(labels=labels, template=template)
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
     assert (
         prompt.strip()
@@ -601,7 +601,7 @@ def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         label_definitions={
             "Recipe": "A Recipe is a set of instructions to make a food of some kind",
