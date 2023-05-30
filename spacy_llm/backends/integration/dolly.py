@@ -13,7 +13,7 @@ class DollyHFBackend(HuggingFaceBackend):
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        return transformers.pipeline(model=self.model, **self.config)
+        return transformers.pipeline(model=self._model, **self._config)
 
     @property
     def supported_models(self) -> Iterable[str]:
@@ -57,7 +57,6 @@ def backend_dolly_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
     return DollyHFBackend(
-        integration=None,
         query=query_dolly,  # type: ignore[arg-type]
         model=model,
         config=config,

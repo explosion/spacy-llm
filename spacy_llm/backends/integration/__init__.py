@@ -2,7 +2,7 @@ from .base import Backend, HuggingFaceBackend
 from .langchain import backend_langchain, query_langchain
 from .minichain import backend_minichain, query_minichain
 from .dolly import backend_dolly_hf
-from .openllama import backend_openllama_hf
+from .stablelm import backend_stablelm_hf
 
 __all__ = [
     "Backend",
@@ -12,5 +12,5 @@ __all__ = [
     "backend_minichain",
     "backend_langchain",
     "backend_dolly_hf",
-    "backend_openllama_hf",
+    "backend_stablelm_hf",
 ]

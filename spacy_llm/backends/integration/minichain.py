@@ -56,6 +56,9 @@ def backend_minichain(
     """
     _check_installation()
 
+    if "model" not in config:
+        raise ValueError("The LLM model must be specified in the config.")
+
     if hasattr(minichain.backend, api):
         return Backend(
             integration=getattr(minichain.backend, api)(**config),

@@ -1,5 +1,4 @@
 import abc
-import dataclasses
 import warnings
 from typing import Iterable, TypeVar, Callable, Any, Dict
 from ...compat import has_torch, has_transformers, has_accelerate, torch
@@ -11,35 +10,57 @@ _PromptType = TypeVar("_PromptType")
 _ResponseType = TypeVar("_ResponseType")
 
 
-@dataclasses.dataclass
 class Backend:
-    integration: Any
-    query: Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]
+    def __init__(
+        self,
+        integration: Any,
+        query: Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]],
+    ):
+        """Initializes Backend instance.
+        integration (Any): Object/Callable enabling LLM calls through third-party libraries. This can be a HuggingFace
+            model, a LangChain API class, or anything else able to execute LLM prompts directly or indirectly.
+        query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
+            supplied with the `integration` object.
+        """
+        self._integration = integration
+        self.query = query
 
     def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
         """Executes prompts on specified API.
         prompts (Iterable[_PromptType]): Prompts to execute.
         RETURNS (Iterable[__ResponseType]): API responses.
         """
-        return self.query(self.integration, prompts)
+        return self.query(self._integration, prompts)
 
 
-@dataclasses.dataclass
 class HuggingFaceBackend(Backend, abc.ABC):
     """Backend for HuggingFace models."""
 
-    model: str
-    config: Dict[Any, Any]
+    def __init__(
+        self,
+        query: Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]],
+        model: str,
+        config: Dict[Any, Any],
+    ):
+        """Initializes Backend instance.
+        query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
+            supplied with the `integration` object.
+        model (str): Name of HF model to load.
+        config (Dict[Any, Any]): HF config.
+        """
+        super().__init__(integration=None, query=query)
+        self._model = model
+        self._config = config
 
-    def __post_init__(self):
+        # Init HF model.
         HuggingFaceBackend.check_installation()
         self.check_model()
 
-        if not self.config or len(self.config) == 0:
-            self.config = self.compile_default_config()
+        if not self._config or len(self._config) == 0:
+            self._config = self.compile_default_config()
 
-        if not self.integration:
-            self.integration = self.init_model()
+        if not self._integration:
+            self._integration = self.init_model()
 
     @property
     @abc.abstractmethod
@@ -64,9 +85,9 @@ class HuggingFaceBackend(Backend, abc.ABC):
 
     def check_model(self) -> None:
         """Checks whether model is supported. Raises if it isn't."""
-        if self.model not in self.supported_models:
+        if self._model not in self.supported_models:
             raise ValueError(
-                f"Model '{self.model}' is not supported - select one of {self.supported_models} instead"
+                f"Model '{self._model}' is not supported - select one of {self.supported_models} instead"
             )
 
     @staticmethod

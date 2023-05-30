@@ -8,13 +8,12 @@ from thinc.compat import has_torch_cuda_gpu
 _PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.OpenLLaMaHF.v1",
-        "model": "s-JoL/Open-Llama-V2-pretrain",
+        "model": "stabilityai/stablelm-base-alpha-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
 
 _NLP_CONFIG = """
-
 [nlp]
 lang = "en"
 pipeline = ["llm"]
@@ -30,7 +29,7 @@ factory = "llm"
 
 [components.llm.backend]
 @llm_backends = "spacy.OpenLLaMaHF.v1"
-model = "s-JoL/Open-Llama-V2-pretrain"
+model = "stabilityai/stablelm-base-alpha-3b"
 """
 
 
@@ -38,6 +37,16 @@ model = "s-JoL/Open-Llama-V2-pretrain"
 def test_init():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
+    nlp.add_pipe("llm", config=_PIPE_CFG)
+    nlp("This is a test.")
+
+
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+def test_init_tuned():
+    """Test initialization and simple run"""
+    nlp = spacy.blank("en")
+    cfg = copy.deepcopy(_PIPE_CFG)
+    cfg["backend"]["model"] = "stabilityai/stablelm-base-tuned-3b"
     nlp.add_pipe("llm", config=_PIPE_CFG)
     nlp("This is a test.")
 
