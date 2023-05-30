@@ -752,6 +752,50 @@ Note that Hugging Face will download this model the first time you use it - you 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
+
+#### spacy.spacy.StableLMHF.v1.v1
+
+To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
+
+```shell
+python -m pip install "torch>=1.13.1,<2.0"
+python -m pip install "transformers>=4.28.1,<5.0"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[transformers]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
+which may ultimately result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Example config block:
+
+```ini
+[components.llm.backend]
+@llm_backends = "spacy.StableLMHF.v1"
+model = "stabilityai/stablelm-tuned-alpha-7b"
+```
+
+| Argument | Type             | Default | Description                                                                                      |
+| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
+| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+
+Supported models (see the [Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha) for details):
+
+- `"stabilityai/stablelm-base-alpha-3b"`
+- `"stabilityai/stablelm-base-alpha-7b"`
+- `"stabilityai/stablelm-tuned-alpha-3b"`
+- `"stabilityai/stablelm-tuned-alpha-7b"`
+
+Note that Hugging Face will download this model the first time you use it - you can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+
 ### Cache
 
 Interacting with LLMs, either through an external API or a local instance, is costly.

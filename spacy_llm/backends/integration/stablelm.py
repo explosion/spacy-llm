@@ -110,7 +110,7 @@ class StableLMHFBackend(HuggingFaceBackend):
         }
 
 
-@registry.llm_backends("spacy.OpenLLaMaHF.v1")
+@registry.llm_backends("spacy.StableLMHF.v1")
 def backend_stablelm_hf(
     model: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),
