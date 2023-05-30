@@ -15,7 +15,7 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:^.*pkg_resources.*:DeprecationWarning",
-    "ignore::sqlalchemy.exc.MovedIn20Warning",
+    # "ignore::sqlalchemy.exc.MovedIn20Warning",
     "ignore:^.*You are trying to use a chat model. This way of initializing it is no longer supported. Instead, please use.*:UserWarning",
 ]
 markers = [
