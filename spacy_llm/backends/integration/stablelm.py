@@ -1,4 +1,4 @@
-from typing import Iterable, Callable, Any, Dict, Optional, TYPE_CHECKING
+from typing import Iterable, Callable, Any, Dict, Optional
 
 from spacy.util import SimpleFrozenList, SimpleFrozenDict
 
@@ -6,8 +6,10 @@ from .base import HuggingFaceBackend
 from ...compat import transformers, torch, has_transformers
 from ...registry.util import registry
 
-if TYPE_CHECKING and has_transformers:
+if has_transformers:
     from transformers import StoppingCriteria
+else:
+    StoppingCriteria = object
 
 
 class StableLMHFBackend(HuggingFaceBackend):
