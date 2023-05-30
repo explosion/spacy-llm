@@ -13,7 +13,7 @@ PIPE_CFG = {
 }
 
 
-# @pytest.mark.external
+@pytest.mark.external
 @pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 def test_initialization():
     """Test initialization and simple run"""
