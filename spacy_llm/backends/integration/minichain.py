@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
-from . import Backend
+from .base import RemoteBackend
 from ...compat import has_minichain, minichain
 from ...registry import registry
 
@@ -18,7 +18,7 @@ def _check_installation() -> None:
 
 @registry.llm_queries("spacy.RunMiniChain.v1")
 def query_minichain() -> (
-    Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]
+    Callable[["minichain.backend.RemoteBackend", Iterable[str]], Iterable[str]]
 ):
     """Returns query Callable for MiniChain.
     RETURNS (Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]): Callable executing simple prompts
@@ -26,7 +26,7 @@ def query_minichain() -> (
     """
 
     def prompt(
-        backend: "minichain.backend.Backend", prompts: Iterable[str]
+        backend: "minichain.backend.RemoteBackend", prompts: Iterable[str]
     ) -> Iterable[str]:
         @minichain.prompt(backend)
         def _prompt(model: "minichain.base.Prompt.Model", prompt_text: str) -> str:
@@ -41,7 +41,7 @@ def query_minichain() -> (
 def backend_minichain(
     api: str,
     query: Optional[
-        Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]
+        Callable[["minichain.backend.RemoteBackend", Iterable[str]], Iterable[str]]
     ] = None,
     config: Dict[Any, Any] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
@@ -60,7 +60,7 @@ def backend_minichain(
         raise ValueError("The LLM model must be specified in the config.")
 
     if hasattr(minichain.backend, api):
-        return Backend(
+        return RemoteBackend(
             integration=getattr(minichain.backend, api)(**config),
             query=query_minichain() if query is None else query,
         )

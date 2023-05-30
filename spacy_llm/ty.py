@@ -9,7 +9,6 @@ from spacy.vocab import Vocab
 from .backends import integration
 from .compat import Protocol, runtime_checkable
 
-
 _Prompt = Any
 _Response = Any
 
@@ -100,10 +99,10 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
 
     # Assume that __call__() has the necessary type info - except in the case of integration.Backend, for which
     # we know this is not the case.
-    if not isinstance(backend, integration.Backend):
+    if not isinstance(backend, integration.RemoteBackend):
         return typing.get_type_hints(backend.__call__)
 
-    # If this is an instance of integrations.Backend: read type information from .query() instead, only keep
+    # If this is an instance of integrations.RemoteBackend: read type information from .query() instead, only keep
     # information on Iterable args.
     signature = typing.get_type_hints(backend.query).items()
     to_ignore: List[str] = []
@@ -116,7 +115,7 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
         for k, v in typing.get_type_hints(backend.query).items()
         # In Python 3.8+ (or 3.6+ if typing_utils is installed) the check for the origin class should be done using
         # typing.get_origin().
-        if hasattr(v, "__origin__") and issubclass(v.__origin__, Iterable)
+        if k not in to_ignore
     }
     assert len(signature) == 2
     assert "return" in signature
