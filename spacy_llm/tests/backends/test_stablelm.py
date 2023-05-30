@@ -33,17 +33,15 @@ model = "stabilityai/stablelm-base-alpha-3b"
 """
 
 
+@pytest.mark.parametrize(
+    "model",
+    ("stabilityai/stablelm-base-alpha-3b", "stabilityai/stablelm-tuned-alpha-3b"),
+)
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init():
-    """Test initialization and simple run"""
-    nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=_PIPE_CFG)
-    nlp("This is a test.")
-
-
-@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init_tuned():
-    """Test initialization and simple run"""
+def test_init(model: str):
+    """Test initialization and simple run.
+    model (str): Name of model to run.
+    """
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
     cfg["backend"]["model"] = "stabilityai/stablelm-tuned-alpha-3b"

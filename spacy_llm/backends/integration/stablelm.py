@@ -7,9 +7,16 @@ from ...compat import transformers, torch, has_transformers
 from ...registry.util import registry
 
 if has_transformers:
-    from transformers import StoppingCriteria
-else:
-    StoppingCriteria = object
+
+    class _StopOnTokens(transformers.StoppingCriteria):
+        def __call__(
+            self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+        ) -> bool:
+            stop_ids = [50278, 50279, 50277, 1, 0]
+            for stop_id in stop_ids:
+                if input_ids[0][-1] == stop_id:
+                    return True
+            return False
 
 
 class StableLMHFBackend(HuggingFaceBackend):
@@ -21,16 +28,6 @@ class StableLMHFBackend(HuggingFaceBackend):
 - StableLM will refuse to participate in anything that could harm a human.
 """
 
-    class StopOnTokens(StoppingCriteria):
-        def __call__(
-            self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
-        ) -> bool:
-            stop_ids = [50278, 50279, 50277, 1, 0]
-            for stop_id in stop_ids:
-                if input_ids[0][-1] == stop_id:
-                    return True
-            return False
-
     def __init__(
         self,
         model: str,
@@ -38,15 +35,27 @@ class StableLMHFBackend(HuggingFaceBackend):
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_tuned = "tuned" in model
+        self._init_config: Dict[str, Any] = {}
+        self._inference_config: Dict[str, Any] = {}
         super().__init__(model=model, config=config)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
+        # Define configs for init and inference time.
+        inference_args = ("max_new_tokens", "temperature", "do_sample")
+        self._init_config = {
+            k: v for k, v in self._config.items() if k not in inference_args
+        }
+        self._inference_config = {
+            k: v for k, v in self._config.items() if k in inference_args
+        }
+
+        # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._model_name, **self._config
+            self._model_name, **self._init_config
         )
         model.half().cuda()
 
@@ -70,12 +79,7 @@ class StableLMHFBackend(HuggingFaceBackend):
         assert hasattr(self._model, "generate")
         return [
             self._tokenizer.decode(
-                self._model.generate(
-                    **prompt,
-                    max_new_tokens=64,
-                    temperature=0.7,
-                    do_sample=True,
-                )[0],
+                self._model.generate(**prompt, **self._inference_config)[0],
                 skip_special_tokens=True,
             )
             for prompt in tokenized_prompts
@@ -94,9 +98,16 @@ class StableLMHFBackend(HuggingFaceBackend):
 
     @staticmethod
     def compile_default_config() -> Dict[Any, Any]:
-        cfg = HuggingFaceBackend.compile_default_config()
-        cfg.pop("device")
-        return cfg
+        return {
+            **{
+                k: v
+                for k, v in HuggingFaceBackend.compile_default_config().items()
+                if k != "device"
+            },
+            "max_new_tokens": 64,
+            "temperature": 0.7,
+            "do_sample": True,
+        }
 
 
 @registry.llm_backends("spacy.OpenLLaMaHF.v1")
