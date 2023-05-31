@@ -3,8 +3,8 @@ from typing import Iterable, Callable, Any, Dict, Optional
 from spacy.util import SimpleFrozenList, SimpleFrozenDict
 
 from .base import HuggingFaceBackend
-from ...compat import transformers, torch, has_transformers
-from ...registry.util import registry
+from ....compat import transformers, torch, has_transformers
+from ....registry.util import registry
 
 if has_transformers:
 

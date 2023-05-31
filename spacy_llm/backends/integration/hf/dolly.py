@@ -4,8 +4,8 @@ from spacy.util import SimpleFrozenList, SimpleFrozenDict
 
 
 from . import HuggingFaceBackend
-from ...compat import transformers
-from ...registry.util import registry
+from ....compat import transformers
+from ....registry.util import registry
 
 
 class DollyHFBackend(HuggingFaceBackend):
