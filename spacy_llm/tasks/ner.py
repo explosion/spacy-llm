@@ -120,4 +120,4 @@ class NERTask(SpanTask):
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
-        return get_ner_prf(examples, attr="ents")
+        return get_ner_prf(examples)
