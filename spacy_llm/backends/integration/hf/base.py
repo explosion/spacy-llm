@@ -16,16 +16,19 @@ class HuggingFaceBackend(abc.ABC):
     def __init__(
         self,
         model: str,
-        config: Dict[Any, Any],
+        config: Dict[str, Dict[Any, Any]],
     ):
         """Initializes Backend instance.
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         model (str): Name of HF model to load.
-        config (Dict[Any, Any]): HF config.
+        config (Dict[Any, Any]): HF config. Has to have keys "init" for all arguments used for model at init time and
+            "run" for all arguments at inference time.
+        inference_config (Dict[Any, Any]): HF config for model run.
         """
         self._model_name = model
         self._config = config
+        assert len(self._config) == 0 or all([key in ("init", "run") for key in config])
 
         # Init HF model.
         HuggingFaceBackend.check_installation()
@@ -76,16 +79,16 @@ class HuggingFaceBackend(abc.ABC):
         """Compiles default config for HF model.
         RETURNS (Dict[Any, Any]): HF model default config.
         """
-        default_cfg: Dict[str, Any] = {}
+        default_cfg: Dict[str, Any] = {"init": {}}
 
         if has_torch:
-            default_cfg["torch_dtype"] = torch.bfloat16
+            default_cfg["init"]["torch_dtype"] = torch.bfloat16
             if has_torch_cuda_gpu:
                 # this ensures it fails explicitely when GPU is not enabled or sufficient
-                default_cfg["device"] = "cuda:0"
+                default_cfg["init"]["device"] = "cuda:0"
             elif has_accelerate:
                 # accelerate will distribute the layers depending on availability on GPU/CPU/hard drive
-                default_cfg["device_map"] = "auto"
+                default_cfg["init"]["device_map"] = "auto"
                 warnings.warn(
                     "Couldn't find a CUDA GPU, so the setting 'device_map:auto' will be used, which may result "
                     "in the LLM being loaded (partly) on the CPU or even the hard disk, which may be slow. "

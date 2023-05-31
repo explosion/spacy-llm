@@ -13,7 +13,7 @@ class DollyHFBackend(HuggingFaceBackend):
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        return transformers.pipeline(model=self._model_name, **self._config)
+        return transformers.pipeline(model=self._model_name, **self._config["init"])
 
     @property
     def supported_models(self) -> Iterable[str]:

@@ -9,8 +9,12 @@ types-requests==2.28.11.16
 # Prompting libraries needed for testing
 langchain>=0.0.180,<0.1.0; python_version>="3.9"
 minichain>=0.3,<0.4; python_version>="3.8" and python_version<"3.11"
+
 # Necessary for running all local models on GPU.
 transformers>=4.0.0,<5.0.0
-torch
+torch>=2.0,<3
+# Required for OpenLLaMa to run.
+protobuf>=3.20.0,<3.21
+
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
