@@ -14,7 +14,7 @@ minichain>=0.3,<0.4; python_version>="3.8" and python_version<"3.11"
 transformers>=4.0.0,<5.0.0
 torch<3
 # Required for OpenLLaMa to run.
-protobuf>=3.20.0,<3.21
+protobuf<3.21
 
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
