@@ -59,7 +59,7 @@ def fewshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.REL.v1"
-    labels = "LivesIn,Visits"
+    labels = ["LivesIn", "Visits"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"

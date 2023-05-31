@@ -24,7 +24,7 @@ def test_example_1_classifier():
 
         [components.llm.task]
         @llm_tasks = "spacy.TextCat.v2"
-        labels = COMPLIMENT,INSULT
+        labels = ["COMPLIMENT", "INSULT"]
 
         [components.llm.backend]
         @llm_backends = "spacy.REST.v1"
@@ -55,7 +55,7 @@ def test_example_2_ner_hf():
 
         [components.llm.task]
         @llm_tasks = "spacy.NER.v2"
-        labels = PERSON,ORGANISATION,LOCATION
+        labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
         [components.llm.backend]
         @llm_backends = "spacy.Dolly_HF.v1"
@@ -79,7 +79,7 @@ def test_example_3_python():
         config={
             "task": {
                 "@llm_tasks": "spacy.NER.v2",
-                "labels": "PERSON,ORGANISATION,LOCATION",
+                "labels": ["PERSON", "ORGANISATION", "LOCATION"],
             },
             "backend": {
                 "@llm_backends": "spacy.REST.v1",

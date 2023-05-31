@@ -58,7 +58,7 @@ _DEFAULT_REL_TEMPLATE = read_template("rel")
 
 @registry.llm_tasks("spacy.REL.v1")
 def make_rel_task(
-    labels: str,
+    labels: Union[List[str], str],
     template: str = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
