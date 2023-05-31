@@ -14,6 +14,7 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         config: Dict[Any, Any],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
+        self._device: Optional[str] = None
         super().__init__(model=model, config=config)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
@@ -22,9 +23,15 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         """
         # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
+        init_cfg = self._config.get("init", {})
+        if "device" in init_cfg:
+            self._device = init_cfg.pop("device")
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._model_name, **self._config.get("init", {})
+            self._model_name, **init_cfg
         )
+
+        if self._device:
+            model.to(self._device)
 
         return model
 
@@ -33,6 +40,8 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         tokenized_input_ids = [
             self._tokenizer(prompt, return_tensors="pt").input_ids for prompt in prompts
         ]
+        if self._device:
+            tokenized_input_ids = [tii.to(self._device) for tii in tokenized_input_ids]
 
         assert hasattr(self._model, "generate")
         return [
@@ -58,10 +67,10 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         default_cfg = HuggingFaceBackend.compile_default_config()
         return {
             "init": {
-                "init": {k: v for k, v in default_cfg["init"].items() if k != "device"},
+                **default_cfg["init"],
                 "torch_dtype": torch.float16,
             },
-            "run": {"max_new_tokens": 32},
+            "run": {**default_cfg.get("run", {}), "max_new_tokens": 32},
         }
 
 

@@ -35,6 +35,7 @@ class StableLMHFBackend(HuggingFaceBackend):
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_tuned = "tuned" in model
+        self._device: Optional[str] = None
         super().__init__(model=model, config=config)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
@@ -43,17 +44,22 @@ class StableLMHFBackend(HuggingFaceBackend):
         """
         # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
+        init_cfg = self._config.get("init", {})
+        if "device" in init_cfg:
+            self._device = init_cfg.pop("device")
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._model_name, **self._config.get("init", {})
+            self._model_name, **init_cfg
         )
-        model.half().cuda()
+
+        if self._device:
+            model.half().to(self._device)
 
         return model
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         assert callable(self._tokenizer)
         tokenized_prompts = [
-            self._tokenizer(prompt, return_tensors="pt").to("cuda")
+            self._tokenizer(prompt, return_tensors="pt")
             for prompt in (
                 # Add prompt formatting for tuned model.
                 prompts
@@ -64,6 +70,8 @@ class StableLMHFBackend(HuggingFaceBackend):
                 ]
             )
         ]
+        if self._device:
+            tokenized_prompts = [tp.to(self._device) for tp in tokenized_prompts]
 
         assert hasattr(self._model, "generate")
         return [
@@ -89,8 +97,9 @@ class StableLMHFBackend(HuggingFaceBackend):
     def compile_default_config() -> Dict[Any, Any]:
         default_cfg = HuggingFaceBackend.compile_default_config()
         return {
-            "init": {k: v for k, v in default_cfg["init"].items() if k != "device"},
+            "init": default_cfg["init"],
             "run": {
+                **default_cfg.get("run", {}),
                 "max_new_tokens": 64,
                 "temperature": 0.7,
                 "do_sample": True,
