@@ -34,7 +34,7 @@ class OpenAIBackend(Backend):
             "text-ada-001": Endpoints.NON_CHAT.value,
             "davinci": Endpoints.NON_CHAT.value,
             "curie": Endpoints.NON_CHAT.value,
-            "babbage": Endpoints.NON_CHAT,
+            "babbage": Endpoints.NON_CHAT.value,
             "ada": Endpoints.NON_CHAT.value,
         }
 

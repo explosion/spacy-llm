@@ -1,6 +1,6 @@
 # Using GPT models from OpenAI
 
-This example shows how you can use a model from OpenAI for to recognize named entities using the MiniChain backend.
+This example shows how you can use a model from OpenAI to recognize named entities using the MiniChain backend.
 
 First, create a new API key from
 [openai.com](https://platform.openai.com/account/api-keys) or fetch an existing
