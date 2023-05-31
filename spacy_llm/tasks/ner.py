@@ -116,7 +116,7 @@ class NERTask(SpanTask):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Iterable["Example"],
-        labels: List[str] = None,
+        labels: List[str] = [],
         **kwargs: Any,
     ):
         """Initialize the NER task, by auto-discovering labels.
