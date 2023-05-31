@@ -7,7 +7,7 @@ PIPE_CFG = {
     "backend": {
         "@llm_backends": "spacy.LangChain.v1",
         "api": "OpenAI",
-        "config": {"temperature": 0.3},
+        "config": {"temperature": 0.3, "model": "ada"},
         "query": {"@llm_queries": "spacy.CallLangChain.v1"},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
