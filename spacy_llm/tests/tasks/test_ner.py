@@ -1,16 +1,26 @@
 from pathlib import Path
+from typing import Iterable
 
 import pytest
 import spacy
 import srsly
 from confection import Config
 from pydantic import ValidationError
+from spacy.tokens import Span
+from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import strip_normalizer, lowercase_normalizer
-from spacy_llm.registry import fewshot_reader, file_reader
+from spacy_llm.registry import (
+    fewshot_reader,
+    file_reader,
+    lowercase_normalizer,
+    registry,
+    strip_normalizer,
+)
 from spacy_llm.tasks.ner import make_ner_task_v2
 from spacy_llm.tasks.util import find_substrings
+from spacy_llm.util import assemble_from_config
+
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -664,3 +674,35 @@ LOC
 Here is the text: Alice and Bob went to the supermarket
 """.strip()
     )
+
+
+@pytest.mark.parametrize("n_detections", [0, 1, 2])
+def test_ner_scoring(zeroshot_cfg_string, n_detections):
+    @registry.llm_backends("Dummy")
+    def factory():
+        def b(prompts: Iterable[str]) -> Iterable[str]:
+            for _ in prompts:
+                yield ("PER: Alice,Bob")
+
+        return b
+
+    config = Config().from_str(zeroshot_cfg_string)
+    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for text in ["Alice works with Bob.", "Bob lives with Alice."]:
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        reference.ents = [
+            Span(reference, 0, 1, label="PER"),
+            Span(reference, 3, 4, label="PER"),
+        ][:n_detections]
+
+        examples.append(Example(predicted, reference))
+
+    scores = nlp.evaluate(examples)
+
+    assert scores["ents_p"] == n_detections / 2

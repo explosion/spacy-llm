@@ -220,6 +220,10 @@ how to parse the LLM's responses back into structured information. All tasks are
 Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined in [`ty.py`](spacy_llm/ty.py).
 It needs to define a `generate_prompts` function and a `parse_responses` function.
 
+Moreover, the task may define an optional [`scorer` method](https://spacy.io/api/scorer#score).
+It should accept an iterable of `Example`s as input and return a score dictionary.
+If the `scorer` method is defined, `spacy-llm` will call it to evaluate the component.
+
 #### <kbd>function</kbd> `task.generate_prompts`
 
 Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.
@@ -337,7 +341,6 @@ examples = null
 | `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
 | `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
 
-[ner]: https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/ner.py#L14
 
 The NER task implementation doesn't currently ask the LLM for specific offsets, but simply expects a list of strings that represent the enties in the document.
 This means that a form of string matching is required. This can be configured by the following parameters:

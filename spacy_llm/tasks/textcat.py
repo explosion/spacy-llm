@@ -1,15 +1,16 @@
-from typing import Callable, Dict, List, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from pydantic import BaseModel
+from spacy.scorer import Scorer
 from spacy.tokens import Doc
+from spacy.training import Example
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
-
 
 _DEFAULT_TEXTCAT_TEMPLATE_V1 = read_template("textcat")
 _DEFAULT_TEXTCAT_TEMPLATE_V2 = read_template("textcat.v2")
@@ -213,3 +214,14 @@ class TextCatTask:
             cats = self._format_response(prompt_response)
             doc.cats = cats
             yield doc
+
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        return Scorer.score_cats(
+            examples,
+            attr="cats",
+            labels=self._label_dict.values(),
+            multi_label=not self._exclusive_classes,
+        )

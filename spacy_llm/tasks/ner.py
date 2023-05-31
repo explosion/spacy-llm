@@ -1,15 +1,16 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
+from spacy.scorer import get_ner_prf
 from spacy.tokens import Doc, Span
+from spacy.training import Example
 from spacy.util import filter_spans
 
-from .templates import read_template
-from .util import SpanTask, SpanExample
 from ..compat import Literal
 from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
-
+from .templates import read_template
+from .util import SpanExample, SpanTask
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
 _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
@@ -114,3 +115,9 @@ class NERTask(SpanTask):
     ) -> None:
         """Assign spans to the document."""
         doc.set_ents(filter_spans(spans))
+
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        return get_ner_prf(examples)
