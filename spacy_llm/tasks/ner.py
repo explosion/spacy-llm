@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
-from spacy.scorer import Scorer, get_ner_prf
+from spacy.scorer import get_ner_prf
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import filter_spans
