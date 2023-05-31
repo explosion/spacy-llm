@@ -12,8 +12,9 @@ from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 
-_DEFAULT_TEXTCAT_TEMPLATE_v1 = read_template("textcat")
-_DEFAULT_TEXTCAT_TEMPLATE_v2 = read_template("textcat.v2")
+_DEFAULT_TEXTCAT_TEMPLATE_V1 = read_template("textcat")
+_DEFAULT_TEXTCAT_TEMPLATE_V2 = read_template("textcat.v2")
+_DEFAULT_TEXTCAT_TEMPLATE_V3 = read_template("textcat.v3")
 
 
 class TextCatExample(BaseModel):
@@ -37,7 +38,7 @@ def make_textcat_task(
     )
     return TextCatTask(
         labels=labels_list,
-        template=_DEFAULT_TEXTCAT_TEMPLATE_v1,
+        template=_DEFAULT_TEXTCAT_TEMPLATE_V1,
         examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
@@ -49,7 +50,7 @@ def make_textcat_task(
 @registry.llm_tasks("spacy.TextCat.v2")
 def make_textcat_task_v2(
     labels: str,
-    template: str = _DEFAULT_TEXTCAT_TEMPLATE_v2,
+    template: str = _DEFAULT_TEXTCAT_TEMPLATE_V2,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
@@ -72,11 +73,40 @@ def make_textcat_task_v2(
     )
 
 
+@registry.llm_tasks("spacy.TextCat.v3")
+def make_textcat_task_v3(
+    labels: str,
+    template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
+    label_definitions: Optional[Dict[str, str]] = None,
+    examples: ExamplesConfigType = None,
+    normalizer: Optional[Callable[[str], str]] = None,
+    exclusive_classes: bool = False,
+    allow_none: bool = True,
+    verbose: bool = False,
+) -> "TextCatTask":
+    labels_list = split_labels(labels)
+    raw_examples = examples() if callable(examples) else examples
+    textcat_examples = (
+        [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
+    )
+    return TextCatTask(
+        labels=labels_list,
+        template=template,
+        label_definitions=label_definitions,
+        examples=textcat_examples,
+        normalizer=normalizer,
+        exclusive_classes=exclusive_classes,
+        allow_none=allow_none,
+        verbose=verbose,
+    )
+
+
 class TextCatTask:
     def __init__(
         self,
         labels: List[str],
-        template: str = _DEFAULT_TEXTCAT_TEMPLATE_v2,
+        template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
+        label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[TextCatExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
@@ -101,6 +131,8 @@ class TextCatTask:
         labels (str): Comma-separated list of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
         template (str): Prompt template passed to the model.
+        label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
+            These descriptions are added to the prompt to help instruct the LLM on what to extract.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
@@ -113,6 +145,7 @@ class TextCatTask:
         self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_definitions = label_definitions
         self._examples = examples
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
@@ -134,6 +167,7 @@ class TextCatTask:
             prompt = _template.render(
                 text=doc.text,
                 labels=list(self._label_dict.values()),
+                label_definitions=self._label_definitions,
                 examples=self._examples,
                 exclusive_classes=self._exclusive_classes,
                 allow_none=self._allow_none,

@@ -15,7 +15,7 @@ from spacy_llm.registry import (
     lowercase_normalizer,
     registry,
 )
-from spacy_llm.tasks.textcat import make_textcat_task_v2
+from spacy_llm.tasks.textcat import make_textcat_task_v3
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -119,6 +119,37 @@ def ext_template_cfg_string():
 
 
 @pytest.fixture
+def zeroshot_cfg_string_v3_lds():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.TextCat.v3"
+    labels = "Recipe"
+    exclusive_classes = true
+
+    [components.llm.task.label_definitions]
+    Recipe = "A recipe is a set of instructions for preparing a meal, including a list of the ingredients required."
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {}
+    """
+
+
+@pytest.fixture
 def binary():
     text = "Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream"
     labels = "Recipe"
@@ -156,7 +187,12 @@ def multilabel_nonexcl():
 )
 @pytest.mark.parametrize(
     "cfg_string",
-    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+    [
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+        "zeroshot_cfg_string_v3_lds",
+    ],
 )
 def test_textcat_config(task, cfg_string, request):
     """Simple test to check if the config loads properly given different settings"""
@@ -182,7 +218,12 @@ def test_textcat_config(task, cfg_string, request):
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize(
     "cfg_string",
-    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+    [
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+        "zeroshot_cfg_string_v3_lds",
+    ],
 )
 def test_textcat_predict(task, cfg_string, request):
     """Use OpenAI to get Textcat results.
@@ -213,7 +254,12 @@ def test_textcat_predict(task, cfg_string, request):
 @pytest.mark.parametrize("task", ["binary", "multilabel_nonexcl", "multilabel_excl"])
 @pytest.mark.parametrize(
     "cfg_string",
-    ["zeroshot_cfg_string", "fewshot_cfg_string", "ext_template_cfg_string"],
+    [
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+        "zeroshot_cfg_string_v3_lds",
+    ],
 )
 def test_textcat_io(task, cfg_string, request):
     task = request.getfixturevalue(task)
@@ -244,7 +290,7 @@ def test_textcat_io(task, cfg_string, request):
 
 def test_textcat_sets_exclusive_classes_if_binary():
     """Test if the textcat task automatically sets exclusive classes to True if binary"""
-    llm_textcat = make_textcat_task_v2(labels="Recipe", exclusive_classes=False)
+    llm_textcat = make_textcat_task_v3(labels="Recipe", exclusive_classes=False)
     assert llm_textcat._exclusive_classes
 
 
@@ -265,7 +311,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
     label is an empty dictionary
     """
     label = "Recipe"
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
@@ -296,7 +342,7 @@ def test_textcat_multilabel_labels_are_correct(
     text, exclusive_classes, response, expected
 ):
     labels = "Recipe,Comment,Feedback"
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         exclusive_classes=exclusive_classes,
         normalizer=lowercase_normalizer(),
@@ -328,7 +374,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -394,7 +440,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -407,6 +453,7 @@ You are an expert Text Classification system. Your task is to accept Text as inp
 and provide a category for the text based on the predefined labels.
 
 Classify the text below to any of the following labels: Recipe, Feedback, Comment
+
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
 Below are some examples (only use these as a guide):
@@ -460,7 +507,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     doc = nlp(text)
 
     examples = fewshot_reader(examples_path)
-    llm_textcat = make_textcat_task_v2(
+    llm_textcat = make_textcat_task_v3(
         labels=labels,
         examples=examples,
         exclusive_classes=exclusive_classes,
@@ -473,6 +520,7 @@ You are an expert Text Classification system. Your task is to accept Text as inp
 and provide a category for the text based on the predefined labels.
 
 Classify the text below to any of the following labels: Recipe, Feedback, Comment
+
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
 Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
@@ -528,7 +576,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValidationError):
-            make_textcat_task_v2(
+            make_textcat_task_v3(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
@@ -542,7 +590,7 @@ def test_external_template_actually_loads():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
-    llm_textcat = make_textcat_task_v2(labels=labels, template=template)
+    llm_textcat = make_textcat_task_v3(labels=labels, template=template)
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
     assert (
         prompt.strip()
@@ -615,3 +663,47 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
 
     assert scores["cats_micro_p"] == pos
     assert not n_insults or scores["cats_micro_r"] == 1
+
+
+def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
+    text, labels, _, exclusive_classes, _ = multilabel_excl
+    nlp = spacy.blank("xx")
+    doc = nlp(text)
+
+    llm_textcat = make_textcat_task_v3(
+        labels=labels,
+        label_definitions={
+            "Recipe": "A Recipe is a set of instructions to make a food of some kind",
+            "Feedback": "Feedback description",
+            "Comment": "Comment description",
+        },
+        exclusive_classes=exclusive_classes,
+    )
+    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    assert (
+        prompt.strip()
+        == """
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
+Classify the text below to any of the following labels: Recipe, Feedback, Comment
+
+The task is exclusive, so only choose one label from what I provided.
+Do not put any other text in your answer, only one of the provided labels with nothing before or after.
+
+Below are definitions of each label to help aid you in correctly classifying the text.
+Assume these definitions are written by an expert and follow them closely.
+
+Recipe: A Recipe is a set of instructions to make a food of some kind
+Feedback: Feedback description
+Comment: Comment description
+
+
+Here is the text that needs classification
+
+
+Text:
+'''
+You need to increase the temperature when baking, it looks undercooked.
+'''""".strip()
+    )
