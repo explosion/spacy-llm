@@ -753,7 +753,7 @@ Note that Hugging Face will download this model the first time you use it - you 
 by setting the environmental variable `HF_HOME`.
 
 
-#### spacy.spacy.StableLMHF.v1.v1
+#### spacy.StableLMHF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 
