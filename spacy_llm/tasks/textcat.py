@@ -188,4 +188,5 @@ class TextCatTask:
             examples,
             attr="cats",
             labels=self._label_dict.values(),
+            multi_label=not self._exclusive_classes
         )
