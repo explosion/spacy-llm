@@ -40,7 +40,7 @@ class HuggingFaceBackend(abc.ABC):
     def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
         """Executes prompts on specified API.
         prompts (Iterable[_PromptType]): Prompts to execute.
-        RETURNS (Iterable[__ResponseType]): API responses.
+        RETURNS (Iterable[_ResponseType]): API responses.
         """
 
     @property
