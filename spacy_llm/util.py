@@ -20,6 +20,7 @@ def split_labels(labels: Union[str, Iterable[str]]) -> List[str]:
 
 def assemble_from_config(config: Config) -> Language:
     """Assemble a spaCy pipeline from a confection Config object.
+
     config (Config): Config to load spaCy pipeline from.
     RETURNS (Language): An initialized spaCy pipeline.
     """
@@ -36,6 +37,7 @@ def assemble(
     config_path: Union[str, Path], *, overrides: Dict[str, Any] = SimpleFrozenDict()
 ) -> Language:
     """Assemble a spaCy pipeline from a config file.
+
     config_path (Union[str, Path]): Path to config file.
     overrides (Dict[str, Any], optional): Dictionary of config overrides.
     RETURNS (Language): An initialized spaCy pipeline.
