@@ -1,11 +1,23 @@
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import spacy
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.ty import InitializableComponent
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
@@ -163,6 +175,19 @@ class LLMWrapper(Pipe):
                 final_docs.append(doc)
 
         return final_docs
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Iterable["Example"],
+        **kwargs: Any,
+    ):
+        if isinstance(self._task, InitializableComponent):
+            self._task.initialize(
+                get_examples=get_examples,
+                nlp=nlp,
+                **kwargs,
+            )
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
