@@ -171,8 +171,6 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
         """
-        if not Doc.has_extension("llm_io"):
-            Doc.set_extension("llm_io", default=defaultdict(dict))
 
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
@@ -200,7 +198,11 @@ class LLMWrapper(Pipe):
                 final_docs.append(doc)
 
                 if self._save_io:
-                    llm_io = doc._.llm_io[self._name]
+                    # Make sure the `llm_io` field is set
+                    doc.user_data["llm_io"] = doc.user_data.get(
+                        "llm_io", defaultdict(dict)
+                    )
+                    llm_io = doc.user_data["llm_io"][self._name]
                     llm_io["prompt"] = str(next(saved_prompts))
                     llm_io["response"] = str(next(saved_responses))
 

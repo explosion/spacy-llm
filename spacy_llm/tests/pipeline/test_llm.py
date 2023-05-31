@@ -54,7 +54,7 @@ def test_llm_pipe(nlp: Language, n_process: int):
     assert len(docs) == 2
 
     for doc in docs:
-        llm_io = doc._.llm_io
+        llm_io = doc.user_data["llm_io"]
 
         assert llm_io["llm"]["prompt"] == _NOOP_PROMPT
         assert llm_io["llm"]["response"] == _NOOP_RESPONSE
