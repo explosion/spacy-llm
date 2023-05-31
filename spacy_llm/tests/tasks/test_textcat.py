@@ -94,7 +94,7 @@ def ext_template_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.TextCat.v2"
-    labels = "Recipe"
+    labels = ["Recipe"]
     exclusive_classes = true
 
     [components.llm.task.template]

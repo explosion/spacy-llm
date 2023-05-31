@@ -58,7 +58,7 @@ def fewshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.SpanCat.v2"
-    labels = PER,ORG,LOC
+    labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
