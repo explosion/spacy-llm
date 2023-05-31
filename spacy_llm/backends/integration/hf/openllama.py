@@ -23,7 +23,7 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._model_name, **self._config["init"]
+            self._model_name, **self._config.get("init", {})
         )
 
         return model
@@ -37,7 +37,7 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         assert hasattr(self._model, "generate")
         return [
             self._tokenizer.decode(
-                self._model.generate(input_ids=tii, **self._config["run"])[0],
+                self._model.generate(input_ids=tii, **self._config.get("run", {}))[0],
             )
             for tii in tokenized_input_ids
         ]

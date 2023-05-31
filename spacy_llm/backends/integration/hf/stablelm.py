@@ -44,7 +44,7 @@ class StableLMHFBackend(HuggingFaceBackend):
         # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._model_name, **self._config["init"]
+            self._model_name, **self._config.get("init", {})
         )
         model.half().cuda()
 
@@ -68,7 +68,7 @@ class StableLMHFBackend(HuggingFaceBackend):
         assert hasattr(self._model, "generate")
         return [
             self._tokenizer.decode(
-                self._model.generate(**prompt, **self._config["run"])[0],
+                self._model.generate(**prompt, **self._config.get("run", {}))[0],
                 skip_special_tokens=True,
             )
             for prompt in tokenized_prompts

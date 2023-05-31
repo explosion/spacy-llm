@@ -79,7 +79,7 @@ class HuggingFaceBackend(abc.ABC):
         """Compiles default config for HF model.
         RETURNS (Dict[Any, Any]): HF model default config.
         """
-        default_cfg: Dict[str, Any] = {"init": {}}
+        default_cfg: Dict[str, Any] = {"init": {}, "run": {}}
 
         if has_torch:
             default_cfg["init"]["torch_dtype"] = torch.bfloat16

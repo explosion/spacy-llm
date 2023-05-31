@@ -13,7 +13,9 @@ class DollyHFBackend(HuggingFaceBackend):
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        return transformers.pipeline(model=self._model_name, **self._config["init"])
+        return transformers.pipeline(
+            model=self._model_name, **self._config.get("init", {})
+        )
 
     @property
     def supported_models(self) -> Iterable[str]:
@@ -31,15 +33,23 @@ class DollyHFBackend(HuggingFaceBackend):
         prompts (Iterable[str]): Prompts to query Dolly model with.
         RETURNS (Iterable[str]): Prompt responses.
         """
-        return [self._model(pr)[0]["generated_text"] for pr in prompts]
+        return [
+            self._model(pr, **self._config.get("run", {}))[0]["generated_text"]
+            for pr in prompts
+        ]
 
     @staticmethod
     def compile_default_config() -> Dict[Any, Any]:
+        default_cfg = HuggingFaceBackend.compile_default_config()
         return {
-            **HuggingFaceBackend.compile_default_config(),
-            # Loads a custom pipeline from https://huggingface.co/databricks/dolly-v2-3b/blob/main/instruct_pipeline.py
-            # cf also https://huggingface.co/databricks/dolly-v2-12b
-            "trust_remote_code": True,
+            "init": {
+                **default_cfg["init"],
+                # Loads a custom pipeline from
+                # https://huggingface.co/databricks/dolly-v2-3b/blob/main/instruct_pipeline.py
+                # cf also https://huggingface.co/databricks/dolly-v2-12b
+                "trust_remote_code": True,
+            },
+            "run": default_cfg["run"],
         }
 
 
