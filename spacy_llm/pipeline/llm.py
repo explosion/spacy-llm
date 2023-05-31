@@ -135,34 +135,6 @@ class LLMWrapper(Pipe):
                 yield from iter(self._process_docs(doc_batch))
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
-            # try:
-            #     prompts = self._task.generate_prompts(noncached_doc_batch)
-            #     if self._save_io:
-            #         prompts, saved_prompts = tee(prompts)
-
-            #     responses = self._backend(prompts)
-            #     if self._save_io:
-            #         responses, saved_responses = tee(responses)
-
-            #     modified_docs = iter(
-            #         self._task.parse_responses(noncached_doc_batch, responses)
-            #     )
-
-            #     for doc, cached_doc in zip(doc_batch, is_cached):
-            #         if cached_doc:
-            #             doc = self._cache[doc]
-            #             assert isinstance(doc, Doc)
-            #             yield doc
-            #         else:
-            #             doc = next(modified_docs)
-
-            #             if self._save_io:
-            #                 llm_io = doc._.llm_io[self._name]
-            #                 llm_io["prompt"] = str(next(saved_prompts))
-            #                 llm_io["response"] = str(next(saved_responses))
-
-            #             self._cache.add(doc)
-            #             yield doc
 
     def _process_docs(self, docs: List[Doc]) -> List[Doc]:
         """Process a batch of docs with the configured LLM backend and task.
