@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
-from spacy.scorer import Scorer
+from spacy.scorer import Scorer, get_ner_prf
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import filter_spans
@@ -120,4 +120,4 @@ class NERTask(SpanTask):
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
-        return Scorer.score_spans(examples, attr="ents")
+        return get_ner_prf(examples, attr="ents")
