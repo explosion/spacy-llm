@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Tuple, cast
+from typing import Iterable, Iterator, List, Optional, Tuple, cast
 
 import spacy
 from spacy.language import Language
@@ -107,15 +107,7 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        docs = [self._cache[doc]]
-        if docs[0] is None:
-            prompts = self._task.generate_prompts([doc])
-            responses = self._backend(prompts)
-            docs = list(self._task.parse_responses([doc], responses))
-            assert len(docs) == 1
-            assert isinstance(docs[0], Doc)
-            self._cache.add(docs[0])
-
+        docs = self._process_docs([doc])
         assert isinstance(docs[0], Doc)
         return docs[0]
 
@@ -128,27 +120,35 @@ class LLMWrapper(Pipe):
         """
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
-            is_cached = [doc in self._cache for doc in doc_batch]
-            noncached_doc_batch = [
-                doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
-            ]
             try:
-                prompts = self._task.generate_prompts(noncached_doc_batch)
-                responses = self._backend(prompts)
-                modified_docs = iter(
-                    self._task.parse_responses(noncached_doc_batch, responses)
-                )
-                for doc, cached_doc in zip(doc_batch, is_cached):
-                    if cached_doc:
-                        doc = self._cache[doc]
-                        assert isinstance(doc, Doc)
-                        yield doc
-                    else:
-                        doc = next(modified_docs)
-                        self._cache.add(doc)
-                        yield doc
+                yield from iter(self._process_docs(doc_batch))
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
+
+    def _process_docs(self, docs: List[Doc]) -> List[Doc]:
+        """Process a batch of docs with the configured LLM backend and task.
+        If a cache is configured, only sends prompts to backend for docs not found in cache.
+
+        docs (List[Doc]): Input batch of docs
+        RETURNS (List[Doc]): Processed batch of docs with task annotations set
+        """
+        is_cached = [doc in self._cache for doc in docs]
+        noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
+        prompts = self._task.generate_prompts(noncached_doc_batch)
+        responses = self._backend(prompts)
+        modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
+        final_docs = []
+        for i, doc in enumerate(docs):
+            if is_cached[i]:
+                cached_doc = self._cache[doc]
+                assert cached_doc is not None
+                final_docs.append(cached_doc)
+            else:
+                doc = next(modified_docs)
+                self._cache.add(doc)
+                final_docs.append(doc)
+
+        return final_docs
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         """Serialize the LLMWrapper to a bytestring.

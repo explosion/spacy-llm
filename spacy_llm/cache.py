@@ -55,7 +55,9 @@ class BatchCache:
         # Statistics.
         self._stats: Dict[str, int] = {
             "hit": 0,
+            "hit_contains": 0,
             "missed": 0,
+            "missed_contains": 0,
             "added": 0,
             "persisted": 0,
         }
@@ -167,9 +169,9 @@ class BatchCache:
         RETURNS (bool): Whether doc has been processed and cached.
         """
         if self._doc_id(doc) not in self._doc2batch:
-            self._stats["missed"] += 1
+            self._stats["missed_contains"] += 1
             return False
-        self._stats["hit"] += 1
+        self._stats["hit_contains"] += 1
         return True
 
     def __getitem__(self, doc: Doc) -> Optional[Doc]:
