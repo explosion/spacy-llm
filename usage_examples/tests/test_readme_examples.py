@@ -58,7 +58,7 @@ def test_example_2_ner_hf():
         labels = PERSON,ORGANISATION,LOCATION
 
         [components.llm.backend]
-        @llm_backends = "spacy.DollyHF.v1"
+        @llm_backends = "spacy.Dolly_HF.v1"
         # For better performance, use databricks/dolly-v2-12b instead
         model = "databricks/dolly-v2-3b"
         """

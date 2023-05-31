@@ -7,7 +7,7 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "backend": {
-        "@llm_backends": "spacy.DollyHF.v1",
+        "@llm_backends": "spacy.Dolly_HF.v1",
         "model": "databricks/dolly-v2-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -29,7 +29,7 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 model = "databricks/dolly-v2-3b"
 """
 

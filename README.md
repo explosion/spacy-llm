@@ -106,7 +106,7 @@ factory = "llm"
 labels = PERSON,ORGANISATION,LOCATION
 
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 # For better performance, use databricks/dolly-v2-12b instead
 model = "databricks/dolly-v2-3b"
 ```
@@ -710,7 +710,7 @@ config = {"temperature": 0.3}
 
 The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `model(text)` for each given textual prompt.
 
-#### spacy.DollyHF.v1
+#### spacy.Dolly_HF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
@@ -733,7 +733,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 model = "databricks/dolly-v2-3b"
 ```
 
@@ -753,7 +753,7 @@ Note that Hugging Face will download this model the first time you use it - you 
 by setting the environmental variable `HF_HOME`.
 
 
-#### spacy.StableLMHF.v1
+#### spacy.StableLM_HF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 
@@ -775,7 +775,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.StableLMHF.v1"
+@llm_backends = "spacy.StableLM_HF.v1"
 model = "stabilityai/stablelm-tuned-alpha-7b"
 ```
 
