@@ -148,7 +148,7 @@ class SpanCatTask(SpanTask):
             label_set = set()
 
             for eg in examples:
-                for span in eg.reference.spans[self._spans_key]:
+                for span in eg.reference.spans.get(self._spans_key, []):
                     label_set.add(span.label_)
             labels = list(label_set)
 
