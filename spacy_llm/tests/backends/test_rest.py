@@ -1,12 +1,13 @@
 # mypy: ignore-errors
 import copy
 import re
-from typing import Iterable
+from typing import Iterable, Type
 
 import pytest
 import spacy
 from spacy.tokens import Doc
 
+import spacy_llm.backends.rest.backend.base
 from ...registry import registry
 from ..compat import has_openai_key
 
@@ -103,3 +104,17 @@ def test_max_time_error_handling():
                 },
             },
         )
+
+
+def test_api_as_backend_config():
+    """Test specifying the API backend as object rather than name."""
+
+    @registry.llm_misc("REST_OPENAI_API.v1")
+    def rest_openai_api_backend() -> Type[spacy_llm.backends.rest.backend.base.Backend]:
+        return spacy_llm.backends.rest.backend.openai.OpenAIBackend
+
+    nlp = spacy.blank("en")
+    cfg = copy.deepcopy(PIPE_CFG)
+    cfg["backend"]["api"] = {"@llm_misc": "REST_OPENAI_API.v1"}
+    nlp.add_pipe("llm", config=cfg)
+    nlp("This is a test.")

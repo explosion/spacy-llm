@@ -1,14 +1,14 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Union, Type
 
 from spacy.util import SimpleFrozenDict
 
-from .backend import supported_apis
+from .backend import supported_apis, base
 from ...registry import registry
 
 
 @registry.llm_backends("spacy.REST.v1")
 def backend_rest(
-    api: str,
+    api: Union[str, Type[base.Backend]],
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = True,
     max_tries: int = 5,
@@ -16,7 +16,9 @@ def backend_rest(
     max_request_time: float = 30,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
-    api (str): Name of any API. Currently supported: "OpenAI".
+    api (Union[str, Type[base.Backend]]): Name of any supported API to use. Alternatively the backend class
+        implementing REST support for this API can be supplied directly. The latter is necessary is the corresponding
+        API is not included in spacy_llm.backends.rest.registry.supported_apis.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the Backend instance.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
@@ -30,7 +32,7 @@ def backend_rest(
         Backend instance.
     """
 
-    backend = supported_apis[api](
+    backend = (supported_apis[api] if isinstance(api, str) else api)(
         config=config,
         strict=strict,
         max_tries=max_tries,
