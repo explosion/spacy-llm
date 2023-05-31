@@ -109,12 +109,13 @@ def test_max_time_error_handling():
 def test_api_as_backend_config():
     """Test specifying the API backend as object rather than name."""
 
-    @registry.llm_misc("REST_OPENAI_API.v1")
-    def rest_openai_api_backend() -> Type[spacy_llm.backends.rest.backend.base.Backend]:
-        return spacy_llm.backends.rest.backend.openai.OpenAIBackend
+    @registry.llm_misc("REST_NOOP_API.v1")
+    def rest_noop_backend() -> Type[spacy_llm.backends.rest.backend.base.Backend]:
+        return spacy_llm.backends.rest.backend.noop.NoOpBackend
 
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(PIPE_CFG)
-    cfg["backend"]["api"] = {"@llm_misc": "REST_OPENAI_API.v1"}
+    cfg["backend"]["config"] = {"model": "NoOp"}
+    cfg["backend"]["api"] = {"@llm_misc": "REST_NOOP_API.v1"}
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
