@@ -115,15 +115,7 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        docs = [self._cache[doc]]
-        if docs[0] is None:
-            prompts = self._task.generate_prompts([doc])
-            responses = self._backend(prompts)
-            docs = list(self._task.parse_responses([doc], responses))
-            assert len(docs) == 1
-            assert isinstance(docs[0], Doc)
-            self._cache.add(docs[0])
-
+        docs = list(self.pipe([doc]))
         assert isinstance(docs[0], Doc)
         return docs[0]
 
