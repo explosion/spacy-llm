@@ -57,7 +57,10 @@ class OpenLLaMaBackend(HuggingFaceBackend):
     def compile_default_config() -> Dict[Any, Any]:
         default_cfg = HuggingFaceBackend.compile_default_config()
         return {
-            "init": {**default_cfg["init"], "torch_dtype": torch.float16},
+            "init": {
+                "init": {k: v for k, v in default_cfg["init"].items() if k != "device"},
+                "torch_dtype": torch.float16,
+            },
             "run": {"max_new_tokens": 32},
         }
 
