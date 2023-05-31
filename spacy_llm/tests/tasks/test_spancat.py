@@ -17,6 +17,7 @@ from spacy_llm.registry import (
     strip_normalizer,
 )
 from spacy_llm.tasks import make_spancat_task_v2
+from spacy_llm.tasks.spancat import SpanCatTask
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.util import assemble_from_config
 
@@ -513,3 +514,34 @@ def test_spancat_scoring(zeroshot_cfg_string, n_detections):
     scores = nlp.evaluate(examples)
 
     assert scores["spans_sc_p"] == n_detections / 2
+
+
+def test_spancat_init(zeroshot_cfg_string):
+
+    config = Config().from_str(zeroshot_cfg_string)
+    del config["components"]["llm"]["task"]["labels"]
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for text in [
+        "Alice works with Bob in London.",
+        "Bob lives with Alice in Manchester.",
+    ]:
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        reference.spans["sc"] = [
+            Span(reference, 0, 1, label="PER"),
+            Span(reference, 3, 4, label="PER"),
+            Span(reference, 5, 6, label="LOC"),
+        ]
+
+        examples.append(Example(predicted, reference))
+
+    _, llm = nlp.pipeline[0]
+    task: SpanCatTask = llm._task
+
+    assert set(task._label_dict.values()) == set()
+    nlp.initialize(lambda: examples)
+    assert set(task._label_dict.values()) == {"PER", "LOC"}
