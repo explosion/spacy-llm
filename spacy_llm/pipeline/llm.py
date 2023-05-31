@@ -1,12 +1,13 @@
 from collections import defaultdict
 from itertools import tee
 from pathlib import Path
-from typing import Iterable, Iterator, List, Optional, Tuple, cast
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import spacy
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
+from spacy.training import Example
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
@@ -118,6 +119,20 @@ class LLMWrapper(Pipe):
         docs = self._process_docs([doc])
         assert isinstance(docs[0], Doc)
         return docs[0]
+
+    def score(
+        self, examples: Iterable[Example], **kwargs
+    ) -> Dict[str, Union[float, Dict[str, float]]]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores.
+
+        DOCS: https://spacy.io/api/pipe#score
+        """
+        if hasattr(self._task, "scorer") and self._task.scorer is not None:
+            return self._task.scorer(examples)
+        return {}
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the LLM prompt to a stream of documents.

@@ -1,14 +1,15 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
+from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
+from spacy.training import Example
 
 from ..compat import Literal
 from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
-from .util import SpanTask, SpanExample
-
+from .util import SpanExample, SpanTask
 
 _DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")
 _DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
@@ -40,7 +41,7 @@ def make_spancat_task(
 
 @registry.llm_tasks("spacy.SpanCat.v2")
 def make_spancat_task_v2(
-    labels: str,
+    labels: Union[List[str], str],
     template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -111,3 +112,13 @@ class SpanCatTask(SpanTask):
     ) -> None:
         """Assign spans to the document."""
         doc.spans[self._spans_key] = sorted(spans)  # type: ignore [type-var]
+
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        return spancat_score(
+            examples,
+            spans_key=self._spans_key,
+            allow_overlap=True,
+        )

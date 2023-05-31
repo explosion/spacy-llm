@@ -65,7 +65,7 @@ factory = "llm"
 
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v2"
-labels = COMPLIMENT,INSULT
+labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.backend]
 @llm_backends = "spacy.REST.v1"
@@ -103,7 +103,7 @@ factory = "llm"
 
 [components.llm.task]
 @llm_tasks = "spacy.NER.v2"
-labels = PERSON,ORGANISATION,LOCATION
+labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.backend]
 @llm_backends = "spacy.DollyHF.v1"
@@ -140,7 +140,7 @@ nlp.add_pipe(
     config={
         "task": {
             "@llm_tasks": "spacy.NER.v2",
-            "labels": "PERSON,ORGANISATION,LOCATION"
+            "labels": ["PERSON", "ORGANISATION", "LOCATION"]
         },
         "backend": {
             "@llm_backends": "spacy.REST.v1",
@@ -235,6 +235,10 @@ how to parse the LLM's responses back into structured information. All tasks are
 Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined in [`ty.py`](spacy_llm/ty.py).
 It needs to define a `generate_prompts` function and a `parse_responses` function.
 
+Moreover, the task may define an optional [`scorer` method](https://spacy.io/api/scorer#score).
+It should accept an iterable of `Example`s as input and return a score dictionary.
+If the `scorer` method is defined, `spacy-llm` will call it to evaluate the component.
+
 #### <kbd>function</kbd> `task.generate_prompts`
 
 Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.
@@ -267,13 +271,13 @@ The built-in NER task supports both zero-shot and few-shot prompting. This versi
 ```ini
 [components.llm.task]
 @llm_tasks = "spacy.NER.v2"
-labels = PERSON,ORGANISATION,LOCATION
+labels = ["PERSON", "ORGANISATION", "LOCATION"]
 examples = null
 ```
 
 | Argument                  | Type                                    | Default                                                  | Description                                                                                                                                           |
 | ------------------------- | --------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`                  | `str`                                   |                                                          | Comma-separated list of labels.                                                                                                                       |
+| `labels`                  | `Union[List[str], str]`                 |                                                          | List of labels or str of comma-separated list of labels.                                                                                              |
 | `template`                | `str`                                   | [ner.v2.jinja](./spacy_llm/tasks/templates/ner.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
 | `label_definitions`       | `Optional[Dict[str, str]]`              | `None`                                                   | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract. |
 | `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                   | Optional function that generates examples for few-shot learning.                                                                                      |
@@ -397,13 +401,13 @@ support overlapping entities and store its annotations in `doc.spans`.
 ```ini
 [components.llm.task]
 @llm_tasks = "spacy.SpanCat.v2"
-labels = PERSON,ORGANISATION,LOCATION
+labels = ["PERSON", "ORGANISATION", "LOCATION"]
 examples = null
 ```
 
 | Argument                  | Type                                    | Default                                                            | Description                                                                                                                                           |
 | ------------------------- | --------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`                  | `str`                                   |                                                                    | Comma-separated list of labels.                                                                                                                       |
+| `labels`                  | `Union[List[str], str]`                 |                                                                    | List of labels or str of comma-separated list of labels.                                                                                              |
 | `template`                | `str`                                   | [`spancat.v2.jinja`](./spacy_llm/tasks/templates/spancat.v2.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
 | `label_definitions`       | `Optional[Dict[str, str]]`              | `None`                                                             | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract. |
 | `spans_key`               | `str`                                   | `"sc"`                                                             | Key of the `Doc.spans` dict to save the spans under.                                                                                                  |
@@ -450,13 +454,13 @@ The built-in TextCat task supports both zero-shot and few-shot prompting.
 ```ini
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v2"
-labels = COMPLIMENT,INSULT
+labels = ["COMPLIMENT", "INSULT"]
 examples = null
 ```
 
 | Argument            | Type                                    | Default                                                      | Description                                                                                                                                      |
 | ------------------- | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `labels`            | `str`                                   |                                                              | Comma-separated list of labels.                                                                                                                  |
+| `labels`            | `Union[List[str], str]`                 |                                                              | List of labels or str of comma-separated list of labels.                                                                                         |
 | `template`          | `str`                                   | [`textcat.jinja`](./spacy_llm/tasks/templates/textcat.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.         |
 | `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                       | Optional function that generates examples for few-shot learning.                                                                                 |
 | `normalizer`        | `Optional[Callable[[str], str]]`        | `None`                                                       | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
@@ -483,7 +487,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 ```ini
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v2"
-labels = COMPLIMENT,INSULT
+labels = ["COMPLIMENT", "INSULT"]
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "textcat_examples.json"
@@ -542,12 +546,12 @@ It relies on an upstream NER component for entities extraction.
 ```ini
 [components.llm.task]
 @llm_tasks = "spacy.REL.v1"
-labels = LivesIn,Visits
+labels = ["LivesIn", "Visits"]
 ```
 
 | Argument            | Type                                    | Default                                              | Description                                                                                                                              |
 | ------------------- | --------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`            | `str`                                   |                                                      | Comma-separated list of relation labels.                                                                                                 |
+| `labels`            | `Union[List[str], str]`                 |                                                      | List of labels or str of comma-separated list of labels.                                                                                 |
 | `template`          | `str`                                   | [`rel.jinja`](./spacy_llm/tasks/templates/rel.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
 | `label_description` | `Optional[Dict[str, str]]`              | `None`                                               | Dictionary providing a description for each relation label.                                                                              |
 | `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`                                               | Optional function that generates examples for few-shot learning.                                                                         |
@@ -569,7 +573,7 @@ spans to your spaCy pipeline and put it _before_ the REL component.
 ```ini
 [components.llm.task]
 @llm_tasks = "spacy.REL.v1"
-labels = LivesIn,Visits
+labels = ["LivesIn", "Visits"]
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "rel_examples.jsonl"
