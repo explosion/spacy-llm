@@ -604,7 +604,8 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
         predicted = nlp.make_doc(text)
         reference = predicted.copy()
 
-        reference.cats = {"Insult": 1.0 if i < n_insults else 0.0}
+        if i < n_insults:
+            reference.cats = {"Insult": 1.0}
 
         examples.append(Example(predicted, reference))
 
