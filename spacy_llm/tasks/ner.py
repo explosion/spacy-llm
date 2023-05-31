@@ -18,14 +18,18 @@ _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
 
 @registry.llm_tasks("spacy.NER.v1")
 def make_ner_task(
-    labels: str,
+    labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
-    labels_list = split_labels(labels)
+    if labels:
+        labels_list = split_labels(labels)
+    else:
+        labels_list = []
+
     span_examples = (
         [SpanExample(**eg) for eg in examples()] if callable(examples) else examples
     )
@@ -42,7 +46,7 @@ def make_ner_task(
 
 @registry.llm_tasks("spacy.NER.v2")
 def make_ner_task_v2(
-    labels: Union[List[str], str],
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_NER_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -107,6 +111,36 @@ class NERTask(SpanTask):
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Iterable["Example"],
+        labels: List[str] = None,
+        **kwargs: Any,
+    ):
+        """Initialize the NER task, by auto-discovering labels.
+
+        Labels can be set through, by order of precedence:
+
+        - the `[initialize]` section of the pipeline configuration
+        - the `labels` argument supplied to the task factory
+        - the labels found in the examples
+        """
+        examples = get_examples()
+
+        if not labels:
+            labels = list(self._label_dict.values())
+
+        if not labels:
+            label_set = set()
+
+            for eg in examples:
+                for ent in eg.reference.ents:
+                    label_set.add(ent.label_)
+            labels = list(label_set)
+
+        self._label_dict = {self._normalizer(label): label for label in labels}
 
     def assign_spans(
         self,

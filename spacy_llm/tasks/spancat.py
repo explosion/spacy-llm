@@ -41,7 +41,7 @@ def make_spancat_task(
 
 @registry.llm_tasks("spacy.SpanCat.v2")
 def make_spancat_task_v2(
-    labels: Union[List[str], str],
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -68,7 +68,7 @@ def make_spancat_task_v2(
 class SpanCatTask(SpanTask):
     def __init__(
         self,
-        labels: List[str],
+        labels: List[str] = [],
         template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
         label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
@@ -83,6 +83,7 @@ class SpanCatTask(SpanTask):
         """Default SpanCat task.
 
         labels (str): Comma-separated list of labels to pass to the template.
+            Leave empty to populate it at initialization time.
         spans_key (str): Key of the `Doc.spans` dict to save under.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
@@ -122,3 +123,33 @@ class SpanCatTask(SpanTask):
             spans_key=self._spans_key,
             allow_overlap=True,
         )
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Iterable["Example"],
+        labels: List[str] = None,
+        **kwargs: Any,
+    ):
+        """Initialize the NER task, by auto-discovering labels.
+
+        Labels can be set through, by order of precedence:
+
+        - the `[initialize]` section of the pipeline configuration
+        - the `labels` argument supplied to the task factory
+        - the labels found in the examples
+        """
+        examples = get_examples()
+
+        if not labels:
+            labels = list(self._label_dict.values())
+
+        if not labels:
+            label_set = set()
+
+            for eg in examples:
+                for span in eg.reference.spans[self._spans_key]:
+                    label_set.add(span.label_)
+            labels = list(label_set)
+
+        self._label_dict = {self._normalizer(label): label for label in labels}
