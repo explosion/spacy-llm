@@ -34,11 +34,16 @@ model = "databricks/dolly-v2-3b"
 """
 
 
+@pytest.mark.parametrize("backend", ("spacy.Dolly_HF.v1", "spacy.DollyHF.v1"))
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init():
-    """Test initialization and simple run"""
+def test_init(backend: str):
+    """Test initialization and simple run.
+    backend (str): Name of backend to use.
+    """
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=_PIPE_CFG)
+    cfg = copy.deepcopy(_PIPE_CFG)
+    cfg["backend"]["@llm_backends"] = backend
+    nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
 

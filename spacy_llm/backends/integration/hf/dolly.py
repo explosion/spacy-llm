@@ -43,6 +43,7 @@ class DollyBackend(HuggingFaceBackend):
         }
 
 
+@registry.llm_backends("spacy.DollyHF.v1")
 @registry.llm_backends("spacy.Dolly_HF.v1")
 def backend_dolly_hf(
     model: str,
