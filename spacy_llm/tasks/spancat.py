@@ -117,4 +117,8 @@ class SpanCatTask(SpanTask):
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
-        return spancat_score(examples, spans_key=self._spans_key)
+        return spancat_score(
+            examples,
+            spans_key=self._spans_key,
+            allow_overlap=True,
+        )
