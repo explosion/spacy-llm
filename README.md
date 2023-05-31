@@ -76,10 +76,9 @@ config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 Now run:
 
 ```python
-from spacy import util
+from spacy_llm.util import assemble
 
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
+nlp = assemble("config.cfg")
 doc = nlp("You look gorgeous!")
 print(doc.cats)
 ```
@@ -115,10 +114,9 @@ model = "databricks/dolly-v2-3b"
 Now run:
 
 ```python
-from spacy import util
+from spacy_llm.util import assemble
 
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
+nlp = assemble("config.cfg")
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
@@ -151,6 +149,7 @@ nlp.add_pipe(
         },
     },
 )
+nlp.initialize()
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
@@ -535,51 +534,6 @@ labels = COMPLIMENT,INSULT
 path = "textcat_examples.json"
 ```
 
-#### spacy.TextCat.v1
-
-The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
-
-```ini
-[components.llm.task]
-@llm_tasks = "spacy.TextCat.v1"
-labels = COMPLIMENT,INSULT
-examples = null
-```
-
-| Argument            | Type                                    | Default | Description                                                                                                                                      |
-| ------------------- | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `labels`            | str                                     |         | Comma-separated list of labels.                                                                                                                  |
-| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`  | Optional function that generates examples for few-shot learning.                                                                                 |
-| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`  | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
-| `exclusive_classes` | `bool`                                  | `False` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
-| `allow_none`        | `bool`                                  | `True`  | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
-| `verbose`           | `bool`                                  | `False` | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
-
-To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
-The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
-
-```json
-[
-  {
-    "text": "You look great!",
-    "answer": "Compliment"
-  },
-  {
-    "text": "You are not very clever at all.",
-    "answer": "Insult"
-  }
-]
-```
-
-```ini
-[components.llm.task]
-@llm_tasks = "spacy.TextCat.v1"
-labels = COMPLIMENT,INSULT
-[components.llm.task.examples]
-@misc = "spacy.FewShotReader.v1"
-path = "textcat_examples.json"
-```
-
 #### spacy.REL.v1
 
 The built-in REL task supports both zero-shot and few-shot prompting.
@@ -824,14 +778,14 @@ batch_size = 64
 max_batches_in_mem = 4
 ```
 
-| Argument             | Type            | Default | Description                                          |
-| -------------------- | --------------- | ------- | ---------------------------------------------------- |
-| `path`               | `Optional[str]` | `None`  | Cache directory. If `None`, no caching is performed. |
-| `batch_size`         | `int`           | 64      | Number of docs in one batch (file).                  |
-| `max_batches_in_mem` | `int`           | 4       | Max. number of batches to hold in memory.            |
+| Argument             | Type                         | Default | Description                                          |
+| -------------------- | ---------------------------- | ------- | ---------------------------------------------------- |
+| `path`               | `Optional[Union[str, Path]]` | `None`  | Cache directory. If `None`, no caching is performed. |
+| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file).                  |
+| `max_batches_in_mem` | `int`                        | 4       | Max. number of batches to hold in memory.            |
 
 Note that since the cache is generated by a registered function, you can also provide your own registered function
-returning your own cache implementation. If you wish to do so, ensure that your cache object has to adhere to the
+returning your own cache implementation. If you wish to do so, ensure that your cache object adheres to the
 `Protocol` defined in `spacy_llm.ty.Cache`.
 
 ### Various functions

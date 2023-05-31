@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 
@@ -5,7 +7,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--external",
         action="store_true",
-        default=False,
+        default=bool(int(os.environ.get("TEST_EXTERNAL", 0))),
         help="include tests that connects to third-party API",
     )
 
