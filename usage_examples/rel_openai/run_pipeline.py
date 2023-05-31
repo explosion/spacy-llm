@@ -14,7 +14,7 @@ Opt = typer.Option
 def run_pipeline(
     # fmt: off
     text: str = Arg("", help="Text to perform text categorization on."),
-    config_path: Path = Arg(..., help="Path to the configuration file to use."),
+    config_path: Union[str, Path] = Arg(..., help="Path to the configuration file to use."),
     examples_path: Optional[Path] = Arg(None, help="Path to the examples file to use (few-shot only)."),
     verbose: bool = Opt(False, "--verbose", "-v", help="Show extra information."),
     # fmt: on
