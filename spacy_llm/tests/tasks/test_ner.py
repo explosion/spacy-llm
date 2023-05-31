@@ -711,6 +711,7 @@ def test_ner_scoring(zeroshot_cfg_string, n_detections):
 def test_ner_init(zeroshot_cfg_string):
 
     config = Config().from_str(zeroshot_cfg_string)
+    config["components"]["llm"]["backend"]["api"] = "NoOp"
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
 
