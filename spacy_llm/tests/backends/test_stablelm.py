@@ -44,7 +44,7 @@ def test_init(model: str):
     """
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["backend"]["model"] = "stabilityai/stablelm-tuned-alpha-3b"
+    cfg["backend"]["model"] = model
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
