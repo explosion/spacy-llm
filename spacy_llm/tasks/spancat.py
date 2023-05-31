@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
@@ -41,7 +41,7 @@ def make_spancat_task(
 
 @registry.llm_tasks("spacy.SpanCat.v2")
 def make_spancat_task_v2(
-    labels: str,
+    labels: Union[List[str], str],
     template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,

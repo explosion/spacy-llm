@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from spacy.scorer import get_ner_prf
 from spacy.tokens import Doc, Span
@@ -42,7 +42,7 @@ def make_ner_task(
 
 @registry.llm_tasks("spacy.NER.v2")
 def make_ner_task_v2(
-    labels: str,
+    labels: Union[List[str], str],
     template: str = _DEFAULT_NER_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,

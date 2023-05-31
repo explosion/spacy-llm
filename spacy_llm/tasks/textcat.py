@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from pydantic import BaseModel
@@ -49,7 +49,7 @@ def make_textcat_task(
 
 @registry.llm_tasks("spacy.TextCat.v2")
 def make_textcat_task_v2(
-    labels: str,
+    labels: Union[List[str], str],
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V2,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -75,7 +75,7 @@ def make_textcat_task_v2(
 
 @registry.llm_tasks("spacy.TextCat.v3")
 def make_textcat_task_v3(
-    labels: str,
+    labels: Union[List[str], str],
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
