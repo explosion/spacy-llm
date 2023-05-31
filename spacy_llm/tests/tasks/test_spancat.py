@@ -1,15 +1,24 @@
 from pathlib import Path
+from typing import Iterable
 
 import pytest
 import spacy
 import srsly
 from confection import Config
 from pydantic import ValidationError
+from spacy.tokens import Span
+from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
+from spacy_llm.registry import (
+    fewshot_reader,
+    lowercase_normalizer,
+    registry,
+    strip_normalizer,
+)
 from spacy_llm.tasks import make_spancat_task_v2
 from spacy_llm.tasks.util import find_substrings
+from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
 
@@ -58,7 +67,7 @@ def fewshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.SpanCat.v2"
-    labels = PER,ORG,LOC
+    labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -472,3 +481,35 @@ def test_example_not_following_basemodel():
             make_spancat_task_v2(
                 labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path)
             )
+
+
+@pytest.mark.parametrize("n_detections", [0, 1, 2])
+def test_spancat_scoring(zeroshot_cfg_string, n_detections):
+    @registry.llm_backends("Dummy")
+    def factory():
+        def b(prompts: Iterable[str]) -> Iterable[str]:
+            for _ in prompts:
+                yield ("PER: Alice,Bob")
+
+        return b
+
+    config = Config().from_str(zeroshot_cfg_string)
+    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for text in ["Alice works with Bob.", "Bob lives with Alice."]:
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        reference.spans["sc"] = [
+            Span(reference, 0, 1, label="PER"),
+            Span(reference, 3, 4, label="PER"),
+        ][:n_detections]
+
+        examples.append(Example(predicted, reference))
+
+    scores = nlp.evaluate(examples)
+
+    assert scores["spans_sc_p"] == n_detections / 2

@@ -1,16 +1,16 @@
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Tuple, cast
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import spacy
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
+from spacy.training import Example
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
-from ..ty import Cache
 from ..compat import TypedDict
-from ..ty import LLMTask, PromptExecutor, validate_types
+from ..ty import Cache, LLMTask, PromptExecutor, validate_types
 
 
 class CacheConfigType(TypedDict):
@@ -107,17 +107,23 @@ class LLMWrapper(Pipe):
         doc (Doc): The Doc instance to process.
         RETURNS (Doc): The processed Doc.
         """
-        docs = [self._cache[doc]]
-        if docs[0] is None:
-            prompts = self._task.generate_prompts([doc])
-            responses = self._backend(prompts)
-            docs = list(self._task.parse_responses([doc], responses))
-            assert len(docs) == 1
-            assert isinstance(docs[0], Doc)
-            self._cache.add(docs[0])
-
+        docs = self._process_docs([doc])
         assert isinstance(docs[0], Doc)
         return docs[0]
+
+    def score(
+        self, examples: Iterable[Example], **kwargs
+    ) -> Dict[str, Union[float, Dict[str, float]]]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores.
+
+        DOCS: https://spacy.io/api/pipe#score
+        """
+        if hasattr(self._task, "scorer") and self._task.scorer is not None:
+            return self._task.scorer(examples)
+        return {}
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the LLM prompt to a stream of documents.
@@ -128,27 +134,35 @@ class LLMWrapper(Pipe):
         """
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
-            is_cached = [doc in self._cache for doc in doc_batch]
-            noncached_doc_batch = [
-                doc for doc, cached_doc in zip(doc_batch, is_cached) if not cached_doc
-            ]
             try:
-                prompts = self._task.generate_prompts(noncached_doc_batch)
-                responses = self._backend(prompts)
-                modified_docs = iter(
-                    self._task.parse_responses(noncached_doc_batch, responses)
-                )
-                for doc, cached_doc in zip(doc_batch, is_cached):
-                    if cached_doc:
-                        doc = self._cache[doc]
-                        assert isinstance(doc, Doc)
-                        yield doc
-                    else:
-                        doc = next(modified_docs)
-                        self._cache.add(doc)
-                        yield doc
+                yield from iter(self._process_docs(doc_batch))
             except Exception as e:
                 error_handler(self._name, self, doc_batch, e)
+
+    def _process_docs(self, docs: List[Doc]) -> List[Doc]:
+        """Process a batch of docs with the configured LLM backend and task.
+        If a cache is configured, only sends prompts to backend for docs not found in cache.
+
+        docs (List[Doc]): Input batch of docs
+        RETURNS (List[Doc]): Processed batch of docs with task annotations set
+        """
+        is_cached = [doc in self._cache for doc in docs]
+        noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
+        prompts = self._task.generate_prompts(noncached_doc_batch)
+        responses = self._backend(prompts)
+        modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
+        final_docs = []
+        for i, doc in enumerate(docs):
+            if is_cached[i]:
+                cached_doc = self._cache[doc]
+                assert cached_doc is not None
+                final_docs.append(cached_doc)
+            else:
+                doc = next(modified_docs)
+                self._cache.add(doc)
+                final_docs.append(doc)
+
+        return final_docs
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
