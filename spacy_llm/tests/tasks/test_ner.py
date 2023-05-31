@@ -676,15 +676,17 @@ Here is the text: Alice and Bob went to the supermarket
     )
 
 
+@registry.llm_backends("Dummy")
+def factory():
+    def b(prompts: Iterable[str]) -> Iterable[str]:
+        for _ in prompts:
+            yield ("PER: Alice,Bob")
+
+    return b
+
+
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_ner_scoring(zeroshot_cfg_string, n_detections):
-    @registry.llm_backends("Dummy")
-    def factory():
-        def b(prompts: Iterable[str]) -> Iterable[str]:
-            for _ in prompts:
-                yield ("PER: Alice,Bob")
-
-        return b
 
     config = Config().from_str(zeroshot_cfg_string)
     config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
@@ -711,7 +713,7 @@ def test_ner_scoring(zeroshot_cfg_string, n_detections):
 def test_ner_init(zeroshot_cfg_string):
 
     config = Config().from_str(zeroshot_cfg_string)
-    config["components"]["llm"]["backend"]["api"] = "NoOp"
+    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
 
