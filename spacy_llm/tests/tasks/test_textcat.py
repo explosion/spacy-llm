@@ -611,7 +611,6 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
     scores = nlp.evaluate(examples)
 
     pos = n_insults / len(INSULTS)
-    1 - pos
 
     assert scores["cats_micro_p"] == pos
     assert not n_insults or scores["cats_micro_r"] == 1
