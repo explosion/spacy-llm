@@ -15,7 +15,7 @@ from spacy_llm.registry import (
     lowercase_normalizer,
     registry,
 )
-from spacy_llm.tasks.textcat import make_textcat_task_v3
+from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -707,3 +707,51 @@ Text:
 You need to increase the temperature when baking, it looks undercooked.
 '''""".strip()
     )
+
+
+@pytest.mark.parametrize("init_from_config", [True, False])
+def test_textcat_init(zeroshot_cfg_string, init_from_config: bool):
+    @registry.llm_backends("Dummy")
+    def factory():
+        def b(prompts: Iterable[str]) -> Iterable[str]:
+            for _ in prompts:
+                yield "POS"
+
+        return b
+
+    config = Config().from_str(zeroshot_cfg_string)
+    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    del config["components"]["llm"]["task"]["labels"]
+    if init_from_config:
+        config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for i, text in enumerate(INSULTS):
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        if i < (len(INSULTS) // 2):
+            reference.cats = {"Insult": 1.0, "Compliment": 0.0}
+        else:
+            reference.cats = {"Insult": 0.0, "Compliment": 1.0}
+
+        examples.append(Example(predicted, reference))
+
+    _, llm = nlp.pipeline[0]
+    task: TextCatTask = llm._task
+
+    if init_from_config:
+        target = {"Test"}
+    else:
+        target = set()
+    assert set(task._label_dict.values()) == target
+
+    nlp.initialize(lambda: examples)
+
+    if init_from_config:
+        target = {"Test"}
+    else:
+        target = {"Insult", "Compliment"}
+    assert set(task._label_dict.values()) == target

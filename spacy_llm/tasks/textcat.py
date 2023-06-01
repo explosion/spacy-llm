@@ -6,6 +6,7 @@ from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
+from spacy.language import Language
 
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
@@ -24,7 +25,7 @@ class TextCatExample(BaseModel):
 
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
-    labels: str,
+    labels: str = "",
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
@@ -49,7 +50,7 @@ def make_textcat_task(
 
 @registry.llm_tasks("spacy.TextCat.v2")
 def make_textcat_task_v2(
-    labels: Union[List[str], str],
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V2,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -225,3 +226,38 @@ class TextCatTask:
             labels=self._label_dict.values(),
             multi_label=not self._exclusive_classes,
         )
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Language,
+        labels: List[str] = [],
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the TextCat task, by auto-discovering labels.
+
+        Labels can be set through, by order of precedence:
+
+        - the `[initialize]` section of the pipeline configuration
+        - the `labels` argument supplied to the task factory
+        - the labels found in the examples
+
+        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
+            for initialization.
+        nlp (Language): Language instance.
+        labels (List[str]): Optional list of labels.
+        """
+        examples = get_examples()
+
+        if not labels:
+            labels = list(self._label_dict.values())
+
+        if not labels:
+            label_set = set()
+
+            for eg in examples:
+                for cat in eg.reference.cats.keys():
+                    label_set.add(cat)
+            labels = list(label_set)
+
+        self._label_dict = {self._normalizer(label): label for label in labels}
