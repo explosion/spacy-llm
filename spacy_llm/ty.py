@@ -169,7 +169,7 @@ def validate_types(task: LLMTask, backend: PromptExecutor) -> None:
     for k in type_hints["parse"]:
         # find the 'prompt_responses' var without assuming its name
         type_k = type_hints["parse"][k]
-        if type_k is not typing.Iterable[Doc]:
+        if type_k != typing.Iterable[Doc]:
             parse_input = type_hints["parse"][k]
 
     template_output = type_hints["template"]["return"]
