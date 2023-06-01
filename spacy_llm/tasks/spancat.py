@@ -132,7 +132,7 @@ class SpanCatTask(SpanTask):
         labels: List[str] = [],
         **kwargs: Any,
     ) -> None:
-        """Initialize the NER task, by auto-discovering labels.
+        """Initialize the SpanCat task, by auto-discovering labels.
 
         Labels can be set through, by order of precedence:
 
