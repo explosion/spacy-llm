@@ -1,6 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple
-from typing import Union, cast
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import spacy
 from spacy.language import Language
@@ -103,6 +102,12 @@ class LLMWrapper(Pipe):
         self._cache = cache
         self._cache.vocab = vocab
 
+        # This is done this way because spaCy's `validate_init_settings` function
+        # does not support `**kwargs: Any`.
+        # See https://github.com/explosion/spaCy/blob/master/spacy/schemas.py#L111
+        if isinstance(self._task, Initializable):
+            self.initialize = self._task.initialize
+
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
 
@@ -165,19 +170,6 @@ class LLMWrapper(Pipe):
                 final_docs.append(doc)
 
         return final_docs
-
-    def initialize(
-        self,
-        get_examples: Callable[[], Iterable["Example"]],
-        nlp: Language,
-        **kwargs: Any,
-    ):
-        if isinstance(self._task, Initializable):
-            self._task.initialize(
-                get_examples=get_examples,
-                nlp=nlp,
-                **kwargs,
-            )
 
     def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
