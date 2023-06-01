@@ -3,8 +3,10 @@ from pathlib import Path
 import pytest
 from confection import Config
 from pytest import FixtureRequest
+from spacy.tokens import Span
+from spacy.training import Example
 
-from spacy_llm.tasks.rel import RelationItem
+from spacy_llm.tasks.rel import RelationItem, RELTask
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -75,6 +77,31 @@ def fewshot_cfg_string():
 
 
 @pytest.fixture
+def noop_config():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.REL.v1"
+    labels = ["LivesIn", "Visits"]
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "test.NoOpBackend.v1"
+    """
+
+
+@pytest.fixture
 def task():
     text = "Joey rents a place in New York City."
     gold_relations = [RelationItem(dep=0, dest=1, relation="LivesIn")]
@@ -108,3 +135,38 @@ def test_rel_predict(task, cfg_string, request):
 
     assert doc.ents
     assert doc._.rel
+
+
+def test_rel_init(noop_config):
+
+    RELTask._check_rel_extention()
+
+    config = Config().from_str(noop_config)
+    del config["components"]["llm"]["task"]["labels"]
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for text, rel in [
+        ("Alice travelled to London.", "Visits"),
+        ("Bob lives in Manchester.", "LivesIn"),
+    ]:
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        # We might want to set those on the predicted example as well...
+        reference.ents = [
+            Span(reference, 0, 1, label="PER"),
+            Span(reference, 3, 4, label="LOC"),
+        ]
+
+        reference._.rel = [RelationItem(dep=0, dest=1, relation=rel)]
+
+        examples.append(Example(predicted, reference))
+
+    _, llm = nlp.pipeline[0]
+    task: RELTask = llm._task
+
+    assert set(task._label_dict.values()) == set()
+    nlp.initialize(lambda: examples)
+    assert set(task._label_dict.values()) == {"LivesIn", "Visits"}

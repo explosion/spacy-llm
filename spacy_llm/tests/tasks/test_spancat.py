@@ -479,7 +479,7 @@ def test_example_not_following_basemodel():
 
 
 @pytest.fixture
-def noop_no_labels_config():
+def noop_config():
     return """
     [nlp]
     lang = "en"
@@ -493,6 +493,7 @@ def noop_no_labels_config():
 
     [components.llm.task]
     @llm_tasks = "spacy.SpanCat.v2"
+    labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -504,10 +505,9 @@ def noop_no_labels_config():
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_spancat_scoring(noop_no_labels_config, n_detections):
+def test_spancat_scoring(noop_config, n_detections):
 
-    config = Config().from_str(noop_no_labels_config)
-    config["components"]["llm"]["task"]["labels"] = ["PER", "ORG", "LOC"]
+    config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
     examples = []
@@ -528,9 +528,10 @@ def test_spancat_scoring(noop_no_labels_config, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-def test_spancat_init(noop_no_labels_config):
+def test_spancat_init(noop_config):
 
-    config = Config().from_str(noop_no_labels_config)
+    config = Config().from_str(noop_config)
+    del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
 
     examples = []

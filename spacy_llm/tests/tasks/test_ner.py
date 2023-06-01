@@ -671,7 +671,7 @@ Here is the text: Alice and Bob went to the supermarket
 
 
 @pytest.fixture
-def noop_no_label_config():
+def noop_config():
     return """
     [nlp]
     lang = "en"
@@ -697,9 +697,9 @@ def noop_no_label_config():
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_ner_scoring(noop_no_label_config, n_detections):
+def test_ner_scoring(noop_config, n_detections):
 
-    config = Config().from_str(noop_no_label_config)
+    config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
     examples = []
@@ -720,9 +720,9 @@ def test_ner_scoring(noop_no_label_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-def test_ner_init(noop_no_label_config):
+def test_ner_init(noop_config):
 
-    config = Config().from_str(noop_no_label_config)
+    config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
 

@@ -2,7 +2,9 @@ from typing import Callable, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
+from spacy.language import Language
 from spacy.tokens import Doc
+from spacy.training import Example
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
@@ -58,7 +60,7 @@ _DEFAULT_REL_TEMPLATE = read_template("rel")
 
 @registry.llm_tasks("spacy.REL.v1")
 def make_rel_task(
-    labels: Union[List[str], str],
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -83,7 +85,7 @@ class RELTask:
 
     def __init__(
         self,
-        labels: List[str],
+        labels: List[str] = [],
         template: str = _DEFAULT_REL_TEMPLATE,
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[RELExample]] = None,
@@ -116,7 +118,7 @@ class RELTask:
             )
             yield prompt
 
-    def _format_response(self, response: str) -> Iterable[RelationItem]:
+    def _format_response(self, response: str) -> List[RelationItem]:
         """Parse raw string response into a structured format"""
         relations = []
         for line in response.strip().split("\n"):
@@ -139,3 +141,38 @@ class RELTask:
             rels = self._format_response(prompt_response)
             doc._.rel = rels
             yield doc
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Language,
+        labels: List[str] = [],
+    ) -> None:
+        """Initialize the SpanCat task, by auto-discovering labels.
+
+        Labels can be set through, by order of precedence:
+
+        - the `[initialize]` section of the pipeline configuration
+        - the `labels` argument supplied to the task factory
+        - the labels found in the examples
+
+        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
+            for initialization.
+        nlp (Language): Language instance.
+        labels (List[str]): Optional list of labels.
+        """
+        examples = get_examples()
+
+        if not labels:
+            labels = list(self._label_dict.values())
+
+        if not labels:
+            label_set = set()
+
+            for eg in examples:
+                rels: List[RelationItem] = eg.reference._.rel
+                for rel in rels:
+                    label_set.add(rel.relation)
+            labels = list(label_set)
+
+        self._label_dict = {self._normalizer(label): label for label in labels}

@@ -706,7 +706,7 @@ You need to increase the temperature when baking, it looks undercooked.
 
 
 @pytest.fixture
-def noop_no_labels_config():
+def noop_config():
     return """
     [nlp]
     lang = "en"
@@ -730,9 +730,9 @@ def noop_no_labels_config():
 
 
 @pytest.mark.parametrize("init_from_config", [True, False])
-def test_textcat_init(noop_no_labels_config, init_from_config: bool):
+def test_textcat_init(noop_config, init_from_config: bool):
 
-    config = Config().from_str(noop_no_labels_config)
+    config = Config().from_str(noop_config)
     if init_from_config:
         config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
     nlp = assemble_from_config(config)
