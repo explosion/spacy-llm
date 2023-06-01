@@ -59,7 +59,7 @@ class AnthropicBackend(Backend):
         model = self._config["model"]
         if model not in self.supported_models:
             raise ValueError(
-                f"The specified model '{model}' is not supported by the /v1/completions endpoint. "
+                f"The specified model '{model}' is not supported by the /v1/complete endpoint. "
                 f"Choices are: {sorted(list(self.supported_models))} ."
                 "(See the Anthropic API documentation: https://console.anthropic.com/docs/api/reference)"
             )
@@ -96,29 +96,27 @@ class AnthropicBackend(Backend):
                 raise ValueError(
                     f"Request to Anthropic API failed: {res_content.get('error', {})}"
                 ) from ex
-            responses = r.json()
+            response = r.json()
 
             # c.f. https://console.anthropic.com/docs/api/errors
-            if "error" in responses:
+            if "error" in response:
                 if self._strict:
-                    raise ValueError(f"API call failed: {responses}.")
+                    raise ValueError(f"API call failed: {response}.")
                 else:
                     assert isinstance(prompts, Sized)
-                    return {"error": [srsly.json_dumps(responses)] * len(prompts)}
-            return responses
+                    return {"error": [srsly.json_dumps(response)] * len(prompts)}
+            return response
 
         responses = [
             _request({"prompt": f"{Speaker.HUMAN} {prompt}{Speaker.ASST}"})
             for prompt in prompts
         ]
 
-        if "error" in responses:
-            return responses["error"]
-        assert len(responses["choices"]) == len(prompts)
-
         for response in responses:
             if "completion" in response:
                 api_responses.append(response["completion"])
             else:
                 api_responses.append(srsly.json_dumps(response))
+
+        assert len(api_responses) == len(prompts)
         return api_responses
