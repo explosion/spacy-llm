@@ -815,22 +815,17 @@ by setting the environmental variable `HF_HOME`.
 
 To use this backend, ideally you have a GPU enabled and have installed
 
-- `transformers`
+- `transformers[sentencepiece]`
 - `torch`
 - CUDA
-- `protobuf<3.21`
-- `sentencepiece>=0.1,<0.2`
   in your virtual environment.
 
 ```shell
 python -m pip install "torch>=1.13.1,<2.0"
-python -m pip install "transformers>=4.28.1,<5.0"
-python -m pip install "protobuf<3.21"
-python -m pip install "sentencepiece>=0.1,<0.2"
+python -m pip install "transformers[sentencepiece]>=4.0.0,<5.0"
 # Or install with spacy-llm directly
 python -m pip install "spacy-llm[transformers]"
-python -m pip install "protobuf<3.21"
-python -m pip install "sentencepiece>=0.1,<0.2"
+python -m pip install "transformers[sentencepiece]>=4.0.0,<5.0"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
