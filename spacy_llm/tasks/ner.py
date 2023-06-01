@@ -4,6 +4,7 @@ from spacy.scorer import get_ner_prf
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import filter_spans
+from spacy.language import Language
 
 from ..compat import Literal
 from ..registry import registry
@@ -115,7 +116,7 @@ class NERTask(SpanTask):
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
-        nlp: Iterable["Example"],
+        nlp: Language,
         labels: List[str] = [],
         **kwargs: Any,
     ):

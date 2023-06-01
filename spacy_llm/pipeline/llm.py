@@ -7,7 +7,7 @@ from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.training import Example
-from spacy.ty import InitializableComponent
+from spacy.ty import InitializableComponent as Initializable
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
@@ -169,10 +169,10 @@ class LLMWrapper(Pipe):
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
-        nlp: Iterable["Example"],
+        nlp: Language,
         **kwargs: Any,
     ):
-        if isinstance(self._task, InitializableComponent):
+        if isinstance(self._task, Initializable):
             self._task.initialize(
                 get_examples=get_examples,
                 nlp=nlp,

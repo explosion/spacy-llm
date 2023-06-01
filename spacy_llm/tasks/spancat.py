@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
 from spacy.training import Example
+from spacy.language import Language
 
 from ..compat import Literal
 from ..registry import registry
@@ -127,7 +128,7 @@ class SpanCatTask(SpanTask):
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
-        nlp: Iterable["Example"],
+        nlp: Language,
         labels: List[str] = [],
         **kwargs: Any,
     ):
