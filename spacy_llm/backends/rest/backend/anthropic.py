@@ -108,7 +108,7 @@ class AnthropicBackend(Backend):
             return responses
 
         responses = [
-            _request({"prompt": f"{Speaker.HUMAN}{prompt}{Speaker.ASST}"})
+            _request({"prompt": f"{Speaker.HUMAN} {prompt}{Speaker.ASST}"})
             for prompt in prompts
         ]
 
