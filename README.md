@@ -341,7 +341,6 @@ examples = null
 | `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
 | `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
 
-
 The NER task implementation doesn't currently ask the LLM for specific offsets, but simply expects a list of strings that represent the enties in the document.
 This means that a form of string matching is required. This can be configured by the following parameters:
 
@@ -761,7 +760,7 @@ Note that Hugging Face will download this model the first time you use it - you 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.spacy.StableLM_HF.v1.v1
+#### spacy.StableLM_HF.v1.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 
@@ -812,7 +811,7 @@ Note that Hugging Face will download this model the first time you use it - you 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.spacy.OpenLLaMaHF.v1.v1
+#### spacy.OpenLLaMaHF.v1.v1
 
 To use this backend, ideally you have a GPU enabled and have installed
 
