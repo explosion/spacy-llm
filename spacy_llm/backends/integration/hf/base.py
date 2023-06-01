@@ -30,7 +30,7 @@ class HuggingFaceBackend(abc.ABC):
         """
         self._model_name = model
         self._config = config
-        assert len(self._config) == 0 or all([key in ("init", "run") for key in config])
+        assert len(self._config) == 0 or set(config.keys()) == {"init", "run"}
 
         # Init HF model.
         HuggingFaceBackend.check_installation()
