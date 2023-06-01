@@ -1,9 +1,9 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
+from spacy.language import Language
 from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
 from spacy.training import Example
-from spacy.language import Language
 
 from ..compat import Literal
 from ..registry import registry
@@ -131,7 +131,7 @@ class SpanCatTask(SpanTask):
         nlp: Language,
         labels: List[str] = [],
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the NER task, by auto-discovering labels.
 
         Labels can be set through, by order of precedence:
@@ -139,6 +139,11 @@ class SpanCatTask(SpanTask):
         - the `[initialize]` section of the pipeline configuration
         - the `labels` argument supplied to the task factory
         - the labels found in the examples
+
+        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
+            for initialization.
+        nlp (Language): Language instance.
+        labels (List[str]): Optional list of labels.
         """
         examples = get_examples()
 
