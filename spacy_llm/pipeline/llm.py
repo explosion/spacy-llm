@@ -1,16 +1,6 @@
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Union, cast
 
 import spacy
 from spacy.language import Language
