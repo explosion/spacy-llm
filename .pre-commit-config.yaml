@@ -3,12 +3,26 @@ repos:
     rev: 'v0.0.259'
     hooks:
     - id: ruff
+
+- repo: https://github.com/pycqa/isort
+  rev: 5.12.0
+  hooks:
+    - id: isort
+      name: isort (python)
+    - id: isort
+      name: isort (cython)
+      types: [cython]
+    - id: isort
+      name: isort (pyi)
+      types: [pyi]
+
 -   repo: https://github.com/ambv/black
     rev: 22.3.0
     hooks:
     - id: black
       entry: black spacy_llm
       additional_dependencies: ['click==8.0.4']
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.1.1
     hooks:
