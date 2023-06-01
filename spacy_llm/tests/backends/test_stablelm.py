@@ -1,13 +1,13 @@
 import copy
 
-import spacy
 import pytest
+import spacy
 from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "backend": {
-        "@llm_backends": "spacy.StableLMHF.v1",
+        "@llm_backends": "spacy.StableLM_HF.v1",
         "model": "stabilityai/stablelm-base-alpha-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -28,7 +28,7 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends = "spacy.StableLMHF.v1"
+@llm_backends = "spacy.StableLM_HF.v1"
 model = "stabilityai/stablelm-base-alpha-3b"
 """
 
@@ -44,7 +44,7 @@ def test_init(model: str):
     """
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["backend"]["model"] = "stabilityai/stablelm-tuned-alpha-3b"
+    cfg["backend"]["model"] = model
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 

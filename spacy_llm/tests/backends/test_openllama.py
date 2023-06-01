@@ -1,13 +1,13 @@
 import copy
 
-import spacy
 import pytest
+import spacy
 from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "backend": {
-        "@llm_backends": "spacy.OpenLLaMaHF.v1",
+        "@llm_backends": "spacy.OpenLLaMa_HF.v1",
         "model": "openlm-research/open_llama_3b_350bt_preview",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -28,7 +28,7 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends = spacy.OpenLLaMaHF.v1
+@llm_backends = spacy.OpenLLaMa_HF.v1
 model = "openlm-research/open_llama_3b_350bt_preview"
 """
 

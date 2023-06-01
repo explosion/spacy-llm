@@ -1,10 +1,10 @@
-from typing import Iterable, Callable, Any, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
-from spacy.util import SimpleFrozenList, SimpleFrozenDict
+from spacy.util import SimpleFrozenDict, SimpleFrozenList
 
-from .base import HuggingFaceBackend
-from ....compat import transformers, torch
+from ....compat import torch, transformers
 from ....registry.util import registry
+from .base import HuggingFaceBackend
 
 
 class OpenLLaMaBackend(HuggingFaceBackend):
@@ -74,7 +74,7 @@ class OpenLLaMaBackend(HuggingFaceBackend):
         }
 
 
-@registry.llm_backends("spacy.OpenLLaMaHF.v1")
+@registry.llm_backends("spacy.OpenLLaMa_HF.v1")
 def backend_openllama_hf(
     model: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),

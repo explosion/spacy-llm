@@ -1,8 +1,10 @@
 import abc
 import warnings
-from typing import Iterable, TypeVar, Any, Dict
-from ....compat import has_torch, has_transformers, has_accelerate, torch
+from typing import Any, Dict, Iterable, TypeVar
+
 from thinc.compat import has_torch_cuda_gpu
+
+from ....compat import has_accelerate, has_torch, has_transformers, torch
 
 # Type of prompts returned from Task.generate_prompts().
 _PromptType = TypeVar("_PromptType")
@@ -43,7 +45,7 @@ class HuggingFaceBackend(abc.ABC):
     def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
         """Executes prompts on specified API.
         prompts (Iterable[_PromptType]): Prompts to execute.
-        RETURNS (Iterable[__ResponseType]): API responses.
+        RETURNS (Iterable[_ResponseType]): API responses.
         """
 
     @property

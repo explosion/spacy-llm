@@ -1,14 +1,13 @@
-from typing import Iterable, Callable, Any, Dict
+from typing import Any, Callable, Dict, Iterable
 
-from spacy.util import SimpleFrozenList, SimpleFrozenDict
+from spacy.util import SimpleFrozenDict, SimpleFrozenList
 
-
-from . import HuggingFaceBackend
 from ....compat import transformers
 from ....registry.util import registry
+from . import HuggingFaceBackend
 
 
-class DollyHFBackend(HuggingFaceBackend):
+class DollyBackend(HuggingFaceBackend):
     def init_model(self) -> Any:
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
@@ -54,6 +53,7 @@ class DollyHFBackend(HuggingFaceBackend):
 
 
 @registry.llm_backends("spacy.DollyHF.v1")
+@registry.llm_backends("spacy.Dolly_HF.v1")
 def backend_dolly_hf(
     model: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),
@@ -63,7 +63,7 @@ def backend_dolly_hf(
     config (Dict[Any, Any]): config arguments passed on to the initialization of transformers.pipeline instance.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
-    return DollyHFBackend(
+    return DollyBackend(
         model=model,
         config=config,
     )

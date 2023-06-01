@@ -1,10 +1,10 @@
-from typing import Iterable, Callable, Any, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
-from spacy.util import SimpleFrozenList, SimpleFrozenDict
+from spacy.util import SimpleFrozenDict, SimpleFrozenList
 
-from .base import HuggingFaceBackend
-from ....compat import transformers, torch, has_transformers
+from ....compat import has_transformers, torch, transformers
 from ....registry.util import registry
+from .base import HuggingFaceBackend
 
 if has_transformers:
 
@@ -19,7 +19,7 @@ if has_transformers:
             return False
 
 
-class StableLMHFBackend(HuggingFaceBackend):
+class StableLMBackend(HuggingFaceBackend):
     _SYSTEM_PROMPT = """
 <|SYSTEM|># StableLM Tuned (Alpha version)
 - StableLM is a helpful and harmless open-source AI language model developed by StabilityAI.
@@ -65,7 +65,7 @@ class StableLMHFBackend(HuggingFaceBackend):
                 prompts
                 if not self._is_tuned
                 else [
-                    f"{StableLMHFBackend._SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
+                    f"{StableLMBackend._SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
                     for prompt in prompts
                 ]
             )
@@ -107,7 +107,7 @@ class StableLMHFBackend(HuggingFaceBackend):
         }
 
 
-@registry.llm_backends("spacy.StableLMHF.v1")
+@registry.llm_backends("spacy.StableLM_HF.v1")
 def backend_stablelm_hf(
     model: str,
     config: Dict[Any, Any] = SimpleFrozenDict(),
@@ -117,7 +117,7 @@ def backend_stablelm_hf(
     config (Dict[Any, Any]): config arguments passed on to the initialization of transformers.pipeline instance.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
-    return StableLMHFBackend(
+    return StableLMBackend(
         model=model,
         config=config,
     )

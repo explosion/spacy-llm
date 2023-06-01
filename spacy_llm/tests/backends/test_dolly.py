@@ -1,13 +1,13 @@
 import copy
 
-import spacy
 import pytest
+import spacy
 from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "backend": {
-        "@llm_backends": "spacy.DollyHF.v1",
+        "@llm_backends": "spacy.Dolly_HF.v1",
         "model": "databricks/dolly-v2-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -29,16 +29,21 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 model = "databricks/dolly-v2-3b"
 """
 
 
+@pytest.mark.parametrize("backend", ("spacy.Dolly_HF.v1", "spacy.Dolly_HF.v1"))
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init():
-    """Test initialization and simple run"""
+def test_init(backend: str):
+    """Test initialization and simple run.
+    backend (str): Name of backend to use.
+    """
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=_PIPE_CFG)
+    cfg = copy.deepcopy(_PIPE_CFG)
+    cfg["backend"]["@llm_backends"] = backend
+    nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
 
