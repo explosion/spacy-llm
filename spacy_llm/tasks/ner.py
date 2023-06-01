@@ -26,10 +26,7 @@ def make_ner_task(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
-    if labels:
-        labels_list = split_labels(labels)
-    else:
-        labels_list = []
+    labels_list = split_labels(labels)
 
     span_examples = (
         [SpanExample(**eg) for eg in examples()] if callable(examples) else examples
