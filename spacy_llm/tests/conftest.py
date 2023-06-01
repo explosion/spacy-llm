@@ -1,6 +1,9 @@
 import os
+from typing import Iterable
 
 import pytest
+
+from spacy_llm.registry.util import registry
 
 
 def pytest_addoption(parser):
@@ -30,3 +33,11 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "external" in item.keywords:
             item.add_marker(skip_external)
+
+
+@registry.llm_backends("test.NoOpBackend.v1")
+def noop_factory(output: str = ""):
+    def noop(prompts: Iterable[str]) -> Iterable[str]:
+        return [output] * len(list(prompts))
+
+    return noop

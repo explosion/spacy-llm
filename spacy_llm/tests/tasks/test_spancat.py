@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Iterable
 
 import pytest
 import spacy
@@ -10,12 +9,7 @@ from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import (
-    fewshot_reader,
-    lowercase_normalizer,
-    registry,
-    strip_normalizer,
-)
+from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
 from spacy_llm.tasks import make_spancat_task_v2
 from spacy_llm.tasks.spancat import SpanCatTask
 from spacy_llm.tasks.util import find_substrings
@@ -484,20 +478,36 @@ def test_example_not_following_basemodel():
             )
 
 
-@registry.llm_backends("Dummy")
-def factory():
-    def b(prompts: Iterable[str]) -> Iterable[str]:
-        for _ in prompts:
-            yield ("PER: Alice,Bob")
+@pytest.fixture
+def noop_no_labels_config():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
 
-    return b
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.SpanCat.v2"
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "test.NoOpBackend.v1"
+    output = "PER: Bob,Alice"
+    """
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_spancat_scoring(zeroshot_cfg_string, n_detections):
+def test_spancat_scoring(noop_no_labels_config, n_detections):
 
-    config = Config().from_str(zeroshot_cfg_string)
-    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    config = Config().from_str(noop_no_labels_config)
+    config["components"]["llm"]["task"]["labels"] = ["PER", "ORG", "LOC"]
     nlp = assemble_from_config(config)
 
     examples = []
@@ -518,11 +528,9 @@ def test_spancat_scoring(zeroshot_cfg_string, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-def test_spancat_init(zeroshot_cfg_string):
+def test_spancat_init(noop_no_labels_config):
 
-    config = Config().from_str(zeroshot_cfg_string)
-    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
-    del config["components"]["llm"]["task"]["labels"]
+    config = Config().from_str(noop_no_labels_config)
     nlp = assemble_from_config(config)
 
     examples = []
