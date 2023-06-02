@@ -1,4 +1,5 @@
-from spacy import util
+from spacy_llm.util import assemble_from_config
+from spacy.util import load_config_from_str
 from spacy_streamlit import visualize_ner, visualize_textcat
 import streamlit as st
 import os
@@ -20,7 +21,7 @@ api = "OpenAI"
 config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 
 [components.llm.task]
-@llm_tasks = "spacy.NER.v1"
+@llm_tasks = "spacy.NER.v2"
 labels = PERSON,ORGANISATION,LOCATION
 examples = null
 
@@ -45,7 +46,7 @@ api = "OpenAI"
 config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 
 [components.llm.task]
-@llm_tasks = "spacy.TextCat.v1"
+@llm_tasks = "spacy.TextCat.v2"
 labels = COMPLIMENT,INSULT
 examples = null
 exclusive_classes = true
@@ -75,13 +76,10 @@ os.environ["OPENAI_API_KEY"] = st.text_input(
 text = st.text_area("Text to analyze", DEFAULT_TEXT, height=70)
 
 if os.environ["OPENAI_API_KEY"]:
-    textcat_config = util.load_config(
-        "usage_examples/streamlit/openai_textcat_zeroshot.cfg"
-    )
-    textcat_model = util.load_model_from_config(textcat_config, auto_fill=True)
-
-    ner_config = util.load_config("usage_examples/streamlit/openai_ner_zeroshot.cfg")
-    ner_model = util.load_model_from_config(ner_config, auto_fill=True)
+    textcat_config = load_config_from_str(TEXTCAT_CONFIG)
+    textcat_model = assemble_from_config(textcat_config)
+    ner_config = load_config_from_str(NER_CONFIG)
+    ner_model = assemble_from_config(ner_config)
 
     models = {"textcat": textcat_model, "ner": ner_model}
     model_names = models.keys()
@@ -90,7 +88,9 @@ if os.environ["OPENAI_API_KEY"]:
 
     nlp = models[selected_model]
     doc = nlp(text)
-    prompt = "\n".join([str(prompt) for prompt in nlp.get_pipe("llm")._template([doc])])
+    prompt = "\n".join(
+        [str(prompt) for prompt in nlp.get_pipe("llm")._task.generate_prompts([doc])]
+    )
 
     if selected_model == "textcat":
         visualize_textcat(doc)
