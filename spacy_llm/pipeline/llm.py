@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import spacy
+from spacy import util
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
@@ -11,7 +12,7 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LLMTask, PromptExecutor, validate_types
+from ..ty import Cache, LLMTask, PromptExecutor, Serializable, validate_types
 
 
 class CacheConfigType(TypedDict):
@@ -171,21 +172,53 @@ class LLMWrapper(Pipe):
 
         return final_docs
 
-    def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
+    def to_bytes(
+        self,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
 
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-        return b""
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
+        serialize = {}
+
+        task = self._task
+        backend = self._backend
+
+        if isinstance(task, Serializable):
+            serialize["task"] = lambda: task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(backend, Serializable):
+            serialize["backend"] = lambda: backend.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(
+        self,
+        bytes_data: bytes,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
 
         bytes_data (bytes): The data to load.
-        exclude (Tuple): Names of properties to exclude from deserialization.
+        exclude (Tuple[str]): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
+
+        deserialize = {}
+
+        task = self._task
+        backend = self._backend
+
+        if isinstance(task, Serializable):
+            deserialize["task"] = lambda b: task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(backend, Serializable):
+            deserialize["backend"] = lambda b: backend.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+
+        util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(
