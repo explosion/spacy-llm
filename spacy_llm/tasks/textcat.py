@@ -2,11 +2,11 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from pydantic import BaseModel
+from spacy.language import Language
 from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
-from spacy.language import Language
 
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
@@ -32,6 +32,32 @@ def make_textcat_task(
     allow_none: bool = True,
     verbose: bool = False,
 ) -> "TextCatTask":
+    """TextCat.v1 task factory.
+
+    You can use either binary or multilabel text classification based on the
+    labels you provide.
+
+    If a single label is provided, binary classification
+    will be used. The label will get a score of `0` or `1` in `doc.cats`.
+
+    Otherwise, multilabel classification will be used. The document labels
+    in `doc.cats` will be a dictionary of strings and their score.
+
+    Lastly, you can toggle between exclusive or no-exclusive text
+    categorization by passing a flag to the `exclusive_classes` parameter.
+
+    labels (str): Comma-separated list of labels to pass to the template.
+        This task assumes binary classification if a single label is provided.
+        Leave empty to populate it at initialization time (only if examples are provided).
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+        reads a file containing task examples for few-shot learning. If None is
+        passed, then zero-shot learning will be used.
+    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    exclusive_classes (bool): If True, require the language model to suggest only one
+        label per class. This is automatically set when using binary classification.
+    allow_none (bool): if True, there might be cases where no label is applicable.
+    verbose (bool): If True, show extra information.
+    """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     textcat_examples = (
@@ -58,6 +84,34 @@ def make_textcat_task_v2(
     allow_none: bool = True,
     verbose: bool = False,
 ) -> "TextCatTask":
+    """TextCat.v2 task factory.
+
+    You can use either binary or multilabel text classification based on the
+    labels you provide.
+
+    If a single label is provided, binary classification
+    will be used. The label will get a score of `0` or `1` in `doc.cats`.
+
+    Otherwise, multilabel classification will be used. The document labels
+    in `doc.cats` will be a dictionary of strings and their score.
+
+    Lastly, you can toggle between exclusive or no-exclusive text
+    categorization by passing a flag to the `exclusive_classes` parameter.
+
+    labels (Union[List[str], str]): List of labels to pass to the template,
+        either an actual list or a comma-separated string.
+        This task assumes binary classification if a single label is provided.
+        Leave empty to populate it at initialization time (only if examples are provided).
+    template (str): Prompt template passed to the model.
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+        reads a file containing task examples for few-shot learning. If None is
+        passed, then zero-shot learning will be used.
+    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    exclusive_classes (bool): If True, require the language model to suggest only one
+        label per class. This is automatically set when using binary classification.
+    allow_none (bool): if True, there might be cases where no label is applicable.
+    verbose (bool): If True, show extra information.
+    """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     textcat_examples = (
@@ -85,11 +139,43 @@ def make_textcat_task_v3(
     allow_none: bool = True,
     verbose: bool = False,
 ) -> "TextCatTask":
+    """TextCat.v3 task factory.
+
+    You can use either binary or multilabel text classification based on the
+    labels you provide.
+
+    If a single label is provided, binary classification
+    will be used. The label will get a score of `0` or `1` in `doc.cats`.
+
+    Otherwise, multilabel classification will be used. The document labels
+    in `doc.cats` will be a dictionary of strings and their score.
+
+    Lastly, you can toggle between exclusive or no-exclusive text
+    categorization by passing a flag to the `exclusive_classes` parameter.
+
+    labels (Union[List[str], str]): List of labels to pass to the template,
+        either an actual list or a comma-separated string.
+        This task assumes binary classification if a single label is provided.
+        Leave empty to populate it at initialization time (only if examples are provided).
+    template (str): Prompt template passed to the model.
+    label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
+        These descriptions are added to the prompt to help instruct the LLM on what to extract.
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+        reads a file containing task examples for few-shot learning. If None is
+        passed, then zero-shot learning will be used.
+    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    exclusive_classes (bool): If True, require the language model to suggest only one
+        label per class. This is automatically set when using binary classification.
+    allow_none (bool): if True, there might be cases where no label is applicable.
+    verbose (bool): If True, show extra information.
+    """
+
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     textcat_examples = (
         [TextCatExample(**eg) for eg in raw_examples] if raw_examples else None
     )
+
     return TextCatTask(
         labels=labels_list,
         template=template,
@@ -122,15 +208,15 @@ class TextCatTask:
         If a single label is provided, binary classification
         will be used. The label will get a score of `0` or `1` in `doc.cats`.
 
-        If a comma-separated list of labels is provided, multilabel
-        classification will be used. The document labels in `doc.cats` will be a
-        dictionary of strings and their score.
+        Otherwise, multilabel classification will be used. The document labels
+        in `doc.cats` will be a dictionary of strings and their score.
 
         Lastly, you can toggle between exclusive or no-exclusive text
         categorization by passing a flag to the `exclusive_classes` parameter.
 
-        labels (str): Comma-separated list of labels to pass to the template. This task
+        labels (List[str]): List of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
+            Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
