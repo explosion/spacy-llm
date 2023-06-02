@@ -17,18 +17,20 @@ export OPENAI_API_ORG="org-..."
 Then, you can run the pipeline on a sample text via:
 
 ```sh
-python run_textcat_openai_pipeline.py [TEXT] [PATH TO CONFIG]
+python run_pipeline.py [TEXT] [PATH TO CONFIG] [PATH TO FILE WITH EXAMPLES]
 ```
 
 For example:
 
 ```sh
-python run_textcat_openai_pipeline.py \
-    "You look great today! Nice shirt!" \
-    ./openai_textcat_zeroshot.cfg
+python run_pipeline.py "You look great today! Nice shirt!" ./zeroshot.cfg
+```
+or, for few-shot:
+```sh
+python run_pipeline.py "You look great today! Nice shirt!" ./fewshot.cfg ./examples.jsonl
 ```
 
 You can also include examples to perform few-shot annotation. To do so, use the 
-`openai_textcat_fewshot.cfg` file instead. You can find the few-shot examples in
-the `textcat_examples.jsonl` file. Feel free to change and update it to your liking.
+`fewshot.cfg` file instead. You can find the few-shot examples in
+the `examples.jsonl` file. Feel free to change and update it to your liking.
 We also support other file formats, including `.yml`, `.yaml` and `.json`.

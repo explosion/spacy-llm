@@ -9,11 +9,11 @@ def strip_normalizer() -> Callable[[str], str]:
 
     RETURNS (Callable[[str], str])
     """
+    return _strip
 
-    def noop(s: str) -> str:
-        return s.strip()
 
-    return noop
+def _strip(s: str) -> str:
+    return s.strip()
 
 
 @registry.misc("spacy.LowercaseNormalizer.v1")
@@ -22,8 +22,8 @@ def lowercase_normalizer() -> Callable[[str], str]:
 
     RETURNS (Callable[[str], str])
     """
+    return _lowercase_strip
 
-    def lowercase(s: str) -> str:
-        return s.strip().lower()
 
-    return lowercase
+def _lowercase_strip(s: str) -> str:
+    return s.strip().lower()

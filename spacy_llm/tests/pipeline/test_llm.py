@@ -8,12 +8,14 @@ import pytest
 import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
+from thinc.api import NumpyOps, get_current_ops
 
 import spacy_llm
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from spacy_llm.tasks import NoopTask
+from spacy_llm.tasks import make_noop_task
 
+from ...cache import BatchCache
 from ..compat import has_openai_key
 
 
@@ -40,14 +42,24 @@ def test_llm_init(nlp):
     assert ["llm"] == nlp.pipe_names
 
 
-def test_llm_pipe(nlp):
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_llm_pipe(nlp: Language, n_process: int):
     """Test call .pipe()."""
-    docs = list(nlp.pipe(texts=["This is a test", "This is another test"]))
+    ops = get_current_ops()
+    if not isinstance(ops, NumpyOps) and n_process != 1:
+        pytest.skip("Only test multiple processes on CPU")
+    docs = list(
+        nlp.pipe(texts=["This is a test", "This is another test"], n_process=n_process)
+    )
     assert len(docs) == 2
 
 
-def test_llm_pipe_with_cache(tmp_path: Path):
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_llm_pipe_with_cache(tmp_path: Path, n_process: int):
     """Test call .pipe() with pre-cached docs"""
+    ops = get_current_ops()
+    if not isinstance(ops, NumpyOps) and n_process != 1:
+        pytest.skip("Only test multiple processes on CPU")
 
     path = tmp_path / "cache"
 
@@ -72,7 +84,7 @@ def test_llm_pipe_with_cache(tmp_path: Path):
     texts = [cached_text, "This is a test", "This is another test"]
 
     # Run it again, along with other documents
-    docs = list(nlp.pipe(texts=texts))
+    docs = list(nlp.pipe(texts=texts, n_process=n_process))
     assert [doc.text for doc in docs] == texts
 
 
@@ -83,9 +95,9 @@ def test_llm_pipe_empty(nlp):
 
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
-        task=NoopTask(),
+        task=make_noop_task(),
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
+        cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
     llm.from_bytes(llm.to_bytes())
@@ -93,9 +105,9 @@ def test_llm_serialize_bytes():
 
 def test_llm_serialize_disk():
     llm = LLMWrapper(
-        task=NoopTask(),
+        task=make_noop_task(),
         backend=None,  # type: ignore
-        cache={"path": None, "batch_size": 0, "max_batches_in_mem": 0},
+        cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
 

@@ -1,0 +1,67 @@
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+{# whitespace #}
+{# whitespace #}
+{%- if labels|length == 1 -%}
+{%- set label = labels[0] -%}
+Classify whether the text below belongs to the {{ label }} category or not.
+If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer `NEG`.
+Do not put any other text in your answer, only one of 'POS' or 'NEG' with nothing before or after.
+{%- else -%}
+Classify the text below to any of the following labels: {{ labels|join(", ") }}
+{# whitespace #}
+{# whitespace #}
+{%- if exclusive_classes -%}
+The task is exclusive, so only choose one label from what I provided.
+Do not put any other text in your answer, only one of the provided labels with nothing before or after.
+{%- else -%}
+The task is non-exclusive, so you can provide more than one label as long as
+they're comma-delimited. For example: Label1, Label2, Label3.
+Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
+{%- if allow_none -%}
+{# whitespace #}
+If the text cannot be classified into any of the provided labels, answer `==NONE==`.
+{%- endif -%}
+{%- endif -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{%- if label_definitions -%}
+{# whitespace #}
+{# whitespace #}
+Below are definitions of each label to help aid you in correctly classifying the text.
+Assume these definitions are written by an expert and follow them closely.
+{# whitespace #}
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{{ example.answer }}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+{# whitespace #}
+Here is the text that needs classification
+{# whitespace #}
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''

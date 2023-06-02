@@ -1,0 +1,47 @@
+{%- if labels|length == 1 -%}
+{%- set label = labels[0] -%}
+Classify whether the text below belongs to the {{ label }} category or not.
+If it is a {{ label }}, answer `POS`. If it is not a {{ label }}, answer `NEG`.
+{%- else -%}
+Classify the text below to any of the following labels: {{ labels|join(", ") }}
+{# whitespace #}
+{%- if exclusive_classes -%}
+{# whitespace #}
+The task is exclusive, so only choose one label from what I provided.
+{%- else -%}
+{# whitespace #}
+The task is non-exclusive, so you can provide more than one label as long as
+they're comma-delimited. For example: Label1, Label2, Label3.
+{%- if allow_none -%}
+{# whitespace #}
+If the text cannot be classified into any of the provided labels, answer `==NONE==`.
+{%- endif -%}
+{%- endif -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{{ example.answer }}
+{# whitespace #}
+{%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+{# whitespace #}
+Here is the text that needs classification
+{# whitespace #}
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''

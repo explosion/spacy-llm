@@ -15,8 +15,13 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:^.*pkg_resources.*:DeprecationWarning",
-    "ignore::sqlalchemy.exc.MovedIn20Warning"
+    "ignore:.*function is now available as sqlalchemy.orm.declarative_base().*:",
+    "ignore:^.*You are trying to use a chat model. This way of initializing it is no longer supported. Instead, please use.*:UserWarning",
 ]
-markers =[
+markers = [
     "external: interacts with a (potentially cost-incurring) third-party API"
 ]
+
+[tool.isort]
+multi_line_output = 9
+profile = "black"

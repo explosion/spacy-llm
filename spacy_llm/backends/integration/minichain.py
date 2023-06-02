@@ -2,8 +2,9 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
-from ..compat import has_minichain, minichain
-from ..registry import registry
+from . import Backend
+from ...compat import has_minichain, minichain
+from ...registry import registry
 
 
 def _check_installation() -> None:
@@ -55,15 +56,14 @@ def backend_minichain(
     """
     _check_installation()
 
+    if "model" not in config:
+        raise ValueError("The LLM model must be specified in the config.")
+
     if hasattr(minichain.backend, api):
-        backend = getattr(minichain.backend, api)(**config)
-
-        query_fn = query_minichain() if query is None else query
-
-        def _query(prompts: Iterable[str]) -> Iterable[str]:
-            return query_fn(backend, prompts)
-
-        return _query
+        return Backend(
+            integration=getattr(minichain.backend, api)(**config),
+            query=query_minichain() if query is None else query,
+        )
     else:
         raise KeyError(
             f"The requested API {api} is not available in `minichain.backend`."

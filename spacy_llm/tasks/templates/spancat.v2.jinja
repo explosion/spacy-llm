@@ -1,0 +1,52 @@
+You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
+The entities you extract for each label can overlap with each other.
+From the Text input provided, extract named entities for each label in the following format:
+{# whitespace #}
+{# whitespace #}
+{%- for label in labels -%}
+{{ label }}: <comma delimited list of strings>
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- if label_definitions -%}
+Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
+{# whitespace #}
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+{# whitespace #}
+{%- if examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{%- for label, substrings in example.entities.items() -%}
+{# whitespace #}
+{{ label }}: {{ ', '.join(substrings) }}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''

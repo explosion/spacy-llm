@@ -2,12 +2,26 @@ import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
 
+import numpy
 import srsly  # type: ignore[import]
 from spacy.tokens import Doc, DocBin
 from spacy.vocab import Vocab
 
+from .registry import registry
 
-class Cache:
+
+@registry.llm_misc("spacy.BatchCache.v1")
+def make_cache(
+    path: Optional[Union[str, Path]],
+    batch_size: int,
+    max_batches_in_mem: int,
+):
+    return BatchCache(
+        path=path, batch_size=batch_size, max_batches_in_mem=max_batches_in_mem
+    )
+
+
+class BatchCache:
     """Utility class handling caching functionality for the `llm` component."""
 
     _INDEX_NAME: str = "index.jsonl"
@@ -17,13 +31,11 @@ class Cache:
         path: Optional[Union[str, Path]],
         batch_size: int,
         max_batches_in_mem: int,
-        vocab: Vocab,
     ):
         """Initialize Cache instance.
-        path (Path): Cache directory.
+        path (Optional[Union[str,Path]]): Cache directory.
         batch_size (int): Number of docs in one batch (file).
         max_batches_in_mem (int): Max. number of batches to hold in memory.
-        vocab (Vocab): Vocab object.
         """
         self._path = Path(path) if path else None
 
@@ -31,7 +43,7 @@ class Cache:
         self._batch_size = batch_size
         # Max. number of batches to keep in memory.
         self.max_batches_in_mem = max_batches_in_mem
-        self._vocab = vocab
+        self._vocab: Optional[Vocab] = None
 
         # Stores doc hash -> batch hash to allow efficient lookup of available Docs.
         self._doc2batch: Dict[int, int] = {}
@@ -44,12 +56,28 @@ class Cache:
         # Statistics.
         self._stats: Dict[str, int] = {
             "hit": 0,
+            "hit_contains": 0,
             "missed": 0,
+            "missed_contains": 0,
             "added": 0,
             "persisted": 0,
         }
 
         self._init_cache_index()
+
+    @property
+    def vocab(self) -> Optional[Vocab]:
+        """Vocab used for deserializing docs.
+        RETURNS (Vocab): Vocab used for deserializing docs.
+        """
+        return self._vocab
+
+    @vocab.setter
+    def vocab(self, vocab: Vocab) -> None:
+        """Set vocab to use for deserializing docs.
+        vocab (Vocab): Vocab to use for deserializing docs.
+        """
+        self._vocab = vocab
 
     def _init_cache_index(self) -> None:
         """Init cache index and directory."""
@@ -74,7 +102,7 @@ class Cache:
         RETURNS (Path): Full path to index file.
         """
         assert self._path is not None
-        return self._path / Cache._INDEX_NAME
+        return self._path / BatchCache._INDEX_NAME
 
     def _batch_path(self, batch_id: int) -> Path:
         """Returns full path to batch file.
@@ -90,7 +118,7 @@ class Cache:
         doc (Doc): Doc to generate a unique ID for.
         RETURN (int): Unique ID for this doc.
         """
-        return sum(token.orth for token in doc)
+        return numpy.sum(doc.to_array(["ORTH"]), dtype=numpy.uint64).item()
 
     @staticmethod
     def _batch_id(doc_ids: Iterable[int]) -> int:
@@ -98,7 +126,9 @@ class Cache:
         doc_ids (Iterable[int]): doc ids
         RETURN (int): Unique ID for this batch.
         """
-        return sum(doc_id for doc_id in doc_ids)
+        return numpy.sum(
+            numpy.asarray(doc_ids, dtype=numpy.uint64), dtype=numpy.uint64
+        ).item()
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc. Note: Adding a doc does _not_ mean that this doc is immediately persisted to disk. This
@@ -140,9 +170,9 @@ class Cache:
         RETURNS (bool): Whether doc has been processed and cached.
         """
         if self._doc_id(doc) not in self._doc2batch:
-            self._stats["missed"] += 1
+            self._stats["missed_contains"] += 1
             return False
-        self._stats["hit"] += 1
+        self._stats["hit_contains"] += 1
         return True
 
     def __getitem__(self, doc: Doc) -> Optional[Doc]:
@@ -167,6 +197,11 @@ class Cache:
                 raise ValueError(
                     "Cache directory path was not configured. Documents can't be read from cache."
                 )
+            if self._vocab is None:
+                raise ValueError(
+                    "Vocab must be set in order to Cache.__get_item__() to work."
+                )
+
             # Discard batch, if maximal number of batches would be exceeded otherwise.
             if len(self._loaded_docs) == self.max_batches_in_mem:
                 self._loaded_docs.pop(self._batch_hashes[0])

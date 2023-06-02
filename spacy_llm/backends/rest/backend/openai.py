@@ -1,16 +1,17 @@
 import os
 from enum import Enum
-from typing import Dict, Iterable, List, Any, Sized
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
+from requests import HTTPError
 
 from .base import Backend
 
 
 class Endpoints(str, Enum):
-    chat = "https://api.openai.com/v1/chat/completions"
-    non_chat = "https://api.openai.com/v1/completions"
+    CHAT = "https://api.openai.com/v1/chat/completions"
+    NON_CHAT = "https://api.openai.com/v1/completions"
 
 
 class OpenAIBackend(Backend):
@@ -20,21 +21,21 @@ class OpenAIBackend(Backend):
         RETURNS (Dict[str, str]): Supported models with their endpoints.
         """
         return {
-            "gpt-4": Endpoints.chat.value,
-            "gpt-4-0314": Endpoints.chat.value,
-            "gpt-4-32k": Endpoints.chat.value,
-            "gpt-4-32k-0314": Endpoints.chat.value,
-            "gpt-3.5-turbo": Endpoints.chat.value,
-            "gpt-3.5-turbo-0301": Endpoints.chat.value,
-            "text-davinci-003": Endpoints.non_chat.value,
-            "text-davinci-002": Endpoints.non_chat.value,
-            "text-curie-001": Endpoints.non_chat.value,
-            "text-babbage-001": Endpoints.non_chat.value,
-            "text-ada-001": Endpoints.non_chat.value,
-            "davinci": Endpoints.non_chat.value,
-            "curie": Endpoints.non_chat.value,
-            "babbage": Endpoints.non_chat,
-            "ada": Endpoints.non_chat.value,
+            "gpt-4": Endpoints.CHAT.value,
+            "gpt-4-0314": Endpoints.CHAT.value,
+            "gpt-4-32k": Endpoints.CHAT.value,
+            "gpt-4-32k-0314": Endpoints.CHAT.value,
+            "gpt-3.5-turbo": Endpoints.CHAT.value,
+            "gpt-3.5-turbo-0301": Endpoints.CHAT.value,
+            "text-davinci-003": Endpoints.NON_CHAT.value,
+            "text-davinci-002": Endpoints.NON_CHAT.value,
+            "text-curie-001": Endpoints.NON_CHAT.value,
+            "text-babbage-001": Endpoints.NON_CHAT.value,
+            "text-ada-001": Endpoints.NON_CHAT.value,
+            "davinci": Endpoints.NON_CHAT.value,
+            "curie": Endpoints.NON_CHAT.value,
+            "babbage": Endpoints.NON_CHAT.value,
+            "ada": Endpoints.NON_CHAT.value,
         }
 
     @property
@@ -58,10 +59,10 @@ class OpenAIBackend(Backend):
         if api_org:
             headers["OpenAI-Organization"] = api_org
         r = self.retry(
-            lambda: requests.get(
-                "https://api.openai.com/v1/models",
-                headers=headers,
-            ),
+            call_method=requests.get,
+            url="https://api.openai.com/v1/models",
+            headers=headers,
+            timeout=self._max_request_time,
         )
         if r.status_code == 422:
             raise ValueError(
@@ -70,7 +71,7 @@ class OpenAIBackend(Backend):
             )
         elif r.status_code != 200:
             raise ValueError(
-                "Error accessing api.openai.com" f"{r.status_code}: {r.text}"
+                f"Error accessing api.openai.com ({r.status_code}): {r.text}"
             )
 
         response = r.json()["data"]
@@ -84,7 +85,14 @@ class OpenAIBackend(Backend):
             raise ValueError(
                 f"The specified model '{model}' is not supported by the /v1/completions endpoint. "
                 f"Choices are: {sorted(list(self.supported_models))} ."
-                "(See OpenAI API documentation: https://platform.openai.com/docs/models/gpt-3)"
+                "(See OpenAI API documentation: https://platform.openai.com/docs/models/)"
+            )
+
+        # Ensure endpoint is supported.
+        url = self._url if self._url else self.supported_models[self._config["model"]]
+        if url not in (Endpoints.NON_CHAT, Endpoints.CHAT):
+            raise ValueError(
+                f"Endpoint {url} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
             )
 
         assert api_key is not None
@@ -101,14 +109,20 @@ class OpenAIBackend(Backend):
 
         def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
             r = self.retry(
-                lambda: requests.post(
-                    url,
-                    headers=headers,
-                    json={**json_data, **self._config},
-                    timeout=self._timeout,
-                ),
+                call_method=requests.post,
+                url=url,
+                headers=headers,
+                json={**json_data, **self._config},
+                timeout=self._max_request_time,
             )
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except HTTPError as ex:
+                res_content = srsly.json_loads(r.content.decode("utf-8"))
+                # Include specific error message in exception.
+                raise ValueError(
+                    f"Request to OpenAI API failed: {res_content.get('error', {}).get('message', str(res_content))}"
+                ) from ex
             responses = r.json()
 
             if "error" in responses:
@@ -120,7 +134,7 @@ class OpenAIBackend(Backend):
 
             return responses
 
-        if url == Endpoints.chat:
+        if url == Endpoints.CHAT:
             # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
             for prompt in prompts:
                 responses = _request(
@@ -138,7 +152,7 @@ class OpenAIBackend(Backend):
                     )
                 )
 
-        elif url == Endpoints.non_chat:
+        elif url == Endpoints.NON_CHAT:
             responses = _request({"prompt": prompts})
             if "error" in responses:
                 return responses["error"]

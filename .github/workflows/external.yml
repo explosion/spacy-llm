@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 env:
+  MODULE_NAME: 'spacy_llm'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  TEST_EXTERNAL: 1
 
 jobs:
   run:
@@ -21,19 +23,39 @@ jobs:
           python-version: 3.9
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Build sdist
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          python -m pip install -U build pip setuptools
+          python -m build --sdist
+
+      - name: Delete source directory
+        shell: bash
+        run: |
+          rm -rf $MODULE_NAME
+
+      - name: Install from sdist
+        shell: bash
+        run: |
+          SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+          python -m pip install dist/$SDIST
+
+      - name: Test import
+        shell: bash
+        run: |
+          python -c "import $MODULE_NAME" -Werror
+
+      - name: Install test requirements
+        run: |
+          python -m spacy download en_core_web_md
+          python -m pip install -U -r requirements.txt -r requirements-dev.txt
 
       - name: Run tests
         shell: bash
-        run: pytest spacy_llm/tests --external
+        run: python -m pytest --pyargs $MODULE_NAME -x
 
       - name: Run usage tests
         shell: bash
-        run: pytest usage_examples --external
+        run: python -m pytest --pyargs usage_examples -x
 
 #      - name: Report Status
 #        if: always()
