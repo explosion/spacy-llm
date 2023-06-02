@@ -749,3 +749,29 @@ def test_ner_init(noop_config):
     assert set(task._label_dict.values()) == set()
     nlp.initialize(lambda: examples)
     assert set(task._label_dict.values()) == {"PER", "LOC"}
+
+
+def test_ner_serde(noop_config):
+
+    config = Config().from_str(noop_config)
+    del config["components"]["llm"]["task"]["labels"]
+
+    nlp1 = assemble_from_config(config)
+    nlp2 = assemble_from_config(config)
+
+    labels = {"loc": "LOC", "per": "PER"}
+
+    task1: NERTask = nlp1.get_pipe("llm")._task
+    task2: NERTask = nlp2.get_pipe("llm")._task
+
+    # Artificially add labels to task1
+    task1._label_dict = labels
+
+    assert task1._label_dict == labels
+    assert task2._label_dict == dict()
+
+    b = nlp1.to_bytes()
+    nlp2.from_bytes(b)
+
+    assert task1._label_dict == labels
+    assert task2._label_dict == labels
