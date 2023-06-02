@@ -14,7 +14,7 @@ class Endpoints(str, Enum):
 
 
 class Speaker(str, Enum):
-    """Specifies the prompt prefix for engineering Claude-style prompts
+    """Specifies the prompt prefix for Claude
     c.f. https://console.anthropic.com/docs/prompt-design#what-is-a-prompt
     """
 
@@ -87,7 +87,6 @@ class AnthropicBackend(Backend):
                 json={**json_data, **self._config},
                 timeout=self._max_request_time,
             )
-
             try:
                 r.raise_for_status()
             except HTTPError as ex:
