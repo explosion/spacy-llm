@@ -25,7 +25,7 @@ def make_spancat_task(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
-    """SpanCat task factory
+    """SpanCat.v1 task factory.
 
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
@@ -70,7 +70,7 @@ def make_spancat_task_v2(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
-    """SpanCat task factory
+    """SpanCat.v2 task factory.
 
     labels (Union[str, List[str]]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
