@@ -130,7 +130,7 @@ def make_textcat_task_v2(
 
 @registry.llm_tasks("spacy.TextCat.v3")
 def make_textcat_task_v3(
-    labels: Union[List[str], str],
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -191,7 +191,7 @@ def make_textcat_task_v3(
 class TextCatTask:
     def __init__(
         self,
-        labels: List[str],
+        labels: List[str] = [],
         template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[TextCatExample]] = None,
