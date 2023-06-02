@@ -3,12 +3,13 @@ from typing import Any, Callable, Dict, Iterable, Type
 
 from spacy.util import SimpleFrozenDict
 
-from . import base, openai, noop
+from . import anthropic, base, openai, noop
 from ...registry import registry
 
 
 supported_apis: Dict[str, Type[base.Backend]] = {
     "OpenAI": openai.OpenAIBackend,
+    "Anthropic": anthropic.AnthropicBackend,
     "NoOp": noop.NoOpBackend,
 }
 
