@@ -67,6 +67,24 @@ def make_rel_task(
     normalizer: Optional[Callable[[str], str]] = None,
     verbose: bool = False,
 ) -> "RELTask":
+    """REL.v1 task factory.
+
+    The REL task populates a `Doc._.rel` custom attribute.
+
+    labels (List[str]): List of labels to pass to the template,
+        either an actual list or a comma-separated string.
+        Leave empty to populate it at initialization time (only if examples are provided).
+    template (str): Prompt template passed to the model.
+    label_definitions (Optional[Dict[str, str]]): Map of label -> description
+        of the label to help the language model output the entities wanted.
+        It is usually easier to provide these definitions rather than
+        full examples, although both can be provided.
+    examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
+        reads a file containing task examples for few-shot learning. If None is
+        passed, then zero-shot learning will be used.
+    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    verbose (bool): Controls the verbosity of the task.
+    """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     rel_examples = [RELExample(**eg) for eg in raw_examples] if raw_examples else None
@@ -81,8 +99,6 @@ def make_rel_task(
 
 
 class RELTask:
-    """Simple REL task. Populates a `Doc._.rel` custom attribute."""
-
     def __init__(
         self,
         labels: List[str] = [],
@@ -92,6 +108,21 @@ class RELTask:
         normalizer: Optional[Callable[[str], str]] = None,
         verbose: bool = False,
     ):
+        """Default REL task. Populates a `Doc._.rel` custom attribute.
+
+        labels (List[str]): List of labels to pass to the template.
+            Leave empty to populate it at initialization time (only if examples are provided).
+        template (str): Prompt template passed to the model.
+        label_definitions (Optional[Dict[str, str]]): Map of label -> description
+            of the label to help the language model output the entities wanted.
+            It is usually easier to provide these definitions rather than
+            full examples, although both can be provided.
+        examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
+            reads a file containing task examples for few-shot learning. If None is
+            passed, then zero-shot learning will be used.
+        normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+        verbose (bool): Controls the verbosity of the task.
+        """
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {self._normalizer(label): label for label in labels}
         self._template = template
