@@ -202,7 +202,7 @@ my_other_config_val = 0.3
 
 ## Logging
 
-spacy-llm has a built-in logger that can log the actual prompt sent to the Backend LLM as well as the raw response sent back from the LLM. This logger uses the debug level and by default has no handlers configured.
+spacy-llm has a built-in logger that can log the actual prompt sent to the Backend LLM as well as the raw response sent back from the LLM. This logger uses the debug level and by default has a `logging.NullHandler()` configured.
 
 In order to use this logger, you can setup a simple handler like this:
 
@@ -215,7 +215,7 @@ spacy_llm.logger.addHandler(logging.StreamHandler())
 spacy_llm.logger.setLevel(logging.DEBUG)
 ```
 
-> NOTE: Any `logging` handler will work here so you probably want to use some sort of `FileHandler` as the generated prompts can be quite long, especially for tasks with few-shot examples
+> NOTE: Any `logging` handler will work here so you probably want to use some sort of rotating `FileHandler` as the generated prompts can be quite long, especially for tasks with few-shot examples.
 
 
 Then when using the pipeline you'll be able to view the prompt and response.
@@ -258,7 +258,7 @@ Backend response for doc: You look gorgeous!
 COMPLIMENT
 ```
 
-And your standard print output
+And the `print` of doc.cats to standard output should look like:
 
 ```
 {'COMPLIMENT': 1.0, 'INSULT': 0.0}
