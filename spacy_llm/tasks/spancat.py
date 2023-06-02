@@ -106,6 +106,16 @@ def make_spancat_task_v2(
 
 
 class SpanCatTask(SpanTask):
+    PLAIN_CONFIG_KEYS: List[str] = [
+        "_spans_key",
+        "_label_dict",
+        "_template",
+        "_label_definitions",
+        "_alignment_mode",
+        "_case_sensitive_matching",
+        "_single_match",
+    ]
+
     def __init__(
         self,
         labels: List[str] = [],

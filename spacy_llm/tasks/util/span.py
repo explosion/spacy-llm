@@ -1,6 +1,8 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 import jinja2
+import srsly
+from spacy import util
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal
@@ -11,6 +13,15 @@ from .parsing import find_substrings
 
 class SpanTask:
     """Base class for Span-related tasks, eg NER and SpanCat."""
+
+    PLAIN_CONFIG_KEYS: List[str] = [
+        "_label_dict",
+        "_template",
+        "_label_definitions",
+        "_alignment_mode",
+        "_case_sensitive_matching",
+        "_single_match",
+    ]
 
     def __init__(
         self,
@@ -103,3 +114,62 @@ class SpanTask:
 
             self.assign_spans(doc, spans)
             yield doc
+
+    def to_bytes(
+        self,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
+        """Serialize the LLMWrapper to a bytestring.
+
+        exclude (Tuple): Names of properties to exclude from serialization.
+        RETURNS (bytes): The serialized object.
+        """
+
+        def serialize_plain_config():
+            plain = {key: getattr(self, key) for key in self.PLAIN_CONFIG_KEYS}
+            return srsly.json_dumps(plain)
+
+        def serialize_examples():
+            if self._examples is None:
+                return srsly.json_dumps(None)
+            examples = [eg.dict() for eg in self._examples]
+            return srsly.json_dumps(examples)
+
+        serialize = {
+            "plain": serialize_plain_config,
+            "examples": serialize_examples,
+        }
+
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(
+        self,
+        bytes_data: bytes,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> "SpanTask":
+        """Load the Task from a bytestring.
+
+        bytes_data (bytes): The data to load.
+        exclude (Tuple[str]): Names of properties to exclude from deserialization.
+        RETURNS (SpanTask): Modified SpanTask instance.
+        """
+
+        def deserialize_plain_config(b: bytes):
+            plain = srsly.json_loads(b)
+            for key, value in plain.items():
+                setattr(self, key, value)
+
+        def deserialize_examples(b: bytes):
+            examples = srsly.json_loads(b)
+            if examples is not None:
+                self._examples = [SpanExample.parse_obj(eg) for eg in examples]
+
+        deserialize = {
+            "plain": deserialize_plain_config,
+            "examples": deserialize_examples,
+        }
+
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
