@@ -161,7 +161,9 @@ def test_type_checking_invalid(noop_config) -> None:
 
 
 @pytest.mark.parametrize("use_pipe", [True, False])
-def test_llm_logs_at_debug_level(nlp: Language, use_pipe: bool, caplog):
+def test_llm_logs_at_debug_level(
+    nlp: Language, use_pipe: bool, caplog: pytest.LogCaptureFixture
+):
     with caplog.at_level(logging.INFO):
         if use_pipe:
             doc = next(nlp.pipe(["This is a test"]))
@@ -185,7 +187,7 @@ def test_llm_logs_at_debug_level(nlp: Language, use_pipe: bool, caplog):
     assert f"Backend response for doc: {doc.text}" in caplog.text
 
 
-def test_llm_logs_default_null_handler(nlp: Language, capsys):
+def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixture):
 
     doc = nlp("This is a test")
 
@@ -207,23 +209,8 @@ def test_llm_logs_default_null_handler(nlp: Language, capsys):
     # Remove the Stream Handler from the spacy_llm logger
     spacy_llm.logger.removeHandler(stream_handler)
 
-    #     if use_pipe:
-    #         doc = next(nlp.pipe(["This is a test"]))
-    #     else:
-    #         doc = nlp("This is a test")
-
-    # assert "spacy_llm" not in caplog.text
-    # assert doc.text not in caplog.text
-
-    # with caplog.at_level(logging.DEBUG):
-    #     if use_pipe:
-    #         doc = next(nlp.pipe(["This is a test"]))
-    #     else:
-    #         doc = nlp("This is a test")
-
-    # assert "spacy_llm" in caplog.text
-    # assert doc.text in caplog.text
-
-    # assert f"Generated prompt for doc: {doc.text}" in caplog.text
-    # assert "Don't do anything" in caplog.text
-    # assert f"Backend response for doc: {doc.text}" in caplog.text
+    doc = nlp("This is a test with no handler")
+    captured = capsys.readouterr()
+    assert f"Generated prompt for doc: {doc.text}" not in captured.out
+    assert "Don't do anything" not in captured.out
+    assert f"Backend response for doc: {doc.text}" not in captured.out
