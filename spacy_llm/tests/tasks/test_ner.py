@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -772,5 +773,39 @@ def test_ner_serde(noop_config):
 
     b = nlp1.to_bytes()
     nlp2.from_bytes(b)
+
+    assert task1._label_dict == task2._label_dict == labels
+
+
+def test_ner_to_disk(noop_config, tmp_path: Path):
+
+    config = Config().from_str(noop_config)
+    del config["components"]["llm"]["task"]["labels"]
+
+    nlp1 = assemble_from_config(config)
+    nlp2 = assemble_from_config(config)
+
+    labels = {"loc": "LOC", "per": "PER"}
+
+    task1: NERTask = nlp1.get_pipe("llm")._task
+    task2: NERTask = nlp2.get_pipe("llm")._task
+
+    # Artificially add labels to task1
+    task1._label_dict = labels
+
+    assert task1._label_dict == labels
+    assert task2._label_dict == dict()
+
+    path = tmp_path / "model"
+
+    nlp1.to_disk(path)
+
+    cfgs = list(path.rglob("cfg.json"))
+    assert len(cfgs) == 1
+
+    cfg = json.loads(cfgs[0].read_text())
+    assert cfg["_label_dict"] == {"loc": "LOC", "per": "PER"}
+
+    nlp2.from_disk(path)
 
     assert task1._label_dict == task2._label_dict == labels
