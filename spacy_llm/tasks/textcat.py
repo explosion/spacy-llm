@@ -8,6 +8,8 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
+from spacy_llm.tasks.util.serialization import SerializableTask
+
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
@@ -188,7 +190,18 @@ def make_textcat_task_v3(
     )
 
 
-class TextCatTask:
+class TextCatTask(SerializableTask[TextCatExample]):
+
+    _CFG_KEYS = [
+        "_template",
+        "_label_dict",
+        "_label_definitions",
+        "_use_binary",
+        "_exclusive_classes",
+        "_allow_none",
+        "_verbose",
+    ]
+
     def __init__(
         self,
         labels: List[str] = [],

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Iterable
 
@@ -766,3 +767,40 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
+
+
+def test_textcat_serde(noop_config, tmp_path: Path):
+
+    config = Config().from_str(noop_config)
+
+    nlp1 = assemble_from_config(config)
+    nlp2 = assemble_from_config(config)
+    nlp3 = assemble_from_config(config)
+
+    labels = {"insult": "INSULT", "compliment": "COMPLIMENT"}
+
+    task1: TextCatTask = nlp1.get_pipe("llm")._task
+    task2: TextCatTask = nlp2.get_pipe("llm")._task
+    task3: TextCatTask = nlp3.get_pipe("llm")._task
+
+    # Artificially add labels to task1
+    task1._label_dict = labels
+
+    assert task1._label_dict == labels
+    assert task2._label_dict == dict()
+    assert task3._label_dict == dict()
+
+    path = tmp_path / "model"
+
+    nlp1.to_disk(path)
+
+    cfgs = list(path.rglob("cfg.json"))
+    assert len(cfgs) == 1
+
+    cfg = json.loads(cfgs[0].read_text())
+    assert cfg["_label_dict"] == labels
+
+    nlp2.from_disk(path)
+    nlp3.from_bytes(nlp1.to_bytes())
+
+    assert task1._label_dict == task2._label_dict == task3._label_dict == labels

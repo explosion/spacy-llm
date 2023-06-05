@@ -804,7 +804,7 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     assert len(cfgs) == 1
 
     cfg = json.loads(cfgs[0].read_text())
-    assert cfg["_label_dict"] == {"loc": "LOC", "per": "PER"}
+    assert cfg["_label_dict"] == labels
 
     nlp2.from_disk(path)
 
