@@ -11,6 +11,7 @@ from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
+from .util import SerializableTask
 
 
 class RelationItem(BaseModel):
@@ -98,7 +99,17 @@ def make_rel_task(
     )
 
 
-class RELTask:
+class RELTask(SerializableTask[RELExample]):
+
+    _Example = RELExample
+
+    _CFG_KEYS = [
+        "_label_dict",
+        "_template",
+        "_label_definitions",
+        "_verbose",
+    ]
+
     def __init__(
         self,
         labels: List[str] = [],
@@ -192,6 +203,8 @@ class RELTask:
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
         """
+        self._check_rel_extention()
+
         examples = get_examples()
 
         if not labels:
