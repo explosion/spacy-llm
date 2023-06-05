@@ -1,4 +1,3 @@
-from functools import partial
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, cast
 
@@ -11,49 +10,6 @@ from ...compat import Literal
 from ...registry import lowercase_normalizer
 from .examples import SpanExample
 from .parsing import find_substrings
-
-
-def serialize_cfg(task: "SpanTask", cfg_keys: List[str]) -> str:
-    """Serialize task config.
-
-    task (SpanTask): Task to serialize config from.
-    cfg_keys (List[str]): Keys to serialize.
-    """
-    cfg = {key: getattr(task, key) for key in cfg_keys}
-    return srsly.json_dumps(cfg)
-
-
-def deserialize_cfg(b: str, task: "SpanTask") -> None:
-    """Deserialize task config from bytes.
-
-    b (str): serialized config.
-    task (SpanTask): Task to set the config on.
-    """
-    cfg = srsly.json_loads(b)
-    for key, value in cfg.items():
-        setattr(task, key, value)
-
-
-def serialize_examples(task: "SpanTask") -> str:
-    """Serialize examples.
-
-    task (SpanTask): Task to serialize examples from.
-    """
-    if task._examples is None:
-        return srsly.json_dumps(None)
-    examples = [eg.dict() for eg in task._examples]
-    return srsly.json_dumps(examples)
-
-
-def deserialize_examples(b: str, task: "SpanTask"):
-    """Deserialize examples from bytes.
-
-    b (str): serialized examples.
-    task (SpanTask): Task to set the examples on.
-    """
-    examples = srsly.json_loads(b)
-    if examples is not None:
-        task._examples = [SpanExample.parse_obj(eg) for eg in examples]
 
 
 class SpanTask:
@@ -160,6 +116,39 @@ class SpanTask:
             self.assign_spans(doc, spans)
             yield doc
 
+    def serialize_cfg(self) -> str:
+        """Serialize task config.
+
+        cfg_keys (List[str]): Keys to serialize.
+        """
+        cfg = {key: getattr(self, key) for key in self._CFG_KEYS}
+        return srsly.json_dumps(cfg)
+
+    def deserialize_cfg(self, b: str) -> None:
+        """Deserialize task config from bytes.
+
+        b (str): serialized config.
+        """
+        cfg = srsly.json_loads(b)
+        for key, value in cfg.items():
+            setattr(self, key, value)
+
+    def serialize_examples(self) -> str:
+        """Serialize examples."""
+        if self._examples is None:
+            return srsly.json_dumps(None)
+        examples = [eg.dict() for eg in self._examples]
+        return srsly.json_dumps(examples)
+
+    def deserialize_examples(self, b: str) -> None:
+        """Deserialize examples from bytes.
+
+        b (str): serialized examples.
+        """
+        examples = srsly.json_loads(b)
+        if examples is not None:
+            self._examples = [SpanExample.parse_obj(eg) for eg in examples]
+
     def to_bytes(
         self,
         *,
@@ -172,8 +161,8 @@ class SpanTask:
         """
 
         serialize = {
-            "cfg": partial(serialize_cfg, task=self, cfg_keys=self._CFG_KEYS),
-            "examples": partial(serialize_examples, task=self),
+            "cfg": self.serialize_cfg,
+            "examples": self.serialize_examples,
         }
 
         return util.to_bytes(serialize, exclude)
@@ -192,8 +181,8 @@ class SpanTask:
         """
 
         deserialize = {
-            "cfg": partial(deserialize_cfg, task=self),
-            "examples": partial(deserialize_examples, task=self),
+            "cfg": lambda b: self.deserialize_cfg(b),
+            "examples": lambda b: self.deserialize_examples(b),
         }
 
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -212,10 +201,8 @@ class SpanTask:
         """
 
         serialize = {
-            "cfg.json": lambda p: p.write_text(
-                serialize_cfg(task=self, cfg_keys=self._CFG_KEYS)
-            ),
-            "examples.json": lambda p: p.write_text(serialize_examples(task=self)),
+            "cfg.json": lambda p: p.write_text(self.serialize_cfg()),
+            "examples.json": lambda p: p.write_text(self.serialize_examples()),
         }
 
         util.to_disk(path, serialize, exclude)
@@ -233,8 +220,8 @@ class SpanTask:
         """
 
         deserialize = {
-            "cfg.json": lambda p: deserialize_cfg(p.read_text(), task=self),
-            "examples.json": lambda p: deserialize_examples(p.read_text(), task=self),
+            "cfg.json": lambda p: self.deserialize_cfg(p.read_text()),
+            "examples.json": lambda p: self.deserialize_examples(p.read_text()),
         }
 
         util.from_disk(path, deserialize, exclude)
