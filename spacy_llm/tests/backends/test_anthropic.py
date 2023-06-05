@@ -3,8 +3,8 @@ import pytest
 from typing import Iterable
 
 from spacy.tokens import Doc
+from spacy_llm import registry
 
-from ...registry import registry
 from ..compat import has_anthropic_key
 
 PIPE_CFG = {
