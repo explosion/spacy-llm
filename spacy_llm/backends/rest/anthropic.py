@@ -13,8 +13,8 @@ class Endpoints(str, Enum):
     COMPLETIONS = "https://api.anthropic.com/v1/complete"
 
 
-class Speaker(str, Enum):
-    """Specifies the prompt prefix for Claude
+class SystemPrompt(str, Enum):
+    """Specifies the system prompt for Claude
     c.f. https://console.anthropic.com/docs/prompt-design#what-is-a-prompt
     """
 
@@ -111,7 +111,7 @@ class AnthropicBackend(Backend):
         # errors. In practice, you can adjust _max_request_time so that the
         # timeout is larger.
         responses = [
-            _request({"prompt": f"{Speaker.HUMAN} {prompt}{Speaker.ASST}"})
+            _request({"prompt": f"{SystemPrompt.HUMAN} {prompt}{SystemPrompt.ASST}"})
             for prompt in prompts
         ]
 
