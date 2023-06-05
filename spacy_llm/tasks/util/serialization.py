@@ -108,7 +108,7 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         """
 
         serialize = {
-            "cfg.json": lambda p: p.write_text(self.serialize_cfg()),
+            "cfg": lambda p: srsly.write_json(p, self.serialize_cfg()),
             "examples.json": lambda p: p.write_text(self.serialize_examples()),
         }
 
