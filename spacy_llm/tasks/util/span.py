@@ -1,3 +1,5 @@
+from functools import partial
+from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 import jinja2
@@ -9,6 +11,49 @@ from ...compat import Literal
 from ...registry import lowercase_normalizer
 from .examples import SpanExample
 from .parsing import find_substrings
+
+
+def serialize_cfg(task: "SpanTask", cfg_keys: List[str]) -> str:
+    """Serialize task config.
+
+    task (SpanTask): Task to serialize config from.
+    cfg_keys (List[str]): Keys to serialize.
+    """
+    cfg = {key: getattr(task, key) for key in cfg_keys}
+    return srsly.json_dumps(cfg)
+
+
+def deserialize_cfg(b: bytes, task: "SpanTask"):
+    """Deserialize task config from bytes.
+
+    b (bytes): bytes representing the config.
+    task (SpanTask): Task to set the config on.
+    """
+    cfg = srsly.json_loads(b)
+    for key, value in cfg.items():
+        setattr(task, key, value)
+
+
+def deserialize_examples(b: bytes, task: "SpanTask"):
+    """Deserialize examples from bytes.
+
+    b (bytes): bytes representing the examples.
+    task (SpanTask): Task to set the examples on.
+    """
+    examples = srsly.json_loads(b)
+    if examples is not None:
+        task._examples = [SpanExample.parse_obj(eg) for eg in examples]
+
+
+def serialize_examples(task: "SpanTask") -> str:
+    """Serialize examples.
+
+    task (SpanTask): Task to serialize examples from.
+    """
+    if task._examples is None:
+        return srsly.json_dumps(None)
+    examples = [eg.dict() for eg in task._examples]
+    return srsly.json_dumps(examples)
 
 
 class SpanTask:
@@ -126,19 +171,9 @@ class SpanTask:
         RETURNS (bytes): The serialized object.
         """
 
-        def serialize_cfg():
-            cfg = {key: getattr(self, key) for key in self._CFG_KEYS}
-            return srsly.json_dumps(cfg)
-
-        def serialize_examples():
-            if self._examples is None:
-                return srsly.json_dumps(None)
-            examples = [eg.dict() for eg in self._examples]
-            return srsly.json_dumps(examples)
-
         serialize = {
-            "cfg": serialize_cfg,
-            "examples": serialize_examples,
+            "cfg": partial(serialize_cfg, task=self, cfg_keys=self._CFG_KEYS),
+            "examples": partial(serialize_examples, task=self),
         }
 
         return util.to_bytes(serialize, exclude)
@@ -156,20 +191,51 @@ class SpanTask:
         RETURNS (SpanTask): Modified SpanTask instance.
         """
 
-        def deserialize_cfg(b: bytes):
-            cfg = srsly.json_loads(b)
-            for key, value in cfg.items():
-                setattr(self, key, value)
-
-        def deserialize_examples(b: bytes):
-            examples = srsly.json_loads(b)
-            if examples is not None:
-                self._examples = [SpanExample.parse_obj(eg) for eg in examples]
-
         deserialize = {
-            "cfg": deserialize_cfg,
-            "examples": deserialize_examples,
+            "cfg": partial(deserialize_cfg, task=self),
+            "examples": partial(deserialize_examples, task=self),
         }
 
         util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(
+        self,
+        path: Path,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> None:
+        """Serialize the task to disk.
+
+        path (Path): A path (currently unused).
+        exclude (Tuple): Names of properties to exclude from serialization.
+        """
+
+        serialize = {
+            "cfg.json": lambda p: p.write_text(
+                serialize_cfg(task=self, cfg_keys=self._CFG_KEYS)
+            ),
+            "examples.bin": lambda p: p.write_bytes(serialize_examples(task=self)),
+        }
+
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(
+        self,
+        path: Path,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> "SpanTask":
+        """Deserialize the task from disk.
+
+        path (Path): A path (currently unused).
+        exclude (Tuple): Names of properties to exclude from serialization.
+        """
+
+        deserialize = {
+            "cfg.json": lambda p: deserialize_cfg(p.read_text(), task=self),
+            "examples.bin": lambda p: deserialize_examples(p.read_bytes(), task=self),
+        }
+
+        util.from_disk(path, deserialize, exclude)
         return self

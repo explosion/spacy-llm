@@ -228,8 +228,18 @@ class LLMWrapper(Pipe):
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-        with path.open("wb") as f:
-            f.write(self.to_bytes(exclude=exclude))
+
+        serialize = {}
+
+        task = self._task
+        backend = self._backend
+
+        if isinstance(task, Serializable):
+            serialize["task"] = lambda p: task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(backend, Serializable):
+            serialize["backend"] = lambda p: backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+
+        return util.to_disk(serialize, exclude)
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
@@ -239,5 +249,16 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
-        self.from_bytes(path.read_bytes(), exclude=exclude)
+
+        serialize = {}
+
+        task = self._task
+        backend = self._backend
+
+        if isinstance(task, Serializable):
+            serialize["task"] = lambda p: task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(backend, Serializable):
+            serialize["backend"] = lambda p: backend.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+
+        util.from_disk(path, serialize, exclude)
         return self

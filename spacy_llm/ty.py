@@ -1,6 +1,7 @@
 import inspect
 import typing
 import warnings
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 from typing import cast
 
@@ -34,6 +35,22 @@ class Serializable(Protocol):
         *,
         exclude: Tuple[str] = cast(Tuple[str], tuple()),
     ) -> bytes:
+        ...
+
+    def to_disk(
+        self,
+        path: Path,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
+        ...
+
+    def from_disk(
+        self,
+        path: Path,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ):
         ...
 
 
