@@ -14,7 +14,7 @@ from .parsing import find_substrings
 class SpanTask:
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
-    _PLAIN_CONFIG_KEYS: List[str] = [
+    _CFG_KEYS: List[str] = [
         "_label_dict",
         "_template",
         "_label_definitions",
@@ -126,9 +126,9 @@ class SpanTask:
         RETURNS (bytes): The serialized object.
         """
 
-        def serialize_plain_config():
-            plain = {key: getattr(self, key) for key in self._PLAIN_CONFIG_KEYS}
-            return srsly.json_dumps(plain)
+        def serialize_cfg():
+            cfg = {key: getattr(self, key) for key in self._CFG_KEYS}
+            return srsly.json_dumps(cfg)
 
         def serialize_examples():
             if self._examples is None:
@@ -137,7 +137,7 @@ class SpanTask:
             return srsly.json_dumps(examples)
 
         serialize = {
-            "plain": serialize_plain_config,
+            "cfg": serialize_cfg,
             "examples": serialize_examples,
         }
 
@@ -156,9 +156,9 @@ class SpanTask:
         RETURNS (SpanTask): Modified SpanTask instance.
         """
 
-        def deserialize_plain_config(b: bytes):
-            plain = srsly.json_loads(b)
-            for key, value in plain.items():
+        def deserialize_cfg(b: bytes):
+            cfg = srsly.json_loads(b)
+            for key, value in cfg.items():
                 setattr(self, key, value)
 
         def deserialize_examples(b: bytes):
@@ -167,7 +167,7 @@ class SpanTask:
                 self._examples = [SpanExample.parse_obj(eg) for eg in examples]
 
         deserialize = {
-            "plain": deserialize_plain_config,
+            "cfg": deserialize_cfg,
             "examples": deserialize_examples,
         }
 
