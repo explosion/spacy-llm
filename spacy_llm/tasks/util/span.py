@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
 from spacy.tokens import Doc, Span
@@ -12,16 +12,6 @@ from .serialization import SerializableTask
 
 class SpanTask(SerializableTask[SpanExample]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
-
-    _Example = SpanExample
-    _CFG_KEYS: List[str] = [
-        "_label_dict",
-        "_template",
-        "_label_definitions",
-        "_alignment_mode",
-        "_case_sensitive_matching",
-        "_single_match",
-    ]
 
     def __init__(
         self,
@@ -114,3 +104,18 @@ class SpanTask(SerializableTask[SpanExample]):
 
             self.assign_spans(doc, spans)
             yield doc
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_alignment_mode",
+            "_case_sensitive_matching",
+            "_single_match",
+        ]
+
+    @property
+    def _Example(self) -> Type[SpanExample]:
+        return SpanExample

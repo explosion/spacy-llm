@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -100,16 +100,6 @@ def make_rel_task(
 
 
 class RELTask(SerializableTask[RELExample]):
-
-    _Example = RELExample
-
-    _CFG_KEYS = [
-        "_label_dict",
-        "_template",
-        "_label_definitions",
-        "_verbose",
-    ]
-
     def __init__(
         self,
         labels: List[str] = [],
@@ -220,3 +210,16 @@ class RELTask(SerializableTask[RELExample]):
             labels = list(label_set)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_verbose",
+        ]
+
+    @property
+    def _Example(self) -> Type[RELExample]:
+        return RELExample

@@ -1,3 +1,4 @@
+import abc
 from pathlib import Path
 from typing import Generic, List, Optional, Tuple, Type, TypeVar, cast
 
@@ -8,17 +9,26 @@ from spacy import util
 ExampleType = TypeVar("ExampleType", bound=BaseModel)
 
 
-class SerializableTask(Generic[ExampleType]):
+class SerializableTask(abc.ABC, Generic[ExampleType]):
     """A task that can be serialized and deserialized."""
 
-    _CFG_KEYS: List[str]
-
-    _Example: Type[ExampleType]
     _examples: Optional[List[ExampleType]]
+
+    @property
+    @abc.abstractmethod
+    def _cfg_keys(self) -> List[str]:
+        """A list of configuration attributes to serialize."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def _Example(self) -> Type[ExampleType]:
+        """The example type."""
+        pass
 
     def serialize_cfg(self) -> bytes:
         """Serialize the task's configuration attributes."""
-        cfg = {key: getattr(self, key) for key in self._CFG_KEYS}
+        cfg = {key: getattr(self, key) for key in self._cfg_keys}
         return srsly.json_dumps(cfg)
 
     def deserialize_cfg(self, b: bytes) -> None:

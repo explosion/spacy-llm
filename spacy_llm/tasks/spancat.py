@@ -106,16 +106,6 @@ def make_spancat_task_v2(
 
 
 class SpanCatTask(SpanTask):
-    _CFG_KEYS: List[str] = [
-        "_spans_key",
-        "_label_dict",
-        "_template",
-        "_label_definitions",
-        "_alignment_mode",
-        "_case_sensitive_matching",
-        "_single_match",
-    ]
-
     def __init__(
         self,
         labels: List[str] = [],
@@ -213,3 +203,15 @@ class SpanCatTask(SpanTask):
             labels = list(label_set)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_spans_key",
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_alignment_mode",
+            "_case_sensitive_matching",
+            "_single_match",
+        ]

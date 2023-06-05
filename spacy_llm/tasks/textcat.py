@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 import jinja2
 from pydantic import BaseModel
@@ -191,17 +191,6 @@ def make_textcat_task_v3(
 
 
 class TextCatTask(SerializableTask[TextCatExample]):
-
-    _CFG_KEYS = [
-        "_template",
-        "_label_dict",
-        "_label_definitions",
-        "_use_binary",
-        "_exclusive_classes",
-        "_allow_none",
-        "_verbose",
-    ]
-
     def __init__(
         self,
         labels: List[str] = [],
@@ -360,3 +349,19 @@ class TextCatTask(SerializableTask[TextCatExample]):
             labels = list(label_set)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_template",
+            "_label_dict",
+            "_label_definitions",
+            "_use_binary",
+            "_exclusive_classes",
+            "_allow_none",
+            "_verbose",
+        ]
+
+    @property
+    def _Example(self) -> Type[TextCatExample]:
+        return TextCatExample
