@@ -17,7 +17,7 @@ def backend_rest(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable using minimal REST backend to prompt specified API.
     api (Union[str, Type[base.Backend]]): Name of any supported API to use. Alternatively the backend class
-        implementing REST support for this API can be supplied directly. The latter is necessary is the corresponding
+        implementing REST support for this API can be supplied directly. The latter is necessary if the corresponding
         API is not included in spacy_llm.backends.rest.registry.supported_apis.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the Backend instance.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
