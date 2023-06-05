@@ -228,7 +228,8 @@ class LLMWrapper(Pipe):
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-        return None
+        with path.open("wb") as f:
+            f.write(self.to_bytes(exclude=exclude))
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
@@ -238,4 +239,5 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
+        self.from_bytes(path.read_bytes(), exclude=exclude)
         return self
