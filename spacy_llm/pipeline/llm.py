@@ -185,13 +185,10 @@ class LLMWrapper(Pipe):
 
         serialize = {}
 
-        task = self._task
-        backend = self._backend
-
-        if isinstance(task, Serializable):
-            serialize["task"] = lambda: task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(backend, Serializable):
-            serialize["backend"] = lambda: backend.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda: self._backend.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
 
         return util.to_bytes(serialize, exclude)
 
@@ -210,13 +207,10 @@ class LLMWrapper(Pipe):
 
         deserialize = {}
 
-        task = self._task
-        backend = self._backend
-
-        if isinstance(task, Serializable):
-            deserialize["task"] = lambda b: task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(backend, Serializable):
-            deserialize["backend"] = lambda b: backend.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._task, Serializable):
+            deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            deserialize["backend"] = lambda b: self._backend.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
 
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -231,13 +225,10 @@ class LLMWrapper(Pipe):
 
         serialize = {}
 
-        task = self._task
-        backend = self._backend
-
-        if isinstance(task, Serializable):
-            serialize["task"] = lambda p: task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(backend, Serializable):
-            serialize["backend"] = lambda p: backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda p: self._backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
         return util.to_disk(path, serialize, exclude)
 
@@ -252,13 +243,10 @@ class LLMWrapper(Pipe):
 
         serialize = {}
 
-        task = self._task
-        backend = self._backend
-
-        if isinstance(task, Serializable):
-            serialize["task"] = lambda p: task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(backend, Serializable):
-            serialize["backend"] = lambda p: backend.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda p: self._backend.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
         util.from_disk(path, serialize, exclude)
         return self
