@@ -794,7 +794,7 @@ def test_textcat_serde(noop_config, tmp_path: Path):
 
     nlp1.to_disk(path)
 
-    cfgs = list(path.rglob("cfg.json"))
+    cfgs = list(path.rglob("cfg"))
     assert len(cfgs) == 1
 
     cfg = json.loads(cfgs[0].read_text())

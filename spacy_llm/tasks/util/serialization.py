@@ -1,6 +1,6 @@
 import abc
 from pathlib import Path
-from typing import Generic, List, Optional, Tuple, Type, TypeVar, cast
+from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, cast
 
 import srsly
 from pydantic import BaseModel
@@ -26,33 +26,31 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         """The example type."""
         pass
 
-    def serialize_cfg(self) -> bytes:
+    def get_cfg(self) -> Dict[str, Any]:
         """Serialize the task's configuration attributes."""
         cfg = {key: getattr(self, key) for key in self._cfg_keys}
-        return srsly.json_dumps(cfg)
+        return cfg
 
-    def deserialize_cfg(self, b: bytes) -> None:
+    def set_cfg(self, cfg: Dict[str, Any]) -> None:
         """Deserialize the task's configuration attributes.
 
-        b (bytes): serialized configuration attributes.
+        cfg (Dict[str, Any]): dictionary containing configuration attributes.
         """
-        cfg = srsly.json_loads(b)
         for key, value in cfg.items():
             setattr(self, key, value)
 
-    def serialize_examples(self) -> bytes:
+    def get_examples(self) -> Optional[List[Dict[str, Any]]]:
         """Serialize examples."""
-        if self._examples is None:
-            return srsly.json_dumps(None)
-        examples = [eg.dict() for eg in self._examples]
-        return srsly.json_dumps(examples)
+        if self._examples is not None:
+            examples = [eg.dict() for eg in self._examples]
+            return examples
+        return None
 
-    def deserialize_examples(self, b: bytes) -> None:
+    def set_examples(self, examples: Optional[List[Dict[str, Any]]]) -> None:
         """Deserialize examples from bytes.
 
-        b (bytes): serialized examples.
+        examples (Optional[List[Dict[str, Any]]]): serialized examples.
         """
-        examples = srsly.json_loads(b)
         if examples is not None:
             self._examples = [self._Example.parse_obj(eg) for eg in examples]
 
@@ -68,8 +66,8 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         """
 
         serialize = {
-            "cfg": self.serialize_cfg,
-            "examples": self.serialize_examples,
+            "cfg": lambda: srsly.json_dumps(self.get_cfg()),
+            "examples": lambda: srsly.msgpack_dumps(self.get_examples()),
         }
 
         return util.to_bytes(serialize, exclude)
@@ -88,8 +86,8 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         """
 
         deserialize = {
-            "cfg": lambda b: self.deserialize_cfg(b),
-            "examples": lambda b: self.deserialize_examples(b),
+            "cfg": lambda b: self.set_cfg(srsly.json_loads(b)),
+            "examples": lambda b: self.set_examples(srsly.msgpack_loads(b)),
         }
 
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -108,8 +106,8 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         """
 
         serialize = {
-            "cfg": lambda p: srsly.write_json(p, self.serialize_cfg()),
-            "examples.json": lambda p: p.write_text(self.serialize_examples()),
+            "cfg": lambda p: srsly.write_json(p, self.get_cfg()),
+            "examples": lambda p: srsly.write_msgpack(p, self.get_examples()),
         }
 
         util.to_disk(path, serialize, exclude)
@@ -127,8 +125,8 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         """
 
         deserialize = {
-            "cfg.json": lambda p: self.deserialize_cfg(p.read_text()),
-            "examples.json": lambda p: self.deserialize_examples(p.read_text()),
+            "cfg": lambda p: self.set_cfg(srsly.read_json(p)),
+            "examples": lambda p: self.set_examples(srsly.read_msgpack(p)),
         }
 
         util.from_disk(path, deserialize, exclude)
