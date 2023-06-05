@@ -32,7 +32,10 @@ def backend_rest(
         Backend instance.
     """
 
-    backend = (supported_apis[api] if isinstance(api, str) else api)(
+    backend_class = api
+    if isinstance(api, str):
+        backend_class = supported_apis[api]
+    backend = backend_class(
         config=config,
         strict=strict,
         max_tries=max_tries,
