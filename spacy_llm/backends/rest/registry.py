@@ -35,6 +35,7 @@ def backend_rest(
     backend_class = api
     if isinstance(api, str):
         backend_class = supported_apis[api]
+    assert callable(backend_class)
     backend = backend_class(
         config=config,
         strict=strict,
