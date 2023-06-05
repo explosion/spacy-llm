@@ -23,26 +23,15 @@ def serialize_cfg(task: "SpanTask", cfg_keys: List[str]) -> str:
     return srsly.json_dumps(cfg)
 
 
-def deserialize_cfg(b: bytes, task: "SpanTask"):
+def deserialize_cfg(b: str, task: "SpanTask") -> None:
     """Deserialize task config from bytes.
 
-    b (bytes): bytes representing the config.
+    b (str): serialized config.
     task (SpanTask): Task to set the config on.
     """
     cfg = srsly.json_loads(b)
     for key, value in cfg.items():
         setattr(task, key, value)
-
-
-def deserialize_examples(b: bytes, task: "SpanTask"):
-    """Deserialize examples from bytes.
-
-    b (bytes): bytes representing the examples.
-    task (SpanTask): Task to set the examples on.
-    """
-    examples = srsly.json_loads(b)
-    if examples is not None:
-        task._examples = [SpanExample.parse_obj(eg) for eg in examples]
 
 
 def serialize_examples(task: "SpanTask") -> str:
@@ -54,6 +43,17 @@ def serialize_examples(task: "SpanTask") -> str:
         return srsly.json_dumps(None)
     examples = [eg.dict() for eg in task._examples]
     return srsly.json_dumps(examples)
+
+
+def deserialize_examples(b: str, task: "SpanTask"):
+    """Deserialize examples from bytes.
+
+    b (str): serialized examples.
+    task (SpanTask): Task to set the examples on.
+    """
+    examples = srsly.json_loads(b)
+    if examples is not None:
+        task._examples = [SpanExample.parse_obj(eg) for eg in examples]
 
 
 class SpanTask:
@@ -215,7 +215,7 @@ class SpanTask:
             "cfg.json": lambda p: p.write_text(
                 serialize_cfg(task=self, cfg_keys=self._CFG_KEYS)
             ),
-            "examples.bin": lambda p: p.write_bytes(serialize_examples(task=self)),
+            "examples.json": lambda p: p.write_text(serialize_examples(task=self)),
         }
 
         util.to_disk(path, serialize, exclude)
@@ -234,7 +234,7 @@ class SpanTask:
 
         deserialize = {
             "cfg.json": lambda p: deserialize_cfg(p.read_text(), task=self),
-            "examples.bin": lambda p: deserialize_examples(p.read_bytes(), task=self),
+            "examples.json": lambda p: deserialize_examples(p.read_text(), task=self),
         }
 
         util.from_disk(path, deserialize, exclude)

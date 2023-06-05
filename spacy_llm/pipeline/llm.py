@@ -239,7 +239,7 @@ class LLMWrapper(Pipe):
         if isinstance(backend, Serializable):
             serialize["backend"] = lambda p: backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
-        return util.to_disk(serialize, exclude)
+        return util.to_disk(path, serialize, exclude)
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
