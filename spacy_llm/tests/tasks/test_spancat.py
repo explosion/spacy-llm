@@ -581,5 +581,4 @@ def test_spancat_serde(noop_config):
     b = nlp1.to_bytes()
     nlp2.from_bytes(b)
 
-    assert task1._label_dict == labels
-    assert task2._label_dict == labels
+    assert task1._label_dict == task2._label_dict == labels
