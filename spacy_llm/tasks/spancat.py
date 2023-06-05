@@ -106,7 +106,7 @@ def make_spancat_task_v2(
 
 
 class SpanCatTask(SpanTask):
-    PLAIN_CONFIG_KEYS: List[str] = [
+    _PLAIN_CONFIG_KEYS: List[str] = [
         "_spans_key",
         "_label_dict",
         "_template",

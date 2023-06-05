@@ -14,7 +14,7 @@ from .parsing import find_substrings
 class SpanTask:
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
-    PLAIN_CONFIG_KEYS: List[str] = [
+    _PLAIN_CONFIG_KEYS: List[str] = [
         "_label_dict",
         "_template",
         "_label_definitions",
@@ -127,7 +127,7 @@ class SpanTask:
         """
 
         def serialize_plain_config():
-            plain = {key: getattr(self, key) for key in self.PLAIN_CONFIG_KEYS}
+            plain = {key: getattr(self, key) for key in self._PLAIN_CONFIG_KEYS}
             return srsly.json_dumps(plain)
 
         def serialize_examples():
