@@ -1,20 +1,19 @@
-from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, cast
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import jinja2
-import srsly
-from spacy import util
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal
 from ...registry import lowercase_normalizer
 from .examples import SpanExample
 from .parsing import find_substrings
+from .serialization import SerializableTask
 
 
-class SpanTask:
+class SpanTask(SerializableTask[SpanExample]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
+    _Example = SpanExample
     _CFG_KEYS: List[str] = [
         "_label_dict",
         "_template",
@@ -115,114 +114,3 @@ class SpanTask:
 
             self.assign_spans(doc, spans)
             yield doc
-
-    def serialize_cfg(self) -> str:
-        """Serialize task config.
-
-        cfg_keys (List[str]): Keys to serialize.
-        """
-        cfg = {key: getattr(self, key) for key in self._CFG_KEYS}
-        return srsly.json_dumps(cfg)
-
-    def deserialize_cfg(self, b: str) -> None:
-        """Deserialize task config from bytes.
-
-        b (str): serialized config.
-        """
-        cfg = srsly.json_loads(b)
-        for key, value in cfg.items():
-            setattr(self, key, value)
-
-    def serialize_examples(self) -> str:
-        """Serialize examples."""
-        if self._examples is None:
-            return srsly.json_dumps(None)
-        examples = [eg.dict() for eg in self._examples]
-        return srsly.json_dumps(examples)
-
-    def deserialize_examples(self, b: str) -> None:
-        """Deserialize examples from bytes.
-
-        b (str): serialized examples.
-        """
-        examples = srsly.json_loads(b)
-        if examples is not None:
-            self._examples = [SpanExample.parse_obj(eg) for eg in examples]
-
-    def to_bytes(
-        self,
-        *,
-        exclude: Tuple[str] = cast(Tuple[str], tuple()),
-    ) -> bytes:
-        """Serialize the LLMWrapper to a bytestring.
-
-        exclude (Tuple): Names of properties to exclude from serialization.
-        RETURNS (bytes): The serialized object.
-        """
-
-        serialize = {
-            "cfg": self.serialize_cfg,
-            "examples": self.serialize_examples,
-        }
-
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(
-        self,
-        bytes_data: bytes,
-        *,
-        exclude: Tuple[str] = cast(Tuple[str], tuple()),
-    ) -> "SpanTask":
-        """Load the Task from a bytestring.
-
-        bytes_data (bytes): The data to load.
-        exclude (Tuple[str]): Names of properties to exclude from deserialization.
-        RETURNS (SpanTask): Modified SpanTask instance.
-        """
-
-        deserialize = {
-            "cfg": lambda b: self.deserialize_cfg(b),
-            "examples": lambda b: self.deserialize_examples(b),
-        }
-
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(
-        self,
-        path: Path,
-        *,
-        exclude: Tuple[str] = cast(Tuple[str], tuple()),
-    ) -> None:
-        """Serialize the task to disk.
-
-        path (Path): A path (currently unused).
-        exclude (Tuple): Names of properties to exclude from serialization.
-        """
-
-        serialize = {
-            "cfg.json": lambda p: p.write_text(self.serialize_cfg()),
-            "examples.json": lambda p: p.write_text(self.serialize_examples()),
-        }
-
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(
-        self,
-        path: Path,
-        *,
-        exclude: Tuple[str] = cast(Tuple[str], tuple()),
-    ) -> "SpanTask":
-        """Deserialize the task from disk.
-
-        path (Path): A path (currently unused).
-        exclude (Tuple): Names of properties to exclude from serialization.
-        """
-
-        deserialize = {
-            "cfg.json": lambda p: self.deserialize_cfg(p.read_text()),
-            "examples.json": lambda p: self.deserialize_examples(p.read_text()),
-        }
-
-        util.from_disk(path, deserialize, exclude)
-        return self
