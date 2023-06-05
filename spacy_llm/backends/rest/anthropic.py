@@ -106,6 +106,10 @@ class AnthropicBackend(Backend):
                     return {"error": [srsly.json_dumps(response)] * len(prompts)}
             return response
 
+        # Anthropic API currently doesn't accept batch prompts, so we're making
+        # a request for each iteration. This approach can be prone to rate limit
+        # errors. In practice, you can adjust _max_request_time so that the
+        # timeout is larger.
         responses = [
             _request({"prompt": f"{Speaker.HUMAN} {prompt}{Speaker.ASST}"})
             for prompt in prompts
