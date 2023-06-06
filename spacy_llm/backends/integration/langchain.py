@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from spacy.util import SimpleFrozenDict
 
-from . import Backend
 from ...compat import has_langchain, langchain
 from ...registry import registry
+from . import Backend
 
 
 def _check_installation() -> None:
@@ -65,7 +65,7 @@ def backend_langchain(
     if api in type_to_cls_dict:
         model = config.pop("model")
         return Backend(
-            integration=type_to_cls_dict[api](model_name=model, **config),
+            integration=type_to_cls_dict[api](model=model, **config),
             query=query_langchain() if query is None else query,
         )
     else:

@@ -169,6 +169,8 @@ To register your custom task with spaCy, decorate a factory function using the `
 > 📖 For more details, see the [**usage example on writing your own task**](usage_examples/README.md#writing-your-own-task)
 
 ```python
+from typing import Iterable, List
+from spacy.tokens import Doc
 from spacy_llm.registry import registry
 from spacy_llm.util import split_labels
 

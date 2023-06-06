@@ -21,3 +21,7 @@ filterwarnings = [
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API"
 ]
+
+[tool.isort]
+multi_line_output = 9
+profile = "black"
