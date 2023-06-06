@@ -13,6 +13,8 @@ def split_labels(labels: Union[str, Iterable[str]]) -> List[str]:
     labels (Union[str, Iterable[str]]): comma-separated string or list of labels
     RETURNS (List[str]): a split and stripped list of labels
     """
+    if not labels:
+        return []
     labels = labels.split(",") if isinstance(labels, str) else labels
     return [label.strip() for label in labels]
 

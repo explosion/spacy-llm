@@ -2,15 +2,17 @@ from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import spacy
+from spacy import util
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.ty import InitializableComponent as Initializable
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LLMTask, PromptExecutor, validate_types
+from ..ty import Cache, LLMTask, PromptExecutor, Serializable, validate_types
 
 
 class CacheConfigType(TypedDict):
@@ -101,6 +103,12 @@ class LLMWrapper(Pipe):
         self._cache = cache
         self._cache.vocab = vocab
 
+        # This is done this way because spaCy's `validate_init_settings` function
+        # does not support `**kwargs: Any`.
+        # See https://github.com/explosion/spaCy/blob/master/spacy/schemas.py#L111
+        if isinstance(self._task, Initializable):
+            self.initialize = self._task.initialize
+
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
 
@@ -164,21 +172,47 @@ class LLMWrapper(Pipe):
 
         return final_docs
 
-    def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
+    def to_bytes(
+        self,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
 
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-        return b""
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
+        serialize = {}
+
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda: self._backend.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(
+        self,
+        bytes_data: bytes,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
 
         bytes_data (bytes): The data to load.
-        exclude (Tuple): Names of properties to exclude from deserialization.
+        exclude (Tuple[str]): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
+
+        deserialize = {}
+
+        if isinstance(self._task, Serializable):
+            deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            deserialize["backend"] = lambda b: self._backend.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+
+        util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(
@@ -188,7 +222,15 @@ class LLMWrapper(Pipe):
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-        return None
+
+        serialize = {}
+
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda p: self._backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+
+        return util.to_disk(path, serialize, exclude)
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
@@ -198,4 +240,13 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
+
+        serialize = {}
+
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda p: self._backend.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+
+        util.from_disk(path, serialize, exclude)
         return self
