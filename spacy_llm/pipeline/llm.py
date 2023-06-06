@@ -141,9 +141,6 @@ class LLMWrapper(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
         """
-        if not Doc.has_extension("llm_io"):
-            Doc.set_extension("llm_io", default=defaultdict(dict))
-
         error_handler = self.get_error_handler()
         for doc_batch in spacy.util.minibatch(stream, batch_size):
             try:
