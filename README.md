@@ -209,7 +209,7 @@ my_other_config_val = 0.3
 | `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
 | `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
 | `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
-| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc._.llm_io`                             |
+| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`                  |
 
 An `llm` component is defined by two main settings:
 
@@ -222,8 +222,8 @@ Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality
 the same document through an LLM service (be it local or through a REST API) more than once.
 
 Finally, you can choose to save a stringified version of LLM prompts/responses
-within the `Doc._.llm_io` custom attribute by setting `save_io` to `True`.
-`Doc._.llm_io` is a dictionary containing one entry for every LLM component
+within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
+`Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM component
 within the spaCy pipeline. Each entry is itself a dictionary, with two keys:
 `prompt` and `response`.
 
