@@ -374,7 +374,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         self,
         examples: List[Example],
     ) -> List[TextCatExample]:
-        """Create span examples from spaCy examples."""
+        """Create textcat examples from spaCy examples."""
         textcat_examples = []
         for eg in examples:
             if self._use_binary:

@@ -187,7 +187,7 @@ class NERTask(SpanTask):
             labels = list(label_set)
 
         if gather_examples:
-            self._examples = self.create_span_examples(examples)
+            self._examples = self.create_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -205,11 +205,11 @@ class NERTask(SpanTask):
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
 
-    def create_span_examples(
+    def create_examples(
         self,
         examples: List[Example],
     ) -> List[SpanExample]:
-        """Create span examples from spaCy examples."""
+        """Create NER examples from spaCy examples."""
         span_examples = []
         for eg in examples:
             entities = defaultdict(list)

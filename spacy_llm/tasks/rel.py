@@ -233,7 +233,7 @@ class RELTask(SerializableTask[RELExample]):
         self,
         examples: List[Example],
     ) -> List[RELExample]:
-        """Create span examples from spaCy examples."""
+        """Create REL examples from spaCy examples."""
         rel_examples = []
         for eg in examples:
             rel_example = RELExample(
