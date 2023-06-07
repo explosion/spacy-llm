@@ -106,7 +106,7 @@ factory = "llm"
 labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 # For better performance, use databricks/dolly-v2-12b instead
 model = "databricks/dolly-v2-3b"
 ```
@@ -726,7 +726,7 @@ config = {"temperature": 0.3}
 
 The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `model(text)` for each given textual prompt.
 
-#### spacy.DollyHF.v1
+#### spacy.Dolly_HF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
@@ -749,7 +749,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 model = "databricks/dolly-v2-3b"
 ```
 
@@ -763,6 +763,48 @@ Supported models (see the [Databricks models page](https://huggingface.co/databr
 - `"databricks/dolly-v2-3b"`
 - `"databricks/dolly-v2-7b"`
 - `"databricks/dolly-v2-12b"`
+
+Note that Hugging Face will download this model the first time you use it - you can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.StableLM_HF.v1
+
+To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
+
+```shell
+python -m pip install "torch>=1.13.1,<2.0"
+python -m pip install "transformers>=4.28.1,<5.0"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[transformers]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
+which may ultimately result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Example config block:
+
+```ini
+[components.llm.backend]
+@llm_backends = "spacy.StableLM_HF.v1"
+model = "stabilityai/stablelm-tuned-alpha-7b"
+```
+
+| Argument | Type             | Default | Description                                                                                      |
+| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `model`  | `str`            |         | The name of a StableLM model that is supported.                                                  |
+| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+
+Supported models (see the [Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha) for details):
+
+- `"stabilityai/stablelm-base-alpha-3b"`
+- `"stabilityai/stablelm-base-alpha-7b"`
+- `"stabilityai/stablelm-tuned-alpha-3b"`
+- `"stabilityai/stablelm-tuned-alpha-7b"`
 
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
