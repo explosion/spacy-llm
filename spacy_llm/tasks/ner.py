@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from spacy.language import Language
@@ -154,6 +155,7 @@ class NERTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
+        gather_examples: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize the NER task, by auto-discovering labels.
@@ -168,9 +170,10 @@ class NERTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        gather_examples (bool): Whether to gather examples for the task. False by default.
         """
 
-        examples = get_examples()
+        examples = list(get_examples())
 
         if not labels:
             labels = list(self._label_dict.values())
@@ -182,6 +185,9 @@ class NERTask(SpanTask):
                 for ent in eg.reference.ents:
                     label_set.add(ent.label_)
             labels = list(label_set)
+
+        if gather_examples:
+            self._examples = self.create_span_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -198,3 +204,21 @@ class NERTask(SpanTask):
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
+
+    def create_span_examples(
+        self,
+        examples: List[Example],
+    ) -> List[SpanExample]:
+        """Create span examples from spaCy examples."""
+        span_examples = []
+        for eg in examples:
+            entities = defaultdict(list)
+
+            for ent in eg.reference.ents:
+                entities[ent.label_].append(ent.text)
+            span_example = SpanExample(
+                text=eg.reference.text,
+                entities=entities,
+            )
+            span_examples.append(span_example)
+        return span_examples

@@ -699,7 +699,6 @@ def noop_config():
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_ner_scoring(noop_config, n_detections):
-
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -721,10 +720,11 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-def test_ner_init(noop_config):
-
+@pytest.mark.parametrize("gather_examples", [True, False])
+def test_ner_init(noop_config, gather_examples: bool):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
+
     nlp = assemble_from_config(config)
 
     examples = []
@@ -748,12 +748,22 @@ def test_ner_init(noop_config):
     task: NERTask = llm._task
 
     assert set(task._label_dict.values()) == set()
+    assert not task._examples
+
+    # This is super hacky... but it works for now.
+    nlp.config["initialize"]["components"]["llm"] = {"gather_examples": gather_examples}
+
     nlp.initialize(lambda: examples)
+
     assert set(task._label_dict.values()) == {"PER", "LOC"}
+    assert bool(task._examples) is gather_examples
+
+    if gather_examples and task._examples:
+        for eg in task._examples:
+            assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
 def test_ner_serde(noop_config):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -778,7 +788,6 @@ def test_ner_serde(noop_config):
 
 
 def test_ner_to_disk(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
