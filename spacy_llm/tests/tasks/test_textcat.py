@@ -730,9 +730,13 @@ def noop_config():
     """
 
 
+@pytest.mark.parametrize("gather_examples", [True, False])
 @pytest.mark.parametrize("init_from_config", [True, False])
-def test_textcat_init(noop_config, init_from_config: bool):
-
+def test_textcat_init(
+    noop_config,
+    init_from_config: bool,
+    gather_examples: bool,
+):
     config = Config().from_str(noop_config)
     if init_from_config:
         config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
@@ -759,6 +763,10 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = set()
     assert set(task._label_dict.values()) == target
+    assert not task._examples
+
+    # This is super hacky... but it works for now.
+    nlp.config["initialize"]["components"]["llm"] = {"gather_examples": gather_examples}
 
     nlp.initialize(lambda: examples)
 
@@ -767,10 +775,14 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
+    assert bool(task._examples) is gather_examples
+
+    if gather_examples:
+        assert task._examples
+        assert len(task._examples) == len(INSULTS)
 
 
 def test_textcat_serde(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
 
     nlp1 = assemble_from_config(config)

@@ -320,7 +320,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        **kwargs: Any,
+        gather_examples: bool = False,
     ) -> None:
         """Initialize the TextCat task, by auto-discovering labels.
 
@@ -334,8 +334,9 @@ class TextCatTask(SerializableTask[TextCatExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        gather_examples (bool): Whether to gather examples for the task. False by default.
         """
-        examples = get_examples()
+        examples = list(get_examples())
 
         if not labels:
             labels = list(self._label_dict.values())
@@ -347,6 +348,9 @@ class TextCatTask(SerializableTask[TextCatExample]):
                 for cat in eg.reference.cats.keys():
                     label_set.add(cat)
             labels = list(label_set)
+
+        if gather_examples:
+            self._examples = self.create_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -365,3 +369,27 @@ class TextCatTask(SerializableTask[TextCatExample]):
     @property
     def _Example(self) -> Type[TextCatExample]:
         return TextCatExample
+
+    def create_examples(
+        self,
+        examples: List[Example],
+    ) -> List[TextCatExample]:
+        """Create span examples from spaCy examples."""
+        textcat_examples = []
+        for eg in examples:
+            if self._use_binary:
+                answer = (
+                    "POS"
+                    if eg.reference.cats[list(self._label_dict.values())[0]] == 1.0
+                    else "NEG"
+                )
+            answer = ",".join(
+                [label for label, score in eg.reference.cats.items() if score == 1.0]
+            )
+
+            textcat_example = TextCatExample(
+                text=eg.reference.text,
+                answer=answer,
+            )
+            textcat_examples.append(textcat_example)
+        return textcat_examples
