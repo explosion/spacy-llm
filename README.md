@@ -565,6 +565,49 @@ labels = ["LivesIn", "Visits"]
 path = "rel_examples.jsonl"
 ```
 
+#### spacy.LEMMA.v1
+
+The LEMMA task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.LEMMA.v1"
+examples = null
+```
+
+| Argument                  | Type                                    | Default                                                   | Description                                                                                                                                           |
+| ------------------------- | --------------------------------------- |-----------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
+
+The LEMMA task implementation asks the LLM to annotate the passed text with double square brackets containing the corresponding
+lemmas, like this: for specific offsets, but simply expects a list of strings that represent the enties in the document.
+E. g. the text `I'm buying ice cream` should invoke a response like `I[[I]]'m[[be]] buy[[buy]] ice[[ice]] cream[[cream]].`.
+If you are expecting double square brackets in your text, consider (temporarily) replacing them with other symbols, as 
+matching up lemmas to tokens will not work otherwise.
+
+If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
+by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
+the lemma suggested by the LLM.
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: I'm buying ice cream.
+  lemmatized: I[[I]]'m[[be]] buy[[buy]] ice[[ice]] cream[[cream]].
+- text: I've watered the plants.
+  lemmatized: I[[I]]'ve[['ve]] watered[[water]] the[[the]] plants[[plants]].
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.LEMMA.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "lemma_examples.yml"
+```
+
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.

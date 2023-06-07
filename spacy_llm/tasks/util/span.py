@@ -36,14 +36,6 @@ class SpanTask(SerializableTask[SpanExample]):
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
-    def _validate_alignment(self, mode):
-        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
-        alignment_modes = ("strict", "contract", "expand")
-        if mode not in alignment_modes:
-            raise ValueError(
-                f"Unsupported alignment mode '{mode}'. Supported modes: {', '.join(alignment_modes)}"
-            )
-
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
@@ -72,6 +64,18 @@ class SpanTask(SerializableTask[SpanExample]):
                         _phrases = [p.strip() for p in phrases.strip().split(",")]
                         output.append((self._label_dict[norm_label], _phrases))
         return output
+
+    @staticmethod
+    def _validate_alignment(alignment_mode: str):
+        """Raises error if specified alignment_mode is not supported.
+        alignment_mode (str): Alignment mode to check.
+        """
+        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
+        alignment_modes = ("strict", "contract", "expand")
+        if alignment_mode not in alignment_modes:
+            raise ValueError(
+                f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
+            )
 
     def assign_spans(
         self,

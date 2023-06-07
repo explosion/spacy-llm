@@ -1,0 +1,29 @@
+You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
+Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
+Output the original version of each word, and append its lemma in between double square brackets. like this: Word1[[lemma1]] Word2[[lemma2]].
+Don't add spaces before or after square brackets.
+Prefix with your output with "Lemmatized text".
+
+{# whitespace #}
+{%- if examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+Lemmatized text:
+'''
+{{ example.lemmatized }}
+'''
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+Here is the text that needs to be lemmatized:
+'''
+{{ text }}
+'''

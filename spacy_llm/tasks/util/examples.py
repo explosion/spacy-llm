@@ -6,3 +6,8 @@ from pydantic import BaseModel
 class SpanExample(BaseModel):
     text: str
     entities: Dict[str, List[str]]
+
+
+class LemmaExample(BaseModel):
+    text: str
+    lemmatized: str

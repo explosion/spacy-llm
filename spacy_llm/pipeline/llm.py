@@ -12,7 +12,7 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LLMTask, PromptExecutor, Serializable, validate_types
+from ..ty import Cache, LLMTask, PromptExecutor, Scorable, Serializable, validate_types
 
 
 class CacheConfigType(TypedDict):
@@ -129,7 +129,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if hasattr(self._task, "scorer") and self._task.scorer is not None:
+        if isinstance(self._task, Scorable):
             return self._task.scorer(examples)
         return {}
 
