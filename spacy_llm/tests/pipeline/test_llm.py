@@ -8,7 +8,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from thinc.api import NumpyOps, get_current_ops
 
-from spacy_llm.backends.rest.backend.noop import _NOOP_RESPONSE
+from spacy_llm.backends.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import make_noop_task
