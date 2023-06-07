@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from spacy.language import Language
@@ -174,6 +175,7 @@ class SpanCatTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
+        gather_examples: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
@@ -188,8 +190,9 @@ class SpanCatTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        gather_examples (bool): Whether to gather examples for the task. False by default.
         """
-        examples = get_examples()
+        examples = list(get_examples())
 
         if not labels:
             labels = list(self._label_dict.values())
@@ -201,6 +204,9 @@ class SpanCatTask(SpanTask):
                 for span in eg.reference.spans.get(self._spans_key, []):
                     label_set.add(span.label_)
             labels = list(label_set)
+
+        if gather_examples:
+            self._examples = self.create_span_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -215,3 +221,21 @@ class SpanCatTask(SpanTask):
             "_case_sensitive_matching",
             "_single_match",
         ]
+
+    def create_span_examples(
+        self,
+        examples: List[Example],
+    ) -> List[SpanExample]:
+        """Create span examples from spaCy examples."""
+        span_examples = []
+        for eg in examples:
+            entities = defaultdict(list)
+
+            for span in eg.reference.spans[self._spans_key]:
+                entities[span.label_].append(span.text)
+            span_example = SpanExample(
+                text=eg.reference.text,
+                entities=entities,
+            )
+            span_examples.append(span_example)
+        return span_examples
