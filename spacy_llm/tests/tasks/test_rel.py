@@ -138,8 +138,8 @@ def test_rel_predict(task, cfg_string, request):
     assert doc._.rel
 
 
-def test_rel_init(noop_config):
-
+@pytest.mark.parametrize("gather_examples", [True, False])
+def test_rel_init(noop_config, gather_examples: bool):
     RELTask._check_rel_extention()
 
     config = Config().from_str(noop_config)
@@ -169,12 +169,22 @@ def test_rel_init(noop_config):
     task: RELTask = llm._task
 
     assert set(task._label_dict.values()) == set()
+    assert not task._examples
+
+    # This is super hacky... but it works for now.
+    nlp.config["initialize"]["components"]["llm"] = {"gather_examples": gather_examples}
+
     nlp.initialize(lambda: examples)
+
     assert set(task._label_dict.values()) == {"LivesIn", "Visits"}
+    assert bool(task._examples) is gather_examples
+
+    if gather_examples:
+        assert task._examples
+        assert len(task._examples) == 2
 
 
 def test_rel_serde(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 

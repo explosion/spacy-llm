@@ -179,6 +179,7 @@ class RELTask(SerializableTask[RELExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
+        gather_examples: bool = False,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
 
@@ -192,10 +193,11 @@ class RELTask(SerializableTask[RELExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        gather_examples (bool): Whether to gather examples for the task. False by default.
         """
         self._check_rel_extention()
 
-        examples = get_examples()
+        examples = list(get_examples())
 
         if not labels:
             labels = list(self._label_dict.values())
@@ -208,6 +210,9 @@ class RELTask(SerializableTask[RELExample]):
                 for rel in rels:
                     label_set.add(rel.relation)
             labels = list(label_set)
+
+        if gather_examples:
+            self._examples = self.create_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -223,3 +228,25 @@ class RELTask(SerializableTask[RELExample]):
     @property
     def _Example(self) -> Type[RELExample]:
         return RELExample
+
+    def create_examples(
+        self,
+        examples: List[Example],
+    ) -> List[RELExample]:
+        """Create span examples from spaCy examples."""
+        rel_examples = []
+        for eg in examples:
+            rel_example = RELExample(
+                text=eg.reference.text,
+                ents=[
+                    EntityItem(
+                        start_char=ent.start_char,
+                        end_char=ent.end_char,
+                        label=ent.label_,
+                    )
+                    for ent in eg.reference.ents
+                ],
+                relations=eg.reference._.rel,
+            )
+            rel_examples.append(rel_example)
+        return rel_examples

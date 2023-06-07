@@ -758,7 +758,8 @@ def test_ner_init(noop_config, gather_examples: bool):
     assert set(task._label_dict.values()) == {"PER", "LOC"}
     assert bool(task._examples) is gather_examples
 
-    if gather_examples and task._examples:
+    if gather_examples:
+        assert task._examples
         for eg in task._examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
