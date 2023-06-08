@@ -1,6 +1,6 @@
 # mypy: ignore-errors
 import pytest
-from spacy_llm.backends.rest.backend.cohere import CohereBackend
+from spacy_llm.backends.rest.cohere import CohereBackend
 
 from ..compat import has_cohere_key
 
