@@ -226,10 +226,10 @@ e.g. with the config and code from [Example 1](##example-1-add-a-text-classifier
 
 
 ```python
-from spacy import util
+from spacy_llm.util import assemble
 
-config = util.load_config("config.cfg")
-nlp = util.load_model_from_config(config, auto_fill=True)
+
+nlp = assemble("config.cfg")
 doc = nlp("You look gorgeous!")
 print(doc.cats)
 ```
@@ -265,7 +265,6 @@ And the `print` of doc.cats to standard output should look like:
 ```
 {'COMPLIMENT': 1.0, 'INSULT': 0.0}
 ```
-
 
 ## 📓 API
 
