@@ -34,7 +34,7 @@ model = "databricks/dolly-v2-3b"
 """
 
 
-@pytest.mark.parametrize("backend", ("spacy.Dolly_HF.v1", "spacy.Dolly_HF.v1"))
+@pytest.mark.parametrize("backend", ("spacy.Dolly_HF.v1", "spacy.DollyHF.v1"))
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init(backend: str):
     """Test initialization and simple run.

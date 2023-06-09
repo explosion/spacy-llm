@@ -715,6 +715,7 @@ To use this backend, ideally you have a GPU enabled and have installed `transfor
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
 You can do so with
+
 ```shell
 python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
 ```
@@ -763,6 +764,7 @@ by setting the environmental variable `HF_HOME`.
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 
 You can do so with
+
 ```shell
 python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
 ```
@@ -784,7 +786,7 @@ model = "stabilityai/stablelm-tuned-alpha-7b"
 
 | Argument | Type             | Default | Description                                                                                      |
 | -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
+| `model`  | `str`            |         | The name of a StableLM model that is supported.                                                  |
 | `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
 
 Note that `config` has to be structured like this, if it's not empty:
@@ -817,6 +819,7 @@ To use this backend, ideally you have a GPU enabled and have installed
   in your virtual environment.
 
 You can do so with
+
 ```shell
 python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
 ```
@@ -838,7 +841,7 @@ model = "openlm-research/open_llama_3b_350bt_preview"
 
 | Argument | Type             | Default | Description                                                                                      |
 | -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
+| `model`  | `str`            |         | The name of a OpenLLaMa model that is supported.                                                 |
 | `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
 
 Note that `config` has be structured like this, if it's not empty:

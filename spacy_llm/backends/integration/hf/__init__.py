@@ -6,6 +6,6 @@ from .stablelm import backend_stablelm_hf
 __all__ = [
     "HuggingFaceBackend",
     "backend_dolly_hf",
-    "backend_stablelm_hf",
     "backend_openllama_hf",
+    "backend_stablelm_hf",
 ]
