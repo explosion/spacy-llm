@@ -611,9 +611,6 @@ friends: friend
 .: .
 ```
 
-If you are expecting double square brackets in your text, consider (temporarily) replacing them with other symbols, as 
-matching up lemmas to tokens will not work otherwise.
-
 If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
 by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
 the lemma suggested by the LLM.
@@ -623,9 +620,22 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 
 ```yaml
 - text: I'm buying ice cream.
-  lemmatized: I[[I]]'m[[be]] buy[[buy]] ice[[ice]] cream[[cream]].
+  lemmas:
+    - "I": "I"
+    - "'m": "be"
+    - "buying": "buy"
+    - "ice": "ice"
+    - "cream": "cream"
+    - ".": "."
+
 - text: I've watered the plants.
-  lemmatized: I[[I]]'ve[['ve]] watered[[water]] the[[the]] plants[[plants]].
+  lemmas: 
+    - "I": "I"
+    - "'ve": "have"
+    - "watered": "water"
+    - "the": "the"
+    - "plants": "plant"
+    - ".": "."
 ```
 
 ```ini
