@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from spacy.util import SimpleFrozenDict, SimpleFrozenList
 
@@ -31,12 +31,13 @@ class StableLMBackend(HuggingFaceBackend):
     def __init__(
         self,
         model: str,
-        config: Dict[Any, Any],
+        config_init: Optional[Dict[str, Any]],
+        config_run: Optional[Dict[str, Any]],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_tuned = "tuned" in model
         self._device: Optional[str] = None
-        super().__init__(model=model, config=config)
+        super().__init__(model=model, config_init=config_init, config_run=config_run)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
@@ -44,7 +45,7 @@ class StableLMBackend(HuggingFaceBackend):
         """
         # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._model_name)
-        init_cfg = self._config.get("init", {})
+        init_cfg = self._config_init
         if "device" in init_cfg:
             self._device = init_cfg.pop("device")
         model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -76,7 +77,7 @@ class StableLMBackend(HuggingFaceBackend):
         assert hasattr(self._model, "generate")
         return [
             self._tokenizer.decode(
-                self._model.generate(**prompt, **self._config.get("run", {}))[0],
+                self._model.generate(**prompt, **self._config_run)[0],
                 skip_special_tokens=True,
             )
             for prompt in tokenized_prompts
@@ -94,30 +95,33 @@ class StableLMBackend(HuggingFaceBackend):
         )
 
     @staticmethod
-    def compile_default_config() -> Dict[Any, Any]:
-        default_cfg = HuggingFaceBackend.compile_default_config()
-        return {
-            "init": default_cfg["init"],
-            "run": {
-                **default_cfg.get("run", {}),
+    def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        default_cfg_init, default_cfg_run = HuggingFaceBackend.compile_default_configs()
+        return (
+            default_cfg_init,
+            {
+                **default_cfg_run,
                 "max_new_tokens": 64,
                 "temperature": 0.7,
                 "do_sample": True,
             },
-        }
+        )
 
 
 @registry.llm_backends("spacy.StableLM_HF.v1")
 def backend_stablelm_hf(
     model: str,
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+    config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Callable that can execute a set of prompts and return the raw responses.
     model (str): Name of the HF model.
-    config (Dict[Any, Any]): config arguments passed on to the initialization of transformers.pipeline instance.
+    config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
+    config_run (Optional[Dict[str, Any]]): HF config for running the model.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Callable executing the prompts and returning raw responses.
     """
     return StableLMBackend(
         model=model,
-        config=config,
+        config_init=config_init,
+        config_run=config_run,
     )

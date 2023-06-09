@@ -57,6 +57,16 @@ def test_init_from_config():
 
 
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+def test_init_with_set_config():
+    """Test initialization and simple run with changed config."""
+    nlp = spacy.blank("en")
+    cfg = copy.deepcopy(_PIPE_CFG)
+    cfg["backend"]["config_run"] = {"temperature": 0.3}
+    nlp.add_pipe("llm", config=cfg)
+    nlp("This is a test.")
+
+
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)
     config = copy.deepcopy(orig_config)

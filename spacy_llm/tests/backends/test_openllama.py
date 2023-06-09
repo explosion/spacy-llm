@@ -42,6 +42,16 @@ def test_init():
 
 
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+def test_init_with_set_config():
+    """Test initialization and simple run with changed config."""
+    nlp = spacy.blank("en")
+    cfg = copy.deepcopy(_PIPE_CFG)
+    cfg["backend"]["config_run"] = {"max_new_tokens": 32}
+    nlp.add_pipe("llm", config=cfg)
+    nlp("This is a test.")
+
+
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
