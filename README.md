@@ -583,7 +583,7 @@ path = "rel_examples.jsonl"
 
 #### spacy.Lemma.v1
 
-The LEMMA task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
+The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
 
 ```ini
 [components.llm.task]
@@ -596,9 +596,21 @@ examples = null
 | `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
 | `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
 
-The LEMMA task implementation asks the LLM to annotate the passed text with double square brackets containing the corresponding
-lemmas, like this: for specific offsets, but simply expects a list of strings that represent the enties in the document.
-E. g. the text `I'm buying ice cream` should invoke a response like `I[[I]]'m[[be]] buy[[buy]] ice[[ice]] cream[[cream]].`.
+`Lemma.v1` prompts the LLM to lemmatize the passed text and return the lemmatized version as a list of tokens and their
+corresponding lemma. E. g. the text 
+`I'm buying ice cream for my friends` should invoke the response
+```
+I: I
+'m: be
+buying: buy
+ice: ice
+cream: cream
+for: for
+my: my
+friends: friend
+.: .
+```
+
 If you are expecting double square brackets in your text, consider (temporarily) replacing them with other symbols, as 
 matching up lemmas to tokens will not work otherwise.
 
