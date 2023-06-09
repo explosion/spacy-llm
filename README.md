@@ -752,19 +752,11 @@ Example config block:
 model = "databricks/dolly-v2-3b"
 ```
 
-| Argument | Type             | Default | Description                                                                                      |
-| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
-| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
-
-Note that `config` has to be structured like this, if it's not empty:
-
-```python
-{
-  "init": {},  # All options to be passed to the HF model at init time
-  "run": {},  # All options to be passed to the HF model at run time
-}
-```
+| Argument      | Type             | Default | Description                                                                                      |
+| ------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `model`       | `str`            |         | The name of a Dolly model that is supported.                                                     |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                               |
 
 Supported models (see the [Databricks models page](https://huggingface.co/databricks) on Hugging Face for details):
 
@@ -801,19 +793,11 @@ Example config block:
 model = "stabilityai/stablelm-tuned-alpha-7b"
 ```
 
-| Argument | Type             | Default | Description                                                                                      |
-| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a StableLM model that is supported.                                                  |
-| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
-
-Note that `config` has to be structured like this, if it's not empty:
-
-```python
-{
-  "init": {},  # All options to be passed to the HF model at init time
-  "run": {},  # All options to be passed to the HF model at run time
-}
-```
+| Argument      | Type             | Default | Description                                                                                                                  |
+| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `str`            |         | The name of a StableLM model that is supported.                                                                              |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
 
 Supported models (see the [Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha) for details):
 
@@ -856,19 +840,11 @@ Example config block:
 model = "openlm-research/open_llama_3b_350bt_preview"
 ```
 
-| Argument | Type             | Default | Description                                                                                      |
-| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a OpenLLaMa model that is supported.                                                 |
-| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
-
-Note that `config` has to be structured like this, if it's not empty:
-
-```python
-{
-  "init": {},  # All options to be passed to the HF model at init time
-  "run": {},  # All options to be passed to the HF model at run time
-}
-```
+| Argument      | Type             | Default | Description                                                                                                                  |
+| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `str`            |         | The name of a OpenLLaMa model that is supported.                                                                             |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
 
 Supported models (see the [OpenLM Research OpenLLaMa GitHub repo](https://github.com/openlm-research/open_llama) for details):
 
