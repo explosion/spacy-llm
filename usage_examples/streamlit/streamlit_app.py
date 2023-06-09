@@ -1,8 +1,10 @@
-from spacy_llm.util import assemble_from_config
+import os
+
+import streamlit as st
 from spacy.util import load_config_from_str
 from spacy_streamlit import visualize_ner, visualize_textcat
-import streamlit as st
-import os
+
+from spacy_llm.util import assemble_from_config
 
 NER_CONFIG = """
 [nlp]
@@ -60,12 +62,12 @@ DEFAULT_TEXT = "Ernest Hemingway, born in Illinois, is generally considered one 
 st.title("spacy-llm Streamlit Demo")
 st.markdown(
     """
-    The [spacy-llm](https://github.com/explosion/spacy-llm) package integrates 
-    Large Language Models (LLMs) into spaCy, featuring a modular system 
-    for fast prototyping and prompting, and turning unstructured responses 
+    The [spacy-llm](https://github.com/explosion/spacy-llm) package integrates
+    Large Language Models (LLMs) into spaCy, featuring a modular system
+    for fast prototyping and prompting, and turning unstructured responses
     into robust outputs for various NLP tasks, no training data required.
 
-    This demo uses the OpenAI backend to demonstrate the NER and textcat 
+    This demo uses the OpenAI backend to demonstrate the NER and textcat
     tasks.
     """
 )
