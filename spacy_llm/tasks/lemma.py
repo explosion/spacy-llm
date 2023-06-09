@@ -16,12 +16,12 @@ from .util.serialization import ExampleType
 _DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
 
 
-@registry.llm_tasks("spacy.LEMMA.v1")
+@registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = _DEFAULT_LEMMA_TEMPLATE_V1,
     examples: ExamplesConfigType = None,
 ):
-    """LEMMA.v1 task factory.
+    """Lemma.v1 task factory.
 
     template (str): Prompt template passed to the model.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that

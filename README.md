@@ -581,13 +581,13 @@ labels = ["LivesIn", "Visits"]
 path = "rel_examples.jsonl"
 ```
 
-#### spacy.LEMMA.v1
+#### spacy.Lemma.v1
 
 The LEMMA task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.LEMMA.v1"
+@llm_tasks = "spacy.Lemma.v1"
 examples = null
 ```
 
@@ -618,7 +618,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.LEMMA.v1"
+@llm_tasks = "spacy.Lemma.v1"
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "lemma_examples.yml"

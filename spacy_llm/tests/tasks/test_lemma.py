@@ -28,7 +28,7 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.LEMMA.v1"
+    @llm_tasks = "spacy.Lemma.v1"
 
     [components.llm.backend]
     @llm_backends = "spacy.REST.v1"
@@ -51,7 +51,7 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.LEMMA.v1"
+    @llm_tasks = "spacy.Lemma.v1"
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -79,7 +79,7 @@ def ext_template_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.LEMMA.v1"
+    @llm_tasks = "spacy.Lemma.v1"
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
