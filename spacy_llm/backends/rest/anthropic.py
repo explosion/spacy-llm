@@ -30,18 +30,18 @@ class AnthropicBackend(Backend):
         RETURNS (Dict[str, str]): Supported models with their endpoints.
         """
         return {
-            "claude-v1": Endpoints.COMPLETIONS.value,
-            "claude-v1-100k": Endpoints.COMPLETIONS.value,
-            "claude-instant-v1": Endpoints.COMPLETIONS.value,
-            "claude-instant-v1-100k": Endpoints.COMPLETIONS.value,
+            "claude-1": Endpoints.COMPLETIONS.value,
+            "claude-1-100k": Endpoints.COMPLETIONS.value,
+            "claude-instant-1": Endpoints.COMPLETIONS.value,
+            "claude-instant-1-100k": Endpoints.COMPLETIONS.value,
             # sub-versions of the models
-            "claude-v1.3": Endpoints.COMPLETIONS.value,
-            "claude-v1.3-100k": Endpoints.COMPLETIONS.value,
-            "claude-v1.2": Endpoints.COMPLETIONS.value,
-            "claude-v1.0": Endpoints.COMPLETIONS.value,
-            "claude-instant-v1.1": Endpoints.COMPLETIONS.value,
-            "claude-instant-v1.1-100k": Endpoints.COMPLETIONS.value,
-            "claude-instant-v1.0": Endpoints.COMPLETIONS.value,
+            "claude-1.3": Endpoints.COMPLETIONS.value,
+            "claude-1.3-100k": Endpoints.COMPLETIONS.value,
+            "claude-1.2": Endpoints.COMPLETIONS.value,
+            "claude-1.0": Endpoints.COMPLETIONS.value,
+            "claude-instant-1.1": Endpoints.COMPLETIONS.value,
+            "claude-instant-1.1-100k": Endpoints.COMPLETIONS.value,
+            "claude-instant-1.0": Endpoints.COMPLETIONS.value,
         }
 
     @property
