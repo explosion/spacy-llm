@@ -80,13 +80,11 @@ class LemmaTask(SerializableTask[LemmaExample]):
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, responses):
             parsed_response = [
-                pr.split("[[")
+                [pr_part.strip() for pr_part in pr.split(":")]
                 for pr in prompt_response.replace("Lemmatized text:", "")
-                .replace("\n", "")
-                .replace('"', "")
-                .replace("'", "")
+                .replace("'''", "")
                 .strip()
-                .split("]]")
+                .split("\n")
             ]
             tokens = [token for token in doc]
 
@@ -97,7 +95,8 @@ class LemmaTask(SerializableTask[LemmaExample]):
 
             # Assign lemmas.
             for token, lemma_info in zip(tokens, parsed_response):
-                token.lemma_ = lemma_info[1] if len(lemma_info) > 1 else lemma_info[0]
+                if len(lemma_info) > 0:
+                    token.lemma_ = lemma_info[1]
 
             yield doc
 

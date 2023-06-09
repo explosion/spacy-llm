@@ -181,8 +181,12 @@ def test_jinja_template_rendering_without_examples():
         == f"""
 You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
 Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
-Output the original version of each word, and append its lemma in between double square brackets. like this: Word1[[lemma1]] Word2[[lemma2]].
-Don't add spaces before or after square brackets.
+Output each original word on a new line, followed by a colon and the word's lemma - like this:
+'''
+Word1: Lemma of Word1
+Word2: Lemma of Word2
+'''
+Include the final punctuation token in this list.
 Prefix with your output with "Lemmatized text".
 
 
@@ -209,7 +213,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     with annoying newlines and spaces at the edge of the text.
     """
     nlp = spacy.blank("xx")
-    text = "Alice and Bob went to the supermarket"
+    text = "Alice and Bob went to the supermarket."
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
@@ -217,11 +221,15 @@ def test_jinja_template_rendering_with_examples(examples_path):
 
     assert (
         prompt.strip()
-        == """
+        == f"""
 You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
 Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
-Output the original version of each word, and append its lemma in between double square brackets. like this: Word1[[lemma1]] Word2[[lemma2]].
-Don't add spaces before or after square brackets.
+Output each original word on a new line, followed by a colon and the word's lemma - like this:
+'''
+Word1: Lemma of Word1
+Word2: Lemma of Word2
+'''
+Include the final punctuation token in this list.
 Prefix with your output with "Lemmatized text".
 
 Below are some examples (only use these as a guide):
@@ -230,32 +238,64 @@ Text:
 '''
 The arc of the moral universe is long, but it bends toward justice.
 '''
-Lemmatized text:
+Lemmas:
 '''
-The[[The]] arc[[arc]] of[[of]] the[[the]] moral[[moral]] universe[[universe]] is[[be]] long[[long]], but[[but]] it[[it]] bends[[bend]] toward[[toward]] justice[[justice]].
+The: The
+arc: arc
+of: of
+the: the
+moral: moral
+universe: universe
+is: be
+long: long
+,: ,
+but: but
+it: it
+bends: bend
+toward: toward
+justice: justice
+.: .
 '''
 
 Text:
 '''
 Life can only be understood backwards; but it must be lived forwards.
 '''
-Lemmatized text:
+Lemmas:
 '''
-Life[[Life]] can[[can]] only[[only]] be[[be]] understood[[understand]] backwards[[backwards]]; but[[but]] it[[it]] must[[must]] be[[be]] lived[[lived]] forwards[[forwards]].
+Life: Life
+can: can
+only: only
+be: be
+understood: understand
+backwards: backwards
+;: ;
+but: but
+it: it
+must: must
+be: be
+lived: lived
+forwards: forwards
+.: .
 '''
 
 Text:
 '''
 I'm buying ice cream.
 '''
-Lemmatized text:
+Lemmas:
 '''
-I[[I]]'m[[be]] buy[[buy]] ice[[ice]] cream[[cream]].
+I: I
+'m: be
+buying: buy
+ice: ice
+cream: cream
+.: .
 '''
 
 Here is the text that needs to be lemmatized:
 '''
-Alice and Bob went to the supermarket
+{text}
 '''
 """.strip()
     )

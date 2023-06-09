@@ -10,4 +10,4 @@ class SpanExample(BaseModel):
 
 class LemmaExample(BaseModel):
     text: str
-    lemmatized: str
+    lemmas: List[Dict[str, str]]
