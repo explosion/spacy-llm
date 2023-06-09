@@ -1,16 +1,20 @@
+from collections import defaultdict
+from itertools import tee
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import spacy
+from spacy import util
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.ty import InitializableComponent as Initializable
 from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LLMTask, PromptExecutor, validate_types
+from ..ty import Cache, LLMTask, PromptExecutor, Serializable, validate_types
 
 
 class CacheConfigType(TypedDict):
@@ -37,6 +41,7 @@ class CacheConfigType(TypedDict):
             "batch_size": 64,
             "max_batches_in_mem": 4,
         },
+        "save_io": False,
     },
 )
 def make_llm(
@@ -45,6 +50,7 @@ def make_llm(
     task: Optional[LLMTask],
     backend: PromptExecutor,
     cache: Cache,
+    save_io: bool,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -55,6 +61,7 @@ def make_llm(
         structured information and set that back on the docs.
     backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
+    save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
     """
     if task is None:
         raise ValueError(
@@ -66,6 +73,7 @@ def make_llm(
     return LLMWrapper(
         name=name,
         task=task,
+        save_io=save_io,
         backend=backend,
         cache=cache,
         vocab=nlp.vocab,
@@ -83,6 +91,7 @@ class LLMWrapper(Pipe):
         task: LLMTask,
         backend: PromptExecutor,
         cache: Cache,
+        save_io: bool,
     ) -> None:
         """
         Component managing execution of prompts to LLM APIs and mapping responses back to Doc/Span instances.
@@ -94,12 +103,20 @@ class LLMWrapper(Pipe):
             structured information and set that back on the docs.
         backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
+        save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
         """
         self._name = name
         self._task = task
         self._backend = backend
         self._cache = cache
         self._cache.vocab = vocab
+        self._save_io = save_io
+
+        # This is done this way because spaCy's `validate_init_settings` function
+        # does not support `**kwargs: Any`.
+        # See https://github.com/explosion/spaCy/blob/master/spacy/schemas.py#L111
+        if isinstance(self._task, Initializable):
+            self.initialize = self._task.initialize
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
@@ -146,12 +163,22 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
         """
+
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
+
         prompts = self._task.generate_prompts(noncached_doc_batch)
+        if self._save_io:
+            prompts, saved_prompts = tee(prompts)
+
         responses = self._backend(prompts)
+        if self._save_io:
+            responses, saved_responses = tee(responses)
+
         modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
+
         final_docs = []
+
         for i, doc in enumerate(docs):
             if is_cached[i]:
                 cached_doc = self._cache[doc]
@@ -162,23 +189,58 @@ class LLMWrapper(Pipe):
                 self._cache.add(doc)
                 final_docs.append(doc)
 
+                if self._save_io:
+                    # Make sure the `llm_io` field is set
+                    doc.user_data["llm_io"] = doc.user_data.get(
+                        "llm_io", defaultdict(dict)
+                    )
+                    llm_io = doc.user_data["llm_io"][self._name]
+                    llm_io["prompt"] = str(next(saved_prompts))
+                    llm_io["response"] = str(next(saved_responses))
+
         return final_docs
 
-    def to_bytes(self, *, exclude: Tuple[str] = cast(Tuple[str], tuple())) -> bytes:
+    def to_bytes(
+        self,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
         """Serialize the LLMWrapper to a bytestring.
 
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
         """
-        return b""
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()) -> "LLMWrapper":
+        serialize = {}
+
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda: self._backend.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(
+        self,
+        bytes_data: bytes,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> "LLMWrapper":
         """Load the LLMWrapper from a bytestring.
 
         bytes_data (bytes): The data to load.
-        exclude (Tuple): Names of properties to exclude from deserialization.
+        exclude (Tuple[str]): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
+
+        deserialize = {}
+
+        if isinstance(self._task, Serializable):
+            deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            deserialize["backend"] = lambda b: self._backend.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+
+        util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(
@@ -188,7 +250,15 @@ class LLMWrapper(Pipe):
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-        return None
+
+        serialize = {}
+
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda p: self._backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+
+        return util.to_disk(path, serialize, exclude)
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
@@ -198,4 +268,13 @@ class LLMWrapper(Pipe):
         exclude (Tuple): Names of properties to exclude from deserialization.
         RETURNS (LLMWrapper): Modified LLMWrapper instance.
         """
+
+        serialize = {}
+
+        if isinstance(self._task, Serializable):
+            serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._backend, Serializable):
+            serialize["backend"] = lambda p: self._backend.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+
+        util.from_disk(path, serialize, exclude)
         return self

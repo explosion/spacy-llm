@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Iterable
 
@@ -9,13 +10,9 @@ from pydantic import ValidationError
 from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import (
-    fewshot_reader,
-    file_reader,
-    lowercase_normalizer,
-    registry,
-)
-from spacy_llm.tasks.textcat import make_textcat_task_v3
+from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
+from spacy_llm.registry import registry
+from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -707,3 +704,103 @@ Text:
 You need to increase the temperature when baking, it looks undercooked.
 '''""".strip()
     )
+
+
+@pytest.fixture
+def noop_config():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.TextCat.v1"
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "test.NoOpBackend.v1"
+    """
+
+
+@pytest.mark.parametrize("init_from_config", [True, False])
+def test_textcat_init(noop_config, init_from_config: bool):
+
+    config = Config().from_str(noop_config)
+    if init_from_config:
+        config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for i, text in enumerate(INSULTS):
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        if i < (len(INSULTS) // 2):
+            reference.cats = {"Insult": 1.0, "Compliment": 0.0}
+        else:
+            reference.cats = {"Insult": 0.0, "Compliment": 1.0}
+
+        examples.append(Example(predicted, reference))
+
+    _, llm = nlp.pipeline[0]
+    task: TextCatTask = llm._task
+
+    if init_from_config:
+        target = {"Test"}
+    else:
+        target = set()
+    assert set(task._label_dict.values()) == target
+
+    nlp.initialize(lambda: examples)
+
+    if init_from_config:
+        target = {"Test"}
+    else:
+        target = {"Insult", "Compliment"}
+    assert set(task._label_dict.values()) == target
+
+
+def test_textcat_serde(noop_config, tmp_path: Path):
+
+    config = Config().from_str(noop_config)
+
+    nlp1 = assemble_from_config(config)
+    nlp2 = assemble_from_config(config)
+    nlp3 = assemble_from_config(config)
+
+    labels = {"insult": "INSULT", "compliment": "COMPLIMENT"}
+
+    task1: TextCatTask = nlp1.get_pipe("llm")._task
+    task2: TextCatTask = nlp2.get_pipe("llm")._task
+    task3: TextCatTask = nlp3.get_pipe("llm")._task
+
+    # Artificially add labels to task1
+    task1._label_dict = labels
+
+    assert task1._label_dict == labels
+    assert task2._label_dict == dict()
+    assert task3._label_dict == dict()
+
+    path = tmp_path / "model"
+
+    nlp1.to_disk(path)
+
+    cfgs = list(path.rglob("cfg"))
+    assert len(cfgs) == 1
+
+    cfg = json.loads(cfgs[0].read_text())
+    assert cfg["_label_dict"] == labels
+
+    nlp2.from_disk(path)
+    nlp3.from_bytes(nlp1.to_bytes())
+
+    assert task1._label_dict == task2._label_dict == task3._label_dict == labels

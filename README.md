@@ -169,6 +169,8 @@ To register your custom task with spaCy, decorate a factory function using the `
 > 📖 For more details, see the [**usage example on writing your own task**](usage_examples/README.md#writing-your-own-task)
 
 ```python
+from typing import Iterable, List
+from spacy.tokens import Doc
 from spacy_llm.registry import registry
 from spacy_llm.util import split_labels
 
@@ -202,15 +204,30 @@ my_other_config_val = 0.3
 
 ## 📓 API
 
-Each `llm` component is defined by two main settings:
+`spacy-llm` exposes a `llm` factory that accepts the following configuration options:
+
+| Argument  | Type                                        | Description                                                                         |
+| --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
+| `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
+| `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
+| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`                  |
+
+An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
 - A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
 
-Moreover, the component also implements [**caching**](#cache) functionality to avoid running
+Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality to avoid running
 the same document through an LLM service (be it local or through a REST API) more than once.
+
+Finally, you can choose to save a stringified version of LLM prompts/responses
+within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
+`Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM component
+within the spaCy pipeline. Each entry is itself a dictionary, with two keys:
+`prompt` and `response`.
 
 ### Tasks
 

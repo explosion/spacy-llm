@@ -1,7 +1,9 @@
 import inspect
 import typing
 import warnings
-from typing import Any, Callable, Dict, Iterable, Optional, Union, Type, List
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import cast
 
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
@@ -16,6 +18,40 @@ PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
+
+
+@runtime_checkable
+class Serializable(Protocol):
+    def to_bytes(
+        self,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
+        ...
+
+    def from_bytes(
+        self,
+        bytes_data: bytes,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
+        ...
+
+    def to_disk(
+        self,
+        path: Path,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ) -> bytes:
+        ...
+
+    def from_disk(
+        self,
+        path: Path,
+        *,
+        exclude: Tuple[str] = cast(Tuple[str], tuple()),
+    ):
+        ...
 
 
 @runtime_checkable
@@ -168,7 +204,7 @@ def validate_types(task: LLMTask, backend: PromptExecutor) -> None:
     for k in type_hints["parse"]:
         # find the 'prompt_responses' var without assuming its name
         type_k = type_hints["parse"][k]
-        if type_k is not typing.Iterable[Doc]:
+        if type_k != typing.Iterable[Doc]:
             parse_input = type_hints["parse"][k]
 
     template_output = type_hints["template"]["return"]
