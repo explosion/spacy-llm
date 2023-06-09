@@ -787,7 +787,7 @@ model = "stabilityai/stablelm-tuned-alpha-7b"
 | `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
 | `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
 
-Note that `config` has be structured like this, if it's not empty:
+Note that `config` has to be structured like this, if it's not empty:
 
 ```python
 {
