@@ -844,7 +844,7 @@ model = "openlm-research/open_llama_3b_350bt_preview"
 | `model`  | `str`            |         | The name of a OpenLLaMa model that is supported.                                                 |
 | `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
 
-Note that `config` has be structured like this, if it's not empty:
+Note that `config` has to be structured like this, if it's not empty:
 
 ```python
 {
