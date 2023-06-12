@@ -1,9 +1,11 @@
 import os
+from typing import cast
 
 import streamlit as st
 from spacy.util import load_config_from_str
 from spacy_streamlit import visualize_ner, visualize_textcat
 
+from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.util import assemble_from_config
 
 NER_CONFIG = """
@@ -87,11 +89,13 @@ if os.environ["OPENAI_API_KEY"]:
     model_names = models.keys()
 
     selected_model = st.sidebar.selectbox("Model", model_names)
+    assert selected_model is not None
 
     nlp = models[selected_model]
     doc = nlp(text)
+    llm_pipe = cast(LLMWrapper, nlp.get_pipe("llm"))
     prompt = "\n".join(
-        [str(prompt) for prompt in nlp.get_pipe("llm")._task.generate_prompts([doc])]
+        [str(prompt) for prompt in llm_pipe._task.generate_prompts([doc])]
     )
 
     if selected_model == "textcat":
