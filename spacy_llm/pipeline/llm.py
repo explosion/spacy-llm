@@ -148,9 +148,14 @@ class LLMWrapper(Pipe):
         """
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
-        prompts = self._task.generate_prompts(noncached_doc_batch)
-        responses = self._backend(prompts)
-        modified_docs = iter(self._task.parse_responses(noncached_doc_batch, responses))
+        modified_docs = iter(())
+        if noncached_doc_batch:
+            prompts = self._task.generate_prompts(noncached_doc_batch)
+            responses = self._backend(prompts)
+            modified_docs = iter(
+                self._task.parse_responses(noncached_doc_batch, responses)
+            )
+
         final_docs = []
         for i, doc in enumerate(docs):
             if is_cached[i]:
