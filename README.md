@@ -204,7 +204,7 @@ my_other_config_val = 0.3
 
 ## Logging
 
-spacy-llm has a built-in logger that can log the actual prompt sent to the Backend LLM as well as the raw response sent back from the LLM. This logger uses the debug level and by default has a `logging.NullHandler()` configured.
+spacy-llm has a built-in logger that can log the prompt sent to the LLM as well as its raw response. This logger uses the debug level and by default has a `logging.NullHandler()` configured.
 
 In order to use this logger, you can setup a simple handler like this:
 
@@ -260,7 +260,7 @@ Backend response for doc: You look gorgeous!
 COMPLIMENT
 ```
 
-And the `print` of doc.cats to standard output should look like:
+`print(doc.cats)` to standard output should look like:
 
 ```
 {'COMPLIMENT': 1.0, 'INSULT': 0.0}
