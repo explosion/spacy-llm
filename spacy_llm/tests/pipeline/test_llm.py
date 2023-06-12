@@ -184,7 +184,7 @@ def test_llm_logs_at_debug_level(
 
     assert f"Generated prompt for doc: {doc.text}" in caplog.text
     assert "Don't do anything" in caplog.text
-    assert f"Backend response for doc: {doc.text}" in caplog.text
+    assert f"LLM response for doc: {doc.text}" in caplog.text
 
 
 def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixture):
@@ -213,4 +213,4 @@ def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixt
     captured = capsys.readouterr()
     assert f"Generated prompt for doc: {doc.text}" not in captured.out
     assert "Don't do anything" not in captured.out
-    assert f"Backend response for doc: {doc.text}" not in captured.out
+    assert f"LLM response for doc: {doc.text}" not in captured.out
