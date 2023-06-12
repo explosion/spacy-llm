@@ -204,7 +204,7 @@ def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixt
     captured = capsys.readouterr()
     assert f"Generated prompt for doc: {doc.text}" in captured.out
     assert "Don't do anything" in captured.out
-    assert f"Backend response for doc: {doc.text}" in captured.out
+    assert f"LLM response for doc: {doc.text}" in captured.out
 
     # Remove the Stream Handler from the spacy_llm logger
     spacy_llm.logger.removeHandler(stream_handler)
