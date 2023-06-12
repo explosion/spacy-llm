@@ -260,7 +260,7 @@ Backend response for doc: You look gorgeous!
 COMPLIMENT
 ```
 
-And the `print` of doc.cats to standard output should look like:
+`print(doc.cats)` to standard output should look like:
 
 ```
 {'COMPLIMENT': 1.0, 'INSULT': 0.0}
