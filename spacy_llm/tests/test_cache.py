@@ -1,16 +1,15 @@
+import copy
 import time
 from pathlib import Path
 from typing import Dict
 
 import pytest
-import srsly  # type: ignore[import]
 import spacy
-from spacy import Language
+import srsly  # type: ignore[import]
+from spacy.language import Language
 from spacy.tokens import DocBin
-import copy
 
 from ..cache import BatchCache
-
 
 _DEFAULT_CFG = {
     "backend": {"api": "NoOp", "config": {"model": "NoOp"}},

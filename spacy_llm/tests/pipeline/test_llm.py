@@ -1,3 +1,5 @@
+import logging
+import sys
 import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable
@@ -8,6 +10,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from thinc.api import NumpyOps, get_current_ops
 
+import spacy_llm
 from spacy_llm.backends.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
@@ -166,3 +169,59 @@ def test_type_checking_invalid(noop_config) -> None:
         == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
         "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
     )
+
+
+@pytest.mark.parametrize("use_pipe", [True, False])
+def test_llm_logs_at_debug_level(
+    nlp: Language, use_pipe: bool, caplog: pytest.LogCaptureFixture
+):
+    with caplog.at_level(logging.INFO):
+        if use_pipe:
+            doc = next(nlp.pipe(["This is a test"]))
+        else:
+            doc = nlp("This is a test")
+
+    assert "spacy_llm" not in caplog.text
+    assert doc.text not in caplog.text
+
+    with caplog.at_level(logging.DEBUG):
+        if use_pipe:
+            doc = next(nlp.pipe(["This is a test"]))
+        else:
+            doc = nlp("This is a test")
+
+    assert "spacy_llm" in caplog.text
+    assert doc.text in caplog.text
+
+    assert f"Generated prompt for doc: {doc.text}" in caplog.text
+    assert "Don't do anything" in caplog.text
+    assert f"LLM response for doc: {doc.text}" in caplog.text
+
+
+def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixture):
+
+    doc = nlp("This is a test")
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+    # Add a basic Stream Handler
+    stream_handler = logging.StreamHandler(sys.stdout)
+    spacy_llm.logger.addHandler(stream_handler)
+    spacy_llm.logger.setLevel(logging.DEBUG)
+
+    doc = nlp("This is a test")
+    captured = capsys.readouterr()
+    assert f"Generated prompt for doc: {doc.text}" in captured.out
+    assert "Don't do anything" in captured.out
+    assert f"LLM response for doc: {doc.text}" in captured.out
+
+    # Remove the Stream Handler from the spacy_llm logger
+    spacy_llm.logger.removeHandler(stream_handler)
+
+    doc = nlp("This is a test with no handler")
+    captured = capsys.readouterr()
+    assert f"Generated prompt for doc: {doc.text}" not in captured.out
+    assert "Don't do anything" not in captured.out
+    assert f"LLM response for doc: {doc.text}" not in captured.out

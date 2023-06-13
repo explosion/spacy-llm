@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from itertools import tee
 from pathlib import Path
@@ -15,6 +16,9 @@ from spacy.vocab import Vocab
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
 from ..ty import Cache, LLMTask, PromptExecutor, Scorable, Serializable, validate_types
+
+logger = logging.getLogger("spacy_llm")
+logger.addHandler(logging.NullHandler())
 
 
 class CacheConfigType(TypedDict):
@@ -163,25 +167,33 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
         """
-
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
-        modified_docs = iter(())
-        if noncached_doc_batch:
-            prompts = self._task.generate_prompts(noncached_doc_batch)
-            if self._save_io:
-                prompts, saved_prompts = tee(prompts)
+        if len(noncached_doc_batch) < len(docs):
+            logger.debug(
+                "Found %d docs in cache. Processing %d docs not found in cache",
+                len(docs) - len(noncached_doc_batch),
+                len(noncached_doc_batch),
+            )
 
-            responses = self._backend(prompts)
-            if self._save_io:
-                responses, saved_responses = tee(responses)
+        modified_docs: Iterator[Doc] = iter(())
+        if len(noncached_doc_batch) > 0:
+            n_iters = 3 if self._save_io else 2
+            prompts_iters = tee(
+                self._task.generate_prompts(noncached_doc_batch), n_iters
+            )
+            responses_iters = tee(self._backend(prompts_iters[0]), n_iters)
+            for prompt, response, doc in zip(
+                prompts_iters[1], responses_iters[1], noncached_doc_batch
+            ):
+                logger.debug("Generated prompt for doc: %s\n%s", doc.text, prompt)
+                logger.debug("LLM response for doc: %s\n%s", doc.text, response)
 
             modified_docs = iter(
-                self._task.parse_responses(noncached_doc_batch, responses)
+                self._task.parse_responses(noncached_doc_batch, responses_iters[0])
             )
 
         final_docs = []
-
         for i, doc in enumerate(docs):
             if is_cached[i]:
                 cached_doc = self._cache[doc]
@@ -198,8 +210,8 @@ class LLMWrapper(Pipe):
                         "llm_io", defaultdict(dict)
                     )
                     llm_io = doc.user_data["llm_io"][self._name]
-                    llm_io["prompt"] = str(next(saved_prompts))
-                    llm_io["response"] = str(next(saved_responses))
+                    llm_io["prompt"] = str(next(prompts_iters[2]))
+                    llm_io["response"] = str(next(responses_iters[2]))
 
         return final_docs
 

@@ -202,6 +202,70 @@ labels = LABEL1,LABEL2,LABEL3
 my_other_config_val = 0.3
 ```
 
+## Logging
+
+spacy-llm has a built-in logger that can log the prompt sent to the LLM as well as its raw response. This logger uses the debug level and by default has a `logging.NullHandler()` configured.
+
+In order to use this logger, you can setup a simple handler like this:
+
+```python
+import logging
+import spacy_llm
+
+
+spacy_llm.logger.addHandler(logging.StreamHandler())
+spacy_llm.logger.setLevel(logging.DEBUG)
+```
+
+> NOTE: Any `logging` handler will work here so you probably want to use some sort of rotating `FileHandler` as the generated prompts can be quite long, especially for tasks with few-shot examples.
+
+
+Then when using the pipeline you'll be able to view the prompt and response.
+
+E.g. with the config and code from [Example 1](##example-1-add-a-text-classifier-using-a-gpt-3-model-from-openai) above:
+
+
+```python
+from spacy_llm.util import assemble
+
+
+nlp = assemble("config.cfg")
+doc = nlp("You look gorgeous!")
+print(doc.cats)
+```
+
+You will see `logging` output similar to:
+
+```
+Generated prompt for doc: You look gorgeous!
+
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
+Classify the text below to any of the following labels: COMPLIMENT, INSULT
+The task is non-exclusive, so you can provide more than one label as long as
+they're comma-delimited. For example: Label1, Label2, Label3.
+Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
+If the text cannot be classified into any of the provided labels, answer `==NONE==`.
+
+Here is the text that needs classification
+
+
+Text:
+'''
+You look gorgeous!
+'''
+
+Backend response for doc: You look gorgeous!
+COMPLIMENT
+```
+
+`print(doc.cats)` to standard output should look like:
+
+```
+{'COMPLIMENT': 1.0, 'INSULT': 0.0}
+```
+
 ## 📓 API
 
 `spacy-llm` exposes a `llm` factory that accepts the following configuration options:

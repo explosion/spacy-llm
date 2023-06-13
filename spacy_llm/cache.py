@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
-import numpy
 
+import numpy
 import srsly  # type: ignore[import]
 from spacy.tokens import Doc, DocBin
 from spacy.vocab import Vocab
