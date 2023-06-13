@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
 from spacy.tokens import Doc, Span
@@ -7,9 +7,10 @@ from ...compat import Literal
 from ...registry import lowercase_normalizer
 from .examples import SpanExample
 from .parsing import find_substrings
+from .serialization import SerializableTask
 
 
-class SpanTask:
+class SpanTask(SerializableTask[SpanExample]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
@@ -34,14 +35,6 @@ class SpanTask:
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
-
-    def _validate_alignment(self, mode):
-        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
-        alignment_modes = ("strict", "contract", "expand")
-        if mode not in alignment_modes:
-            raise ValueError(
-                f"Unsupported alignment mode '{mode}'. Supported modes: {', '.join(alignment_modes)}"
-            )
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
@@ -71,6 +64,18 @@ class SpanTask:
                         _phrases = [p.strip() for p in phrases.strip().split(",")]
                         output.append((self._label_dict[norm_label], _phrases))
         return output
+
+    @staticmethod
+    def _validate_alignment(alignment_mode: str):
+        """Raises error if specified alignment_mode is not supported.
+        alignment_mode (str): Alignment mode to check.
+        """
+        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
+        alignment_modes = ("strict", "contract", "expand")
+        if alignment_mode not in alignment_modes:
+            raise ValueError(
+                f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
+            )
 
     def assign_spans(
         self,
@@ -103,3 +108,18 @@ class SpanTask:
 
             self.assign_spans(doc, spans)
             yield doc
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_alignment_mode",
+            "_case_sensitive_matching",
+            "_single_match",
+        ]
+
+    @property
+    def _Example(self) -> Type[SpanExample]:
+        return SpanExample

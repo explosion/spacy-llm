@@ -1,0 +1,52 @@
+[
+  {
+    "text": "The arc of the moral universe is long, but it bends toward justice.",
+    "lemmas": [
+      {"The": "The"},
+      {"arc": "arc"},
+      {"of": "of"},
+      {"the": "the"},
+      {"moral": "moral"},
+      {"universe": "universe"},
+      {"is": "be"},
+      {"long": "long"},
+      {",": ","},
+      {"but": "but"},
+      {"it": "it"},
+      {"bends": "bend"},
+      {"toward": "toward"},
+      {"justice": "justice"},
+      {".": "."}
+    ]
+  },
+  {
+    "text": "Life can only be understood backwards; but it must be lived forwards.",
+    "lemmas": [
+      {"Life": "Life"},
+      {"can": "can"},
+      {"only": "only"},
+      {"be": "be"},
+      {"understood": "understand"},
+      {"backwards": "backwards"},
+      {";": ";"},
+      {"but": "but"},
+      {"it": "it"},
+      {"must": "must"},
+      {"be": "be"},
+      {"lived": "lived"},
+      {"forwards": "forwards"},
+      {".": "."}
+    ]
+  },
+  {
+    "text": "I'm buying ice cream.",
+    "lemmas": [
+      {"I": "I"},
+      {"'m": "be"},
+      {"buying": "buy"},
+      {"ice": "ice"},
+      {"cream": "cream"},
+      {".": "."}
+    ]
+  }
+]

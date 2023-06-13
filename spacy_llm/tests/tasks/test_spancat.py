@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Iterable
 
 import pytest
 import spacy
@@ -10,13 +9,9 @@ from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import (
-    fewshot_reader,
-    lowercase_normalizer,
-    registry,
-    strip_normalizer,
-)
+from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
 from spacy_llm.tasks import make_spancat_task_v2
+from spacy_llm.tasks.spancat import SpanCatTask
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.util import assemble_from_config
 
@@ -483,18 +478,36 @@ def test_example_not_following_basemodel():
             )
 
 
+@pytest.fixture
+def noop_config():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.SpanCat.v2"
+    labels = ["PER", "ORG", "LOC"]
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.backend]
+    @llm_backends = "test.NoOpBackend.v1"
+    output = "PER: Bob,Alice"
+    """
+
+
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_spancat_scoring(zeroshot_cfg_string, n_detections):
-    @registry.llm_backends("Dummy")
-    def factory():
-        def b(prompts: Iterable[str]) -> Iterable[str]:
-            for _ in prompts:
-                yield ("PER: Alice,Bob")
+def test_spancat_scoring(noop_config, n_detections):
 
-        return b
-
-    config = Config().from_str(zeroshot_cfg_string)
-    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
     examples = []
@@ -513,3 +526,59 @@ def test_spancat_scoring(zeroshot_cfg_string, n_detections):
     scores = nlp.evaluate(examples)
 
     assert scores["spans_sc_p"] == n_detections / 2
+
+
+def test_spancat_init(noop_config):
+
+    config = Config().from_str(noop_config)
+    del config["components"]["llm"]["task"]["labels"]
+    nlp = assemble_from_config(config)
+
+    examples = []
+
+    for text in [
+        "Alice works with Bob in London.",
+        "Bob lives with Alice in Manchester.",
+    ]:
+        predicted = nlp.make_doc(text)
+        reference = predicted.copy()
+
+        reference.spans["sc"] = [
+            Span(reference, 0, 1, label="PER"),
+            Span(reference, 3, 4, label="PER"),
+            Span(reference, 5, 6, label="LOC"),
+        ]
+
+        examples.append(Example(predicted, reference))
+
+    _, llm = nlp.pipeline[0]
+    task: SpanCatTask = llm._task
+
+    assert set(task._label_dict.values()) == set()
+    nlp.initialize(lambda: examples)
+    assert set(task._label_dict.values()) == {"PER", "LOC"}
+
+
+def test_spancat_serde(noop_config):
+
+    config = Config().from_str(noop_config)
+    del config["components"]["llm"]["task"]["labels"]
+
+    nlp1 = assemble_from_config(config)
+    nlp2 = assemble_from_config(config)
+
+    labels = {"loc": "LOC", "per": "PER"}
+
+    task1: SpanCatTask = nlp1.get_pipe("llm")._task
+    task2: SpanCatTask = nlp2.get_pipe("llm")._task
+
+    # Artificially add labels to task1
+    task1._label_dict = labels
+
+    assert task1._label_dict == labels
+    assert task2._label_dict == dict()
+
+    b = nlp1.to_bytes()
+    nlp2.from_bytes(b)
+
+    assert task1._label_dict == task2._label_dict == labels

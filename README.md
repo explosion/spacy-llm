@@ -106,7 +106,7 @@ factory = "llm"
 labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 # For better performance, use databricks/dolly-v2-12b instead
 model = "databricks/dolly-v2-3b"
 ```
@@ -268,15 +268,30 @@ COMPLIMENT
 
 ## 📓 API
 
-Each `llm` component is defined by two main settings:
+`spacy-llm` exposes a `llm` factory that accepts the following configuration options:
+
+| Argument  | Type                                        | Description                                                                         |
+| --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
+| `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
+| `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
+| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`                  |
+
+An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
 - A [**backend**](#backends) defining the model to use and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
 
-Moreover, the component also implements [**caching**](#cache) functionality to avoid running
+Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality to avoid running
 the same document through an LLM service (be it local or through a REST API) more than once.
+
+Finally, you can choose to save a stringified version of LLM prompts/responses
+within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
+`Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM component
+within the spaCy pipeline. Each entry is itself a dictionary, with two keys:
+`prompt` and `response`.
 
 ### Tasks
 
@@ -406,7 +421,6 @@ examples = null
 | `alignment_mode`          | `str`                                   | `"contract"` | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. |
 | `case_sensitive_matching` | `bool`                                  | `False`      | Whether to search without case sensitivity.                                                                                                  |
 | `single_match`            | `bool`                                  | `False`      | Whether to match an entity in the LLM's response only once (the first hit) or multiple times.                                                |
-
 
 The NER task implementation doesn't currently ask the LLM for specific offsets, but simply expects a list of strings that represent the enties in the document.
 This means that a form of string matching is required. This can be configured by the following parameters:
@@ -631,6 +645,71 @@ labels = ["LivesIn", "Visits"]
 path = "rel_examples.jsonl"
 ```
 
+#### spacy.Lemma.v1
+
+The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Lemma.v1"
+examples = null
+```
+
+| Argument                  | Type                                    | Default                                                   | Description                                                                                                                                           |
+| ------------------------- | --------------------------------------- |-----------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
+
+`Lemma.v1` prompts the LLM to lemmatize the passed text and return the lemmatized version as a list of tokens and their
+corresponding lemma. E. g. the text 
+`I'm buying ice cream for my friends` should invoke the response
+```
+I: I
+'m: be
+buying: buy
+ice: ice
+cream: cream
+for: for
+my: my
+friends: friend
+.: .
+```
+
+If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
+by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
+the lemma suggested by the LLM.
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: I'm buying ice cream.
+  lemmas:
+    - "I": "I"
+    - "'m": "be"
+    - "buying": "buy"
+    - "ice": "ice"
+    - "cream": "cream"
+    - ".": "."
+
+- text: I've watered the plants.
+  lemmas: 
+    - "I": "I"
+    - "'ve": "have"
+    - "watered": "water"
+    - "the": "the"
+    - "plants": "plant"
+    - ".": "."
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Lemma.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "lemma_examples.yml"
+```
+
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.
@@ -776,16 +855,15 @@ config = {"temperature": 0.3}
 
 The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `model(text)` for each given textual prompt.
 
-#### spacy.DollyHF.v1
+#### spacy.Dolly_HF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
+You can do so with
+
 ```shell
-python -m pip install "torch>=1.13.1,<2.0"
-python -m pip install "transformers>=4.28.1,<5.0"
-# Or install with spacy-llm directly
-python -m pip install "spacy-llm[transformers]"
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
@@ -799,20 +877,110 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.DollyHF.v1"
+@llm_backends = "spacy.Dolly_HF.v1"
 model = "databricks/dolly-v2-3b"
 ```
 
-| Argument | Type             | Default | Description                                                                                      |
-| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
-| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| Argument      | Type             | Default | Description                                                                                      |
+| ------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `model`       | `str`            |         | The name of a Dolly model that is supported.                                                     |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                               |
 
 Supported models (see the [Databricks models page](https://huggingface.co/databricks) on Hugging Face for details):
 
 - `"databricks/dolly-v2-3b"`
 - `"databricks/dolly-v2-7b"`
 - `"databricks/dolly-v2-12b"`
+
+Note that Hugging Face will download this model the first time you use it - you can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.StableLM_HF.v1
+
+To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
+which may ultimately result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Example config block:
+
+```ini
+[components.llm.backend]
+@llm_backends = "spacy.StableLM_HF.v1"
+model = "stabilityai/stablelm-tuned-alpha-7b"
+```
+
+| Argument      | Type             | Default | Description                                                                                                                  |
+| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `str`            |         | The name of a StableLM model that is supported.                                                                              |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
+
+Supported models (see the [Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha) for details):
+
+- `"stabilityai/stablelm-base-alpha-3b"`
+- `"stabilityai/stablelm-base-alpha-7b"`
+- `"stabilityai/stablelm-tuned-alpha-3b"`
+- `"stabilityai/stablelm-tuned-alpha-7b"`
+
+Note that Hugging Face will download this model the first time you use it - you can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.OpenLLaMaHF.v1
+
+To use this backend, ideally you have a GPU enabled and have installed
+
+- `transformers[sentencepiece]`
+- `torch`
+- CUDA
+  in your virtual environment.
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
+which may ultimately result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Example config block:
+
+```ini
+[components.llm.backend]
+@llm_backends = "spacy.OpenLLaMaHF.v1"
+model = "openlm-research/open_llama_3b_350bt_preview"
+```
+
+| Argument      | Type             | Default | Description                                                                                                                  |
+| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `str`            |         | The name of a OpenLLaMa model that is supported.                                                                             |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
+
+Supported models (see the [OpenLM Research OpenLLaMa GitHub repo](https://github.com/openlm-research/open_llama) for details):
+
+- `"openlm-research/open_llama_3b_350bt_preview"`
+- `"openlm-research/open_llama_3b_600bt_preview"`
+- `"openlm-research/open_llama_7b_400bt_preview"`
+- `"openlm-research/open_llama_7b_700bt_preview"`
 
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)

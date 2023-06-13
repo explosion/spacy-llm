@@ -11,9 +11,11 @@ from spacy.tokens import Doc
 from thinc.api import NumpyOps, get_current_ops
 
 import spacy_llm
+from spacy_llm.backends.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import make_noop_task
+from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
 from ..compat import has_openai_key
@@ -25,6 +27,7 @@ def noop_config() -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): NoOp config.
     """
     return {
+        "save_io": True,
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
         "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
     }
@@ -52,6 +55,12 @@ def test_llm_pipe(nlp: Language, n_process: int):
         nlp.pipe(texts=["This is a test", "This is another test"], n_process=n_process)
     )
     assert len(docs) == 2
+
+    for doc in docs:
+        llm_io = doc.user_data["llm_io"]
+
+        assert llm_io["llm"]["prompt"] == _NOOP_PROMPT
+        assert llm_io["llm"]["response"] == _NOOP_RESPONSE
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
@@ -96,6 +105,7 @@ def test_llm_pipe_empty(nlp):
 def test_llm_serialize_bytes():
     llm = LLMWrapper(
         task=make_noop_task(),
+        save_io=False,
         backend=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
@@ -106,6 +116,7 @@ def test_llm_serialize_bytes():
 def test_llm_serialize_disk():
     llm = LLMWrapper(
         task=make_noop_task(),
+        save_io=False,
         backend=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
