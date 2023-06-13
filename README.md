@@ -222,7 +222,7 @@ spacy_llm.logger.setLevel(logging.DEBUG)
 
 Then when using the pipeline you'll be able to view the prompt and response.
 
-e.g. with the config and code from [Example 1](##example-1-add-a-text-classifier-using-a-gpt-3-model-from-openai) above
+E.g. with the config and code from [Example 1](##example-1-add-a-text-classifier-using-a-gpt-3-model-from-openai) above:
 
 
 ```python
