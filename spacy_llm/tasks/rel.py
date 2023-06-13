@@ -1,14 +1,17 @@
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
+from spacy.language import Language
 from spacy.tokens import Doc
+from spacy.training import Example
 from wasabi import msg
 
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
+from .util import SerializableTask
 
 
 class RelationItem(BaseModel):
@@ -58,13 +61,31 @@ _DEFAULT_REL_TEMPLATE = read_template("rel")
 
 @registry.llm_tasks("spacy.REL.v1")
 def make_rel_task(
-    labels: Union[List[str], str],
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     verbose: bool = False,
 ) -> "RELTask":
+    """REL.v1 task factory.
+
+    The REL task populates a `Doc._.rel` custom attribute.
+
+    labels (List[str]): List of labels to pass to the template,
+        either an actual list or a comma-separated string.
+        Leave empty to populate it at initialization time (only if examples are provided).
+    template (str): Prompt template passed to the model.
+    label_definitions (Optional[Dict[str, str]]): Map of label -> description
+        of the label to help the language model output the entities wanted.
+        It is usually easier to provide these definitions rather than
+        full examples, although both can be provided.
+    examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
+        reads a file containing task examples for few-shot learning. If None is
+        passed, then zero-shot learning will be used.
+    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    verbose (bool): Controls the verbosity of the task.
+    """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     rel_examples = [RELExample(**eg) for eg in raw_examples] if raw_examples else None
@@ -78,18 +99,31 @@ def make_rel_task(
     )
 
 
-class RELTask:
-    """Simple REL task. Populates a `Doc._.rel` custom attribute."""
-
+class RELTask(SerializableTask[RELExample]):
     def __init__(
         self,
-        labels: List[str],
+        labels: List[str] = [],
         template: str = _DEFAULT_REL_TEMPLATE,
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[RELExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         verbose: bool = False,
     ):
+        """Default REL task. Populates a `Doc._.rel` custom attribute.
+
+        labels (List[str]): List of labels to pass to the template.
+            Leave empty to populate it at initialization time (only if examples are provided).
+        template (str): Prompt template passed to the model.
+        label_definitions (Optional[Dict[str, str]]): Map of label -> description
+            of the label to help the language model output the entities wanted.
+            It is usually easier to provide these definitions rather than
+            full examples, although both can be provided.
+        examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
+            reads a file containing task examples for few-shot learning. If None is
+            passed, then zero-shot learning will be used.
+        normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+        verbose (bool): Controls the verbosity of the task.
+        """
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {self._normalizer(label): label for label in labels}
         self._template = template
@@ -116,7 +150,7 @@ class RELTask:
             )
             yield prompt
 
-    def _format_response(self, response: str) -> Iterable[RelationItem]:
+    def _format_response(self, response: str) -> List[RelationItem]:
         """Parse raw string response into a structured format"""
         relations = []
         for line in response.strip().split("\n"):
@@ -139,3 +173,53 @@ class RELTask:
             rels = self._format_response(prompt_response)
             doc._.rel = rels
             yield doc
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Language,
+        labels: List[str] = [],
+    ) -> None:
+        """Initialize the SpanCat task, by auto-discovering labels.
+
+        Labels can be set through, by order of precedence:
+
+        - the `[initialize]` section of the pipeline configuration
+        - the `labels` argument supplied to the task factory
+        - the labels found in the examples
+
+        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
+            for initialization.
+        nlp (Language): Language instance.
+        labels (List[str]): Optional list of labels.
+        """
+        self._check_rel_extention()
+
+        examples = get_examples()
+
+        if not labels:
+            labels = list(self._label_dict.values())
+
+        if not labels:
+            label_set = set()
+
+            for eg in examples:
+                rels: List[RelationItem] = eg.reference._.rel
+                for rel in rels:
+                    label_set.add(rel.relation)
+            labels = list(label_set)
+
+        self._label_dict = {self._normalizer(label): label for label in labels}
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_verbose",
+        ]
+
+    @property
+    def _Example(self) -> Type[RELExample]:
+        return RELExample
