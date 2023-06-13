@@ -581,6 +581,71 @@ labels = ["LivesIn", "Visits"]
 path = "rel_examples.jsonl"
 ```
 
+#### spacy.Lemma.v1
+
+The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Lemma.v1"
+examples = null
+```
+
+| Argument                  | Type                                    | Default                                                   | Description                                                                                                                                           |
+| ------------------------- | --------------------------------------- |-----------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
+
+`Lemma.v1` prompts the LLM to lemmatize the passed text and return the lemmatized version as a list of tokens and their
+corresponding lemma. E. g. the text 
+`I'm buying ice cream for my friends` should invoke the response
+```
+I: I
+'m: be
+buying: buy
+ice: ice
+cream: cream
+for: for
+my: my
+friends: friend
+.: .
+```
+
+If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
+by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
+the lemma suggested by the LLM.
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: I'm buying ice cream.
+  lemmas:
+    - "I": "I"
+    - "'m": "be"
+    - "buying": "buy"
+    - "ice": "ice"
+    - "cream": "cream"
+    - ".": "."
+
+- text: I've watered the plants.
+  lemmas: 
+    - "I": "I"
+    - "'ve": "have"
+    - "watered": "water"
+    - "the": "the"
+    - "plants": "plant"
+    - ".": "."
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Lemma.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "lemma_examples.yml"
+```
+
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.

@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, U
 from typing import cast
 
 from spacy.tokens import Doc
+from spacy.training.example import Example
 from spacy.vocab import Vocab
 
 from .backends import integration
@@ -52,6 +53,15 @@ class Serializable(Protocol):
         exclude: Tuple[str] = cast(Tuple[str], tuple()),
     ):
         ...
+
+
+@runtime_checkable
+class Scorable(Protocol):
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        """Scores performance on examples."""
 
 
 @runtime_checkable
