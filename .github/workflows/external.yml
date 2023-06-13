@@ -8,6 +8,7 @@ on:
 env:
   MODULE_NAME: "spacy_llm"
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
   CO_API_KEY: ${{ secrets.CO_API_KEY }}
   TEST_EXTERNAL: 1
 
