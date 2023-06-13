@@ -1,7 +1,7 @@
 import copy
 
-import spacy
 import pytest
+import spacy
 from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 

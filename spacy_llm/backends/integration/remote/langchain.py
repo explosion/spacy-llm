@@ -2,8 +2,8 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from spacy.util import SimpleFrozenDict
 
-from ...compat import has_langchain, langchain
-from ...registry import registry
+from ....compat import has_langchain, langchain
+from ....registry import registry
 from . import RemoteBackend
 
 

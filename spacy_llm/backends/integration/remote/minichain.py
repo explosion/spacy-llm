@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
+from ....compat import has_minichain, minichain
+from ....registry import registry
 from .base import RemoteBackend
-from ...compat import has_minichain, minichain
-from ...registry import registry
 
 
 def _check_installation() -> None:

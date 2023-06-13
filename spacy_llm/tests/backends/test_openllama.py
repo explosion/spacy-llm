@@ -7,8 +7,8 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "backend": {
-        "@llm_backends": "spacy.StableLM_HF.v1",
-        "model": "stabilityai/stablelm-base-alpha-3b",
+        "@llm_backends": "spacy.OpenLLaMa_HF.v1",
+        "model": "openlm-research/open_llama_3b_350bt_preview",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
@@ -28,23 +28,25 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.backend]
-@llm_backends = "spacy.StableLM_HF.v1"
-model = "stabilityai/stablelm-base-alpha-3b"
+@llm_backends = spacy.OpenLLaMa_HF.v1
+model = "openlm-research/open_llama_3b_350bt_preview"
 """
 
 
-@pytest.mark.parametrize(
-    "model",
-    ("stabilityai/stablelm-base-alpha-3b", "stabilityai/stablelm-tuned-alpha-3b"),
-)
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init(model: str):
-    """Test initialization and simple run.
-    model (str): Name of model to run.
-    """
+def test_init():
+    """Test initialization and simple run."""
+    nlp = spacy.blank("en")
+    nlp.add_pipe("llm", config=_PIPE_CFG)
+    nlp("This is a test.")
+
+
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+def test_init_with_set_config():
+    """Test initialization and simple run with changed config."""
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["backend"]["model"] = model
+    cfg["backend"]["config_run"] = {"max_new_tokens": 32}
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
@@ -54,16 +56,6 @@ def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
-
-
-@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init_with_set_config():
-    """Test initialization and simple run with changed config."""
-    nlp = spacy.blank("en")
-    cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["backend"]["config_run"] = {"temperature": 0.3}
-    nlp.add_pipe("llm", config=cfg)
-    nlp("This is a test.")
 
 
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")

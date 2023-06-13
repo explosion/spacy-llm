@@ -1,4 +1,4 @@
-from typing import Iterable, TypeVar, Callable, Any
+from typing import Any, Callable, Iterable, TypeVar
 
 # Type of prompts returned from Task.generate_prompts().
 _PromptType = TypeVar("_PromptType")

@@ -796,11 +796,10 @@ The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
 
+You can do so with
+
 ```shell
-python -m pip install "torch>=1.13.1,<2.0"
-python -m pip install "transformers>=4.28.1,<5.0"
-# Or install with spacy-llm directly
-python -m pip install "spacy-llm[transformers]"
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
@@ -818,10 +817,11 @@ Example config block:
 model = "databricks/dolly-v2-3b"
 ```
 
-| Argument | Type             | Default | Description                                                                                      |
-| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a Dolly model that is supported.                                                     |
-| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| Argument      | Type             | Default | Description                                                                                      |
+| ------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `model`       | `str`            |         | The name of a Dolly model that is supported.                                                     |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                               |
 
 Supported models (see the [Databricks models page](https://huggingface.co/databricks) on Hugging Face for details):
 
@@ -837,11 +837,10 @@ by setting the environmental variable `HF_HOME`.
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
 
+You can do so with
+
 ```shell
-python -m pip install "torch>=1.13.1,<2.0"
-python -m pip install "transformers>=4.28.1,<5.0"
-# Or install with spacy-llm directly
-python -m pip install "spacy-llm[transformers]"
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
 ```
 
 If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
@@ -859,10 +858,11 @@ Example config block:
 model = "stabilityai/stablelm-tuned-alpha-7b"
 ```
 
-| Argument | Type             | Default | Description                                                                                      |
-| -------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `model`  | `str`            |         | The name of a StableLM model that is supported.                                                  |
-| `config` | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| Argument      | Type             | Default | Description                                                                                                                  |
+| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `str`            |         | The name of a StableLM model that is supported.                                                                              |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
 
 Supported models (see the [Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha) for details):
 
@@ -870,6 +870,53 @@ Supported models (see the [Stability AI StableLM GitHub repo](https://github.com
 - `"stabilityai/stablelm-base-alpha-7b"`
 - `"stabilityai/stablelm-tuned-alpha-3b"`
 - `"stabilityai/stablelm-tuned-alpha-7b"`
+
+Note that Hugging Face will download this model the first time you use it - you can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.OpenLLaMaHF.v1
+
+To use this backend, ideally you have a GPU enabled and have installed
+
+- `transformers[sentencepiece]`
+- `torch`
+- CUDA
+  in your virtual environment.
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
+which may ultimately result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Example config block:
+
+```ini
+[components.llm.backend]
+@llm_backends = "spacy.OpenLLaMaHF.v1"
+model = "openlm-research/open_llama_3b_350bt_preview"
+```
+
+| Argument      | Type             | Default | Description                                                                                                                  |
+| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model`       | `str`            |         | The name of a OpenLLaMa model that is supported.                                                                             |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
+
+Supported models (see the [OpenLM Research OpenLLaMa GitHub repo](https://github.com/openlm-research/open_llama) for details):
+
+- `"openlm-research/open_llama_3b_350bt_preview"`
+- `"openlm-research/open_llama_3b_600bt_preview"`
+- `"openlm-research/open_llama_7b_400bt_preview"`
+- `"openlm-research/open_llama_7b_700bt_preview"`
 
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
