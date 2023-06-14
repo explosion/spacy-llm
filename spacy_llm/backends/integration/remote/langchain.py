@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from spacy.util import SimpleFrozenDict
 
-from ...compat import has_langchain, langchain
-from ...registry import registry
-from . import Backend
+from ....compat import has_langchain, langchain
+from ....registry import registry
+from . import RemoteBackend
 
 
 def _check_installation() -> None:
@@ -17,9 +17,9 @@ def _check_installation() -> None:
 
 
 @registry.llm_queries("spacy.CallLangChain.v1")
-def query_langchain() -> Callable[
-    ["langchain.llms.base.BaseLLM", Iterable[Any]], Iterable[Any]
-]:
+def query_langchain() -> (
+    Callable[["langchain.llms.base.BaseLLM", Iterable[Any]], Iterable[Any]]
+):
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
         the specified LangChain backend.
@@ -64,8 +64,8 @@ def backend_langchain(
 
     if api in type_to_cls_dict:
         model = config.pop("model")
-        return Backend(
-            integration=type_to_cls_dict[api](model=model, **config),
+        return RemoteBackend(
+            integration=type_to_cls_dict[api](model_name=model, **config),
             query=query_langchain() if query is None else query,
         )
     else:

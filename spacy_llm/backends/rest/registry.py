@@ -1,9 +1,17 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Type
+
 
 from spacy.util import SimpleFrozenDict
 
-from .backend import supported_apis
+from . import anthropic, base, openai, noop
 from ...registry import registry
+
+
+supported_apis: Dict[str, Type[base.Backend]] = {
+    "OpenAI": openai.OpenAIBackend,
+    "Anthropic": anthropic.AnthropicBackend,
+    "NoOp": noop.NoOpBackend,
+}
 
 
 @registry.llm_backends("spacy.REST.v1")
