@@ -1,0 +1,19 @@
+Definition: {{ description }}
+Do not put any other text in your answer besides a single line per entity in order that they occur in the provided Text.
+{%- for example in examples -%}
+Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+{%- for span in example.entities -%}
+{{ loop.index }}. {{ span.to_str() }}
+{# whitespace #}
+{%- endfor -%}
+
+{%- endfor -%}
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''
