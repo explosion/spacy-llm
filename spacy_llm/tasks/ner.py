@@ -25,7 +25,7 @@ def make_ner_task(
     labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
-    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
@@ -70,7 +70,7 @@ def make_ner_task_v2(
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
-    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
@@ -117,7 +117,7 @@ def make_ner_task_v3(
     template: str = _DEFAULT_NER_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     normalizer: Optional[Callable[[str], str]] = None,
-    alignment_mode: Literal["strict", "contract", "expand"] = "contract",  # noqa: F821
+    alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
 ):
@@ -165,9 +165,7 @@ class NERTask(SpanTask):
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
-        alignment_mode: Literal[
-            "strict", "contract", "expand"  # noqa: F821
-        ] = "contract",
+        alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
