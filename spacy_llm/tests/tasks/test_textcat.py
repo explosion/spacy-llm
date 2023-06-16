@@ -10,10 +10,12 @@ from pydantic import ValidationError
 from spacy.training import Example
 from spacy.util import make_tempdir
 
+from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import registry
 from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
-from spacy_llm.util import assemble_from_config
+from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
 
@@ -208,6 +210,17 @@ def test_textcat_config(task, cfg_string, request):
     orig_config = Config().from_str(cfg_string, overrides=overrides)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
+
+    pipe = nlp.get_pipe("llm")
+    assert isinstance(pipe, LLMWrapper)
+    assert isinstance(pipe.task, LLMTask)
+
+    labels = split_labels(labels)
+    task = pipe.task
+    assert isinstance(task, Labeled)
+    assert task.labels == tuple(labels)
+    assert pipe.labels == task.labels
+    assert nlp.pipe_labels["llm"] == list(task.labels)
 
 
 @pytest.mark.external
