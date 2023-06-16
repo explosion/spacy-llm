@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import jinja2
 from pydantic import BaseModel
@@ -248,6 +248,10 @@ class TextCatTask(SerializableTask[TextCatExample]):
                 "the `exclusive_classes` parameter to True."
             )
             self._exclusive_classes = True
+
+    @property
+    def labels(self) -> Tuple[str, ...]:
+        return tuple(self._label_dict.values())
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
