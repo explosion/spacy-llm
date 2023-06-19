@@ -35,9 +35,8 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.REL.v1"
     labels = "LivesIn,Visits"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
+    [components.llm.model]
+    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
 
     [initialize]
     vectors = "en_core_web_md"
@@ -68,9 +67,8 @@ def fewshot_cfg_string():
     @misc = "spacy.FewShotReader.v1"
     path = {str(EXAMPLES_DIR / "rel_examples.jsonl")}
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
+    [components.llm.model]
+    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
 
     [initialize]
     vectors = "en_core_web_md"
@@ -97,8 +95,8 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     """
 
 
@@ -166,7 +164,7 @@ def test_rel_init(noop_config):
         examples.append(Example(predicted, reference))
 
     _, llm = nlp.pipeline[0]
-    task: RELTask = llm._task
+    task: RELTask = llm._task  # type: ignore[annotation-unchecked]
 
     assert set(task._label_dict.values()) == set()
     nlp.initialize(lambda: examples)

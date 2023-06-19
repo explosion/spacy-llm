@@ -68,7 +68,7 @@ factory = "llm"
 labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.backend]
-@llm_backends = "spacy.REST.v1"
+@llm_models = "spacy.REST.v1"
 api = "OpenAI"
 config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 ```
@@ -106,7 +106,7 @@ factory = "llm"
 labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.backend]
-@llm_backends = "spacy.Dolly_HF.v1"
+@llm_models = "spacy.Dolly_HF.v1"
 # For better performance, use databricks/dolly-v2-12b instead
 model = "databricks/dolly-v2-3b"
 ```
@@ -143,7 +143,7 @@ nlp.add_pipe(
             "labels": ["PERSON", "ORGANISATION", "LOCATION"]
         },
         "backend": {
-            "@llm_backends": "spacy.REST.v1",
+            "@llm_models": "spacy.REST.v1",
             "api": "OpenAI",
             "config": {"model": "gpt-3.5-turbo"},
         },
@@ -726,7 +726,7 @@ of prompts (consistent with the output type of `task.generate_prompts()`) and re
 (consistent with the expected input of `parse_responses`). Generally speaking, it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`,
 but specific implementations can have other signatures, like `Callable[[Iterable[str]], Iterable[str]]`.
 
-All built-in backends are registered in `llm_backends`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
+All built-in backends are registered in `llm_models`. If no backend is specified, the repo currently connects to the [`OpenAI` API](#openai) by default,
 using the built-in REST protocol, and accesses the `"gpt-3.5-turbo"` model.
 
 > :question: _Why are there backends for third-party libraries in addition to a native REST backend and which should
@@ -761,7 +761,7 @@ This default backend uses `requests` and a simple retry mechanism to access an A
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.REST.v1"
+@llm_models = "spacy.REST.v1"
 api = "OpenAI"
 config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 ```
@@ -810,7 +810,7 @@ Example config blocks:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.MiniChain.v1"
+@llm_models = "spacy.MiniChain.v1"
 api = "OpenAI"
 
 [components.llm.backend.query]
@@ -841,7 +841,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.LangChain.v1"
+@llm_models = "spacy.LangChain.v1"
 api = "OpenAI"
 query = {"@llm_queries": "spacy.CallLangChain.v1"}
 config = {"temperature": 0.3}
@@ -877,7 +877,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.Dolly_HF.v1"
+@llm_models = "spacy.Dolly_HF.v1"
 model = "databricks/dolly-v2-3b"
 ```
 
@@ -918,7 +918,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.StableLM_HF.v1"
+@llm_models = "spacy.StableLM_HF.v1"
 model = "stabilityai/stablelm-tuned-alpha-7b"
 ```
 
@@ -965,7 +965,7 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.OpenLLaMaHF.v1"
+@llm_models = "spacy.OpenLLaMaHF.v1"
 model = "openlm-research/open_llama_3b_350bt_preview"
 ```
 

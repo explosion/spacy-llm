@@ -109,14 +109,14 @@ An integrated third-party library can be used by configuring the `llm` component
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.LangChain.v1"
+@llm_models = "spacy.LangChain.v1"
 ```
 
 or
 
 ```ini
 [components.llm.backend]
-@llm_backends = "spacy.MiniChain.v1"
+@llm_models = "spacy.MiniChain.v1"
 ```
 
 <!-- The `usage_examples` directory contains example for all integrated third-party -->
@@ -150,7 +150,7 @@ from spacy_llm.registry import registry
 import random
 from typing import Iterable
 
-@registry.llm_backends("RandomClassification.v1")
+@registry.llm_models("RandomClassification.v1")
 def random_textcat(labels: str):
     labels = labels.split(",")
     def _classify(prompts: Iterable[str]) -> Iterable[str]:
@@ -168,7 +168,7 @@ labels = LABEL1,LABEL2,LABEL3
 
 
 [components.llm.backend]
-@llm_backends = "RandomClassification.v1"
+@llm_models = "RandomClassification.v1"
 labels = ${components.llm.task.labels}  # Make sure to use the same label
 ...
 ```

@@ -40,10 +40,8 @@ def zeroshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
     """
 
 
@@ -71,10 +69,8 @@ def fewshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config: {{}}
+    [components.llm.model]
+    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
     """
 
 
@@ -498,8 +494,8 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     output = "PER: Bob,Alice"
     """
 
