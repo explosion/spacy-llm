@@ -9,6 +9,7 @@ select = [
     "Q",    # flake8-quotes
     "T201"  # flake8-print
 ]
+typing-modules = ['spacy_llm.compat']
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

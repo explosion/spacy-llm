@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -136,6 +136,10 @@ class RELTask(SerializableTask[RELExample]):
         """Add `rel` extension if need be."""
         if not Doc.has_extension("rel"):
             Doc.set_extension("rel", default=[])
+
+    @property
+    def labels(self) -> Tuple[str, ...]:
+        return tuple(self._label_dict.values())
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()

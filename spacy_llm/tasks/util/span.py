@@ -36,6 +36,10 @@ class SpanTask(SerializableTask[SpanExample]):
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
+    @property
+    def labels(self) -> Tuple[str, ...]:
+        return tuple(self._label_dict.values())
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)

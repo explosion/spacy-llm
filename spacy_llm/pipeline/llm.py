@@ -15,7 +15,8 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LLMTask, PromptExecutor, Scorable, Serializable, validate_types
+from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
+from ..ty import validate_types
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -119,6 +120,17 @@ class LLMWrapper(Pipe):
         # See https://github.com/explosion/spaCy/blob/master/spacy/schemas.py#L111
         if isinstance(self._task, Initializable):
             self.initialize = self._task.initialize
+
+    @property
+    def labels(self) -> Tuple[str, ...]:
+        labels: Tuple[str, ...] = tuple()
+        if isinstance(self._task, Labeled):
+            labels = self._task.labels
+        return labels
+
+    @property
+    def task(self) -> LLMTask:
+        return self._task
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the LLM wrapper to a Doc instance.
