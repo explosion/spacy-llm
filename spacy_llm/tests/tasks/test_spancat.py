@@ -41,7 +41,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
+    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
     """
 
 
@@ -70,7 +70,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
+    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
     """
 
 

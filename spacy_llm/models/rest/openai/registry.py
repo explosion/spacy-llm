@@ -7,7 +7,7 @@ from ....registry import registry
 from .model import Endpoints, OpenAI
 
 
-@registry.llm_models("spacy.OpenAI.gpt-4.v1")
+@registry.llm_models("spacy.gpt-4.OpenAI.v1")
 def openai_gpt_4(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Optional[Literal["0314", "32k", "32k-0314"]] = None,  # noqa: F722
@@ -41,7 +41,7 @@ def openai_gpt_4(
     )
 
 
-@registry.llm_models("spacy.OpenAI.gpt-3.5.v1")
+@registry.llm_models("spacy.gpt-3.5.OpenAI.v1")
 def openai_gpt_3_5(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Literal["turbo", "turbo-0301"] = "turbo",  # noqa: F722,F821
@@ -75,7 +75,7 @@ def openai_gpt_3_5(
     )
 
 
-@registry.llm_models("spacy.OpenAI.text-davinci.v1")
+@registry.llm_models("spacy.text-davinci.OpenAI.v1")
 def openai_text_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Literal["002", "003"] = "003",  # noqa: F722
@@ -109,7 +109,7 @@ def openai_text_davinci(
     )
 
 
-@registry.llm_models("spacy.OpenAI.text-curie.v1")
+@registry.llm_models("spacy.text-curie.OpenAI.v1")
 def openai_text_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -141,7 +141,7 @@ def openai_text_curie(
     )
 
 
-@registry.llm_models("spacy.OpenAI.text-babbage.v1")
+@registry.llm_models("spacy.text-babbage.OpenAI.v1")
 def openai_text_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -173,7 +173,7 @@ def openai_text_babbage(
     )
 
 
-@registry.llm_models("spacy.OpenAI.text-ada.v1")
+@registry.llm_models("spacy.text-ada.OpenAI.v1")
 def openai_text_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -205,7 +205,7 @@ def openai_text_ada(
     )
 
 
-@registry.llm_models("spacy.OpenAI.davinci.v1")
+@registry.llm_models("spacy.davinci.OpenAI.v1")
 def openai_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -237,7 +237,7 @@ def openai_davinci(
     )
 
 
-@registry.llm_models("spacy.OpenAI.curie.v1")
+@registry.llm_models("spacy.curie.OpenAI.v1")
 def openai_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -269,7 +269,7 @@ def openai_curie(
     )
 
 
-@registry.llm_models("spacy.OpenAI.babbage.v1")
+@registry.llm_models("spacy.babbage.OpenAI.v1")
 def openai_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -301,7 +301,7 @@ def openai_babbage(
     )
 
 
-@registry.llm_models("spacy.OpenAI.ada.v1")
+@registry.llm_models("spacy.ada.OpenAI.v1")
 def openai_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = OpenAI.DEFAULT_STRICT,

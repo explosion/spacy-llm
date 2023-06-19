@@ -31,7 +31,7 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.Lemma.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
+    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
     """
 
 
@@ -56,7 +56,7 @@ def fewshot_cfg_string():
     path = {str((Path(__file__).parent / "examples" / "lemma_examples.yml"))}
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
+    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
     config = {{"temperature": 0}}
     """
 
@@ -83,7 +83,7 @@ def ext_template_cfg_string():
     path = {str((Path(__file__).parent / "templates" / "lemma_template.jinja2"))}
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.gpt-3.5.v1"
+    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
     config = {{}}
     """
 
