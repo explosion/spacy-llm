@@ -1,8 +1,8 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from spacy.util import SimpleFrozenDict
 
-from ...compat import torch, transformers
+from ...compat import Literal, torch, transformers
 from ...registry.util import registry
 from .base import HuggingFace
 
@@ -76,7 +76,7 @@ class OpenLLaMa(HuggingFace):
 
 @registry.llm_models("spacy.OpenLLaMa.HF.v1")
 def openllama_hf(
-    variant: Literal["3b_350bt", "3b_600bt", "7b_400bt", "7b_600bt"],
+    variant: Literal["3b_350bt", "3b_600bt", "7b_400bt", "7b_600bt"],  # noqa: F722
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:

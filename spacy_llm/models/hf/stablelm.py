@@ -1,8 +1,8 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from spacy.util import SimpleFrozenDict
 
-from ...compat import has_transformers, torch, transformers
+from ...compat import Literal, has_transformers, torch, transformers
 from ...registry.util import registry
 from .base import HuggingFace
 
@@ -109,7 +109,10 @@ class StableLM(HuggingFace):
 @registry.llm_models("spacy.StableLM.HF.v1")
 def stablelm_hf(
     variant: Literal[
-        "base-alpha-3b", "base-alpha-7b", "tuned-alpha-3b", "tuned-alpha-7b"
+        "base-alpha-3b",  # noqa: F722
+        "base-alpha-7b",  # noqa: F722
+        "tuned-alpha-3b",  # noqa: F722
+        "tuned-alpha-7b",  # noqa: F722
     ],
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),

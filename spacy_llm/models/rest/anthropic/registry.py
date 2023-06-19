@@ -1,7 +1,8 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
+from ....compat import Literal
 from ....registry import registry
 from .model import Anthropic, Endpoints
 
@@ -9,7 +10,7 @@ from .model import Anthropic, Endpoints
 @registry.llm_models("spacy.Anthropic.claude-1.v1")
 def anthropic_claude_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["100k"]] = None,
+    variant: Optional[Literal["100k"]] = None,  # noqa: F722
     strict: bool = Anthropic.DEFAULT_STRICT,
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
@@ -43,7 +44,7 @@ def anthropic_claude_1(
 @registry.llm_models("spacy.Anthropic.claude-instant-1.v1")
 def anthropic_claude_instant_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["100k"]] = None,
+    variant: Optional[Literal["100k"]] = None,  # noqa: F722
     strict: bool = Anthropic.DEFAULT_STRICT,
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
@@ -77,7 +78,7 @@ def anthropic_claude_instant_1(
 @registry.llm_models("spacy.Anthropic.claude-instant-1.1.v1")
 def anthropic_claude_instant_1_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["100k"]] = None,
+    variant: Optional[Literal["100k"]] = None,  # noqa: F722
     strict: bool = Anthropic.DEFAULT_STRICT,
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
@@ -175,7 +176,7 @@ def anthropic_claude_1_2(
 @registry.llm_models("spacy.Anthropic.claude-1.3.v1")
 def anthropic_claude_1_3(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["100k"]] = None,
+    variant: Optional[Literal["100k"]] = None,  # noqa: F722
     strict: bool = Anthropic.DEFAULT_STRICT,
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,

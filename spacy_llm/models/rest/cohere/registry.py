@@ -1,7 +1,8 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
+from ....compat import Literal
 from ....registry import registry
 from .model import Cohere, Endpoints
 
@@ -9,7 +10,9 @@ from .model import Cohere, Endpoints
 @registry.llm_models("spacy.Cohere.command.v1")
 def cohere_command(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["light", "light-nightly", "nightly"]] = None,
+    variant: Optional[
+        Literal["light", "light-nightly", "nightly"]  # noqa: F821
+    ] = None,
     strict: bool = Cohere.DEFAULT_STRICT,
     max_tries: int = Cohere.DEFAULT_MAX_TRIES,
     interval: float = Cohere.DEFAULT_INTERVAL,

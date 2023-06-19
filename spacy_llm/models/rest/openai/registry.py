@@ -1,7 +1,8 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from spacy.util import SimpleFrozenDict
 
+from ....compat import Literal
 from ....registry import registry
 from .model import Endpoints, OpenAI
 
@@ -9,7 +10,7 @@ from .model import Endpoints, OpenAI
 @registry.llm_models("spacy.OpenAI.gpt-4.v1")
 def openai_gpt_4(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["0314", "32k", "32k-0314"]] = None,
+    variant: Optional[Literal["0314", "32k", "32k-0314"]] = None,  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -43,7 +44,7 @@ def openai_gpt_4(
 @registry.llm_models("spacy.OpenAI.gpt-3.5.v1")
 def openai_gpt_3_5(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Literal["turbo", "turbo-0301"] = "turbo",
+    variant: Literal["turbo", "turbo-0301"] = "turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -77,7 +78,7 @@ def openai_gpt_3_5(
 @registry.llm_models("spacy.OpenAI.text-davinci.v1")
 def openai_text_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Literal["002", "003"] = "003",
+    variant: Literal["002", "003"] = "003",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,

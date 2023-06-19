@@ -1,8 +1,8 @@
-from typing import Any, Callable, Dict, Iterable, Literal, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from spacy.util import SimpleFrozenDict
 
-from ...compat import transformers
+from ...compat import Literal, transformers
 from ...registry.util import registry
 from . import HuggingFace
 
@@ -49,7 +49,7 @@ class Dolly(HuggingFace):
 
 @registry.llm_models("spacy.Dolly.HF.v1")
 def dolly_hf(
-    variant: Literal["v2-3b", "v2-7b", "v2-12b"],
+    variant: Literal["v2-3b", "v2-7b", "v2-12b"],  # noqa: F722
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
