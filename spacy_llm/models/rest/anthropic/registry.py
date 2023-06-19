@@ -7,7 +7,7 @@ from ....registry import registry
 from .model import Anthropic, Endpoints
 
 
-@registry.llm_models("spacy.Anthropic.claude-1.v1")
+@registry.llm_models("spacy.claude-1.Anthropic.v1")
 def anthropic_claude_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Optional[Literal["100k"]] = None,  # noqa: F722
@@ -41,7 +41,7 @@ def anthropic_claude_1(
     )
 
 
-@registry.llm_models("spacy.Anthropic.claude-instant-1.v1")
+@registry.llm_models("spacy.claude-instant-1.Anthropic.v1")
 def anthropic_claude_instant_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Optional[Literal["100k"]] = None,  # noqa: F722
@@ -75,7 +75,7 @@ def anthropic_claude_instant_1(
     )
 
 
-@registry.llm_models("spacy.Anthropic.claude-instant-1.1.v1")
+@registry.llm_models("spacy.claude-instant-1.1.Anthropic.v1")
 def anthropic_claude_instant_1_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Optional[Literal["100k"]] = None,  # noqa: F722
@@ -109,7 +109,7 @@ def anthropic_claude_instant_1_1(
     )
 
 
-@registry.llm_models("spacy.Anthropic.claude-1.0.v1")
+@registry.llm_models("spacy.claude-1.0.Anthropic.v1")
 def anthropic_claude_1_0(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = Anthropic.DEFAULT_STRICT,
@@ -141,7 +141,7 @@ def anthropic_claude_1_0(
     )
 
 
-@registry.llm_models("spacy.Anthropic.claude-1.2.v1")
+@registry.llm_models("spacy.claude-1.2.Anthropic.v1")
 def anthropic_claude_1_2(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     strict: bool = Anthropic.DEFAULT_STRICT,
@@ -173,7 +173,7 @@ def anthropic_claude_1_2(
     )
 
 
-@registry.llm_models("spacy.Anthropic.claude-1.3.v1")
+@registry.llm_models("spacy.claude-1.3.Anthropic.v1")
 def anthropic_claude_1_3(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     variant: Optional[Literal["100k"]] = None,  # noqa: F722
