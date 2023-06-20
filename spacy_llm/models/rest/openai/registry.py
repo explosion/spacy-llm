@@ -27,7 +27,7 @@ def openai_gpt_4(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model using REST to
         prompt API.
     """
     return OpenAI(
@@ -44,7 +44,9 @@ def openai_gpt_4(
 @registry.llm_models("spacy.gpt-3.5.OpenAI.v1")
 def openai_gpt_3_5(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Literal["turbo", "turbo-0301"] = "turbo",  # noqa: F722,F821
+    variant: Literal[
+        "turbo", "turbo-16k", "turbo-0613", "turbo-0613-16k"
+    ] = "turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -61,7 +63,7 @@ def openai_gpt_3_5(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model using REST to
         prompt API.
     """
     return OpenAI(
@@ -95,11 +97,43 @@ def openai_text_davinci(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'text-davinci' model using REST to
         prompt API.
     """
     return OpenAI(
         name=f"text-davinci{('-' + variant) if variant else ''}",
+        endpoint=Endpoints.NON_CHAT.value,
+        config=config,
+        strict=strict,
+        max_tries=max_tries,
+        interval=interval,
+        max_request_time=max_request_time,
+    )
+
+
+@registry.llm_models("spacy.code-davinci.OpenAI.v1")
+def openai_code_davinci(
+    config: Dict[Any, Any] = SimpleFrozenDict(),
+    strict: bool = OpenAI.DEFAULT_STRICT,
+    max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
+    interval: float = OpenAI.DEFAULT_INTERVAL,
+    max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+) -> Callable[[Iterable[str]], Iterable[str]]:
+    """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
+    config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
+        or other response object that does not conform to the expectation of how a well-formed response object from
+        this API should look like). If False, the API error responses are returned by __call__(), but no error will
+        be raised.
+    max_tries (int): Max. number of tries for API request.
+    interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
+        at each retry.
+    max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'code-davinci' model using REST to
+        prompt API.
+    """
+    return OpenAI(
+        name="code-davinci-002",
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -127,7 +161,7 @@ def openai_text_curie(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'text-curie' model using REST to
         prompt API.
     """
     return OpenAI(
@@ -159,7 +193,7 @@ def openai_text_babbage(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'text-babbage' model using REST to
         prompt API.
     """
     return OpenAI(
