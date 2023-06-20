@@ -897,6 +897,50 @@ Note that Hugging Face will download this model the first time you use it - you 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
+
+#### spacy.Falcon.HF.v1
+
+To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
+This allows you to have the setting `device=cuda:0` in your config, which ensures that the model is loaded entirely on the GPU (and fails otherwise).
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and set`device_map=auto` instead, but be aware that this may result in some layers getting distributed to the CPU or even the hard drive,
+which may ultimately result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Example config block:
+
+```ini
+[components.llm.model]
+@llm_models = "spacy.Falcon.HF.v1"
+variant = "7b"
+```
+
+| Argument      | Type             | Default | Description                                                                                      |
+|---------------| ---------------- | ------- |--------------------------------------------------------------------------------------------------|
+| `variant`     | `str`            |         | The name of a Falcon model variant that is supported.                                            |
+| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                               |
+
+Supported models:
+
+- `"rw-1b"`
+- `"7b"`
+- `"7b-instruct"`
+- `"40b-instruct"`
+
+Note that Hugging Face will download this model the first time you use it - you can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
 #### spacy.StableLM_HF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.

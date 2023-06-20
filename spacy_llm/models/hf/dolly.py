@@ -4,22 +4,14 @@ from spacy.util import SimpleFrozenDict
 
 from ...compat import Literal, transformers
 from ...registry.util import registry
-from . import HuggingFace
+from .base import HuggingFace
 
 
 class Dolly(HuggingFace):
     def init_model(self) -> Any:
-        """Sets up HF model and needed utilities.
-        RETURNS (Any): HF model.
-        """
         return transformers.pipeline(model=self.model_name, **self._config_init)
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
-        """Queries Dolly HF model.
-        pipeline (transformers.pipeline): Transformers pipeline to query.
-        prompts (Iterable[str]): Prompts to query Dolly model with.
-        RETURNS (Iterable[str]): Prompt responses.
-        """
         return [
             self._model(pr, **self._config_run)[0]["generated_text"] for pr in prompts
         ]

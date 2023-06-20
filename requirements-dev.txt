@@ -13,6 +13,7 @@ minichain>=0.3,<0.4; python_version>="3.8" and python_version<"3.11"
 # Necessary for running all local models on GPU.
 transformers[sentencepiece]>=4.0.0,<4.30
 torch
+einops>=0.6,<0.7
 
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
