@@ -66,6 +66,7 @@ class Scorable(Protocol):
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         """Scores performance on examples."""
+        ...
 
 
 @runtime_checkable
@@ -76,6 +77,13 @@ class LLMTask(Protocol):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[_Response]
     ) -> Iterable[Doc]:
+        ...
+
+
+@runtime_checkable
+class Labeled(Protocol):
+    @property
+    def labels(self) -> Tuple[str, ...]:
         ...
 
 
