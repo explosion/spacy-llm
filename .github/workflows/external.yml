@@ -49,7 +49,8 @@ jobs:
       - name: Install test requirements
         run: |
           python -m spacy download en_core_web_md
-          python -m pip install -U -r requirements.txt -r requirements-dev.txt
+          python -m pip install -U -r requirements.txt -r requirements-dev.txt 
+          python -m pip install -U -r requirements-dev-no-deps.txt
 
       - name: Run tests
         shell: bash

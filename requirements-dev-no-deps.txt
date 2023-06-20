@@ -1,0 +1,2 @@
+# Necessary because of issue with torch. See https://github.com/facebookresearch/xformers/issues/740.
+xformers
