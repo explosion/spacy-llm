@@ -19,7 +19,7 @@ class Falcon(HuggingFace):
         super().__init__(
             variant=variant, config_init=config_init, config_run=config_run
         )
-        assert isinstance(self._tokenizer, transformers.AutoTokenizer)
+        assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)
         self._config_run["eos_token_id"] = self._tokenizer.eos_token_id
 
     def init_model(self) -> Any:

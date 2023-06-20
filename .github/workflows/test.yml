@@ -85,9 +85,6 @@ jobs:
           python -m pip install -U -r requirements-dev.txt
           python -m spacy download en_core_web_md
 
-      - name: test install req
-        run: python -m pip install -U -r requirements-dev-no-deps.txt --no-deps
-
       - name: Run spacy_llm tests
         shell: bash
         run: |
