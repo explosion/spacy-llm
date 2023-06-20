@@ -219,11 +219,9 @@ spacy_llm.logger.setLevel(logging.DEBUG)
 
 > NOTE: Any `logging` handler will work here so you probably want to use some sort of rotating `FileHandler` as the generated prompts can be quite long, especially for tasks with few-shot examples.
 
-
 Then when using the pipeline you'll be able to view the prompt and response.
 
 E.g. with the config and code from [Example 1](##example-1-add-a-text-classifier-using-a-gpt-3-model-from-openai) above:
-
 
 ```python
 from spacy_llm.util import assemble
@@ -655,14 +653,15 @@ The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attrib
 examples = null
 ```
 
-| Argument                  | Type                                    | Default                                                   | Description                                                                                                                                           |
-| ------------------------- | --------------------------------------- |-----------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
-| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
+| Argument   | Type                                    | Default                                                | Description                                                                                                                              |
+| ---------- | --------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples` | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                 | Optional function that generates examples for few-shot learning.                                                                         |
 
 `Lemma.v1` prompts the LLM to lemmatize the passed text and return the lemmatized version as a list of tokens and their
-corresponding lemma. E. g. the text 
+corresponding lemma. E. g. the text
 `I'm buying ice cream for my friends` should invoke the response
+
 ```
 I: I
 'm: be
@@ -675,7 +674,7 @@ friends: friend
 .: .
 ```
 
-If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
+If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized
 by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
 the lemma suggested by the LLM.
 
@@ -693,7 +692,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
     - ".": "."
 
 - text: I've watered the plants.
-  lemmas: 
+  lemmas:
     - "I": "I"
     - "'ve": "have"
     - "watered": "water"
@@ -897,7 +896,6 @@ Note that Hugging Face will download this model the first time you use it - you 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-
 #### spacy.Falcon.HF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed `transformers`, `torch` and CUDA in your virtual environment.
@@ -925,7 +923,7 @@ variant = "7b"
 ```
 
 | Argument      | Type             | Default | Description                                                                                      |
-|---------------| ---------------- | ------- |--------------------------------------------------------------------------------------------------|
+| ------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
 | `variant`     | `str`            |         | The name of a Falcon model variant that is supported.                                            |
 | `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
 | `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                               |
