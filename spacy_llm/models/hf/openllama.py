@@ -7,7 +7,7 @@ from ...registry.util import registry
 from .base import HuggingFace
 
 
-class OpenLLaMa(HuggingFace):
+class OpenLLaMA(HuggingFace):
     def __init__(
         self,
         variant: str,
@@ -74,17 +74,17 @@ class OpenLLaMa(HuggingFace):
         )
 
 
-@registry.llm_models("spacy.OpenLLaMa.HF.v1")
-def openllama_hf(
+@registry.llm_models("spacy.OpenLLaMA.HF.v1")
+def OpenLLaMA_hf(
     variant: Literal["3b_350bt", "3b_600bt", "7b_400bt", "7b_600bt"],  # noqa: F722
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Generates OpenLLaMa instance that can execute a set of prompts and return the raw responses.
-    variant (Literal): Name of the StableLM model variant. Has to be one of OpenLLaMa.get_model_variants().
+    """Generates OpenLLaMA instance that can execute a set of prompts and return the raw responses.
+    variant (Literal): Name of the StableLM model variant. Has to be one of OpenLLaMA.get_model_variants().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]): OpenLLaMa instance that can execute a set of prompts and return
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): OpenLLaMA instance that can execute a set of prompts and return
         the raw responses.
     """
-    return OpenLLaMa(variant=variant, config_init=config_init, config_run=config_run)
+    return OpenLLaMA(variant=variant, config_init=config_init, config_run=config_run)

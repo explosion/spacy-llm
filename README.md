@@ -939,7 +939,7 @@ Note that Hugging Face will download this model the first time you use it - you 
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.OpenLLaMaHF.v1
+#### spacy.OpenLLaMAHF.v1
 
 To use this backend, ideally you have a GPU enabled and have installed
 
@@ -965,17 +965,17 @@ Example config block:
 
 ```ini
 [components.llm.backend]
-@llm_models = "spacy.OpenLLaMaHF.v1"
+@llm_models = "spacy.OpenLLaMAHF.v1"
 model = "openlm-research/open_llama_3b_350bt_preview"
 ```
 
 | Argument      | Type             | Default | Description                                                                                                                  |
 | ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `model`       | `str`            |         | The name of a OpenLLaMa model that is supported.                                                                             |
+| `model`       | `str`            |         | The name of a OpenLLaMA model that is supported.                                                                             |
 | `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
 | `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
 
-Supported models (see the [OpenLM Research OpenLLaMa GitHub repo](https://github.com/openlm-research/open_llama) for details):
+Supported models (see the [OpenLM Research OpenLLaMA GitHub repo](https://github.com/openlm-research/open_llama) for details):
 
 - `"openlm-research/open_llama_3b_350bt_preview"`
 - `"openlm-research/open_llama_3b_600bt_preview"`
