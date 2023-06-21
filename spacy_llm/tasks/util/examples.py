@@ -11,3 +11,8 @@ class SpanExample(BaseModel):
 class LemmaExample(BaseModel):
     text: str
     lemmas: List[Dict[str, str]]
+
+
+class SummarizationExample(BaseModel):
+    text: str
+    summary: str

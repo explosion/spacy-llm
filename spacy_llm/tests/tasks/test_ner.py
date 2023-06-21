@@ -102,7 +102,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -133,7 +133,7 @@ def fewshot_cfg_string_v2():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -165,7 +165,7 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "ner_template.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "ner.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -537,9 +537,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "ner_examples.json"),
-        str(EXAMPLES_DIR / "ner_examples.yml"),
-        str(EXAMPLES_DIR / "ner_examples.jsonl"),
+        str(EXAMPLES_DIR / "ner.json"),
+        str(EXAMPLES_DIR / "ner.yml"),
+        str(EXAMPLES_DIR / "ner.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
@@ -664,7 +664,7 @@ def test_example_not_following_basemodel():
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "ner_template.jinja2")
+    template_path = str(TEMPLATES_DIR / "ner.jinja2")
     template = file_reader(template_path)
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")

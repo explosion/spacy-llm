@@ -71,7 +71,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str(EXAMPLES_DIR / "textcat_examples.yml")}
+    path = {str(EXAMPLES_DIR / "textcat.yml")}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -105,7 +105,7 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "textcat_template.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "textcat.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -154,7 +154,7 @@ def binary():
     labels = "Recipe"
     gold_cats = ["Recipe"]
     exclusive_classes = True
-    examples_path = str(EXAMPLES_DIR / "textcat_binary_examples.yml")
+    examples_path = str(EXAMPLES_DIR / "textcat_binary.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -164,7 +164,7 @@ def multilabel_excl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = True
-    examples_path = str(EXAMPLES_DIR / "textcat_multi_excl_examples.yml")
+    examples_path = str(EXAMPLES_DIR / "textcat_multi_excl.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -174,7 +174,7 @@ def multilabel_nonexcl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = False
-    examples_path = str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml")
+    examples_path = str(EXAMPLES_DIR / "textcat_multi_nonexcl.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -368,9 +368,9 @@ def test_textcat_multilabel_labels_are_correct(
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "textcat_binary_examples.json"),
-        str(EXAMPLES_DIR / "textcat_binary_examples.yml"),
-        str(EXAMPLES_DIR / "textcat_binary_examples.jsonl"),
+        str(EXAMPLES_DIR / "textcat_binary.json"),
+        str(EXAMPLES_DIR / "textcat_binary.yml"),
+        str(EXAMPLES_DIR / "textcat_binary.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary):
@@ -437,9 +437,9 @@ Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "textcat_multi_excl_examples.json"),
-        str(EXAMPLES_DIR / "textcat_multi_excl_examples.yml"),
-        str(EXAMPLES_DIR / "textcat_multi_excl_examples.jsonl"),
+        str(EXAMPLES_DIR / "textcat_multi_excl.json"),
+        str(EXAMPLES_DIR / "textcat_multi_excl.yml"),
+        str(EXAMPLES_DIR / "textcat_multi_excl.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
@@ -504,9 +504,9 @@ You need to increase the temperature when baking, it looks undercooked.
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.json"),
-        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml"),
-        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.jsonl"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl.json"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl.yml"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
@@ -594,7 +594,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "textcat_template.jinja2")
+    template_path = str(TEMPLATES_DIR / "textcat.jinja2")
     template = file_reader(template_path)
     labels = "Recipe"
     nlp = spacy.blank("xx")
