@@ -75,7 +75,7 @@ class OpenLLaMA(HuggingFace):
 
 
 @registry.llm_models("spacy.OpenLLaMA.HF.v1")
-def OpenLLaMA_hf(
+def openllama_hf(
     variant: Literal["3b_350bt", "3b_600bt", "7b_400bt", "7b_600bt"],  # noqa: F722
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
