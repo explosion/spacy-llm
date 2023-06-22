@@ -5,7 +5,7 @@ import pytest
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
-from spacy_llm.compat import has_langchain, has_minichain
+from spacy_llm.compat import has_langchain
 from spacy_llm.pipeline import LLMWrapper
 
 PIPE_CFG: Dict[str, Any] = {
@@ -18,12 +18,11 @@ PIPE_CFG: Dict[str, Any] = {
 
 
 @pytest.mark.external
-@pytest.mark.skipif(has_minichain is False, reason="MiniChain is not installed")
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["spacy.LangChain.v1", "spacy.MiniChain.v1", "spacy.gpt-3.5.OpenAI.v1"],
-    ids=["langchain", "minichain", "rest-openai"],
+    ["spacy.LangChain.v1", "spacy.gpt-3.5.v1"],
+    ids=["langchain", "rest-openai"],
 )
 @pytest.mark.parametrize(
     "task",
@@ -39,10 +38,7 @@ def test_combinations(model: str, task: str, n_process: int):
 
     config = copy.deepcopy(PIPE_CFG)
     config["model"]["@llm_models"] = model
-    if "MiniChain" in model:
-        config["model"]["config"] = {"model": "gpt-3.5-turbo"}
-        config["model"]["api"] = "OpenAI"
-    elif "LangChain" in model:
+    if "LangChain" in model:
         config["model"]["config"] = {"model": "ada"}
         config["model"]["api"] = "OpenAI"
     config["task"]["@llm_tasks"] = task

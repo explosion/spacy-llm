@@ -97,13 +97,10 @@ You can check sample tasks for Named Entity Recognition and text categorization
 in the `spacy_llm/tasks/` directory. We also recommend checking out the
 `spacy.NoOp.v1` task for a barebones implementation to pattern your task from.
 
-## Using LangChain, MiniChain and other integrated third-party prompting libraries
+## Using LangChain and other integrated third-party prompting libraries
 
 `spacy-llm` integrates bindings to a number of libraries centered on prompt management and LLM usage to allow users
-to leverage their functionality in their spaCy workflows. This currently includes
-
-- [LangChain](https://github.com/hwchase17/langchain)
-- [MiniChain](https://github.com/srush/MiniChain)
+to leverage their functionality in their spaCy workflows. This currently includes [LangChain](https://github.com/hwchase17/langchain)
 
 An integrated third-party library can be used by configuring the `llm` component to use the respective backend, e. g.:
 
@@ -112,12 +109,6 @@ An integrated third-party library can be used by configuring the `llm` component
 @llm_models = "spacy.LangChain.v1"
 ```
 
-or
-
-```ini
-[components.llm.backend]
-@llm_models = "spacy.MiniChain.v1"
-```
 
 <!-- The `usage_examples` directory contains example for all integrated third-party -->
 

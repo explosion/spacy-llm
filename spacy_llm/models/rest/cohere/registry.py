@@ -7,7 +7,7 @@ from ....registry import registry
 from .model import Cohere, Endpoints
 
 
-@registry.llm_models("spacy.command.Cohere.v1")
+@registry.llm_models("spacy.command.v1")
 def cohere_command(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[

@@ -2,16 +2,11 @@ from pathlib import Path
 
 import pytest
 from thinc.compat import has_torch_cuda_gpu
+
 from spacy_llm import cache  # noqa: F401
 
-from .. import (
-    ner_dolly,
-    textcat_openai,
-    ner_langchain_openai,
-    ner_minichain_openai,
-    multitask_openai,
-    rel_openai,
-)
+from .. import multitask_openai, ner_dolly, ner_langchain_openai, rel_openai
+from .. import textcat_openai
 
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
@@ -53,14 +48,6 @@ def test_ner_langchain_openai():
     """Test NER LangChain OpenAI usage example."""
     ner_langchain_openai.run_pipeline(
         "text", _USAGE_EXAMPLE_PATH / "ner_langchain_openai" / "ner.cfg", False
-    )
-
-
-@pytest.mark.external
-def test_ner_minichain_openai():
-    """Test NER LangChain OpenAI usage example."""
-    ner_minichain_openai.run_pipeline(
-        "text", _USAGE_EXAMPLE_PATH / "ner_minichain_openai" / "ner.cfg", False
     )
 
 

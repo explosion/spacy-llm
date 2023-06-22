@@ -12,7 +12,7 @@ from ..compat import has_openai_key
 
 PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.gpt-3.5.OpenAI.v1",
+        "@llm_models": "spacy.gpt-3.5.v1",
         "config": {"temperature": 0.3},
     },
     "task": {"@llm_tasks": "spacy.TextCat.v1", "labels": "POSITIVE,NEGATIVE"},
@@ -45,14 +45,12 @@ def test_initialization():
 def test_model_error_handling():
     """Test error handling for wrong model."""
     nlp = spacy.blank("en")
-    with pytest.raises(
-        ValueError, match="Could not find function 'spacy.gpt-3.5x.OpenAI.v1'"
-    ):
+    with pytest.raises(ValueError, match="Could not find function 'spacy.gpt-3.5x.v1'"):
         nlp.add_pipe(
             "llm",
             config={
                 "task": {"@llm_tasks": "spacy.NoOp.v1"},
-                "model": {"@llm_models": "spacy.OpenAI.gpt-3.5x.v1"},
+                "model": {"@llm_models": "spacy.gpt-3.5x.v1"},
             },
         )
 

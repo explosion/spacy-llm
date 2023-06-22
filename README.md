@@ -11,7 +11,7 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
 - Serializable `llm` **component** to integrate prompts into your pipeline
 - **Modular functions** to define the [**task**](#tasks) (prompting and parsing) and [**backend**](#backends) (model to use)
 - Support for **hosted APIs** and self-hosted **open-source models**
-- Integration with [`MiniChain`](https://github.com/srush/MiniChain) and [`LangChain`](https://github.com/hwchase17/langchain)
+- Integration with [`LangChain`](https://github.com/hwchase17/langchain)
 - Access to **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**, including GPT-4 and various GPT-3 models
 - Built-in support for **open-source [Dolly](https://huggingface.co/databricks)** models hosted on Hugging Face
 - Usage examples for **Named Entity Recognition** and **Text Classification**
@@ -732,7 +732,7 @@ using the built-in REST protocol, and accesses the `"gpt-3.5-turbo"` model.
 > :question: _Why are there backends for third-party libraries in addition to a native REST backend and which should
 > I choose?_
 >
-> Third-party libraries like `langchain` or `minichain` focus on prompt management, integration of many different LLM
+> Third-party libraries like `langchain` focus on prompt management, integration of many different LLM
 > APIs, and other related features such as conversational memory or agents. `spacy-llm` on the other hand emphasizes
 > features we consider useful in the context of NLP pipelines utilizing LLMs to process documents (mostly) independent
 > from each other. It makes sense that the feature set of such third-party libraries and `spacy-llm` is not identical -
@@ -793,37 +793,6 @@ When `api` is set to `OpenAI`, the following settings can be defined in the `con
   - `"babbage"`
   - `"ada"`
 - `url`: By default, this is `https://api.openai.com/v1/completions`. For models requiring the chat endpoint, use `https://api.openai.com/v1/chat/completions`.
-
-#### spacy.MiniChain.v1
-
-To use [MiniChain](https://github.com/srush/MiniChain) for the API retrieval part, make sure you have installed it first:
-
-```shell
-python -m pip install "minichain>=0.3,<0.4"
-# Or install with spacy-llm directly
-python -m pip install "spacy-llm[minichain]"
-```
-
-Note that MiniChain currently only supports Python 3.8, 3.9 and 3.10.
-
-Example config blocks:
-
-```ini
-[components.llm.backend]
-@llm_models = "spacy.MiniChain.v1"
-api = "OpenAI"
-
-[components.llm.backend.query]
-@llm_queries = "spacy.RunMiniChain.v1"
-```
-
-| Argument | Type                                                                              | Default | Description                                                                         |
-| -------- | --------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `api`    | `str`                                                                             |         | The name of an API supported by MiniChain, e.g. "OpenAI".                           |
-| `config` | `Dict[Any, Any]`                                                                  | `{}`    | Further configuration passed on to the backend.                                     |
-| `query`  | `Optional[Callable[["minichain.backend.Backend", Iterable[str]], Iterable[str]]]` | `None`  | Function that executes the prompts. If `None`, defaults to `spacy.RunMiniChain.v1`. |
-
-The default `query` (`spacy.RunMiniChain.v1`) executes the prompts by running `model(text).run()` for each given textual prompt.
 
 #### spacy.LangChain.v1
 
