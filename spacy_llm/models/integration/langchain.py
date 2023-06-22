@@ -67,5 +67,7 @@ def register_langchain_models() -> None:
 
 
 # Dynamically register LangChain API classes as individual models, if this hasn't been done yet.
-if not any([("langchain" in handle) for handle in registry.llm_models.get_all()]):
+if has_langchain and not any(
+    [("langchain" in handle) for handle in registry.llm_models.get_all()]
+):
     register_langchain_models()
