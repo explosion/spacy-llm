@@ -1,13 +1,18 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
+from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 
-from ...compat import Literal
-from ...registry import lowercase_normalizer
-from .examples import SpanExample
-from .parsing import find_substrings
-from .serialization import SerializableTask
+from ..compat import Literal
+from ..registry import lowercase_normalizer
+from .util.parsing import find_substrings
+from .util.serialization import SerializableTask
+
+
+class SpanExample(BaseModel):
+    text: str
+    entities: Dict[str, List[str]]
 
 
 class SpanTask(SerializableTask[SpanExample]):

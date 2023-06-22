@@ -12,7 +12,7 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
-from .util import SpanExample, SpanTask
+from .span import SpanExample, SpanTask
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
 _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")

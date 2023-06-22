@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 import jinja2
+from pydantic import BaseModel
 from spacy.language import Language
 from spacy.scorer import Scorer
 from spacy.tokens import Doc
@@ -10,10 +11,14 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
-from .util.examples import LemmaExample
 from .util.serialization import ExampleType
 
 _DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
+
+
+class LemmaExample(BaseModel):
+    text: str
+    lemmas: List[Dict[str, str]]
 
 
 @registry.llm_tasks("spacy.Lemma.v1")
