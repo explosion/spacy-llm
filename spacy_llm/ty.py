@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, U
 from typing import cast
 
 from spacy.tokens import Doc
+from spacy.training.example import Example
 from spacy.vocab import Vocab
 
 from .backends import integration
@@ -55,6 +56,16 @@ class Serializable(Protocol):
 
 
 @runtime_checkable
+class Scorable(Protocol):
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        """Scores performance on examples."""
+        ...
+
+
+@runtime_checkable
 class LLMTask(Protocol):
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_Prompt]:
         ...
@@ -62,6 +73,13 @@ class LLMTask(Protocol):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[_Response]
     ) -> Iterable[Doc]:
+        ...
+
+
+@runtime_checkable
+class Labeled(Protocol):
+    @property
+    def labels(self) -> Tuple[str, ...]:
         ...
 
 
@@ -158,8 +176,11 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_types(task: LLMTask, backend: PromptExecutor) -> None:
-    # Inspect the types of the three main parameters to ensure they match internally
+def validate_type_consistency(task: LLMTask, backend: PromptExecutor) -> None:
+    """Check whether the types of the task and backend signatures match.
+    task (LLMTask): Specified task.
+    backend (PromptExecutor): Specified backend.
+    """
     # Raises an error or prints a warning if something looks wrong/odd.
     if not isinstance(task, LLMTask):
         raise ValueError(

@@ -7,8 +7,10 @@ from pytest import FixtureRequest
 from spacy.tokens import Span
 from spacy.training import Example
 
+from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.tasks.rel import RelationItem, RELTask
-from spacy_llm.util import assemble_from_config
+from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
 
@@ -113,11 +115,22 @@ def task():
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_rel_config(cfg_string, request: FixtureRequest):
     """Simple test to check if the config loads properly given different settings"""
-
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = assemble_from_config(orig_config)
     assert nlp.pipe_names == ["ner", "llm"]
+
+    pipe = nlp.get_pipe("llm")
+    assert isinstance(pipe, LLMWrapper)
+    assert isinstance(pipe.task, LLMTask)
+
+    task = pipe.task
+    labels = orig_config["components"]["llm"]["task"]["labels"]
+    labels = split_labels(labels)
+    assert isinstance(task, Labeled)
+    assert task.labels == tuple(labels)
+    assert pipe.labels == task.labels
+    assert nlp.pipe_labels["llm"] == list(task.labels)
 
 
 @pytest.mark.external

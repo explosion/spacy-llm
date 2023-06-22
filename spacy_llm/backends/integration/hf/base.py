@@ -1,8 +1,10 @@
 import abc
 import warnings
-from typing import Iterable, TypeVar, Any, Dict
-from ....compat import has_torch, has_transformers, has_accelerate, torch
+from typing import Any, Dict, Iterable, Optional, Tuple, TypeVar
+
 from thinc.compat import has_torch_cuda_gpu
+
+from ....compat import has_accelerate, has_torch, has_transformers, torch
 
 # Type of prompts returned from Task.generate_prompts().
 _PromptType = TypeVar("_PromptType")
@@ -16,24 +18,27 @@ class HuggingFaceBackend(abc.ABC):
     def __init__(
         self,
         model: str,
-        config: Dict[Any, Any],
+        config_init: Optional[Dict[str, Any]],
+        config_run: Optional[Dict[str, Any]],
     ):
         """Initializes Backend instance.
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         model (str): Name of HF model to load.
-        config (Dict[Any, Any]): HF config.
+        config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
+        config_run (Optional[Dict[str, Any]]): HF config for running the model.
+        inference_config (Dict[Any, Any]): HF config for model run.
         """
         self._model_name = model
-        self._config = config
+        self._config_init, self._config_run = self.compile_default_configs()
+        if config_init:
+            self._config_init = {**self._config_init, **config_init}
+        if config_run:
+            self._config_run = {**self._config_run, **config_run}
 
         # Init HF model.
         HuggingFaceBackend.check_installation()
         self.check_model()
-
-        if not self._config or len(self._config) == 0:
-            self._config = self.compile_default_config()
-
         self._model = self.init_model()
 
     @abc.abstractmethod
@@ -72,20 +77,21 @@ class HuggingFaceBackend(abc.ABC):
             )
 
     @staticmethod
-    def compile_default_config() -> Dict[Any, Any]:
-        """Compiles default config for HF model.
-        RETURNS (Dict[Any, Any]): HF model default config.
+    def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """Compiles default init and run configs for HF model.
+        RETURNS (Tuple[Dict[str, Any], Dict[str, Any]]): HF model default init config, HF model default run config.
         """
-        default_cfg: Dict[str, Any] = {}
+        default_cfg_init: Dict[str, Any] = {}
+        default_cfg_run: Dict[str, Any] = {}
 
         if has_torch:
-            default_cfg["torch_dtype"] = torch.bfloat16
+            default_cfg_init["torch_dtype"] = torch.bfloat16
             if has_torch_cuda_gpu:
                 # this ensures it fails explicitely when GPU is not enabled or sufficient
-                default_cfg["device"] = "cuda:0"
+                default_cfg_init["device"] = "cuda:0"
             elif has_accelerate:
                 # accelerate will distribute the layers depending on availability on GPU/CPU/hard drive
-                default_cfg["device_map"] = "auto"
+                default_cfg_init["device_map"] = "auto"
                 warnings.warn(
                     "Couldn't find a CUDA GPU, so the setting 'device_map:auto' will be used, which may result "
                     "in the LLM being loaded (partly) on the CPU or even the hard disk, which may be slow. "
@@ -96,7 +102,7 @@ class HuggingFaceBackend(abc.ABC):
                     "Install CUDA to load and run the LLM on the GPU, or install 'accelerate' to dynamically "
                     "distribute the LLM on the CPU or even the hard disk. The latter may be slow."
                 )
-        return default_cfg
+        return default_cfg_init, default_cfg_run
 
     @abc.abstractmethod
     def init_model(self) -> Any:
