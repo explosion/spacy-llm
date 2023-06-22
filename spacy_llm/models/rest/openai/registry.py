@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable
 
 from spacy.util import SimpleFrozenDict
 
@@ -10,7 +10,9 @@ from .model import Endpoints, OpenAI
 @registry.llm_models("spacy.gpt-4.OpenAI.v1")
 def openai_gpt_4(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[Literal["0314", "32k", "32k-0314"]] = None,  # noqa: F722
+    name: Literal[
+        "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"
+    ] = "gpt-4",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -18,7 +20,7 @@ def openai_gpt_4(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
-    variant (Optional[Literal["0314", "32k", "32k-0314"]]): Model variant to use. Base 'gpt-4' model by default.
+    name (Optional[Literal["0314", "32k", "32k-0314"]]): Model to use. Base 'gpt-4' model by default.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -31,7 +33,7 @@ def openai_gpt_4(
         prompt API.
     """
     return OpenAI(
-        name=f"gpt-4{('-' + variant) if variant else ''}",
+        name=name,
         endpoint=Endpoints.CHAT.value,
         config=config,
         strict=strict,
@@ -44,9 +46,12 @@ def openai_gpt_4(
 @registry.llm_models("spacy.gpt-3.5.OpenAI.v1")
 def openai_gpt_3_5(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Literal[
-        "turbo", "turbo-16k", "turbo-0613", "turbo-0613-16k"
-    ] = "turbo",  # noqa: F722,F821
+    name: Literal[
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-16k",
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-0613-16k",
+    ] = "gpt-3.5-turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -54,7 +59,7 @@ def openai_gpt_3_5(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
-    variant (Literal["turbo", "turbo-0301"]): Model variant to use. 'turbo' by default.
+    name (Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -67,7 +72,7 @@ def openai_gpt_3_5(
         prompt API.
     """
     return OpenAI(
-        name=f"gpt-3.5{('-' + variant) if variant else ''}",
+        name=name,
         endpoint=Endpoints.CHAT.value,
         config=config,
         strict=strict,
@@ -80,7 +85,9 @@ def openai_gpt_3_5(
 @registry.llm_models("spacy.text-davinci.OpenAI.v1")
 def openai_text_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Literal["002", "003"] = "003",  # noqa: F722
+    name: Literal[
+        "text-davinci-002", "text-davinci-003"
+    ] = "text-davinci-003",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -88,7 +95,7 @@ def openai_text_davinci(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
-    variant (Optional[Literal["002", "003"]]): Model variant to use. '003' by default.
+    name (Optional[Literal["text-davinci-002", "text-davinci-003"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -101,7 +108,7 @@ def openai_text_davinci(
         prompt API.
     """
     return OpenAI(
-        name=f"text-davinci{('-' + variant) if variant else ''}",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,

@@ -17,19 +17,19 @@ class HuggingFace(abc.ABC):
 
     def __init__(
         self,
-        variant: str,
+        name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
     ):
         """Initializes HF model instance.
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
             supplied with the `integration` object.
-        variant (str): Name of HF model to load.
+        name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
         inference_config (Dict[Any, Any]): HF config for model run.
         """
-        self._variant = variant
+        self._hf_model_id = f"{self.get_hf_account()}/{name}"
         self._config_init, self._config_run = self.compile_default_configs()
         if config_init:
             self._config_init = {**self._config_init, **config_init}
@@ -47,18 +47,18 @@ class HuggingFace(abc.ABC):
         RETURNS (Iterable[_ResponseType]): API responses.
         """
 
-    @property
+    @staticmethod
     @abc.abstractmethod
-    def model_name(self) -> str:
-        """Get HF model base name (pre-formatted to allow for variant injection).
-        RETURNS (str): HF model base name (pre-formatted to allow for variant injection).
+    def get_hf_account() -> str:
+        """Names of HF account for this model.
+        RETURNS (str): Name of HF account.
         """
 
     @staticmethod
     @abc.abstractmethod
-    def get_model_variants() -> Iterable[str]:
-        """Supported variants for this model.
-        RETURNS (Iterable[str]): Supported variants for this model.
+    def get_model_names() -> Iterable[str]:
+        """Names of supported models for this HF model implementation.
+        RETURNS (Iterable[str]): Names of supported models.
         """
 
     @staticmethod

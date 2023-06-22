@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable
 
 from spacy.util import SimpleFrozenDict
 
@@ -10,17 +10,16 @@ from .model import Cohere, Endpoints
 @registry.llm_models("spacy.command.Cohere.v1")
 def cohere_command(
     config: Dict[Any, Any] = SimpleFrozenDict(),
-    variant: Optional[
-        Literal["light", "light-nightly", "nightly"]  # noqa: F821
-    ] = None,
+    name: Literal[
+        "command", "command-light", "command-light-nightly", "command-nightly"
+    ] = "command",  # noqa: F821
     strict: bool = Cohere.DEFAULT_STRICT,
     max_tries: int = Cohere.DEFAULT_MAX_TRIES,
     interval: float = Cohere.DEFAULT_INTERVAL,
     max_request_time: float = Cohere.DEFAULT_MAX_REQUEST_TIME,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Cohere instance for 'command' model using REST to prompt API.
-    variant (Optional[Literal["light", "light-nightly", "nightly"]]): Model variant to use. Base 'command' model by
-        default.
+    name (Literal["command", "command-light", "command-light-nightly", "command-nightly"]): Model  to use.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
@@ -33,7 +32,7 @@ def cohere_command(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Cohere instance for 'command' model using REST to prompt API.
     """
     return Cohere(
-        name=f"command{('-' + variant) if variant else ''}",
+        name=name,
         endpoint=Endpoints.COMPLETION.value,
         config=config,
         strict=strict,

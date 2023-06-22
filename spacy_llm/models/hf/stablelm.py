@@ -30,27 +30,25 @@ class StableLM(HuggingFace):
 
     def __init__(
         self,
-        variant: str,
+        name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        self._is_tuned = "tuned" in variant
+        self._is_tuned = "tuned" in name
         self._device: Optional[str] = None
-        super().__init__(
-            variant=variant, config_init=config_init, config_run=config_run
-        )
+        super().__init__(name=name, config_init=config_init, config_run=config_run)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_name)
+        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._hf_model_id)
         init_cfg = self._config_init
         if "device" in init_cfg:
             self._device = init_cfg.pop("device")
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self.model_name, **init_cfg
+            self._hf_model_id, **init_cfg
         )
 
         if self._device:
@@ -58,13 +56,18 @@ class StableLM(HuggingFace):
 
         return model
 
-    @property
-    def model_name(self) -> str:
-        return f"stabilityai/stablelm-{self._variant}"
+    @staticmethod
+    def get_hf_account() -> str:
+        return "stabilityai"
 
     @staticmethod
-    def get_model_variants() -> Iterable[str]:
-        return ["base-alpha-3b", "base-alpha-7b", "tuned-alpha-3b", "tuned-alpha-7b"]
+    def get_model_names() -> Iterable[str]:
+        return [
+            "stablelm-base-alpha-3b",
+            "stablelm-base-alpha-7b",
+            "stablelm-tuned-alpha-3b",
+            "stablelm-tuned-alpha-7b",
+        ]
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         assert callable(self._tokenizer)
@@ -108,28 +111,28 @@ class StableLM(HuggingFace):
 
 @registry.llm_models("spacy.StableLM.HF.v1")
 def stablelm_hf(
-    variant: Literal[
-        "base-alpha-3b",  # noqa: F722
-        "base-alpha-7b",  # noqa: F722
-        "tuned-alpha-3b",  # noqa: F722
-        "tuned-alpha-7b",  # noqa: F722
+    name: Literal[
+        "stablelm-base-alpha-3b",  # noqa: F722
+        "stablelm-base-alpha-7b",  # noqa: F722
+        "stablelm-tuned-alpha-3b",  # noqa: F722
+        "stablelm-tuned-alpha-7b",  # noqa: F722
     ],
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Generates StableLM instance that can execute a set of prompts and return the raw responses.
-    variant (Literal): Name of the StableLM model variant. Has to be one of StableLM.get_model_variants().
+    name (Literal): Name of the StableLM model. Has to be one of StableLM.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): StableLM instance that can execute a set of prompts and return
         the raw responses.
     """
-    if variant not in StableLM.get_model_variants():
+    if name not in StableLM.get_model_names():
         raise ValueError(
-            f"Expected one of {StableLM.get_model_variants()}, but received {variant}."
+            f"Expected one of {StableLM.get_model_names()}, but received {name}."
         )
     return StableLM(
-        variant=variant,
+        name=name,
         config_init=config_init,
         config_run=config_run,
     )
