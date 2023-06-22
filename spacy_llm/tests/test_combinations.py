@@ -21,7 +21,7 @@ PIPE_CFG: Dict[str, Any] = {
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["spacy.LangChain.v1", "spacy.gpt-3.5.v1"],
+    ["spacy.LangChain.v1", "spacy.gpt-3-5.v1"],
     ids=["langchain", "rest-openai"],
 )
 @pytest.mark.parametrize(

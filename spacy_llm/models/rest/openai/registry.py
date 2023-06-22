@@ -43,7 +43,7 @@ def openai_gpt_4(
     )
 
 
-@registry.llm_models("spacy.gpt-3.5.v1")
+@registry.llm_models("spacy.gpt-3-5.v1")
 def openai_gpt_3_5(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[

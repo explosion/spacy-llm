@@ -35,7 +35,7 @@ class CacheConfigType(TypedDict):
     default_config={
         "task": None,
         "model": {
-            "@llm_models": "spacy.gpt-3.5.v1",
+            "@llm_models": "spacy.gpt-3-5.v1",
             "strict": True,
         },
         "cache": {
