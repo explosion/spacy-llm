@@ -16,7 +16,7 @@ from spacy.vocab import Vocab
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
 from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
-from ..ty import validate_types
+from ..ty import validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -47,6 +47,7 @@ class CacheConfigType(TypedDict):
             "max_batches_in_mem": 4,
         },
         "save_io": False,
+        "validate_types": True,
     },
 )
 def make_llm(
@@ -56,6 +57,7 @@ def make_llm(
     backend: PromptExecutor,
     cache: Cache,
     save_io: bool,
+    validate_types: bool,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -67,13 +69,15 @@ def make_llm(
     backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
     save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
+    validate_types (bool): Whether to check if signatures of configured backend and task are consistent.
     """
     if task is None:
         raise ValueError(
             "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
             "'spacy.NER.v2'})."
         )
-    validate_types(task, backend)
+    if validate_types:
+        validate_type_consistency(task, backend)
 
     return LLMWrapper(
         name=name,
