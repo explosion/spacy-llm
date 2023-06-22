@@ -219,11 +219,9 @@ spacy_llm.logger.setLevel(logging.DEBUG)
 
 > NOTE: Any `logging` handler will work here so you probably want to use some sort of rotating `FileHandler` as the generated prompts can be quite long, especially for tasks with few-shot examples.
 
-
 Then when using the pipeline you'll be able to view the prompt and response.
 
 E.g. with the config and code from [Example 1](##example-1-add-a-text-classifier-using-a-gpt-3-model-from-openai) above:
-
 
 ```python
 from spacy_llm.util import assemble
@@ -270,12 +268,13 @@ COMPLIMENT
 
 `spacy-llm` exposes a `llm` factory that accepts the following configuration options:
 
-| Argument  | Type                                        | Description                                                                         |
-| --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
-| `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
-| `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
-| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`                  |
+| Argument         | Type                                        | Description                                                                         |
+| ---------------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `task`           | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
+| `backend`        | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
+| `cache`          | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
+| `save_io`        | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`.                 |
+| `validate_types` | `bool`                                      | Whether to check if signatures of configured backend and task are consistent.       |
 
 An `llm` component is defined by two main settings:
 
@@ -292,6 +291,10 @@ within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
 `Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM component
 within the spaCy pipeline. Each entry is itself a dictionary, with two keys:
 `prompt` and `response`.
+
+A note on `validate_types`: by default, `spacy-llm` checks whether the signatures of the `backend` and `task` callables
+are consistent with each other and emits a warning if they don't. `validate_types` can be set to `False` if you want to
+disable this behavior.
 
 ### Tasks
 
@@ -655,14 +658,15 @@ The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attrib
 examples = null
 ```
 
-| Argument                  | Type                                    | Default                                                   | Description                                                                                                                                           |
-| ------------------------- | --------------------------------------- |-----------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
-| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
+| Argument   | Type                                    | Default                                                | Description                                                                                                                              |
+| ---------- | --------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples` | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                 | Optional function that generates examples for few-shot learning.                                                                         |
 
 `Lemma.v1` prompts the LLM to lemmatize the passed text and return the lemmatized version as a list of tokens and their
-corresponding lemma. E. g. the text 
+corresponding lemma. E. g. the text
 `I'm buying ice cream for my friends` should invoke the response
+
 ```
 I: I
 'm: be
@@ -675,7 +679,7 @@ friends: friend
 .: .
 ```
 
-If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
+If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized
 by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
 the lemma suggested by the LLM.
 
@@ -693,7 +697,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
     - ".": "."
 
 - text: I've watered the plants.
-  lemmas: 
+  lemmas:
     - "I": "I"
     - "'ve": "have"
     - "watered": "water"
