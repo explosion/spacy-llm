@@ -779,7 +779,9 @@ def test_textcat_init(
     assert not task._examples
 
     # This is super hacky... but it works for now.
-    nlp.config["initialize"]["components"]["llm"] = {"add_prompt_examples": add_prompt_examples}
+    nlp.config["initialize"]["components"]["llm"] = {
+        "add_prompt_examples": add_prompt_examples
+    }
 
     nlp.initialize(lambda: examples)
 
