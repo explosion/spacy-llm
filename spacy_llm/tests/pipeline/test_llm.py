@@ -170,6 +170,11 @@ def test_type_checking_invalid(noop_config) -> None:
         "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
     )
 
+    # Run with disabled type consistency validation.
+    nlp = spacy.blank("en")
+    noop_config["validate_types"] = False
+    nlp.add_pipe("llm", config=noop_config)
+
 
 @pytest.mark.parametrize("use_pipe", [True, False])
 def test_llm_logs_at_debug_level(

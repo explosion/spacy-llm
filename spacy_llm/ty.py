@@ -176,8 +176,11 @@ def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_types(task: LLMTask, model: PromptExecutor) -> None:
-    # Inspect the types of the three main parameters to ensure they match internally
+def validate_type_consistency(task: LLMTask, model: PromptExecutor) -> None:
+    """Check whether the types of the task and model signatures match.
+    task (LLMTask): Specified task.
+    backend (PromptExecutor): Specified model.
+    """
     # Raises an error or prints a warning if something looks wrong/odd.
     if not isinstance(task, LLMTask):
         raise ValueError(
