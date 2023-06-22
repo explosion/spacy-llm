@@ -541,8 +541,8 @@ def test_spancat_scoring(noop_config, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-@pytest.mark.parametrize("gather_examples", [True, False])
-def test_spancat_init(noop_config, gather_examples: bool):
+@pytest.mark.parametrize("add_prompt_examples", [True, False])
+def test_spancat_init(noop_config, add_prompt_examples: bool):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
@@ -571,14 +571,14 @@ def test_spancat_init(noop_config, gather_examples: bool):
     assert not task._examples
 
     # This is super hacky... but it works for now.
-    nlp.config["initialize"]["components"]["llm"] = {"gather_examples": gather_examples}
+    nlp.config["initialize"]["components"]["llm"] = {"add_prompt_examples": add_prompt_examples}
 
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    assert bool(task._examples) is gather_examples
+    assert bool(task._examples) is add_prompt_examples
 
-    if gather_examples and task._examples:
+    if add_prompt_examples and task._examples:
         for eg in task._examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 

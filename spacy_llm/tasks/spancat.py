@@ -173,7 +173,7 @@ class SpanCatTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        gather_examples: bool = False,
+        add_prompt_examples: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
@@ -188,7 +188,7 @@ class SpanCatTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        gather_examples (bool): Whether to gather examples for the task. False by default.
+        add_prompt_examples (bool): Whether to gather examples for the task. False by default.
         """
         examples = list(get_examples())
 
@@ -203,7 +203,7 @@ class SpanCatTask(SpanTask):
                     label_set.add(span.label_)
             labels = list(label_set)
 
-        if gather_examples:
+        if add_prompt_examples:
             self._examples = self.create_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
