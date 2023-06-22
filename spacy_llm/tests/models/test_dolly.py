@@ -7,7 +7,7 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.Dolly.HF.v1",
+        "@llm_models": "spacy.Dolly.v1",
         "name": "dolly-v2-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -29,7 +29,7 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = "spacy.Dolly.HF.v1"
+@llm_models = "spacy.Dolly.v1"
 name = "dolly-v2-3b"
 """
 
@@ -39,7 +39,7 @@ def test_init():
     """Test initialization and simple run."""
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["model"]["@llm_models"] = "spacy.Dolly.HF.v1"
+    cfg["model"]["@llm_models"] = "spacy.Dolly.v1"
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 

@@ -77,7 +77,7 @@ class OpenLLaMA(HuggingFace):
         )
 
 
-@registry.llm_models("spacy.OpenLLaMA.HF.v1")
+@registry.llm_models("spacy.OpenLLaMA.v1")
 def openllama_hf(
     name: Literal[
         "open_llama_3b_350bt_preview",

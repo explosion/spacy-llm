@@ -47,7 +47,7 @@ class Dolly(HuggingFace):
         )
 
 
-@registry.llm_models("spacy.Dolly.HF.v1")
+@registry.llm_models("spacy.Dolly.v1")
 def dolly_hf(
     name: Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"],  # noqa: F722
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),

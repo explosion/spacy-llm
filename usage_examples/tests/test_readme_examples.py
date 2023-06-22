@@ -57,9 +57,9 @@ def test_example_2_ner_hf():
         labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
         [components.llm.model]
-        @llm_models = "spacy.Dolly.HF.v1"
+        @llm_models = "spacy.Dolly.v1"
         # For better performance, use databricks/dolly-v2-12b instead
-        variant = "v2-3b"
+        name = "dolly-v2-3b"
         """
 
         with open(tmpdir / "cfg", "w") as text_file:

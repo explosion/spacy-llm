@@ -21,7 +21,7 @@ PIPE_CFG: Dict[str, Any] = {
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["spacy.LangChain.v1", "spacy.gpt-3-5.v1"],
+    ["langchain.OpenAI.v1", "spacy.gpt-3-5.v1"],
     ids=["langchain", "rest-openai"],
 )
 @pytest.mark.parametrize(
@@ -38,9 +38,8 @@ def test_combinations(model: str, task: str, n_process: int):
 
     config = copy.deepcopy(PIPE_CFG)
     config["model"]["@llm_models"] = model
-    if "LangChain" in model:
+    if "langchain" in model:
         config["model"]["config"] = {"model": "ada"}
-        config["model"]["api"] = "OpenAI"
     config["task"]["@llm_tasks"] = task
 
     # Configure task-specific settings.

@@ -109,7 +109,7 @@ class StableLM(HuggingFace):
         )
 
 
-@registry.llm_models("spacy.StableLM.HF.v1")
+@registry.llm_models("spacy.StableLM.v1")
 def stablelm_hf(
     name: Literal[
         "stablelm-base-alpha-3b",  # noqa: F722

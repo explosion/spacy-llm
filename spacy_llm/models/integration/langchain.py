@@ -33,42 +33,39 @@ def _prompt_langchain(
     return [model(pr) for pr in prompts]
 
 
-@registry.llm_models("spacy.LangChain.v1")
-def model_langchain(
-    api: str,
-    query: Optional[
-        Callable[["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]]
-    ] = None,
-    config: Dict[Any, Any] = SimpleFrozenDict(),
-) -> Callable[[Iterable[Any]], Iterable[Any]]:
-    """Returns Callable using LangChain to prompt specified API.
-    api (str): Name of any API/class in langchain.llms.type_to_cls_dict, e. g. "openai".
-    query (Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]): Callable implementing querying this
-        API.
-    config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the langchain.llms.BaseLLM
-        instance.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Callable using the querying the specified API using the
-        specified model.
-    """
-    _check_installation()
-
-    if "model" not in config:
-        raise ValueError("The LLM model must be specified in the config.")
-
-    # langchain.llms.type_to_cls_dict contains all API names in lowercase, so this allows to be more forgiving and make
-    # "OpenAI" work as well "openai".
-    api = api.lower()
+def register_langchain_models() -> None:
+    """Registers APIs supported by langchain (one API is registered as one model)."""
     type_to_cls_dict: Dict[
         str, Type[langchain.llms.base.BaseLLM]
     ] = langchain.llms.type_to_cls_dict
 
-    if api in type_to_cls_dict:
-        model = config.pop("model")
-        return Remote(
-            integration=type_to_cls_dict[api](model_name=model, **config),
-            query=query_langchain() if query is None else query,
+    for class_id, cls in type_to_cls_dict.items():
+
+        def langchain_model(
+            query: Optional[
+                Callable[["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]]
+            ] = None,
+            config: Dict[Any, Any] = SimpleFrozenDict(),
+            langchain_class_id: str = class_id,
+        ) -> Callable[[Iterable[Any]], Iterable[Any]]:
+            model = config.pop("model")
+            try:
+                return Remote(
+                    integration=type_to_cls_dict[langchain_class_id](
+                        model_name=model, **config
+                    ),
+                    query=query_langchain() if query is None else query,
+                )
+            except ImportError as ex:
+                raise ValueError(
+                    "Failed to instantiate LangChain class. Ensure all necessary dependencies are installed."
+                ) from ex
+
+        registry.llm_models.register(
+            f"langchain.{cls.__name__}.v1", func=langchain_model
         )
-    else:
-        raise KeyError(
-            f"The requested API {api} is not available in `langchain.llms.type_to_cls_dict`."
-        )
+
+
+# Dynamically register LangChain API classes as individual models, if this hasn't been done yet.
+if not any([("langchain" in handle) for handle in registry.llm_models.get_all()]):
+    register_langchain_models()

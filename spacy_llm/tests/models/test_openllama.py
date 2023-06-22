@@ -7,7 +7,7 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.OpenLLaMA.HF.v1",
+        "@llm_models": "spacy.OpenLLaMA.v1",
         "name": "open_llama_3b_350bt_preview",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -28,7 +28,7 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = spacy.OpenLLaMA.HF.v1
+@llm_models = spacy.OpenLLaMA.v1
 name = open_llama_3b_350bt_preview
 """
 

@@ -5,8 +5,7 @@ from spacy_llm.compat import has_langchain
 
 PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.LangChain.v1",
-        "api": "OpenAI",
+        "@llm_models": "langchain.OpenAI.v1",
         "config": {"temperature": 0.3, "model": "ada"},
         "query": {"@llm_queries": "spacy.CallLangChain.v1"},
     },
