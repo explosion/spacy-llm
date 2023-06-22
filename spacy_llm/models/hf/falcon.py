@@ -72,7 +72,7 @@ def falcon_hf(
     variant (Literal): Name of the Falcon model variant. Has to be one of Falcon.get_model_variants().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Dolly instance that can execute a set of prompts and return
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Falcon instance that can execute a set of prompts and return
         the raw responses.
     """
     return Falcon(variant=variant, config_init=config_init, config_run=config_run)
