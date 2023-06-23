@@ -36,6 +36,27 @@ class SpanTask(SerializableTask[SpanExample]):
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
+        self._check_label_consistency()
+
+    def _check_label_consistency(self) -> None:
+        """Checks consistency of labels between examples and defined labels."""
+        if not self._examples:
+            return
+        example_labels = list(
+            {
+                self._normalizer(key)
+                for example in self._examples
+                for key in example.entities
+            }
+        )
+        spec_labels = list(self._label_dict.keys())
+        example_labels.sort()
+        spec_labels.sort()
+        if example_labels != spec_labels:
+            raise ValueError(
+                f"Specified labels and labels in examples diverge. Received {spec_labels} and {example_labels}, correspondingly. Please ensure your label specification and example labels are consistent."
+            )
+
     @property
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())

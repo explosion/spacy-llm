@@ -1,0 +1,11 @@
+- text: Jack and Jill went up the hill.
+  entities:
+    PERSON:
+      - Jack
+      - Jill
+    location:
+      - hill
+- text: spaCy is a great tool
+  entities:
+    TECH:
+      - spaCy

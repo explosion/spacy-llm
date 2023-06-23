@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -823,3 +824,37 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     nlp2.from_disk(path)
 
     assert task1._label_dict == task2._label_dict == labels
+
+
+def test_label_inconsistency():
+    """Test whether inconsistency between specified labels and labels in examples is detected."""
+    cfg = f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v2"
+    labels = ["PERSON", "LOCATION"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
+
+    [components.llm.backend]
+    @llm_backends = "test.NoOpBackend.v1"
+    """
+
+    config = Config().from_str(cfg)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Specified labels and labels in examples diverge. Received ['location', 'person'] and ['location', 'person', 'tech'], correspondingly. Please ensure your label specification and example labels are consistent."
+        ),
+    ):
+        assemble_from_config(config)
