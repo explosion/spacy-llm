@@ -1,6 +1,6 @@
 import abc
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, cast
+from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, cast
 
 import srsly
 from pydantic import BaseModel
@@ -39,15 +39,15 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         for key, value in cfg.items():
             setattr(self, key, value)
 
-    def get_prompt_examples(self) -> List[Dict[str, Any]]:
+    def _get_prompt_examples(self) -> List[Dict[str, Any]]:
         """Serialize examples."""
         examples = [eg.dict() for eg in self._prompt_examples]
         return examples
 
-    def set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
+    def _set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
         """Deserialize examples from bytes.
 
-        examples (Optional[List[Dict[str, Any]]]): serialized examples.
+        examples (List[Dict[str, Any]]): serialized examples.
         """
         self._prompt_examples = [self._Example.parse_obj(eg) for eg in examples]
 
@@ -64,7 +64,7 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
 
         serialize = {
             "cfg": lambda: srsly.json_dumps(self.get_cfg()),
-            "prompt_examples": lambda: srsly.msgpack_dumps(self.get_prompt_examples()),
+            "prompt_examples": lambda: srsly.msgpack_dumps(self._get_prompt_examples()),
         }
 
         return util.to_bytes(serialize, exclude)
@@ -84,7 +84,7 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
 
         deserialize = {
             "cfg": lambda b: self.set_cfg(srsly.json_loads(b)),
-            "prompt_examples": lambda b: self.set_prompt_examples(
+            "prompt_examples": lambda b: self._set_prompt_examples(
                 srsly.msgpack_loads(b)
             ),
         }
@@ -107,7 +107,7 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         serialize = {
             "cfg": lambda p: srsly.write_json(p, self.get_cfg()),
             "prompt_examples": lambda p: srsly.write_msgpack(
-                p, self.get_prompt_examples()
+                p, self._get_prompt_examples()
             ),
         }
 
@@ -127,7 +127,7 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
 
         deserialize = {
             "cfg": lambda p: self.set_cfg(srsly.read_json(p)),
-            "prompt_examples": lambda p: self.set_prompt_examples(
+            "prompt_examples": lambda p: self._set_prompt_examples(
                 srsly.read_msgpack(p)
             ),
         }

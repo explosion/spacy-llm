@@ -11,7 +11,6 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
-from .util.serialization import ExampleType
 
 _DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
 
