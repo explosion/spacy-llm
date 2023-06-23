@@ -237,7 +237,7 @@ def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixt
     assert f"LLM response for doc: {doc.text}" not in captured.out
 
 
-def test_fewshot_reader():
+def test_fewshot_reader_file_format_handling():
     """Test if fewshot reader copes with file formats as expected."""
     example = [
         {
@@ -250,10 +250,7 @@ def test_fewshot_reader():
         srsly.write_yaml(tmpdir / "example.json", example)
         srsly.write_yaml(tmpdir / "example.foo", example)
 
-        warning = (
-            "Content of examples file could be read, but doesn't correspond with the file suffix. Please "
-            "ensure the correct suffix has been used."
-        )
+        warning = "Content of examples file could be read, but doesn't correspond with the file suffix."
         _fewshot_reader(tmpdir / "example.yml")
         with pytest.warns(UserWarning, match=warning):
             _fewshot_reader(tmpdir / "example.json")
