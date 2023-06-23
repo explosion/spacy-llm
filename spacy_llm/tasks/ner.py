@@ -185,7 +185,10 @@ class NERTask(SpanTask):
             if infer_labels:
                 for ent in eg.reference.ents:
                     labels.append(ent.label_)
-            if infer_prompt_examples < 0 or len(self._prompt_examples) < infer_prompt_examples:
+            if (
+                infer_prompt_examples < 0
+                or len(self._prompt_examples) < infer_prompt_examples
+            ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
         labels = list(set(labels))

@@ -201,7 +201,10 @@ class SpanCatTask(SpanTask):
             if infer_labels:
                 for span in eg.reference.spans.get(self._spans_key, []):
                     labels.append(span.label_)
-            if infer_prompt_examples < 0 or len(self._prompt_examples) < infer_prompt_examples:
+            if (
+                infer_prompt_examples < 0
+                or len(self._prompt_examples) < infer_prompt_examples
+            ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
         labels = list(set(labels))

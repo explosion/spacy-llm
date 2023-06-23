@@ -217,7 +217,10 @@ class RELTask(SerializableTask[RELExample]):
                 rels: List[RelationItem] = eg.reference._.rel
                 for rel in rels:
                     labels.append(rel.relation)
-            if infer_prompt_examples < 0 or len(self._prompt_examples) < infer_prompt_examples:
+            if (
+                infer_prompt_examples < 0
+                or len(self._prompt_examples) < infer_prompt_examples
+            ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
         labels = list(set(labels))
