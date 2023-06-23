@@ -743,12 +743,12 @@ def noop_config():
     """
 
 
-@pytest.mark.parametrize("add_prompt_examples", [True, False])
+@pytest.mark.parametrize("infer_prompt_examples", [-1, 0, 1, 2])
 @pytest.mark.parametrize("init_from_config", [True, False])
 def test_textcat_init(
     noop_config,
     init_from_config: bool,
-    add_prompt_examples: bool,
+    infer_prompt_examples: bool,
 ):
     config = Config().from_str(noop_config)
     if init_from_config:
@@ -778,9 +778,8 @@ def test_textcat_init(
     assert set(task._label_dict.values()) == target
     assert not task._prompt_examples
 
-    # This is super hacky... but it works for now.
     nlp.config["initialize"]["components"]["llm"] = {
-        "add_prompt_examples": add_prompt_examples
+        "infer_prompt_examples": infer_prompt_examples
     }
 
     nlp.initialize(lambda: examples)
@@ -790,10 +789,9 @@ def test_textcat_init(
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
-    assert bool(task._prompt_examples) is add_prompt_examples
-
-    if add_prompt_examples:
-        assert task._prompt_examples
+    if infer_prompt_examples >= 0:
+        assert len(task._prompt_examples) == infer_prompt_examples
+    else:
         assert len(task._prompt_examples) == len(INSULTS)
 
 
