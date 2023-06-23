@@ -52,7 +52,7 @@ class SpanTask(SerializableTask[SpanExample]):
         spec_labels = list(self._label_dict.keys())
         example_labels.sort()
         spec_labels.sort()
-        if example_labels != spec_labels:
+        if set(example_labels) <= set(spec_labels):
             raise ValueError(
                 f"Specified labels and labels in examples diverge. Received {spec_labels} and {example_labels}, correspondingly. Please ensure your label specification and example labels are consistent."
             )
