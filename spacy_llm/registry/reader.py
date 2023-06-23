@@ -1,6 +1,7 @@
 import functools
+import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union, cast
 
 import srsly
 
@@ -31,21 +32,54 @@ def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, An
 
 
 def _fewshot_reader(eg_path: Path) -> Iterable[Any]:
+    data: Optional[List] = None
+
     if eg_path is None:
         data = []
-    elif eg_path.suffix in (".yml", ".yaml"):
-        data = srsly.read_yaml(eg_path)
-    elif eg_path.suffix == ".json":
-        data = srsly.read_json(eg_path)
-    elif eg_path.suffix == ".jsonl":
-        data = list(srsly.read_jsonl(eg_path))
+
     else:
-        raise ValueError(
-            "The examples file expects a .yml, .yaml, .json, or .jsonl file type."
-        )
+        suffix = eg_path.suffix.replace("yaml", "yml")
+        readers = {
+            ".yml": lambda path: srsly.read_yaml(eg_path),
+            ".json": lambda path: srsly.read_json(eg_path),
+            ".jsonl": lambda path: list(srsly.read_jsonl(eg_path)),
+        }
+
+        # Sort formats/read methods depending on file suffix so that the read methods most likely to work are used
+        # first.
+        if suffix == ".json":
+            formats = (".json", ".jsonl", ".yml")
+        elif suffix == ".jsonl":
+            formats = (".jsonl", ".json", ".yml")
+        else:
+            formats = (".yml", ".json", ".jsonl")
+
+        # Try to read file in all supported formats.
+        i = 0
+        for i, file_format in enumerate(formats):
+            try:
+                data = readers[file_format](eg_path)
+                break
+            except Exception:
+                pass
+
+        # Raise error if reading file didn't work.
+        if data is None:
+            raise ValueError(
+                "The examples file expects a .yml, .yaml, .json, or .jsonl file type. Ensure that your file "
+                "corresponds to one of these file formats."
+            )
+
+        # Reading worked, but suffix is wrong: recommend changing suffix.
+        if i > 0 or suffix not in formats:
+            warnings.warn(
+                "Content of examples file could be read, but doesn't correspond with the file suffix. Please "
+                "ensure the correct suffix has been used."
+            )
 
     if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
         raise ValueError(
-            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting"
+            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting."
         )
+
     return cast(Iterable[Dict[str, Any]], data)
