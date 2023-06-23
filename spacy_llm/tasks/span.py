@@ -35,7 +35,7 @@ class SpanTask(SerializableTask[SpanExample]):
         self._label_dict = {self._normalizer(label): label for label in labels}
         self._template = template
         self._label_definitions = label_definitions
-        self._prompt_examples = prompt_examples
+        self._prompt_examples = prompt_examples or []
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching

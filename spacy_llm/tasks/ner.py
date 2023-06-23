@@ -141,7 +141,7 @@ class NERTask(SpanTask):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            examples=examples,
+            prompt_examples=examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -153,7 +153,7 @@ class NERTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        infer_prompt_examples: bool = False,
+        infer_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize the NER task, by auto-discovering labels.
@@ -168,7 +168,7 @@ class NERTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        infer_prompt_examples (bool): Whether to infer prompt examples from the Example objects. False by default.
+        infer_prompt_examples (int): How many prompt examples to infer from the Example objects. 0 by default.
         """
 
         examples = get_examples()
@@ -177,11 +177,14 @@ class NERTask(SpanTask):
             labels = list(self._label_dict.values())
         infer_labels = not labels
 
+        if infer_labels:
+            labels = []
+
         for eg in examples:
             if infer_labels:
                 for ent in eg.reference.ents:
                     labels.append(ent.label_)
-            if infer_prompt_examples:
+            if len(self._prompt_examples) < infer_prompt_examples:
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
         labels = list(set(labels))

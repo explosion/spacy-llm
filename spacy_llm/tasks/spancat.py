@@ -52,7 +52,7 @@ def make_spancat_task(
     return SpanCatTask(
         labels=labels_list,
         template=_DEFAULT_SPANCAT_TEMPLATE_V1,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -98,7 +98,7 @@ def make_spancat_task_v2(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -173,7 +173,7 @@ class SpanCatTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        infer_prompt_examples: bool = False,
+        infer_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
@@ -188,7 +188,7 @@ class SpanCatTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        infer_prompt_examples (bool): Whether to infer prompt examples from the Example objects. False by default.
+        infer_prompt_examples (int): How many prompt examples to infer from the Example objects. 0 by default.
         """
         examples = get_examples()
 
@@ -200,7 +200,7 @@ class SpanCatTask(SpanTask):
             if infer_labels:
                 for span in eg.reference.spans.get(self._spans_key, []):
                     labels.append(span.label_)
-            if infer_prompt_examples:
+            if len(self._prompt_examples) < infer_prompt_examples:
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
         labels = list(set(labels))

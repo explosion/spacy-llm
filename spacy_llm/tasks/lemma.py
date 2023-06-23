@@ -55,7 +55,7 @@ class LemmaTask(SerializableTask[LemmaExample]):
             passed, then zero-shot learning will be used.
         """
         self._template = template
-        self._prompt_examples = examples
+        self._prompt_examples = examples or []
 
     def initialize(
         self,
@@ -119,5 +119,5 @@ class LemmaTask(SerializableTask[LemmaExample]):
         return ["_template"]
 
     @property
-    def _Example(self) -> Type[ExampleType]:
+    def _Example(self) -> Type[LemmaExample]:
         return LemmaExample
