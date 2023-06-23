@@ -31,7 +31,7 @@ def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, An
     return functools.partial(_fewshot_reader, eg_path=eg_path)
 
 
-def _fewshot_reader(eg_path: Path) -> Iterable[Any]:
+def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
     data: Optional[List] = None
 
     if eg_path is None:
