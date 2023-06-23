@@ -41,7 +41,7 @@ def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
         suffix = eg_path.suffix.replace("yaml", "yml")
         readers = {
             ".yml": srsly.read_yaml,
-            ".json": lambda path: srsly.read_json(eg_path),
+            ".json": srsly.read_json,
             ".jsonl": lambda path: list(srsly.read_jsonl(eg_path)),
         }
 
