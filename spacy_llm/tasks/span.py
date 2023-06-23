@@ -53,7 +53,7 @@ class SpanTask(SerializableTask[SpanExample]):
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                prompt_examples=self._prompt_examples,
+                examples=self._prompt_examples,
             )
             yield prompt
 

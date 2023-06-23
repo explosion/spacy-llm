@@ -261,7 +261,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                prompt_examples=self._prompt_examples,
+                examples=self._prompt_examples,
                 exclusive_classes=self._exclusive_classes,
                 allow_none=self._allow_none,
             )
