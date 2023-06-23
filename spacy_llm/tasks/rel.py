@@ -183,7 +183,7 @@ class RELTask(SerializableTask[RELExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        add_prompt_examples: bool = False,
+        infer_prompt_examples: bool = False,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
 
@@ -197,27 +197,25 @@ class RELTask(SerializableTask[RELExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        add_prompt_examples (bool): Whether to gather examples for the task. False by default.
+        infer_prompt_examples (bool): Whether to infer prompt examples from the Example objects. False by default.
         """
         self._check_rel_extention()
 
-        examples = list(get_examples())
+        examples = get_examples()
 
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
-
-            for eg in examples:
+        for eg in examples:
+            if infer_labels:
                 rels: List[RelationItem] = eg.reference._.rel
                 for rel in rels:
-                    label_set.add(rel.relation)
-            labels = list(label_set)
+                    labels.append(rel.relation)
+            if infer_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        if add_prompt_examples:
-            self._prompt_examples = self._create_prompt_examples(examples)
-
+        labels = list(set(labels))
         self._label_dict = {self._normalizer(label): label for label in labels}
 
     @property
@@ -233,24 +231,20 @@ class RELTask(SerializableTask[RELExample]):
     def _Example(self) -> Type[RELExample]:
         return RELExample
 
-    def _create_prompt_examples(
-        self,
-        examples: List[Example],
-    ) -> List[RELExample]:
-        """Create REL prompt examples from spaCy examples."""
-        rel_examples = []
-        for eg in examples:
-            rel_example = RELExample(
-                text=eg.reference.text,
-                ents=[
-                    EntityItem(
-                        start_char=ent.start_char,
-                        end_char=ent.end_char,
-                        label=ent.label_,
-                    )
-                    for ent in eg.reference.ents
-                ],
-                relations=eg.reference._.rel,
+    def _create_prompt_example(self, example: Example) -> RELExample:
+        """Create a REL prompt example from a spaCy example."""
+        entities = [
+            EntityItem(
+                start_char=ent.start_char,
+                end_char=ent.end_char,
+                label=ent.label_,
             )
-            rel_examples.append(rel_example)
-        return rel_examples
+            for ent in example.reference.ents
+        ]
+
+        rel_example = RELExample(
+            text=example.reference.text,
+            ents=entities,
+            relations=example.reference._.rel,
+        )
+        return rel_example

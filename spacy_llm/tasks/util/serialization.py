@@ -126,7 +126,7 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
 
         deserialize = {
             "cfg": lambda p: self.set_cfg(srsly.read_json(p)),
-            "prompt_examples": lambda p: self.set_examples(srsly.read_msgpack(p)),
+            "prompt_examples": lambda p: self.set_prompt_examples(srsly.read_msgpack(p)),
         }
 
         util.from_disk(path, deserialize, exclude)

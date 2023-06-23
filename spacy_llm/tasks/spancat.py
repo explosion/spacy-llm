@@ -10,8 +10,8 @@ from ..compat import Literal
 from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
-from .templates import read_template
 from .span import SpanExample, SpanTask
+from .templates import read_template
 
 _DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")
 _DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
@@ -113,7 +113,7 @@ class SpanCatTask(SpanTask):
         template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
         label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
-        examples: Optional[List[SpanExample]] = None,
+        prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
@@ -129,7 +129,7 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
@@ -142,7 +142,7 @@ class SpanCatTask(SpanTask):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            examples=examples,
+            prompt_examples=prompt_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -173,7 +173,7 @@ class SpanCatTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        add_prompt_examples: bool = False,
+        infer_prompt_examples: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
@@ -188,24 +188,22 @@ class SpanCatTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        add_prompt_examples (bool): Whether to gather examples for the task. False by default.
+        infer_prompt_examples (bool): Whether to infer prompt examples from the Example objects. False by default.
         """
-        examples = list(get_examples())
+        examples = get_examples()
 
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
-
-            for eg in examples:
+        for eg in examples:
+            if infer_labels:
                 for span in eg.reference.spans.get(self._spans_key, []):
-                    label_set.add(span.label_)
-            labels = list(label_set)
+                    labels.append(span.label_)
+            if infer_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        if add_prompt_examples:
-            self._prompt_examples = self._create_prompt_examples(examples)
-
+        labels = list(set(labels))
         self._label_dict = {self._normalizer(label): label for label in labels}
 
     @property
@@ -220,20 +218,10 @@ class SpanCatTask(SpanTask):
             "_single_match",
         ]
 
-    def _create_prompt_examples(
-        self,
-        examples: List[Example],
-    ) -> List[SpanExample]:
-        """Create spancat prompt examples from spaCy examples."""
-        span_examples = []
-        for eg in examples:
-            entities = defaultdict(list)
+    def _create_prompt_example(self, example: Example) -> SpanExample:
+        """Create a spancat prompt example from a spaCy example."""
+        entities = defaultdict(list)
+        for span in example.reference.spans[self._spans_key]:
+            entities[span.label_].append(span.text)
 
-            for span in eg.reference.spans[self._spans_key]:
-                entities[span.label_].append(span.text)
-            span_example = SpanExample(
-                text=eg.reference.text,
-                entities=entities,
-            )
-            span_examples.append(span_example)
-        return span_examples
+        return SpanExample(text=example.reference.text, entities=entities)

@@ -182,7 +182,7 @@ def test_rel_init(noop_config, add_prompt_examples: bool):
     task: RELTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._examples
+    assert not task._prompt_examples
 
     # This is super hacky... but it works for now.
     nlp.config["initialize"]["components"]["llm"] = {
@@ -192,11 +192,11 @@ def test_rel_init(noop_config, add_prompt_examples: bool):
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"LivesIn", "Visits"}
-    assert bool(task._examples) is add_prompt_examples
+    assert bool(task._prompt_examples) is add_prompt_examples
 
     if add_prompt_examples:
-        assert task._examples
-        assert len(task._examples) == 2
+        assert task._prompt_examples
+        assert len(task._prompt_examples) == 2
 
 
 def test_rel_serde(noop_config, tmp_path: Path):

@@ -68,7 +68,7 @@ def make_textcat_task(
     return TextCatTask(
         labels=labels_list,
         template=_DEFAULT_TEXTCAT_TEMPLATE_V1,
-        examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -122,7 +122,7 @@ def make_textcat_task_v2(
     return TextCatTask(
         labels=labels_list,
         template=template,
-        examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -182,7 +182,7 @@ def make_textcat_task_v3(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -324,7 +324,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        add_prompt_examples: bool = False,
+        infer_prompt_examples: bool = False,
     ) -> None:
         """Initialize the TextCat task, by auto-discovering labels.
 
@@ -338,24 +338,22 @@ class TextCatTask(SerializableTask[TextCatExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        add_prompt_examples (bool): Whether to gather examples for the task. False by default.
+        infer_prompt_examples (bool): Whether to infer prompt examples from the Example objects. False by default.
         """
-        examples = list(get_examples())
+        examples = get_examples()
 
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
-
-            for eg in examples:
+        for eg in examples:
+            if infer_labels:
                 for cat in eg.reference.cats.keys():
-                    label_set.add(cat)
-            labels = list(label_set)
+                    labels.append(cat)
+            if infer_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        if add_prompt_examples:
-            self._prompt_examples = self._create_prompt_examples(examples)
-
+        labels = list(set(labels))
         self._label_dict = {self._normalizer(label): label for label in labels}
 
     @property
@@ -374,26 +372,25 @@ class TextCatTask(SerializableTask[TextCatExample]):
     def _Example(self) -> Type[TextCatExample]:
         return TextCatExample
 
-    def _create_prompt_examples(
-        self,
-        examples: List[Example],
-    ) -> List[TextCatExample]:
-        """Create textcat prompt examples from spaCy examples."""
-        textcat_examples = []
-        for eg in examples:
-            if self._use_binary:
-                answer = (
-                    "POS"
-                    if eg.reference.cats[list(self._label_dict.values())[0]] == 1.0
-                    else "NEG"
-                )
+    def _create_prompt_example(self, example: Example) -> TextCatExample:
+        """Create a textcat prompt example from a spaCy example."""
+        if self._use_binary:
+            answer = (
+                "POS"
+                if example.reference.cats[list(self._label_dict.values())[0]] == 1.0
+                else "NEG"
+            )
+        else:
             answer = ",".join(
-                [label for label, score in eg.reference.cats.items() if score == 1.0]
+                [
+                    label
+                    for label, score in example.reference.cats.items()
+                    if score == 1.0
+                ]
             )
 
-            textcat_example = TextCatExample(
-                text=eg.reference.text,
-                answer=answer,
-            )
-            textcat_examples.append(textcat_example)
-        return textcat_examples
+        textcat_example = TextCatExample(
+            text=example.reference.text,
+            answer=answer,
+        )
+        return textcat_example

@@ -568,7 +568,7 @@ def test_spancat_init(noop_config, add_prompt_examples: bool):
     task: SpanCatTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._examples
+    assert not task._prompt_examples
 
     # This is super hacky... but it works for now.
     nlp.config["initialize"]["components"]["llm"] = {
@@ -578,10 +578,10 @@ def test_spancat_init(noop_config, add_prompt_examples: bool):
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    assert bool(task._examples) is add_prompt_examples
+    assert bool(task._prompt_examples) is add_prompt_examples
 
-    if add_prompt_examples and task._examples:
-        for eg in task._examples:
+    if add_prompt_examples and task._prompt_examples:
+        for eg in task._prompt_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 

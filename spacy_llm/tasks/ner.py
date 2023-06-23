@@ -11,8 +11,8 @@ from ..compat import Literal
 from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
-from .templates import read_template
 from .span import SpanExample, SpanTask
+from .templates import read_template
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
 _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
@@ -153,7 +153,7 @@ class NERTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        add_prompt_examples: bool = False,
+        infer_prompt_examples: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize the NER task, by auto-discovering labels.
@@ -168,25 +168,23 @@ class NERTask(SpanTask):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        add_prompt_examples (bool): Whether to gather prompt examples for the task. False by default.
+        infer_prompt_examples (bool): Whether to infer prompt examples from the Example objects. False by default.
         """
 
-        examples = list(get_examples())
+        examples = get_examples()
 
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
-
-            for eg in examples:
+        for eg in examples:
+            if infer_labels:
                 for ent in eg.reference.ents:
-                    label_set.add(ent.label_)
-            labels = list(label_set)
+                    labels.append(ent.label_)
+            if infer_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        if add_prompt_examples:
-            self._prompt_examples = self._create_prompt_examples(examples)
-
+        labels = list(set(labels))
         self._label_dict = {self._normalizer(label): label for label in labels}
 
     def assign_spans(
@@ -203,20 +201,10 @@ class NERTask(SpanTask):
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
 
-    def _create_prompt_examples(
-        self,
-        examples: List[Example],
-    ) -> List[SpanExample]:
-        """Create NER prompt examples from spaCy examples."""
-        span_examples = []
-        for eg in examples:
-            entities = defaultdict(list)
+    def _create_prompt_example(self, example: Example) -> SpanExample:
+        """Create an NER prompt example from a spaCy example."""
+        entities = defaultdict(list)
+        for ent in example.reference.ents:
+            entities[ent.label_].append(ent.text)
 
-            for ent in eg.reference.ents:
-                entities[ent.label_].append(ent.text)
-            span_example = SpanExample(
-                text=eg.reference.text,
-                entities=entities,
-            )
-            span_examples.append(span_example)
-        return span_examples
+        return SpanExample(text=example.reference.text, entities=entities)

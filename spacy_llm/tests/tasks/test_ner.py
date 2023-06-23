@@ -762,7 +762,7 @@ def test_ner_init(noop_config, add_prompt_examples: bool):
     task: NERTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._examples
+    assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
         "add_prompt_examples": add_prompt_examples
@@ -770,11 +770,11 @@ def test_ner_init(noop_config, add_prompt_examples: bool):
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    assert bool(task._examples) is add_prompt_examples
+    assert bool(task._prompt_examples) is add_prompt_examples
 
     if add_prompt_examples:
-        assert task._examples
-        for eg in task._examples:
+        assert task._prompt_examples
+        for eg in task._prompt_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
