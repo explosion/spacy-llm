@@ -73,8 +73,8 @@ def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
         # Reading worked, but suffix is wrong: recommend changing suffix.
         if i > 0 or suffix not in formats:
             warnings.warn(
-                "Content of examples file could be read, but the file suffix does not correspond to the detected format. Please "
-                "ensure the correct suffix has been used."
+                "Content of examples file could be read, but the file suffix does not correspond to the detected "
+                "format. Please ensure the correct suffix has been used."
             )
 
     if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):

@@ -250,7 +250,7 @@ def test_fewshot_reader_file_format_handling():
         srsly.write_yaml(tmpdir / "example.json", example)
         srsly.write_yaml(tmpdir / "example.foo", example)
 
-        warning = "Content of examples file could be read, but doesn't correspond with the file suffix."
+        warning = "Content of examples file could be read"
         _fewshot_reader(tmpdir / "example.yml")
         with pytest.warns(UserWarning, match=warning):
             _fewshot_reader(tmpdir / "example.json")
