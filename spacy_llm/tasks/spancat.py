@@ -204,7 +204,7 @@ class SpanCatTask(SpanTask):
             labels = list(label_set)
 
         if add_prompt_examples:
-            self._examples = self.create_examples(examples)
+            self._prompt_examples = self._create_prompt_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -220,11 +220,11 @@ class SpanCatTask(SpanTask):
             "_single_match",
         ]
 
-    def create_examples(
+    def _create_prompt_examples(
         self,
         examples: List[Example],
     ) -> List[SpanExample]:
-        """Create spancat examples from spaCy examples."""
+        """Create spancat prompt examples from spaCy examples."""
         span_examples = []
         for eg in examples:
             entities = defaultdict(list)

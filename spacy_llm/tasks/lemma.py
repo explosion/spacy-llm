@@ -55,7 +55,7 @@ class LemmaTask(SerializableTask[LemmaExample]):
             passed, then zero-shot learning will be used.
         """
         self._template = template
-        self._examples = examples
+        self._prompt_examples = examples
 
     def initialize(
         self,
@@ -76,7 +76,7 @@ class LemmaTask(SerializableTask[LemmaExample]):
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,
-                examples=self._examples,
+                examples=self._prompt_examples,
             )
             yield prompt
 

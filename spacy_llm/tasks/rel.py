@@ -128,7 +128,7 @@ class RELTask(SerializableTask[RELExample]):
         self._label_dict = {self._normalizer(label): label for label in labels}
         self._template = template
         self._label_definitions = label_definitions
-        self._examples = examples
+        self._prompt_examples = examples
         self._verbose = verbose
 
     @classmethod
@@ -149,7 +149,7 @@ class RELTask(SerializableTask[RELExample]):
                 text=_preannotate(doc),
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                examples=self._examples,
+                examples=self._prompt_examples,
                 preannotate=_preannotate,
             )
             yield prompt
@@ -216,7 +216,7 @@ class RELTask(SerializableTask[RELExample]):
             labels = list(label_set)
 
         if add_prompt_examples:
-            self._examples = self.create_examples(examples)
+            self._prompt_examples = self._create_prompt_examples(examples)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
@@ -233,11 +233,11 @@ class RELTask(SerializableTask[RELExample]):
     def _Example(self) -> Type[RELExample]:
         return RELExample
 
-    def create_examples(
+    def _create_prompt_examples(
         self,
         examples: List[Example],
     ) -> List[RELExample]:
-        """Create REL examples from spaCy examples."""
+        """Create REL prompt examples from spaCy examples."""
         rel_examples = []
         for eg in examples:
             rel_example = RELExample(
