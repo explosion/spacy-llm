@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable
 import pytest
 import spacy
 import srsly
+from confection import Config
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.util import make_tempdir
@@ -21,6 +22,7 @@ from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
 from ...registry.reader import _fewshot_reader
+from ...util import assemble_from_config
 from ..compat import has_openai_key
 
 
@@ -257,3 +259,37 @@ def test_fewshot_reader():
             _fewshot_reader(tmpdir / "example.json")
         with pytest.warns(UserWarning, match=warning):
             _fewshot_reader(tmpdir / "example.foo")
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_pipe_labels():
+    """Test pipe labels with serde."""
+
+    cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.TextCat.v2"
+    labels = ["COMPLIMENT", "INSULT"]
+
+    [components.llm.backend]
+    @llm_backends = "spacy.REST.v1"
+    api = "OpenAI"
+    config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
+    """
+
+    config = Config().from_str(cfg_string)
+    nlp = assemble_from_config(config)
+
+    with spacy.util.make_tempdir() as tmpdir:
+        nlp.to_disk(tmpdir / "tst.nlp")
+        nlp = spacy.load(tmpdir / "tst.nlp")
+        assert nlp.pipe_labels["llm"] == ["COMPLIMENT", "INSULT"]
