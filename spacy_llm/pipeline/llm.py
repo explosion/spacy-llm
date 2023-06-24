@@ -214,6 +214,7 @@ class LLMWrapper(Pipe):
             if is_cached[i]:
                 cached_doc = self._cache[doc]
                 assert cached_doc is not None
+                cached_doc._context = doc._context
                 final_docs.append(cached_doc)
             else:
                 doc = next(modified_docs)
