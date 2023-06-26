@@ -6,9 +6,11 @@ from typing import Any, Dict, Iterable
 
 import pytest
 import spacy
+import srsly
 from confection import Config
 from spacy.language import Language
 from spacy.tokens import Doc
+from spacy.util import make_tempdir
 from thinc.api import NumpyOps, get_current_ops
 
 import spacy_llm
@@ -19,6 +21,7 @@ from spacy_llm.tasks import make_noop_task
 from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
+from ...registry.reader import fewshot_reader
 from ...util import assemble_from_config
 from ..compat import has_openai_key
 
@@ -232,6 +235,24 @@ def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixt
     assert f"Generated prompt for doc: {doc.text}" not in captured.out
     assert "Don't do anything" not in captured.out
     assert f"LLM response for doc: {doc.text}" not in captured.out
+
+
+def test_fewshot_reader_file_format_handling():
+    """Test if fewshot reader copes with file formats as expected."""
+    example = [
+        {
+            "text": "Circe lived on Aeaea.",
+            "entities": {"PER": ["Circe"], "LOC": ["Aeaea"]},
+        }
+    ]
+    with make_tempdir() as tmpdir:
+        srsly.write_yaml(tmpdir / "example.yml", example)
+        srsly.write_yaml(tmpdir / "example.json", example)
+        srsly.write_yaml(tmpdir / "example.foo", example)
+
+        fewshot_reader(tmpdir / "example.yml")
+        fewshot_reader(tmpdir / "example.json")
+        fewshot_reader(tmpdir / "example.foo")
 
 
 @pytest.mark.external
