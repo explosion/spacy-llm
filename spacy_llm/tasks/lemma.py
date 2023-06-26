@@ -65,6 +65,10 @@ class LemmaTask(SerializableTask[LemmaExample]):
         labels (List[str]): Optional list of labels.
         """
 
+    @property
+    def prompt_template(self) -> str:
+        return self._template
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)

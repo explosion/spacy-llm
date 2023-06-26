@@ -117,9 +117,10 @@ class LLMWrapper(Pipe):
         self._name = name
         self._task = task
         self._backend = backend
+        self._save_io = save_io
         self._cache = cache
         self._cache.vocab = vocab
-        self._save_io = save_io
+        self._cache.prompt_template = self._task.prompt_template
 
         # This is done this way because spaCy's `validate_init_settings` function
         # does not support `**kwargs: Any`.

@@ -75,6 +75,10 @@ class LLMTask(Protocol):
     ) -> Iterable[Doc]:
         ...
 
+    @property
+    def prompt_template(self) -> str:
+        ...
+
 
 @runtime_checkable
 class Labeled(Protocol):
@@ -102,6 +106,18 @@ class Cache(Protocol):
     def add(self, doc: Doc) -> None:
         """Adds processed doc to cache (or to a queue that is added to the cache at a later point)
         doc (Doc): Doc to add to persistence queue.
+        """
+
+    @property
+    def prompt_template(self) -> Optional[str]:
+        """Set prompt template.
+        RETURNS (str): Prompt template string used for docs to cache/cached docs.
+        """
+
+    @prompt_template.setter
+    def prompt_template(self, prompt_template: str) -> None:
+        """Set prompt template.
+        prompt_template (str): Prompt template string used for docs to cache/cached docs.
         """
 
     def __contains__(self, doc: Doc) -> bool:

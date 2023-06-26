@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
 
@@ -43,6 +44,8 @@ class BatchCache:
         # Max. number of batches to keep in memory.
         self.max_batches_in_mem = max_batches_in_mem
         self._vocab: Optional[Vocab] = None
+        self._prompt_template: Optional[str] = None
+        self._prompt_template_checked: bool = False
 
         # Stores doc hash -> batch hash to allow efficient lookup of available Docs.
         self._doc2batch: Dict[int, int] = {}
@@ -62,7 +65,52 @@ class BatchCache:
             "persisted": 0,
         }
 
-        self._init_cache_index()
+        self._init_cache_dir()
+
+    @property
+    def prompt_template(self) -> Optional[str]:
+        """Set prompt template.
+        RETURNS (str): Prompt template string used for docs to cache/cached docs.
+        """
+        return self._prompt_template
+
+    @prompt_template.setter
+    def prompt_template(self, prompt_template: str) -> None:
+        """Set prompt template.
+        prompt_template (str): Prompt template string used for docs to cache/cached docs.
+        """
+        self._prompt_template = prompt_template
+        if not self._path:
+            return
+
+        # Store prompt template as file.
+        prompt_template_path = self._path / "prompt_template.txt"
+        # If no file exists: store in plain text for easier debugging.
+        if not prompt_template_path.exists():
+            with open(prompt_template_path, "w") as file:
+                file.write(self._prompt_template)
+
+        # If file exists and prompt template is not equal to new prompt template: raise, as this indicate we are
+        # trying to reuse a cache directory with a changed prompt.
+        else:
+            with open(prompt_template_path, "r") as file:
+                existing_prompt_template = "\n".join(file.readlines())
+            if BatchCache._normalize_prompt_template(
+                existing_prompt_template
+            ) != BatchCache._normalize_prompt_template(self._prompt_template):
+                raise ValueError(
+                    f"Prompt template in cache directory ({prompt_template_path}) is not equal with "
+                    f"current prompt template. Reset your cache if you are using a new prompt "
+                    f"template."
+                )
+
+    @staticmethod
+    def _normalize_prompt_template(prompt_template: str) -> str:
+        """Normalizes prompt template, e. g. for easier comparison.
+        prompt_template (str): Prompt template to normalize.
+        RETURNS (str): Normalized prompt template.
+        """
+        return " ".join(prompt_template.strip().replace("\n", " ").split())
 
     @property
     def vocab(self) -> Optional[Vocab]:
@@ -78,8 +126,8 @@ class BatchCache:
         """
         self._vocab = vocab
 
-    def _init_cache_index(self) -> None:
-        """Init cache index and directory."""
+    def _init_cache_dir(self) -> None:
+        """Init cache directory with index and prompt template file."""
         if self._path is None:
             return
 
@@ -87,6 +135,7 @@ class BatchCache:
             raise ValueError("Cache directory exists and is not a directory.")
         self._path.mkdir(parents=True, exist_ok=True)
 
+        # Read from index file, if it exists.
         index_path = self._index_path
         if index_path.exists():
             for rec in srsly.read_jsonl(index_path):
@@ -136,6 +185,13 @@ class BatchCache:
         """
         if self._path is None:
             return
+        if not self._prompt_template_checked and self._prompt_template is None:
+            warnings.warn(
+                "No prompt template set for Cache object, entailing that consistency of prompt template used "
+                "to generate docs cannot be checked. Be mindful to reset your cache whenever you change your "
+                "prompt template."
+            )
+            self._prompt_template_checked = True
 
         self._cache_queue.append(doc)
         self._stats["added"] += 1

@@ -141,6 +141,10 @@ class RELTask(SerializableTask[RELExample]):
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
 
+    @property
+    def prompt_template(self) -> str:
+        return self._template
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
