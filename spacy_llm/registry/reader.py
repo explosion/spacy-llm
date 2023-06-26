@@ -46,16 +46,19 @@ def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
 
         # Try to read in indicated format.
         success = False
-        try:
-            data = readers[suffix](eg_path)
-            success = True
-        except Exception:
+        if suffix in readers:
+            try:
+                data = readers[suffix](eg_path)
+                success = True
+            except Exception:
+                pass
+        if not success:
             # Try to read file in all supported formats.
-            for file_format in (".yml", ".json", ".jsonl"):
+            for file_format, reader in readers.items():
                 if file_format == suffix:
                     continue
                 try:
-                    data = readers[file_format](eg_path)
+                    data = reader(eg_path)
                     success = True
                     break
                 except Exception:
