@@ -1,10 +1,10 @@
 import abc
 import warnings
-from typing import Any, Dict, Iterable, Literal, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterable, Optional, Tuple, TypeVar
 
 from thinc.compat import has_torch_cuda_gpu
 
-from ...compat import has_accelerate, has_torch, has_transformers, torch
+from ...compat import Literal, has_accelerate, has_torch, has_transformers, torch
 
 # Type of prompts returned from Task.generate_prompts().
 _PromptType = TypeVar("_PromptType")
