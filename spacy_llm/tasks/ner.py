@@ -171,9 +171,6 @@ class NERTask(SpanTask):
         infer_prompt_examples (int): How many prompt examples to infer from the Example objects.
             0 by default. Takes all examples if set to -1.
         """
-
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
         infer_labels = not labels
@@ -181,7 +178,7 @@ class NERTask(SpanTask):
         if infer_labels:
             labels = []
 
-        for eg in examples:
+        for eg in get_examples():
             if infer_labels:
                 for ent in eg.reference.ents:
                     labels.append(ent.label_)

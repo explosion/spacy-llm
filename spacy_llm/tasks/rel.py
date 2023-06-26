@@ -205,8 +205,6 @@ class RELTask(SerializableTask[RELExample]):
         """
         self._check_rel_extention()
 
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
         infer_labels = not labels
@@ -214,7 +212,7 @@ class RELTask(SerializableTask[RELExample]):
         if infer_labels:
             labels = []
 
-        for eg in examples:
+        for eg in get_examples():
             if infer_labels:
                 rels: List[RelationItem] = eg.reference._.rel
                 for rel in rels:

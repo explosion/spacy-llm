@@ -327,6 +327,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         nlp: Language,
         labels: List[str] = [],
         infer_prompt_examples: int = 0,
+        **kwargs: Any,
     ) -> None:
         """Initialize the TextCat task, by auto-discovering labels.
 
@@ -343,8 +344,6 @@ class TextCatTask(SerializableTask[TextCatExample]):
         infer_prompt_examples (int): How many prompt examples to infer from the Example objects.
             0 by default. Takes all examples if set to -1.
         """
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
         infer_labels = not labels
@@ -352,7 +351,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         if infer_labels:
             labels = []
 
-        for eg in examples:
+        for eg in get_examples():
             if infer_labels:
                 for cat in eg.reference.cats.keys():
                     labels.append(cat)
