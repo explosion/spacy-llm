@@ -1,4 +1,5 @@
 import copy
+import os
 import time
 from pathlib import Path
 from typing import Dict
@@ -10,6 +11,7 @@ from spacy.language import Language
 from spacy.tokens import DocBin
 
 from ..cache import BatchCache
+from .compat import has_openai_key
 
 _DEFAULT_CFG = {
     "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
@@ -153,3 +155,33 @@ def test_path_dir_created():
         config["cache"]["path"] = str(tmpdir / "new_dir")
         spacy.blank("en").add_pipe("llm", config=config)
         assert (tmpdir / "new_dir").exists()
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_caching_llm_io() -> None:
+    """Test availability of LLM IO after caching."""
+    with spacy.util.make_tempdir() as tmpdir:
+        config = copy.deepcopy(_DEFAULT_CFG)
+        config["backend"]["api"] = "OpenAI"  # type: ignore[index]
+        config["backend"]["config"] = {"model": "gpt-3.5-turbo"}  # type: ignore[index]
+        config["cache"]["path"] = str(tmpdir)  # type: ignore[index]
+        config["cache"]["batch_size"] = 3  # type: ignore[index]
+        config["save_io"] = True
+        nlp = spacy.blank("en")
+        nlp.add_pipe("llm", config=config)
+        docs = [nlp(txt) for txt in ("What's 1+1?", "What's 2+2?", "What's 3+3?")]
+
+        assert all([doc.user_data["llm_io"]["llm"]] for doc in docs)
+        cached_file_names = [
+            f
+            for f in os.listdir(tmpdir)
+            if os.path.isfile(tmpdir / f)
+            if f.endswith(".spacy")
+        ]
+        assert len(cached_file_names) == 1
+        cached_docs = list(
+            DocBin().from_disk(tmpdir / cached_file_names[0]).get_docs(nlp.vocab)
+        )
+        assert len(cached_docs) == 3
+        assert all([doc.user_data["llm_io"]["llm"]] for doc in cached_docs)
