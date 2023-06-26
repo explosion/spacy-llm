@@ -176,8 +176,7 @@ def test_caching_llm_io() -> None:
         cached_file_names = [
             f
             for f in os.listdir(tmpdir)
-            if os.path.isfile(tmpdir / f)
-            if f.endswith(".spacy")
+            if os.path.isfile(tmpdir / f) and f.endswith(".spacy")
         ]
         assert len(cached_file_names) == 1
         cached_docs = list(

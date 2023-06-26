@@ -218,6 +218,7 @@ class LLMWrapper(Pipe):
                 final_docs.append(cached_doc)
             else:
                 doc = next(modified_docs)
+
                 if self._save_io:
                     # Make sure the `llm_io` field is set
                     doc.user_data["llm_io"] = doc.user_data.get(
