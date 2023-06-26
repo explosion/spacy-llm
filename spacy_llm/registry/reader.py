@@ -1,5 +1,4 @@
 import functools
-import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union, cast
 
@@ -45,36 +44,28 @@ def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
             ".jsonl": lambda path: list(srsly.read_jsonl(eg_path)),
         }
 
-        # Sort formats/read methods depending on file suffix so that the read methods most likely to work are used
-        # first.
-        if suffix == ".json":
-            formats = (".json", ".jsonl", ".yml")
-        elif suffix == ".jsonl":
-            formats = (".jsonl", ".json", ".yml")
-        else:
-            formats = (".yml", ".json", ".jsonl")
-
-        # Try to read file in all supported formats.
-        i = 0
-        for i, file_format in enumerate(formats):
-            try:
-                data = readers[file_format](eg_path)
-                break
-            except Exception:
-                pass
+        # Try to read in indicated format.
+        success = False
+        try:
+            data = readers[suffix](eg_path)
+            success = True
+        except Exception:
+            # Try to read file in all supported formats.
+            for file_format in (".yml", ".json", ".jsonl"):
+                if file_format == suffix:
+                    continue
+                try:
+                    data = readers[file_format](eg_path)
+                    success = True
+                    break
+                except Exception:
+                    pass
 
         # Raise error if reading file didn't work.
-        if data is None:
+        if not success:
             raise ValueError(
                 "The examples file expects a .yml, .yaml, .json, or .jsonl file type. Ensure that your file "
                 "corresponds to one of these file formats."
-            )
-
-        # Reading worked, but suffix is wrong: recommend changing suffix.
-        if i > 0 or suffix not in formats:
-            warnings.warn(
-                "Content of examples file could be read, but the file suffix does not correspond to the detected "
-                "format. Please ensure the correct suffix has been used."
             )
 
     if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
