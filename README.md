@@ -392,6 +392,16 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
+Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
+and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
+
+```ini
+[initialize.components.llm]
+infer_prompt_examples = 3
+```
+
+or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
+
 If you don't have specific examples to provide to the LLM, you can write definitions for each label and provide them via the `label_definitions` argument. This lets you tell the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name. Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief description along with some examples and counter examples seems to work quite well.
 
 ```ini
@@ -562,6 +572,16 @@ labels = ["COMPLIMENT", "INSULT"]
 path = "textcat_examples.json"
 ```
 
+Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
+and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
+
+```ini
+[initialize.components.llm]
+infer_prompt_examples = 3
+```
+
+or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
+
 #### spacy.TextCat.v1
 
 The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
@@ -630,14 +650,10 @@ labels = ["LivesIn", "Visits"]
 To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 
-```json
+```jsonl
 {"text": "Laura bought a house in Boston with her husband Mark.", "ents": [{"start_char": 0, "end_char": 5, "label": "PERSON"}, {"start_char": 24, "end_char": 30, "label": "GPE"}, {"start_char": 48, "end_char": 52, "label": "PERSON"}], "relations": [{"dep": 0, "dest": 1, "relation": "LivesIn"}, {"dep": 2, "dest": 1, "relation": "LivesIn"}]}
 {"text": "Michael travelled through South America by bike.", "ents": [{"start_char": 0, "end_char": 7, "label": "PERSON"}, {"start_char": 26, "end_char": 39, "label": "LOC"}], "relations": [{"dep": 0, "dest": 1, "relation": "Visits"}]}
 ```
-
-Note: the REL task relies on pre-extracted entities to make its prediction.
-Hence, you'll need to add a component that populates `doc.ents` with recognized
-spans to your spaCy pipeline and put it _before_ the REL component.
 
 ```ini
 [components.llm.task]
@@ -647,6 +663,20 @@ labels = ["LivesIn", "Visits"]
 @misc = "spacy.FewShotReader.v1"
 path = "rel_examples.jsonl"
 ```
+
+Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
+and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
+
+```ini
+[initialize.components.llm]
+infer_prompt_examples = 3
+```
+
+or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
+
+Note: the REL task relies on pre-extracted entities to make its prediction.
+Hence, you'll need to add a component that populates `doc.ents` with recognized
+spans to your spaCy pipeline and put it _before_ the REL component.
 
 #### spacy.Lemma.v1
 
@@ -713,6 +743,16 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 @misc = "spacy.FewShotReader.v1"
 path = "lemma_examples.yml"
 ```
+
+Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
+and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
+
+```ini
+[initialize.components.llm]
+infer_prompt_examples = 3
+```
+
+or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
 
 #### spacy.NoOp.v1
 
