@@ -91,8 +91,8 @@ class BatchCache:
                 file.write(self._prompt_template)
 
         else:
-        	# If file exists and prompt template is not equal to new prompt template: raise, as this indicate we are
-        	# trying to reuse a cache directory with a changed prompt.
+            # If file exists and prompt template is not equal to new prompt template: raise, as this indicate we are
+            # trying to reuse a cache directory with a changed prompt.
             with open(prompt_template_path, "r") as file:
                 existing_prompt_template = "\n".join(file.readlines())
             if BatchCache._normalize_prompt_template(
