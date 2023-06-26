@@ -99,7 +99,7 @@ def make_ner_task_v2(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -113,7 +113,7 @@ class NERTask(SpanTask):
         labels: List[str] = [],
         template: str = _DEFAULT_NER_TEMPLATE_V2,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[List[SpanExample]] = None,
+        prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
@@ -141,7 +141,7 @@ class NERTask(SpanTask):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            prompt_examples=examples,
+            prompt_examples=prompt_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -191,7 +191,9 @@ class NERTask(SpanTask):
             ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
-        self._label_dict = {self._normalizer(label): label for label in sorted(set(labels))}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
 
     def assign_spans(
         self,

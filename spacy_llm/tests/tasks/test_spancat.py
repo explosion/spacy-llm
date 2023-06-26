@@ -391,9 +391,9 @@ You are an expert Named Entity Recognition (NER) system. Your task is to accept 
 The entities you extract for each label can overlap with each other.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Here is the text that needs labeling:
@@ -435,9 +435,9 @@ You are an expert Named Entity Recognition (NER) system. Your task is to accept 
 The entities you extract for each label can overlap with each other.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Below are some examples (only use these as a guide):

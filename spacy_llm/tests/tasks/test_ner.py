@@ -519,9 +519,9 @@ def test_jinja_template_rendering_without_examples():
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Here is the text that needs labeling:
@@ -562,9 +562,9 @@ def test_jinja_template_rendering_with_examples(examples_path):
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Below are some examples (only use these as a guide):
@@ -626,9 +626,9 @@ def test_jinja_template_rendering_with_label_definitions():
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
 Assume these definitions are written by an expert and follow them closely.
@@ -676,9 +676,9 @@ def test_external_template_actually_loads():
         prompt.strip()
         == """
 This is a test NER template. Here are the labels
-PER
-ORG
 LOC
+ORG
+PER
 
 Here is the text: Alice and Bob went to the supermarket
 """.strip()

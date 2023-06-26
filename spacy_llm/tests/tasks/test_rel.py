@@ -129,7 +129,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
     labels = split_labels(labels)
     assert isinstance(task, Labeled)
     assert task.labels == tuple(labels)
-    assert pipe.labels == task.labels
+    assert set(pipe.labels) == set(task.labels)
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
 

@@ -233,7 +233,9 @@ class TextCatTask(SerializableTask[TextCatExample]):
         """
         self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in sorted(set(labels))}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
         self._label_definitions = label_definitions
         self._prompt_examples = prompt_examples or []
         # Textcat configuration
@@ -360,7 +362,9 @@ class TextCatTask(SerializableTask[TextCatExample]):
             ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
-        self._label_dict = {self._normalizer(label): label for label in sorted(set(labels))}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
 
     @property
     def _cfg_keys(self) -> List[str]:

@@ -207,7 +207,9 @@ class SpanCatTask(SpanTask):
             ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
-        self._label_dict = {self._normalizer(label): label for label in sorted(set(labels))}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
 
     @property
     def _cfg_keys(self) -> List[str]:
