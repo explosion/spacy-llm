@@ -22,14 +22,20 @@ PIPE_CFG = {
 
 @registry.llm_tasks("spacy.Count.v1")
 class _CountTask:
+    _PROMPT_TEMPLATE = "Count the number of characters in this string: '{text}'."
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         for doc in docs:
-            yield f"Count the number of characters in this string: '{doc.text}'."
+            yield _CountTask._PROMPT_TEMPLATE.format(text=doc.text)
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         return docs
+
+    @property
+    def prompt_template(self) -> str:
+        return _CountTask._PROMPT_TEMPLATE
 
 
 def test_initialization():
