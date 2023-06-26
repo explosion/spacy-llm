@@ -8,6 +8,13 @@ from .base import HuggingFace
 
 
 class OpenLLaMA(HuggingFace):
+    MODEL_NAMES = Literal[
+        "open_llama_3b_350bt_preview",  # noqa: F722
+        "open_llama_3b_600bt_preview",  # noqa: F722
+        "open_llama_7b_400bt_preview",  # noqa: F722
+        "open_llama_7b_600bt_preview",  # noqa: F722
+    ]
+
     def __init__(
         self,
         name: str,
@@ -57,15 +64,6 @@ class OpenLLaMA(HuggingFace):
         return "openlm-research"
 
     @staticmethod
-    def get_model_names() -> Iterable[str]:
-        return [
-            "open_llama_3b_350bt_preview",
-            "open_llama_3b_600bt_preview",
-            "open_llama_7b_400bt_preview",
-            "open_llama_7b_600bt_preview",
-        ]
-
-    @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
         return (
@@ -79,12 +77,7 @@ class OpenLLaMA(HuggingFace):
 
 @registry.llm_models("spacy.OpenLLaMA.v1")
 def openllama_hf(
-    name: Literal[
-        "open_llama_3b_350bt_preview",
-        "open_llama_3b_600bt_preview",
-        "open_llama_7b_400bt_preview",
-        "open_llama_7b_600bt_preview",
-    ],  # noqa: F722
+    name: OpenLLaMA.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:

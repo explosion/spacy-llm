@@ -42,6 +42,7 @@ def test_init():
     cfg["model"]["@llm_models"] = "spacy.Dolly.v1"
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
+    nlp.get_pipe("llm")._model.get_model_names()
 
 
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")

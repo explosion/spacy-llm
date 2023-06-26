@@ -20,6 +20,12 @@ if has_transformers:
 
 
 class StableLM(HuggingFace):
+    MODEL_NAMES = Literal[
+        "stablelm-base-alpha-3b",  # noqa: F722
+        "stablelm-base-alpha-7b",  # noqa: F722
+        "stablelm-tuned-alpha-3b",  # noqa: F722
+        "stablelm-tuned-alpha-7b",  # noqa: F722
+    ]
     _SYSTEM_PROMPT = """
 <|SYSTEM|># StableLM Tuned (Alpha version)
 - StableLM is a helpful and harmless open-source AI language model developed by StabilityAI.
@@ -59,15 +65,6 @@ class StableLM(HuggingFace):
     @staticmethod
     def get_hf_account() -> str:
         return "stabilityai"
-
-    @staticmethod
-    def get_model_names() -> Iterable[str]:
-        return [
-            "stablelm-base-alpha-3b",
-            "stablelm-base-alpha-7b",
-            "stablelm-tuned-alpha-3b",
-            "stablelm-tuned-alpha-7b",
-        ]
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         assert callable(self._tokenizer)
@@ -111,12 +108,7 @@ class StableLM(HuggingFace):
 
 @registry.llm_models("spacy.StableLM.v1")
 def stablelm_hf(
-    name: Literal[
-        "stablelm-base-alpha-3b",  # noqa: F722
-        "stablelm-base-alpha-7b",  # noqa: F722
-        "stablelm-tuned-alpha-3b",  # noqa: F722
-        "stablelm-tuned-alpha-7b",  # noqa: F722
-    ],
+    name: StableLM.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:

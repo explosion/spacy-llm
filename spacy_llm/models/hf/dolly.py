@@ -8,6 +8,8 @@ from . import HuggingFace
 
 
 class Dolly(HuggingFace):
+    MODEL_NAMES = Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]  # noqa: F722
+
     def init_model(self) -> Any:
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
@@ -29,10 +31,6 @@ class Dolly(HuggingFace):
         return "databricks"
 
     @staticmethod
-    def get_model_names() -> Iterable[str]:
-        return ["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]
-
-    @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
         return (
@@ -49,7 +47,7 @@ class Dolly(HuggingFace):
 
 @registry.llm_models("spacy.Dolly.v1")
 def dolly_hf(
-    name: Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"],  # noqa: F722
+    name: Dolly.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:

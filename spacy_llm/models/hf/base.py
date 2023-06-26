@@ -1,6 +1,6 @@
 import abc
 import warnings
-from typing import Any, Dict, Iterable, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterable, Literal, Optional, Tuple, TypeVar
 
 from thinc.compat import has_torch_cuda_gpu
 
@@ -14,6 +14,8 @@ _ResponseType = TypeVar("_ResponseType")
 
 class HuggingFace(abc.ABC):
     """Base class for HuggingFace model classes."""
+
+    MODEL_NAMES = Literal[None]  # noqa: F722
 
     def __init__(
         self,
@@ -29,7 +31,9 @@ class HuggingFace(abc.ABC):
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
         inference_config (Dict[Any, Any]): HF config for model run.
         """
-        self._hf_model_id = f"{self.get_hf_account()}/{name}"
+        self._hf_model_id = (
+            name if self.get_hf_account() in name else f"{self.get_hf_account()}/{name}"
+        )
         self._config_init, self._config_run = self.compile_default_configs()
         if config_init:
             self._config_init = {**self._config_init, **config_init}
@@ -47,18 +51,18 @@ class HuggingFace(abc.ABC):
         RETURNS (Iterable[_ResponseType]): API responses.
         """
 
+    @classmethod
+    def get_model_names(cls) -> Tuple[str, ...]:
+        """Names of supported models for this HF model implementation.
+        RETURNS (Tuple[str]): Names of supported models.
+        """
+        return tuple(str(arg) for arg in cls.MODEL_NAMES.__args__)  # type: ignore[attr-defined]
+
     @staticmethod
     @abc.abstractmethod
     def get_hf_account() -> str:
         """Names of HF account for this model.
         RETURNS (str): Name of HF account.
-        """
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_model_names() -> Iterable[str]:
-        """Names of supported models for this HF model implementation.
-        RETURNS (Iterable[str]): Names of supported models.
         """
 
     @staticmethod
