@@ -53,7 +53,7 @@ def make_ner_task(
     return NERTask(
         labels=labels_list,
         template=_DEFAULT_NER_TEMPLATE_V1,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
