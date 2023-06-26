@@ -98,6 +98,11 @@ def test_llm_pipe_with_cache(tmp_path: Path, n_process: int):
     docs = list(nlp.pipe(texts=texts, n_process=n_process))
     assert [doc.text for doc in docs] == texts
 
+    egs = [(text, i) for i, text in enumerate(texts)]
+    egs_processed = list(nlp.pipe(egs, as_tuples=True, n_process=n_process))
+    assert [doc.text for doc, _ in egs_processed] == texts
+    assert [eg for _, eg in egs_processed] == list(range(len(texts)))
+
 
 def test_llm_pipe_empty(nlp):
     """Test call .pipe() with empty batch."""
