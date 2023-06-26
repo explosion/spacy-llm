@@ -1000,7 +1000,7 @@ Example config block:
 
 ```ini
 [components.llm.cache]
-@llm_misc = "spacy.BatchCache.v1",
+@llm_misc = "spacy.BatchCache.v1"
 path = "path/to/cache"
 batch_size = 64
 max_batches_in_mem = 4
