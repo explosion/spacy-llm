@@ -362,7 +362,7 @@ def test_textcat_multilabel_labels_are_correct(
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     # Take only those that have scores
     pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
-    assert pred_cats == expected
+    assert set(pred_cats) == set(expected)
 
 
 @pytest.mark.parametrize(
@@ -462,7 +462,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
@@ -529,7 +529,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
@@ -696,7 +696,7 @@ def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
