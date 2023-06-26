@@ -218,8 +218,6 @@ class LLMWrapper(Pipe):
                 final_docs.append(cached_doc)
             else:
                 doc = next(modified_docs)
-                self._cache.add(doc)
-                final_docs.append(doc)
 
                 if self._save_io:
                     # Make sure the `llm_io` field is set
@@ -229,6 +227,9 @@ class LLMWrapper(Pipe):
                     llm_io = doc.user_data["llm_io"][self._name]
                     llm_io["prompt"] = str(next(prompts_iters[2]))
                     llm_io["response"] = str(next(responses_iters[2]))
+
+                self._cache.add(doc)
+                final_docs.append(doc)
 
         return final_docs
 
