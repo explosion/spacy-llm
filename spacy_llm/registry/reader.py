@@ -73,7 +73,9 @@ def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
 
     if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
         raise ValueError(
-            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting."
+            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting to ensure that the "
+            f"examples specified in {eg_path} are described as list of dictionaries that fit the structure described by"
+            f" the prompt example class for the corresponding class."
         )
 
     return cast(Iterable[Dict[str, Any]], data)
