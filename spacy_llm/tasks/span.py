@@ -32,7 +32,7 @@ class SpanTask(SerializableTask[SpanExample]):
         single_match: bool = False,
     ):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {self._normalizer(label): label for label in set(labels)}
         self._template = template
         self._label_definitions = label_definitions
         self._prompt_examples = prompt_examples or []

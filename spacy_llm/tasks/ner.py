@@ -191,8 +191,7 @@ class NERTask(SpanTask):
             ):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
-        labels = list(set(labels))
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {self._normalizer(label): label for label in set(labels)}
 
     def assign_spans(
         self,
