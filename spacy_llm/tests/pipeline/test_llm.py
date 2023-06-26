@@ -21,7 +21,7 @@ from spacy_llm.tasks import make_noop_task
 from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
-from ...registry.reader import _fewshot_reader
+from ...registry.reader import fewshot_reader
 from ...util import assemble_from_config
 from ..compat import has_openai_key
 
@@ -250,9 +250,9 @@ def test_fewshot_reader_file_format_handling():
         srsly.write_yaml(tmpdir / "example.json", example)
         srsly.write_yaml(tmpdir / "example.foo", example)
 
-        _fewshot_reader(tmpdir / "example.yml")
-        _fewshot_reader(tmpdir / "example.json")
-        _fewshot_reader(tmpdir / "example.foo")
+        fewshot_reader(tmpdir / "example.yml")
+        fewshot_reader(tmpdir / "example.json")
+        fewshot_reader(tmpdir / "example.foo")
 
 
 @pytest.mark.external
