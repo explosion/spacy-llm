@@ -69,8 +69,8 @@ class BatchCache:
 
     @property
     def prompt_template(self) -> Optional[str]:
-        """Set prompt template.
-        RETURNS (str): Prompt template string used for docs to cache/cached docs.
+        """Get prompt template.
+        RETURNS (Optional[str]): Prompt template string used for docs to cache/cached docs.
         """
         return self._prompt_template
 
@@ -90,9 +90,9 @@ class BatchCache:
             with open(prompt_template_path, "w") as file:
                 file.write(self._prompt_template)
 
-        # If file exists and prompt template is not equal to new prompt template: raise, as this indicate we are
-        # trying to reuse a cache directory with a changed prompt.
         else:
+        	# If file exists and prompt template is not equal to new prompt template: raise, as this indicate we are
+        	# trying to reuse a cache directory with a changed prompt.
             with open(prompt_template_path, "r") as file:
                 existing_prompt_template = "\n".join(file.readlines())
             if BatchCache._normalize_prompt_template(

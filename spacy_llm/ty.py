@@ -110,8 +110,8 @@ class Cache(Protocol):
 
     @property
     def prompt_template(self) -> Optional[str]:
-        """Set prompt template.
-        RETURNS (str): Prompt template string used for docs to cache/cached docs.
+        """Get prompt template.
+        RETURNS (Optional[str]): Prompt template string used for docs to cache/cached docs.
         """
 
     @prompt_template.setter
