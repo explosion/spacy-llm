@@ -161,6 +161,9 @@ def test_type_checking_invalid(noop_config) -> None:
         ) -> Iterable[Doc]:
             return docs
 
+        def prompt_template(self) -> str:
+            return ""
+
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:
         noop_config["task"] = {"@llm_tasks": "IncorrectTypes.v1"}
