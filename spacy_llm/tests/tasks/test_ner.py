@@ -855,8 +855,8 @@ def test_label_inconsistency():
         ValueError,
         match=re.escape(
             "Examples contain labels that are not specified in the task configuration. The latter contains the "
-            "following labels: {'PERSON', 'LOCATION'}. Labels in examples missing from the task configuration: "
-            "{'TECH'}. Please ensure your label specification and example labels are consistent."
+            "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
+            "['TECH']. Please ensure your label specification and example labels are consistent."
         ),
     ):
         assemble_from_config(config)

@@ -54,9 +54,9 @@ class SpanTask(SerializableTask[SpanExample]):
         if not set(example_labels.keys()) <= set(self._label_dict.keys()):
             raise ValueError(
                 f"Examples contain labels that are not specified in the task configuration. The latter contains the "
-                f"following labels: {set(self._label_dict.values())}. Labels in examples missing from the task "
-                f"configuration: {unspecified_labels}. Please ensure your label specification and example labels "
-                f"are consistent."
+                f"following labels: {sorted(list(set(self._label_dict.values())))}. Labels in examples missing from "
+                f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
+                f"and example labels are consistent."
             )
 
     @property
