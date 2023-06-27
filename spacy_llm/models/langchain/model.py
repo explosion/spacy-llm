@@ -59,7 +59,10 @@ class LangChain:
 
     @staticmethod
     def register_models() -> None:
-        """Registers APIs supported by langchain (one API is registered as one model)."""
+        """Registers APIs supported by langchain (one API is registered as one model).
+        Doesn't attempt to register anything if LangChain isn't installed or at least one LangChain model has been
+        registered already.
+        """
         if not has_langchain or any(
             [("langchain" in handle) for handle in registry.llm_models.get_all()]
         ):
