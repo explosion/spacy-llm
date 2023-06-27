@@ -60,6 +60,11 @@ class LangChain:
     @staticmethod
     def register_models() -> None:
         """Registers APIs supported by langchain (one API is registered as one model)."""
+        if not has_langchain or any(
+            [("langchain" in handle) for handle in registry.llm_models.get_all()]
+        ):
+            return
+
         type_to_cls_dict: Dict[
             str, Type[langchain.llms.base.BaseLLM]
         ] = langchain.llms.type_to_cls_dict
