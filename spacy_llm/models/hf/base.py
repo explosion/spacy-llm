@@ -31,7 +31,7 @@ class HuggingFace(abc.ABC):
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
         inference_config (Dict[Any, Any]): HF config for model run.
         """
-        self._hf_model_id = (
+        self._name = (
             name if self.get_hf_account() in name else f"{self.get_hf_account()}/{name}"
         )
         self._config_init, self._config_run = self.compile_default_configs()
@@ -42,6 +42,7 @@ class HuggingFace(abc.ABC):
 
         # Init HF model.
         HuggingFace.check_installation()
+        self._check_model()
         self._model = self.init_model()
 
     @abc.abstractmethod
@@ -50,6 +51,17 @@ class HuggingFace(abc.ABC):
         prompts (Iterable[_PromptType]): Prompts to execute.
         RETURNS (Iterable[_ResponseType]): API responses.
         """
+
+    def _check_model(self) -> None:
+        """Checks whether model is supported. Raises if it isn't."""
+        if (
+            self._name not in self.get_model_names()
+            and self._name.replace(f"{self.get_hf_account()}/", "")
+            not in self.get_model_names()
+        ):
+            raise ValueError(
+                f"Model '{self._name}' is not supported - select one of {self.get_model_names()} instead"
+            )
 
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:

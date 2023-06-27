@@ -49,12 +49,12 @@ class StableLM(HuggingFace):
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._hf_model_id)
+        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
         init_cfg = self._config_init
         if "device" in init_cfg:
             self._device = init_cfg.pop("device")
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self._hf_model_id, **init_cfg
+            self._name, **init_cfg
         )
 
         if self._device:

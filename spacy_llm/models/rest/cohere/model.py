@@ -1,19 +1,19 @@
 import os
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized
+from typing import Any, Dict, Iterable, List, Sized, Tuple
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
 
-from ..base import Model
+from ..base import REST
 
 
 class Endpoints(str, Enum):
     COMPLETION = "https://api.cohere.ai/v1/generate"
 
 
-class Cohere(Model):
+class Cohere(REST):
     @property
     def credentials(self) -> Dict[str, str]:
         api_key = os.getenv("CO_API_KEY")
@@ -82,3 +82,7 @@ class Cohere(Model):
                     api_responses.append(srsly.json_dumps(response))
 
         return api_responses
+
+    @classmethod
+    def get_model_names(cls) -> Tuple[str, ...]:
+        return "command", "command-light", "command-light-nightly", "command-nightly"

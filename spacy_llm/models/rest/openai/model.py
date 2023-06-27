@@ -1,12 +1,12 @@
 import os
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized
+from typing import Any, Dict, Iterable, List, Sized, Tuple
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
 
-from ..base import Model
+from ..base import REST
 
 
 class Endpoints(str, Enum):
@@ -14,7 +14,7 @@ class Endpoints(str, Enum):
     NON_CHAT = "https://api.openai.com/v1/completions"
 
 
-class OpenAI(Model):
+class OpenAI(REST):
     @property
     def credentials(self) -> Dict[str, str]:
         # Fetch and check the key
@@ -132,3 +132,30 @@ class OpenAI(Model):
                     api_responses.append(srsly.json_dumps(response))
 
         return api_responses
+
+    @classmethod
+    def get_model_names(cls) -> Tuple[str, ...]:
+        return (
+            # gpt-4
+            "gpt-4",
+            "gpt-4-0314",
+            "gpt-4-32k",
+            "gpt-4-32k-0314",
+            # gpt-3.5
+            "gpt-3.5-turbo",
+            "gpt-3.5-turbo-16k",
+            "gpt-3.5-turbo-0613",
+            "gpt-3.5-turbo-0613-16k",
+            # text-davinci
+            "text-davinci-002",
+            "text-davinci-003",
+            # others
+            "code-davinci-002",
+            "text-curie-001",
+            "text-babbage-001",
+            "text-ada-001",
+            "davinci",
+            "curie",
+            "babbage",
+            "ada",
+        )

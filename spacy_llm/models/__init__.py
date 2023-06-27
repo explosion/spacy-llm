@@ -1,5 +1,5 @@
 from .hf import dolly_hf, openllama_hf, stablelm_hf
-from .integration import query_langchain
+from .langchain import query_langchain
 from .rest import anthropic, cohere, noop, openai
 
 __all__ = [

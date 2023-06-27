@@ -1,12 +1,12 @@
 import time
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Tuple
 
-from ..base import Model
+from ..base import REST
 
 _NOOP_RESPONSE = ""
 
 
-class NoOpModel(Model):
+class NoOpModel(REST):
     """NoOp model. Used for tests only."""
 
     _CALL_TIMEOUT = 0.01
@@ -30,3 +30,7 @@ class NoOpModel(Model):
         # Assume time penalty for API calls.
         time.sleep(NoOpModel._CALL_TIMEOUT)
         return [_NOOP_RESPONSE] * len(list(prompts))
+
+    @classmethod
+    def get_model_names(cls) -> Tuple[str, ...]:
+        return ("NoOp",)
