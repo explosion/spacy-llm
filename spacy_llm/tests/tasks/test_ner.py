@@ -854,9 +854,9 @@ def test_label_inconsistency():
     with pytest.raises(
         ValueError,
         match=re.escape(
-            "Specified labels and labels in examples diverge. Received ['location', 'person'] and ['location', "
-            "'person', 'tech'], correspondingly. Please ensure your label specification and example labels are "
-            "consistent."
+            "Examples contain labels that are not specified in the task configuration. The latter contains the "
+            "following labels: {'PERSON', 'LOCATION'}. Labels in examples missing from the task configuration: "
+            "{'TECH'}. Please ensure your label specification and example labels are consistent."
         ),
     ):
         assemble_from_config(config)

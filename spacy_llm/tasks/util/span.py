@@ -42,19 +42,21 @@ class SpanTask(SerializableTask[SpanExample]):
         """Checks consistency of labels between examples and defined labels."""
         if not self._examples:
             return
-        example_labels = list(
-            {
-                self._normalizer(key)
-                for example in self._examples
-                for key in example.entities
-            }
-        )
-        spec_labels = list(self._label_dict.keys())
-        example_labels.sort()
-        spec_labels.sort()
-        if not set(example_labels) <= set(spec_labels):
+        example_labels = {
+            self._normalizer(key): key
+            for example in self._examples
+            for key in example.entities
+        }
+        unspecified_labels = {
+            example_labels[key]
+            for key in (set(example_labels.keys()) - set(self._label_dict.keys()))
+        }
+        if not set(example_labels.keys()) <= set(self._label_dict.keys()):
             raise ValueError(
-                f"Specified labels and labels in examples diverge. Received {spec_labels} and {example_labels}, correspondingly. Please ensure your label specification and example labels are consistent."
+                f"Examples contain labels that are not specified in the task configuration. The latter contains the "
+                f"following labels: {set(self._label_dict.values())}. Labels in examples missing from the task "
+                f"configuration: {unspecified_labels}. Please ensure your label specification and example labels "
+                f"are consistent."
             )
 
     @property
