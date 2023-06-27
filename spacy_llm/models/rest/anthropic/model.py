@@ -1,11 +1,12 @@
 import os
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Literal, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized, Tuple
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
 
+from ....compat import Literal
 from ..base import REST
 
 
