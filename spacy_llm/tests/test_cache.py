@@ -195,9 +195,7 @@ def test_prompt_template_handling():
         prompt_template_filepath = tmpdir / "prompt_template.txt"
         assert prompt_template_filepath.exists() and prompt_template_filepath.is_file()
         with open(prompt_template_filepath, "r") as file:
-            assert BatchCache._normalize_prompt_template(
-                "\n".join(file.readlines())
-            ) == BatchCache._normalize_prompt_template(llm._task.prompt_template)
+            assert hash("".join(file.readlines())) == hash(llm._task.prompt_template)
 
         # This should fail, as the prompt template diverges from the persisted one.
         with pytest.raises(ValueError, match="Prompt template in cache directory"):

@@ -94,23 +94,13 @@ class BatchCache:
             # If file exists and prompt template is not equal to new prompt template: raise, as this indicate we are
             # trying to reuse a cache directory with a changed prompt.
             with open(prompt_template_path, "r") as file:
-                existing_prompt_template = "\n".join(file.readlines())
-            if BatchCache._normalize_prompt_template(
-                existing_prompt_template
-            ) != BatchCache._normalize_prompt_template(self._prompt_template):
+                existing_prompt_template = "".join(file.readlines())
+            if hash(existing_prompt_template) != hash(self._prompt_template):
                 raise ValueError(
                     f"Prompt template in cache directory ({prompt_template_path}) is not equal with "
                     f"current prompt template. Reset your cache if you are using a new prompt "
                     f"template."
                 )
-
-    @staticmethod
-    def _normalize_prompt_template(prompt_template: str) -> str:
-        """Normalizes prompt template, e. g. for easier comparison.
-        prompt_template (str): Prompt template to normalize.
-        RETURNS (str): Normalized prompt template.
-        """
-        return " ".join(prompt_template.strip().replace("\n", " ").split())
 
     @property
     def vocab(self) -> Optional[Vocab]:
