@@ -37,7 +37,7 @@ class LangChain:
         self._check_installation()
 
     @staticmethod
-    def get_type_to_cls_dict() -> Dict[str, Type[langchain.llms.base.BaseLLM]]:
+    def get_type_to_cls_dict() -> Dict[str, Type["langchain.llms.base.BaseLLM"]]:
         """Returns langchain.llms.type_to_cls_dict.
         RETURNS (Dict[str, Type[langchain.llms.base.BaseLLM]]): langchain.llms.type_to_cls_dict.
         """
