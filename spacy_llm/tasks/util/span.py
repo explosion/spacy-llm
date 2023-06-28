@@ -1,3 +1,4 @@
+import shlex
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
@@ -35,6 +36,7 @@ class SpanTask(SerializableTask[SpanExample]):
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
+        self._uses_quoted_strings = "quoted strings" in template
 
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -63,10 +65,21 @@ class SpanTask(SerializableTask[SpanExample]):
                 label, phrases = line.split(":", 1)
                 norm_label = self._normalizer(label)
                 if norm_label in self._label_dict:
-                    # Get the phrases / spans for each entity
-                    if phrases.strip():
-                        _phrases = [p.strip() for p in phrases.strip().split(",")]
+                    # Get the phrases / spans for each entity. Ensure there are spaces between entities.
+                    phrases = (
+                        phrases.strip().replace("','", "', '").replace('","', '", "')
+                    )
+                    if phrases:
+                        # shlex.split() splits '"ab c", "cde, efg", "ijk"' into ['"ab c"', '"cde, efg"', '"ijk"'].
+                        # It doesn't work as needed if we use unquoted strings though, which is why we split on "," if
+                        # quoted strings are not explicitly requested by the prompt.
+                        _phrases = (
+                            [p.strip(",'\" ") for p in shlex.split(phrases.strip())]
+                            if self._uses_quoted_strings
+                            else [p.strip() for p in phrases.strip().split(",")]
+                        )
                         output.append((self._label_dict[norm_label], _phrases))
+
         return output
 
     @staticmethod
