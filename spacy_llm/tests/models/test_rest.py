@@ -73,7 +73,7 @@ def test_doc_length_error_handling():
         ValueError,
         match=re.escape(
             "Request to OpenAI API failed: This model's maximum context length is 4097 tokens. However, your messages "
-            "resulted in 5019 tokens. Please reduce the length of the messages."
+            "resulted in 5018 tokens. Please reduce the length of the messages."
         ),
     ):
         nlp("n" * 10000)
