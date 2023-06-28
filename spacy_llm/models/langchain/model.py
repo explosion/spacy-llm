@@ -13,10 +13,6 @@ _ResponseType = TypeVar("_ResponseType")
 
 
 class LangChain:
-    TYPE_TO_CLS_DICT: Dict[
-        str, Type[langchain.llms.base.BaseLLM]
-    ] = langchain.llms.type_to_cls_dict
-
     def __init__(
         self,
         name: str,
@@ -34,11 +30,18 @@ class LangChain:
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         """
-        self._langchain_model = LangChain.TYPE_TO_CLS_DICT[api](
+        self._langchain_model = LangChain.get_type_to_cls_dict()[api](
             model_name=name, **config
         )
         self.query = query
         self._check_installation()
+
+    @staticmethod
+    def get_type_to_cls_dict() -> Dict[str, Type[langchain.llms.base.BaseLLM]]:
+        """Returns langchain.llms.type_to_cls_dict.
+        RETURNS (Dict[str, Type[langchain.llms.base.BaseLLM]]): langchain.llms.type_to_cls_dict.
+        """
+        return langchain.llms.type_to_cls_dict
 
     def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
         """Executes prompts on specified API.
@@ -81,7 +84,7 @@ class LangChain:
         ):
             return
 
-        for class_id, cls in LangChain.TYPE_TO_CLS_DICT.items():
+        for class_id, cls in LangChain.get_type_to_cls_dict().items():
 
             def langchain_model(
                 name: str,
