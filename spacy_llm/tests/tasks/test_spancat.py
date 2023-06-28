@@ -4,7 +4,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
@@ -482,10 +481,8 @@ def test_example_not_following_basemodel():
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
-            make_spancat_task_v2(
-                labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path)
-            )
+    with pytest.raises(ValueError):
+        make_spancat_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 @pytest.fixture

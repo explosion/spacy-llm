@@ -6,7 +6,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.training import Example
 from spacy.util import make_tempdir
 
@@ -577,7 +576,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError):
             make_textcat_task_v3(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
