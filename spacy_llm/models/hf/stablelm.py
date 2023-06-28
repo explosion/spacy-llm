@@ -62,8 +62,8 @@ class StableLM(HuggingFace):
 
         return model
 
-    @staticmethod
-    def get_hf_account() -> str:
+    @property
+    def hf_account(self) -> str:
         return "stabilityai"
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]

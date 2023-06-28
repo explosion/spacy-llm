@@ -100,7 +100,7 @@ in the `spacy_llm/tasks/` directory. We also recommend checking out the
 ## Using LangChain and other integrated third-party prompting libraries
 
 `spacy-llm` integrates bindings to a number of libraries centered on prompt management and LLM usage to allow users
-to leverage their functionality in their spaCy workflows. This currently includes [LangChain](https://github.com/hwchase17/langchain)
+to leverage their functionality in their spaCy workflows. A built-in example for this is [LangChain](https://github.com/hwchase17/langchain)
 
 An integrated third-party library can be used by configuring the `llm` component to use the respective backend, e. g.:
 

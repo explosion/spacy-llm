@@ -31,9 +31,7 @@ class HuggingFace(abc.ABC):
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
         inference_config (Dict[Any, Any]): HF config for model run.
         """
-        self._name = (
-            name if self.get_hf_account() in name else f"{self.get_hf_account()}/{name}"
-        )
+        self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
         self._config_init, self._config_run = self.compile_default_configs()
         if config_init:
             self._config_init = {**self._config_init, **config_init}
@@ -54,11 +52,7 @@ class HuggingFace(abc.ABC):
 
     def _check_model(self) -> None:
         """Checks whether model is supported. Raises if it isn't."""
-        if (
-            self._name not in self.get_model_names()
-            and self._name.replace(f"{self.get_hf_account()}/", "")
-            not in self.get_model_names()
-        ):
+        if self._name.replace(f"{self.hf_account}/", "") not in self.get_model_names():
             raise ValueError(
                 f"Model '{self._name}' is not supported - select one of {self.get_model_names()} instead"
             )
@@ -70,9 +64,9 @@ class HuggingFace(abc.ABC):
         """
         return tuple(str(arg) for arg in cls.MODEL_NAMES.__args__)  # type: ignore[attr-defined]
 
-    @staticmethod
+    @property
     @abc.abstractmethod
-    def get_hf_account() -> str:
+    def hf_account(self) -> str:
         """Name of HF account for this model.
         RETURNS (str): Name of HF account.
         """

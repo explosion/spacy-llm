@@ -26,8 +26,8 @@ class Dolly(HuggingFace):
             self._model(pr, **self._config_run)[0]["generated_text"] for pr in prompts
         ]
 
-    @staticmethod
-    def get_hf_account() -> str:
+    @property
+    def hf_account(self) -> str:
         return "databricks"
 
     @staticmethod

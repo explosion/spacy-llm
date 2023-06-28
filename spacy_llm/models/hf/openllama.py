@@ -59,8 +59,8 @@ class OpenLLaMA(HuggingFace):
             for tii in tokenized_input_ids
         ]
 
-    @staticmethod
-    def get_hf_account() -> str:
+    @property
+    def hf_account(self) -> str:
         return "openlm-research"
 
     @staticmethod
