@@ -13,20 +13,30 @@ _ResponseType = TypeVar("_ResponseType")
 
 
 class LangChain:
+    TYPE_TO_CLS_DICT: Dict[
+        str, Type[langchain.llms.base.BaseLLM]
+    ] = langchain.llms.type_to_cls_dict
+
     def __init__(
         self,
-        langchain_model: "langchain.llms.base.BaseLLM",
+        name: str,
+        api: str,
+        config: Dict[Any, Any],
         query: Callable[
             ["langchain.llms.base.BaseLLM", Iterable[_PromptType]],
             Iterable[_ResponseType],
         ],
     ):
         """Initializes model instance for integration APIs.
-        langchain_model (langchain.llms.base.BaseLLM): LangChain model object able to execute LLM prompts.
+        name (str): Name of LangChain model to instantiate.
+        api (str): Name of class/API.
+        config (Dict[Any, Any]): Config passed on to LangChain model.
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         """
-        self._langchain_model = langchain_model
+        self._langchain_model = LangChain.TYPE_TO_CLS_DICT[api](
+            model_name=name, **config
+        )
         self.query = query
         self._check_installation()
 
@@ -64,15 +74,14 @@ class LangChain:
         registered already.
         """
         if not has_langchain or any(
-            [("langchain" in handle) for handle in registry.llm_models.get_all()]
+            [
+                (handle.startswith("langchain"))
+                for handle in registry.llm_models.get_all()
+            ]
         ):
             return
 
-        type_to_cls_dict: Dict[
-            str, Type[langchain.llms.base.BaseLLM]
-        ] = langchain.llms.type_to_cls_dict
-
-        for class_id, cls in type_to_cls_dict.items():
+        for class_id, cls in LangChain.TYPE_TO_CLS_DICT.items():
 
             def langchain_model(
                 name: str,
@@ -86,9 +95,9 @@ class LangChain:
             ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
                 try:
                     return LangChain(
-                        langchain_model=type_to_cls_dict[langchain_class_id](
-                            model_name=name, **config
-                        ),
+                        name=name,
+                        api=langchain_class_id,
+                        config=config,
                         query=query_langchain() if query is None else query,
                     )
                 except ImportError:
