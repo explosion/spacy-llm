@@ -1,4 +1,3 @@
-import copy
 from typing import Any, Dict
 
 import pytest
@@ -7,14 +6,6 @@ from thinc.api import NumpyOps, get_current_ops
 
 from spacy_llm.compat import has_langchain
 from spacy_llm.pipeline import LLMWrapper
-
-PIPE_CFG: Dict[str, Any] = {
-    "model": {
-        "@llm_models": None,
-        "config": {},
-    },
-    "task": {"@llm_tasks": None},
-}
 
 
 @pytest.mark.external
@@ -36,12 +27,15 @@ def test_combinations(model: str, task: str, n_process: int):
     if not isinstance(ops, NumpyOps) and n_process != 1:
         pytest.skip("Only test multiple processes on CPU")
 
-    config = copy.deepcopy(PIPE_CFG)
-    config["model"]["@llm_models"] = model
-    if "langchain" in model:
+    config: Dict[str, Any] = {
+        "model": {
+            "@llm_models": model,
+            "config": {},
+        },
+        "task": {"@llm_tasks": task},
+    }
+    if model.startswith("langchain"):
         config["model"]["name"] = "ada"
-    config["task"]["@llm_tasks"] = task
-
     # Configure task-specific settings.
     if task.startswith("spacy.NER"):
         config["task"]["labels"] = "PER,ORG,LOC"
