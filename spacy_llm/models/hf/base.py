@@ -73,7 +73,7 @@ class HuggingFace(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def get_hf_account() -> str:
-        """Names of HF account for this model.
+        """Name of HF account for this model.
         RETURNS (str): Name of HF account.
         """
 
