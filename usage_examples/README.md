@@ -99,10 +99,10 @@ in the `spacy_llm/tasks/` directory. We also recommend checking out the
 
 ## Using LangChain
 
-`spacy-llm` integrates [LangChain](https://github.com/hwchase17/langchain) to leverage its features for prompt management and LLM usage to allow users
-to leverage their functionality in their spaCy workflows. A built-in example for this is 
+`spacy-llm` integrates [LangChain](https://github.com/hwchase17/langchain) to allow users to leverage its features for 
+prompt management and LLM usage in their spaCy workflows.  
 
-An integrated third-party library can be used by configuring the `llm` component to use the respective model, e. g.:
+LangChain can be used like so:
 
 ```ini
 [components.llm.model]
