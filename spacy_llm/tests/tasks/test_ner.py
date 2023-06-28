@@ -222,10 +222,10 @@ def test_ner_config(cfg_string, request):
 @pytest.mark.parametrize(
     "cfg_string",
     [
-        # "zeroshot_cfg_string",
-        # "zeroshot_cfg_string_v2_lds",
-        # "fewshot_cfg_string",
-        # "fewshot_cfg_string_v2",
+        "zeroshot_cfg_string",
+        "zeroshot_cfg_string_v2_lds",
+        "fewshot_cfg_string",
+        "fewshot_cfg_string_v2",
         "ext_template_cfg_string",
     ],
 )
