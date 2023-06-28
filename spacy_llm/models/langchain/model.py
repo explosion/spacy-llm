@@ -104,6 +104,10 @@ class LangChain:
                         query=query_langchain() if query is None else query,
                     )
                 except ImportError:
+                    print(  # noqa: T201
+                        f"WARNING: Failed to instantiate LangChain class {cls.__name__}. Ensure all necessary dependencies are "
+                        f"installed."
+                    )
                     warnings.warn(
                         f"Failed to instantiate LangChain class {cls.__name__}. Ensure all necessary dependencies are "
                         f"installed."
