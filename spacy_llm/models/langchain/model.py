@@ -75,6 +75,7 @@ class LangChain:
         for class_id, cls in type_to_cls_dict.items():
 
             def langchain_model(
+                name: str,
                 query: Optional[
                     Callable[
                         ["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]
@@ -83,11 +84,10 @@ class LangChain:
                 config: Dict[Any, Any] = SimpleFrozenDict(),
                 langchain_class_id: str = class_id,
             ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
-                model = config.pop("model")
                 try:
                     return LangChain(
                         langchain_model=type_to_cls_dict[langchain_class_id](
-                            model_name=model, **config
+                            model_name=name, **config
                         ),
                         query=query_langchain() if query is None else query,
                     )

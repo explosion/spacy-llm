@@ -39,7 +39,7 @@ def test_combinations(model: str, task: str, n_process: int):
     config = copy.deepcopy(PIPE_CFG)
     config["model"]["@llm_models"] = model
     if "langchain" in model:
-        config["model"]["config"] = {"model": "ada"}
+        config["model"]["name"] = "ada"
     config["task"]["@llm_tasks"] = task
 
     # Configure task-specific settings.

@@ -1038,3 +1038,7 @@ PRs are always welcome!
 If you have questions regarding the usage of `spacy-llm`, or want to give us feedback after giving it a spin, please use the
 [discussion board](https://github.com/explosion/spaCy/discussions).
 Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosion/spaCy/issues). Thank you!
+
+## Migration guides
+
+Please refer to our [migration guide](migration_guide.md).
