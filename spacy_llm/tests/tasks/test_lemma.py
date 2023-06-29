@@ -32,6 +32,7 @@ def zeroshot_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.gpt-3-5.v1"
+    config = {"temperature": 0}
     """
 
 
@@ -84,7 +85,7 @@ def ext_template_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.gpt-3-5.v1"
-    config = {{}}
+    config = {{"temperature": 0}}
     """
 
 
