@@ -7,30 +7,35 @@ from ...registry.util import registry
 from .base import HuggingFace
 
 
-class OpenLLaMa(HuggingFace):
+class OpenLLaMA(HuggingFace):
+    MODEL_NAMES = Literal[
+        "open_llama_3b_350bt_preview",  # noqa: F722
+        "open_llama_3b_600bt_preview",  # noqa: F722
+        "open_llama_7b_400bt_preview",  # noqa: F722
+        "open_llama_7b_600bt_preview",  # noqa: F722
+    ]
+
     def __init__(
         self,
-        variant: str,
+        name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._device: Optional[str] = None
-        super().__init__(
-            variant=variant, config_init=config_init, config_run=config_run
-        )
+        super().__init__(name=name, config_init=config_init, config_run=config_run)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
         # Initialize tokenizer and model.
-        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_name)
+        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
         init_cfg = self._config_init
         if "device" in init_cfg:
             self._device = init_cfg.pop("device")
         model = transformers.AutoModelForCausalLM.from_pretrained(
-            self.model_name, **init_cfg
+            self._name, **init_cfg
         )
 
         if self._device:
@@ -55,12 +60,8 @@ class OpenLLaMa(HuggingFace):
         ]
 
     @property
-    def model_name(self) -> str:
-        return f"openlm-research/open_llama_{self._variant}_preview"
-
-    @staticmethod
-    def get_model_variants() -> Iterable[str]:
-        return ["3b_350bt", "3b_600bt", "7b_400bt", "7b_600bt"]
+    def hf_account(self) -> str:
+        return "openlm-research"
 
     @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -74,17 +75,17 @@ class OpenLLaMa(HuggingFace):
         )
 
 
-@registry.llm_models("spacy.OpenLLaMa.HF.v1")
+@registry.llm_models("spacy.OpenLLaMA.v1")
 def openllama_hf(
-    variant: Literal["3b_350bt", "3b_600bt", "7b_400bt", "7b_600bt"],  # noqa: F722
+    name: OpenLLaMA.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Generates OpenLLaMa instance that can execute a set of prompts and return the raw responses.
-    variant (Literal): Name of the StableLM model variant. Has to be one of OpenLLaMa.get_model_variants().
+    """Generates OpenLLaMA instance that can execute a set of prompts and return the raw responses.
+    name (Literal): Name of the OpenLLaMA model. Has to be one of OpenLLaMA.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]): OpenLLaMa instance that can execute a set of prompts and return
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): OpenLLaMA instance that can execute a set of prompts and return
         the raw responses.
     """
-    return OpenLLaMa(variant=variant, config_init=config_init, config_run=config_run)
+    return OpenLLaMA(name=name, config_init=config_init, config_run=config_run)

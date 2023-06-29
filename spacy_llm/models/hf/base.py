@@ -1,35 +1,32 @@
 import abc
 import warnings
-from typing import Any, Dict, Iterable, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterable, Optional, Tuple
 
 from thinc.compat import has_torch_cuda_gpu
 
-from ...compat import has_accelerate, has_torch, has_transformers, torch
-
-# Type of prompts returned from Task.generate_prompts().
-_PromptType = TypeVar("_PromptType")
-# Type of responses returned from query function.
-_ResponseType = TypeVar("_ResponseType")
+from ...compat import Literal, has_accelerate, has_torch, has_transformers, torch
 
 
 class HuggingFace(abc.ABC):
     """Base class for HuggingFace model classes."""
 
+    MODEL_NAMES = Literal[None]  # noqa: F722
+
     def __init__(
         self,
-        variant: str,
+        name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
     ):
         """Initializes HF model instance.
-        query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
+        query (Callable[[Any, Iterable[Any]], Iterable[Any]): Callable executing LLM prompts when
             supplied with the `integration` object.
-        variant (str): Name of HF model to load.
+        name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
         inference_config (Dict[Any, Any]): HF config for model run.
         """
-        self._variant = variant
+        self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
         self._config_init, self._config_run = self.compile_default_configs()
         if config_init:
             self._config_init = {**self._config_init, **config_init}
@@ -38,27 +35,35 @@ class HuggingFace(abc.ABC):
 
         # Init HF model.
         HuggingFace.check_installation()
+        self._check_model()
         self._model = self.init_model()
 
     @abc.abstractmethod
-    def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
+    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         """Executes prompts on specified API.
-        prompts (Iterable[_PromptType]): Prompts to execute.
-        RETURNS (Iterable[_ResponseType]): API responses.
+        prompts (Iterable[Any]): Prompts to execute.
+        RETURNS (Iterable[Any]): API responses.
         """
+
+    def _check_model(self) -> None:
+        """Checks whether model is supported. Raises if it isn't."""
+        if self._name.replace(f"{self.hf_account}/", "") not in self.get_model_names():
+            raise ValueError(
+                f"Model '{self._name}' is not supported - select one of {self.get_model_names()} instead"
+            )
+
+    @classmethod
+    def get_model_names(cls) -> Tuple[str, ...]:
+        """Names of supported models for this HF model implementation.
+        RETURNS (Tuple[str]): Names of supported models.
+        """
+        return tuple(str(arg) for arg in cls.MODEL_NAMES.__args__)  # type: ignore[attr-defined]
 
     @property
     @abc.abstractmethod
-    def model_name(self) -> str:
-        """Get HF model base name (pre-formatted to allow for variant injection).
-        RETURNS (str): HF model base name (pre-formatted to allow for variant injection).
-        """
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_model_variants() -> Iterable[str]:
-        """Supported variants for this model.
-        RETURNS (Iterable[str]): Supported variants for this model.
+    def hf_account(self) -> str:
+        """Name of HF account for this model.
+        RETURNS (str): Name of HF account.
         """
 
     @staticmethod

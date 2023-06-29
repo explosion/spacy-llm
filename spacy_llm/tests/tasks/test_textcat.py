@@ -6,7 +6,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.training import Example
 from spacy.util import make_tempdir
 
@@ -45,7 +44,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
+    @llm_models = "spacy.gpt-3-5.v1"
     """
 
 
@@ -75,7 +74,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
+    @llm_models = "spacy.gpt-3-5.v1"
     """
 
 
@@ -107,7 +106,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
+    @llm_models = "spacy.gpt-3-5.v1"
     """
 
 
@@ -136,7 +135,7 @@ def zeroshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3.5.OpenAI.v1"
+    @llm_models = "spacy.gpt-3-5.v1"
     """
 
 
@@ -577,7 +576,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError):
             make_textcat_task_v3(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),

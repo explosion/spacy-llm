@@ -7,8 +7,8 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.OpenLLaMa.HF.v1",
-        "variant": "3b_350bt",
+        "@llm_models": "spacy.OpenLLaMA.v1",
+        "name": "open_llama_3b_350bt_preview",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
@@ -28,8 +28,8 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = spacy.OpenLLaMa.HF.v1
-variant = 3b_350bt
+@llm_models = spacy.OpenLLaMA.v1
+name = open_llama_3b_350bt_preview
 """
 
 
@@ -62,6 +62,6 @@ def test_init_from_config():
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)
     config = copy.deepcopy(orig_config)
-    config["components"]["llm"]["model"]["variant"] = "anything-else"
+    config["components"]["llm"]["model"]["name"] = "anything-else"
     with pytest.raises(ValueError, match="unexpected value; permitted"):
         spacy.util.load_model_from_config(config, auto_fill=True)

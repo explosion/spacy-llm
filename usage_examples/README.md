@@ -7,8 +7,8 @@ configuration and an optional `examples.yml` file for few-shot annotation.
 ## The configuration file
 
 Each configuration file contains an `llm` component that takes in a `task` and a
-`backend` as its parameters. The `task` defines how the prompt is structured and
-how the corresponding LLM output will be parsed whereas the `backend` defines
+`model` as its parameters. `task` defines how the prompt is structured and
+how the corresponding LLM output will be parsed whereas `model` defines
 which model to use and how to connect to it.
 
 ```ini
@@ -24,8 +24,8 @@ factory = "llm"
 ...
 
 # Defines which model to use (open-source or third-party API) and how to connect
-# to it (e.g., REST, MiniChain, LangChain).
-[components.llm.backend]
+# to it (e.g., REST, LangChain, locally via HuggingFace, ...).
+[components.llm.model]
 ...
 ```
 
@@ -53,13 +53,12 @@ need to implement two functions:
 - **`generate_prompts(docs: Iterable[Doc]) -> Iterable[str]`**: a function that
   takes in a list of spaCy [`Doc`](https://spacy.io/api/doc) objects and transforms
   them into a list of prompts. These prompts will then be sent to the LLM in the
-  `backend`.
+  `model`.
 - **`parse_responses(docs: Iterable[Doc], responses: Iterable[str]) -> Iterable[Doc]`**: a function for parsing the LLM's outputs into spaCy
   [`Doc`](https://spacy.io/api/doc) objects. You also have access to the input
   `Doc` objects so you can store the outputs into one of its attributes.
 
 The `spacy-llm` library requires tasks to be defined as a class and registered in the `llm_tasks` registry:
-
 
 ```python
 from spacy_llm.registry import registry
@@ -97,52 +96,43 @@ You can check sample tasks for Named Entity Recognition and text categorization
 in the `spacy_llm/tasks/` directory. We also recommend checking out the
 `spacy.NoOp.v1` task for a barebones implementation to pattern your task from.
 
-## Using LangChain, MiniChain and other integrated third-party prompting libraries
+## Using LangChain
 
-`spacy-llm` integrates bindings to a number of libraries centered on prompt management and LLM usage to allow users
-to leverage their functionality in their spaCy workflows. This currently includes
+`spacy-llm` integrates [LangChain](https://github.com/hwchase17/langchain) to allow users to leverage its features for
+prompt management and LLM usage in their spaCy workflows.
 
-- [LangChain](https://github.com/hwchase17/langchain)
-- [MiniChain](https://github.com/srush/MiniChain)
-
-An integrated third-party library can be used by configuring the `llm` component to use the respective backend, e. g.:
+LangChain can be used like so:
 
 ```ini
-[components.llm.backend]
-@llm_models = "spacy.LangChain.v1"
-```
-
-or
-
-```ini
-[components.llm.backend]
-@llm_models = "spacy.MiniChain.v1"
+[components.llm.model]
+@llm_models = "langchain.OpenAI.v1"
+name = "gpt-3.5-turbo"
 ```
 
 <!-- The `usage_examples` directory contains example for all integrated third-party -->
 
-## Writing your own backend
+## Writing your own model
 
-In `spacy-llm`, the [**backend**](../README.md#backend) is responsible for the
+In `spacy-llm`, the [**model**](../README.md#models) is responsible for the
 interaction with the actual LLM model. The latter can be an
 [API-based service](../README.md#spacyrestv1), or a local model - whether
 you [downloaded it from the Hugging Face Hub](../README.md#spacydollyhfv1)
 directly or finetuned it with proprietary data.
 
-`spacy-llm` lets you implement your own custom backend so you can try out the
+`spacy-llm` lets you implement your own custom model so you can try out the
 latest LLM interface out there. Bear in mind that tasks are responsible for
 creating the prompt and parsing the response – and both can be arbitrary objects.
-Hence, a backend's call signature should be consistent with that of the task you'd like it to run.
+Hence, a model's call signature should be consistent with that of the task you'd like it to run.
 
 In other words, `spacy-llm` roughly performs the following pseudo-code behind the scenes:
 
 ```python
 prompts = task.generate_prompts(docs)
-responses = backend(prompts)
+responses = model(prompts)
 docs = task.parse_responses(docs, responses)
 ```
 
-Let's write a dummy backend that provides a random output for the
+Let's write a dummy model that provides a random output for the
 [text classification task](../README.md#spacytextcatv1).
 
 ```python
@@ -156,7 +146,7 @@ def random_textcat(labels: str):
     def _classify(prompts: Iterable[str]) -> Iterable[str]:
         for _ in prompts:
             yield random.choice(labels)
-    
+
     return _classify
 ```
 
@@ -167,18 +157,18 @@ def random_textcat(labels: str):
 labels = LABEL1,LABEL2,LABEL3
 
 
-[components.llm.backend]
+[components.llm.model]
 @llm_models = "RandomClassification.v1"
 labels = ${components.llm.task.labels}  # Make sure to use the same label
 ...
 ```
 
-Of course, this particular backend is not very realistic
+Of course, this particular model is not very realistic
 (it does not even interact with an actual LLM model!).
 But it does show how you would go about writing custom
 and arbitrary logic to interact with any LLM implementation.
 
-Note that in all built-in tasks prompts and responses are expected to be of type `str`, while all built-in backends
-support `str` (or `Any`) types. All built-in tasks and backends are therefore inter-operable. It's possible to work with 
+Note that in all built-in tasks prompts and responses are expected to be of type `str`, while all built-in model
+support `str` (or `Any`) types. All built-in tasks and models are therefore inter-operable. It's possible to work with
 arbitrary objects instead of `str` though - which might be useful if you want some third-party abstractions for prompts
 or responses.

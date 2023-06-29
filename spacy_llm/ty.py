@@ -10,7 +10,7 @@ from spacy.training.example import Example
 from spacy.vocab import Vocab
 
 from .compat import Protocol, runtime_checkable
-from .models import integration
+from .models import langchain
 
 _Prompt = Any
 _Response = Any
@@ -153,7 +153,7 @@ def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
 
     # Assume that __call__() has the necessary type info - except in the case of integration.Model, for which
     # we know this is not the case.
-    if not isinstance(model, integration.Remote):
+    if not isinstance(model, langchain.LangChain):
         return typing.get_type_hints(model.__call__)
 
     # If this is an instance of integrations.Model: read type information from .query() instead, only keep
@@ -176,8 +176,11 @@ def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_types(task: LLMTask, model: PromptExecutor) -> None:
-    # Inspect the types of the three main parameters to ensure they match internally
+def validate_type_consistency(task: LLMTask, model: PromptExecutor) -> None:
+    """Check whether the types of the task and model signatures match.
+    task (LLMTask): Specified task.
+    backend (PromptExecutor): Specified model.
+    """
     # Raises an error or prints a warning if something looks wrong/odd.
     if not isinstance(task, LLMTask):
         raise ValueError(

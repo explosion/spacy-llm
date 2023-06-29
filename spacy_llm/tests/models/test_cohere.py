@@ -11,7 +11,8 @@ def test_cohere_api_response_is_correct():
     """Check if we're getting the response from the correct structure"""
     cohere = Cohere(
         name="command",
-        endpoint=Endpoints.COMPLETION,
+        endpoint=Endpoints.COMPLETION.value,
+        config={},
         strict=False,
         max_tries=10,
         interval=5.0,
@@ -35,6 +36,7 @@ def test_cohere_api_response_n_generations():
     num_generations = 3
     cohere = Cohere(
         name="command",
+        endpoint=Endpoints.COMPLETION.value,
         config={"num_generations": num_generations},
         strict=False,
         max_tries=10,
@@ -57,6 +59,7 @@ def test_cohere_api_response_when_error():
     incorrect_temperature = 1000  # must be between 0 and 5
     cohere = Cohere(
         name="command",
+        endpoint=Endpoints.COMPLETION.value,
         config={"temperature": incorrect_temperature},
         strict=False,
         max_tries=10,
@@ -73,13 +76,13 @@ def test_cohere_api_response_when_error():
 def test_cohere_error_unsupported_model():
     """Ensure graceful handling of error when model is not supported"""
     incorrect_model = "x-gpt-3.5-turbo"
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError, match="Model 'x-gpt-3.5-turbo' is not supported"):
         Cohere(
             name=incorrect_model,
-            endpoint=Endpoints.COMPLETION,
+            config={},
+            endpoint=Endpoints.COMPLETION.value,
             strict=False,
             max_tries=10,
             interval=5.0,
             max_request_time=20,
         )
-    assert "The specified model 'x-gpt-3.5-turbo' is not supported" in str(err.value)

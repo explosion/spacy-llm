@@ -7,8 +7,8 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.StableLM.HF.v1",
-        "variant": "base-alpha-3b",
+        "@llm_models": "spacy.StableLM.v1",
+        "name": "stablelm-base-alpha-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
@@ -28,20 +28,20 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = "spacy.StableLM.HF.v1"
-variant = "base-alpha-3b"
+@llm_models = "spacy.StableLM.v1"
+name = "stablelm-base-alpha-3b"
 """
 
 
-@pytest.mark.parametrize("variant", ("base-alpha-3b", "tuned-alpha-3b"))
+@pytest.mark.parametrize("name", ("stablelm-base-alpha-3b", "stablelm-tuned-alpha-3b"))
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init(variant: str):
+def test_init(name: str):
     """Test initialization and simple run.
-    variant (str): Name of model variant to run.
+    name (str): Name of model to run.
     """
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["model"]["variant"] = variant
+    cfg["model"]["name"] = name
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
@@ -67,6 +67,6 @@ def test_init_with_set_config():
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)
     config = copy.deepcopy(orig_config)
-    config["components"]["llm"]["model"]["variant"] = "anything-else"
+    config["components"]["llm"]["model"]["name"] = "anything-else"
     with pytest.raises(ValueError, match="unexpected value; permitted:"):
         spacy.util.load_model_from_config(config, auto_fill=True)

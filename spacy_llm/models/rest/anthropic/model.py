@@ -1,12 +1,13 @@
 import os
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized
+from typing import Any, Dict, Iterable, List, Sized, Tuple
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
 
-from ..base import Model
+from ....compat import Literal
+from ..base import REST
 
 
 class Endpoints(str, Enum):
@@ -22,7 +23,11 @@ class SystemPrompt(str, Enum):
     ASST = "\n\nAssistant:"
 
 
-class Anthropic(Model):
+class Anthropic(REST):
+    MODEL_NAMES = {
+        "claude-1": Literal["claude-1", "claude-1-100k"],
+    }
+
     @property
     def credentials(self) -> Dict[str, str]:
         # Fetch and check the key
@@ -42,6 +47,7 @@ class Anthropic(Model):
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
             **self._credentials,
+            "model": self._name,
             "Content-Type": "application/json",
         }
 
@@ -53,7 +59,7 @@ class Anthropic(Model):
                 call_method=requests.post,
                 url=self._endpoint,
                 headers=headers,
-                json={**json_data, **self._config},
+                json={**json_data, **self._config, "model": self._name},
                 timeout=self._max_request_time,
             )
             try:
@@ -92,3 +98,23 @@ class Anthropic(Model):
 
         assert len(api_responses) == len(prompts)
         return api_responses
+
+    @classmethod
+    def get_model_names(cls) -> Tuple[str, ...]:
+        return (
+            # claude-1
+            "claude-1",
+            "claude-1-100k",
+            # claude-instant-1
+            "claude-instant-1",
+            "claude-instant-1-100k",
+            # claude-instant-1.1
+            "claude-instant-1.1",
+            "claude-instant-1.1-100k",
+            # claude-1.3
+            "claude-1.3",
+            "claude-1.3-100k",
+            # others
+            "claude-1.0",
+            "claude-1.2",
+        )
