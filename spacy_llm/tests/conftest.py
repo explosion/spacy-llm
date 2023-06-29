@@ -35,7 +35,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_external)
 
 
-@registry.llm_backends("test.NoOpBackend.v1")
+@registry.llm_models("test.NoOpModel.v1")
 def noop_factory(output: str = ""):
     def noop(prompts: Iterable[str]) -> Iterable[str]:
         return [output] * len(list(prompts))

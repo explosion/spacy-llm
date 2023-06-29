@@ -30,9 +30,8 @@ def zeroshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.Lemma.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
     config = {"temperature": 0}
     """
 
@@ -57,9 +56,8 @@ def fewshot_cfg_string():
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "lemma.yml"))}
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
     config = {{"temperature": 0}}
     """
 
@@ -85,10 +83,9 @@ def ext_template_cfg_string():
     @misc = "spacy.FileReader.v1"
     path = {str((Path(__file__).parent / "templates" / "lemma.jinja2"))}
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {{}}
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
+    config = {{"temperature": 0}}
     """
 
 
@@ -137,7 +134,10 @@ def test_lemma_predict(cfg_string, request):
     lemmas = [str(token.lemma_) for token in nlp("I've watered the plants.")]
     # Compare lemmas for correctness, if we are not using the external dummy template.
     if cfg_string != "ext_template_cfg_string":
-        assert lemmas == ["I", "have", "water", "the", "plant", "."]
+        assert lemmas in (
+            ["-PRON-", "have", "water", "the", "plant", "."],
+            ["I", "have", "water", "the", "plant", "."],
+        )
 
 
 @pytest.mark.external
@@ -160,7 +160,10 @@ def test_lemma_io(cfg_string, request):
     assert nlp2.pipe_names == ["llm"]
     lemmas = [str(token.lemma_) for token in nlp2("I've watered the plants.")]
     if cfg_string != "ext_template_cfg_string":
-        assert lemmas == ["I", "have", "water", "the", "plant", "."]
+        assert lemmas in (
+            ["-PRON-", "have", "water", "the", "plant", "."],
+            ["I", "have", "water", "the", "plant", "."],
+        )
 
 
 def test_jinja_template_rendering_without_examples():

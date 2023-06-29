@@ -20,7 +20,7 @@ batch_size = 128
 factory = "llm"
 
 [components.llm.backend]
-@llm_backends = "spacy.REST.v1"
+@llm_models = "spacy.REST.v1"
 api = "OpenAI"
 config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 
@@ -45,7 +45,7 @@ batch_size = 128
 factory = "llm"
 
 [components.llm.backend]
-@llm_backends = "spacy.REST.v1"
+@llm_models = "spacy.REST.v1"
 api = "OpenAI"
 config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 
