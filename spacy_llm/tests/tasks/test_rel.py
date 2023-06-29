@@ -151,7 +151,7 @@ def test_rel_predict(task, cfg_string, request):
 
 def test_rel_init(noop_config):
 
-    RELTask._check_rel_extention()
+    RELTask._check_rel_extension()
 
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]

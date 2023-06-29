@@ -116,6 +116,7 @@ def anthropic_claude_instant_1_1(
 @registry.llm_models("spacy.claude-1-0.v1")
 def anthropic_claude_1_0(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["claude-1.0"] = "claude-1.0",  # noqa: F722
     strict: bool = Anthropic.DEFAULT_STRICT,
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
@@ -123,6 +124,7 @@ def anthropic_claude_1_0(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-1.0' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Literal["claude-1.0"]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -135,7 +137,7 @@ def anthropic_claude_1_0(
         API.
     """
     return Anthropic(
-        name="claude-1.0",
+        name=name,
         endpoint=Endpoints.COMPLETIONS,
         config=config,
         strict=strict,
@@ -148,6 +150,7 @@ def anthropic_claude_1_0(
 @registry.llm_models("spacy.claude-1-2.v1")
 def anthropic_claude_1_2(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["claude-1.2"] = "claude-1.2",  # noqa: F722
     strict: bool = Anthropic.DEFAULT_STRICT,
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
@@ -155,6 +158,7 @@ def anthropic_claude_1_2(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-1.2' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Literal["claude-1.2"]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -167,7 +171,7 @@ def anthropic_claude_1_2(
         API.
     """
     return Anthropic(
-        name="claude-1.2",
+        name=name,
         endpoint=Endpoints.COMPLETIONS,
         config=config,
         strict=strict,

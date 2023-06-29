@@ -67,14 +67,14 @@ def test_multitask_openai(config_name: str):
 
 
 @pytest.mark.external
-@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
+@pytest.mark.parametrize("config_name", ("zeroshot.cfg", "fewshot.cfg"))
 def test_rel_openai(config_name: str):
     """Test REL OpenAI usage example.
     config_name (str): Name of config file to use.
     """
     path = _USAGE_EXAMPLE_PATH / "rel_openai"
     rel_openai.run_pipeline(
-        text="text",
+        text="Sara lives in Lisbon.",
         config_path=path / config_name,
         examples_path=None
         if config_name == "zeroshot.cfg"

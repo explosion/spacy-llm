@@ -121,6 +121,7 @@ def openai_text_davinci(
 @registry.llm_models("spacy.code-davinci.v1")
 def openai_code_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["code-davinci-002"] = "code-davinci-002",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -128,6 +129,7 @@ def openai_code_davinci(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["code-davinci-002"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -140,7 +142,7 @@ def openai_code_davinci(
         prompt API.
     """
     return OpenAI(
-        name="code-davinci-002",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -153,6 +155,7 @@ def openai_code_davinci(
 @registry.llm_models("spacy.text-curie.v1")
 def openai_text_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["text-curie-001"] = "text-curie-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -160,6 +163,7 @@ def openai_text_curie(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-curie' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["text-curie-001"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -172,7 +176,7 @@ def openai_text_curie(
         prompt API.
     """
     return OpenAI(
-        name="text-curie-001",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -185,6 +189,7 @@ def openai_text_curie(
 @registry.llm_models("spacy.text-babbage.v1")
 def openai_text_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["text-babbage-001"] = "text-babbage-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -192,6 +197,7 @@ def openai_text_babbage(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-babbage' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["text-babbage-001"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -204,7 +210,7 @@ def openai_text_babbage(
         prompt API.
     """
     return OpenAI(
-        name="text-babbage-001",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -217,6 +223,7 @@ def openai_text_babbage(
 @registry.llm_models("spacy.text-ada.v1")
 def openai_text_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["text-ada-001"] = "text-ada-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -224,6 +231,7 @@ def openai_text_ada(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-ada' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["text-ada-001"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -236,7 +244,7 @@ def openai_text_ada(
         prompt API.
     """
     return OpenAI(
-        name="text-ada-001",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -249,6 +257,7 @@ def openai_text_ada(
 @registry.llm_models("spacy.davinci.v1")
 def openai_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["davinci"] = "davinci",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -256,6 +265,7 @@ def openai_davinci(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'davinci' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["davinci"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -268,7 +278,7 @@ def openai_davinci(
         prompt API.
     """
     return OpenAI(
-        name="davinci",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -281,6 +291,7 @@ def openai_davinci(
 @registry.llm_models("spacy.curie.v1")
 def openai_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["curie"] = "curie",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -288,6 +299,7 @@ def openai_curie(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'curie' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["curie"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -300,7 +312,7 @@ def openai_curie(
         prompt API.
     """
     return OpenAI(
-        name="curie",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -313,6 +325,7 @@ def openai_curie(
 @registry.llm_models("spacy.babbage.v1")
 def openai_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["babbage"] = "babbage",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -320,6 +333,7 @@ def openai_babbage(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'babbage' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["babbage"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -332,7 +346,7 @@ def openai_babbage(
         prompt API.
     """
     return OpenAI(
-        name="babbage",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
@@ -345,6 +359,7 @@ def openai_babbage(
 @registry.llm_models("spacy.ada.v1")
 def openai_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(),
+    name: Literal["ada"] = "ada",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
@@ -352,6 +367,7 @@ def openai_ada(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'ada' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
+    name (Optional[Literal["ada"]]): Model to use.
     strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
         or other response object that does not conform to the expectation of how a well-formed response object from
         this API should look like). If False, the API error responses are returned by __call__(), but no error will
@@ -364,7 +380,7 @@ def openai_ada(
         prompt API.
     """
     return OpenAI(
-        name="ada",
+        name=name,
         endpoint=Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
