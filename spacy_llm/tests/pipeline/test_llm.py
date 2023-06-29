@@ -274,9 +274,8 @@ def test_pipe_labels():
     labels = ["COMPLIMENT", "INSULT"]
 
     [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
+    @llm_models = "spacy.gpt-3-5.v1"
+    config = {"temperature": 0.3}
     """
 
     config = Config().from_str(cfg_string)
