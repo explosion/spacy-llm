@@ -273,7 +273,7 @@ def test_pipe_labels():
     @llm_tasks = "spacy.TextCat.v2"
     labels = ["COMPLIMENT", "INSULT"]
 
-    [components.llm.backend]
+    [components.llm.model]
     @llm_models = "spacy.gpt-3-5.v1"
     config = {"temperature": 0.3}
     """
