@@ -13,7 +13,7 @@ from spacy.tokens import DocBin
 from ..cache import BatchCache
 
 _DEFAULT_CFG = {
-    "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+    "model": {"@llm_models": "spacy.NoOp.v1"},
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
     "cache": {
         "batch_size": 2,
