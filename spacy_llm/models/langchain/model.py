@@ -1,14 +1,9 @@
-from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from spacy.util import SimpleFrozenDict
 
 from ...compat import has_langchain, langchain
 from ...registry import registry
-
-# Type of prompts returned from Task.generate_prompts().
-_PromptType = TypeVar("_PromptType")
-# Type of responses returned from query function.
-_ResponseType = TypeVar("_ResponseType")
 
 
 class LangChain:
@@ -18,8 +13,8 @@ class LangChain:
         api: str,
         config: Dict[Any, Any],
         query: Callable[
-            ["langchain.llms.base.BaseLLM", Iterable[_PromptType]],
-            Iterable[_ResponseType],
+            ["langchain.llms.base.BaseLLM", Iterable[Any]],
+            Iterable[Any],
         ],
     ):
         """Initializes model instance for integration APIs.
@@ -42,10 +37,10 @@ class LangChain:
         """
         return langchain.llms.type_to_cls_dict
 
-    def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
+    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         """Executes prompts on specified API.
-        prompts (Iterable[_PromptType]): Prompts to execute.
-        RETURNS (Iterable[_ResponseType]): API responses.
+        prompts (Iterable[Any]): Prompts to execute.
+        RETURNS (Iterable[Any]): API responses.
         """
         return self.query(self._langchain_model, prompts)
 

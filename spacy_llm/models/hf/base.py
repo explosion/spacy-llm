@@ -1,15 +1,10 @@
 import abc
 import warnings
-from typing import Any, Dict, Iterable, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterable, Optional, Tuple
 
 from thinc.compat import has_torch_cuda_gpu
 
 from ...compat import Literal, has_accelerate, has_torch, has_transformers, torch
-
-# Type of prompts returned from Task.generate_prompts().
-_PromptType = TypeVar("_PromptType")
-# Type of responses returned from query function.
-_ResponseType = TypeVar("_ResponseType")
 
 
 class HuggingFace(abc.ABC):
@@ -24,7 +19,7 @@ class HuggingFace(abc.ABC):
         config_run: Optional[Dict[str, Any]],
     ):
         """Initializes HF model instance.
-        query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
+        query (Callable[[Any, Iterable[Any]], Iterable[Any]): Callable executing LLM prompts when
             supplied with the `integration` object.
         name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
@@ -44,10 +39,10 @@ class HuggingFace(abc.ABC):
         self._model = self.init_model()
 
     @abc.abstractmethod
-    def __call__(self, prompts: Iterable[_PromptType]) -> Iterable[_ResponseType]:
+    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         """Executes prompts on specified API.
-        prompts (Iterable[_PromptType]): Prompts to execute.
-        RETURNS (Iterable[_ResponseType]): API responses.
+        prompts (Iterable[Any]): Prompts to execute.
+        RETURNS (Iterable[Any]): API responses.
         """
 
     def _check_model(self) -> None:
