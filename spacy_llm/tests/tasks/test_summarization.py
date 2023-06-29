@@ -114,8 +114,8 @@ def noop_config():
     [components.llm.task]
     @llm_tasks = "spacy.Summarization.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     """
 
 
