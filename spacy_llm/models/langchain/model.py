@@ -71,6 +71,31 @@ class LangChain:
             )
 
     @staticmethod
+    def _langchain_model_maker(class_id: str):
+        def langchain_model(
+            name: str,
+            query: Optional[
+                Callable[["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]]
+            ] = None,
+            config: Dict[Any, Any] = SimpleFrozenDict(),
+            langchain_class_id: str = copy.deepcopy(class_id),
+        ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
+            try:
+                return LangChain(
+                    name=name,
+                    api=langchain_class_id,
+                    config=config,
+                    query=query_langchain() if query is None else query,
+                )
+            except ImportError as err:
+                raise ValueError(
+                    f"Failed to instantiate LangChain model {langchain_class_id}. Ensure all necessary dependencies "
+                    f"are installed."
+                ) from err
+
+        return langchain_model
+
+    @staticmethod
     def register_models() -> None:
         """Registers APIs supported by langchain (one API is registered as one model).
         Doesn't attempt to register anything if LangChain isn't installed or at least one LangChain model has been
@@ -85,32 +110,9 @@ class LangChain:
             return
 
         for class_id, cls in LangChain.get_type_to_cls_dict().items():
-
-            def langchain_model(
-                name: str,
-                query: Optional[
-                    Callable[
-                        ["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]
-                    ]
-                ] = None,
-                config: Dict[Any, Any] = SimpleFrozenDict(),
-                langchain_class_id: str = copy.deepcopy(class_id),
-            ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
-                try:
-                    return LangChain(
-                        name=name,
-                        api=langchain_class_id,
-                        config=config,
-                        query=query_langchain() if query is None else query,
-                    )
-                except ImportError:
-                    raise ValueError(
-                        f"Failed to instantiate LangChain class {cls.__name__}. Ensure all necessary dependencies are "
-                        f"installed."
-                    )
-
             registry.llm_models.register(
-                f"langchain.{cls.__name__}.v1", func=langchain_model
+                f"langchain.{cls.__name__}.v1",
+                func=LangChain._langchain_model_maker(class_id=class_id),
             )
 
 
