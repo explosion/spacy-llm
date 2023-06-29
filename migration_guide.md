@@ -6,16 +6,16 @@
 ## `0.3.x` to `0.4.x`
 
 `0.4.x` significantly refactors the code to make it more robust and the config more intuitive. 0.4.0 changes the config 
-paradigm from backend- to model-centric. This is reflected in the external API in a different config structure.
+paradigm from `backend`- to `model`-centric. This is reflected in the external API in a different config structure.
 
 Remember that there are three different types of models: the first uses the native REST implementation to communicate
 with hosted LLMs, the second builds on HuggingFace's `transformers` model to run models locally and the third leverages
-`langchain` to operate on hosted or local models. While they config for all three is rather similar (especially in 
+`langchain` to operate on hosted or local models. While the config for all three is rather similar (especially in 
 0.4.x), there are differences in how these models have to be configured. We show how to migrate your config from 0.3.x
 to 0.4.x for each of these model types.
 
-For all model types: 
-- The registry name has changed - instead of `llm_backends`, use `llm_models`.
+### All model types 
+- The registry name has changed - instead of `@llm_backends`, use `@llm_models`.
 - The `api` attribute has been removed.
 
 ### Models using REST
@@ -57,7 +57,7 @@ In `0.4.x`:
 [components.llm.model]
 @llm_models = "spacy.Dolly.v1"
 name = "dolly-v2-3b"  # or databricks/dolly-v2-3b - the prefix is optional
-config_init = {}  # Arguments passed to HF model at initalization time
+config_init = {}  # Arguments passed to HF model at initialization time
 config_run = {}  # Arguments passed to HF model at inference time 
 ```
 
