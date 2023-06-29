@@ -838,7 +838,7 @@ def test_label_inconsistency():
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
 
-    [components.llm.backend]
+    [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
     """
 
