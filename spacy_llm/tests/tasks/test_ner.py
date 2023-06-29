@@ -839,7 +839,7 @@ def test_label_inconsistency():
     path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
 
     [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    @llm_models = "test.NoOpModel.v1"
     """
 
     config = Config().from_str(cfg)
