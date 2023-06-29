@@ -1,3 +1,4 @@
+import warnings
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
@@ -36,12 +37,14 @@ class SpanTask(SerializableTask[SpanExample]):
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
-        self._check_label_consistency()
+        if self._examples:
+            self._examples = self._check_label_consistency()
 
-    def _check_label_consistency(self) -> None:
-        """Checks consistency of labels between examples and defined labels."""
-        if not self._examples:
-            return
+    def _check_label_consistency(self) -> List[SpanExample]:
+        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
+        RETURNS ():
+        """
+        assert self._examples
         example_labels = {
             self._normalizer(key): key
             for example in self._examples
@@ -52,12 +55,29 @@ class SpanTask(SerializableTask[SpanExample]):
             for key in (set(example_labels.keys()) - set(self._label_dict.keys()))
         }
         if not set(example_labels.keys()) <= set(self._label_dict.keys()):
-            raise ValueError(
+            warnings.warn(
                 f"Examples contain labels that are not specified in the task configuration. The latter contains the "
                 f"following labels: {sorted(list(set(self._label_dict.values())))}. Labels in examples missing from "
                 f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
                 f"and example labels are consistent."
             )
+
+        # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
+        return [
+            example
+            for example in [
+                SpanExample(
+                    text=example.text,
+                    entities={
+                        label: entities
+                        for label, entities in example.entities.items()
+                        if self._normalizer(label) in self._label_dict
+                    },
+                )
+                for example in self._examples
+            ]
+            if len(example.entities)
+        ]
 
     @property
     def labels(self) -> Tuple[str, ...]:

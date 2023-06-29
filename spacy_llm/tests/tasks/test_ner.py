@@ -851,12 +851,21 @@ def test_label_inconsistency():
     """
 
     config = Config().from_str(cfg)
-    with pytest.raises(
-        ValueError,
+    with pytest.warns(
+        UserWarning,
         match=re.escape(
             "Examples contain labels that are not specified in the task configuration. The latter contains the "
             "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
             "['TECH']. Please ensure your label specification and example labels are consistent."
         ),
     ):
-        assemble_from_config(config)
+        nlp = assemble_from_config(config)
+
+    examples = nlp.get_pipe("llm")._task._examples
+    assert len(examples) == 2
+    assert examples[0].text == "Jack and Jill went up the hill."
+    assert examples[0].entities == {"LOCATION": ["hill"], "PERSON": ["Jack", "Jill"]}
+    assert (
+        examples[1].text == "Jack and Jill went up the hill and spaCy is a great tool."
+    )
+    assert examples[1].entities == {"LOCATION": ["hill"], "PERSON": ["Jack", "Jill"]}
