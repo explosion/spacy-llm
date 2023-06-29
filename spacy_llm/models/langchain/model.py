@@ -1,4 +1,3 @@
-import copy
 from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar
 
 from spacy.util import SimpleFrozenDict
@@ -78,7 +77,7 @@ class LangChain:
                 Callable[["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]]
             ] = None,
             config: Dict[Any, Any] = SimpleFrozenDict(),
-            langchain_class_id: str = copy.deepcopy(class_id),
+            langchain_class_id: str = class_id,
         ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
             try:
                 return LangChain(

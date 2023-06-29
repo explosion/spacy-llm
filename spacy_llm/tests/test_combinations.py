@@ -12,13 +12,13 @@ from spacy_llm.pipeline import LLMWrapper
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["langchain.OpenAI.v1"],  # , "spacy.gpt-3-5.v1"
-    ids=["langchain"],  # , "rest-openai"
+    ["langchain.OpenAI.v1", "spacy.gpt-3-5.v1"],
+    ids=["langchain", "rest-openai"],
 )
 @pytest.mark.parametrize(
     "task",
-    ["spacy.NER.v1"],  # , "spacy.NER.v2", "spacy.TextCat.v1"
-    ids=["ner.v1"],  # , "ner.v2", "textcat"
+    ["spacy.NER.v1", "spacy.NER.v2", "spacy.TextCat.v1"],
+    ids=["ner.v1", "ner.v2", "textcat"],
 )
 @pytest.mark.parametrize("n_process", [1])  # , 2
 def test_combinations(model: str, task: str, n_process: int):

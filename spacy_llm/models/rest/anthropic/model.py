@@ -47,6 +47,7 @@ class Anthropic(REST):
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
             **self._credentials,
+            "model": self._name,
             "Content-Type": "application/json",
         }
 
@@ -58,7 +59,7 @@ class Anthropic(REST):
                 call_method=requests.post,
                 url=self._endpoint,
                 headers=headers,
-                json={**json_data, **self._config},
+                json={**json_data, **self._config, "model": self._name},
                 timeout=self._max_request_time,
             )
             try:
