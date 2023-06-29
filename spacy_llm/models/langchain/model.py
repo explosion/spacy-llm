@@ -1,4 +1,4 @@
-import warnings
+import copy
 from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar
 
 from spacy.util import SimpleFrozenDict
@@ -94,7 +94,7 @@ class LangChain:
                     ]
                 ] = None,
                 config: Dict[Any, Any] = SimpleFrozenDict(),
-                langchain_class_id: str = class_id,
+                langchain_class_id: str = copy.deepcopy(class_id),
             ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
                 try:
                     return LangChain(
@@ -104,15 +104,10 @@ class LangChain:
                         query=query_langchain() if query is None else query,
                     )
                 except ImportError:
-                    print(  # noqa: T201
-                        f"WARNING: Failed to instantiate LangChain class {cls.__name__}. Ensure all necessary dependencies are "
-                        f"installed."
-                    )
-                    warnings.warn(
+                    raise ValueError(
                         f"Failed to instantiate LangChain class {cls.__name__}. Ensure all necessary dependencies are "
                         f"installed."
                     )
-                    return None
 
             registry.llm_models.register(
                 f"langchain.{cls.__name__}.v1", func=langchain_model
