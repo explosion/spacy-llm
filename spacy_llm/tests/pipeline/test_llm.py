@@ -14,7 +14,7 @@ from spacy.util import make_tempdir
 from thinc.api import NumpyOps, get_current_ops
 
 import spacy_llm
-from spacy_llm.backends.rest.noop import _NOOP_RESPONSE
+from spacy_llm.models.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import make_noop_task
@@ -34,7 +34,7 @@ def noop_config() -> Dict[str, Any]:
     return {
         "save_io": True,
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
-        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+        "model": {"@llm_models": "spacy.NoOp.v1"},
     }
 
 
@@ -79,7 +79,7 @@ def test_llm_pipe_with_cache(tmp_path: Path, n_process: int):
 
     config = {
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
-        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+        "model": {"@llm_models": "spacy.NoOp.v1"},
         "cache": {
             "path": str(path),
             "batch_size": 1,  # Eager caching
@@ -111,7 +111,7 @@ def test_llm_serialize_bytes():
     llm = LLMWrapper(
         task=make_noop_task(),
         save_io=False,
-        backend=None,  # type: ignore
+        model=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
@@ -122,7 +122,7 @@ def test_llm_serialize_disk():
     llm = LLMWrapper(
         task=make_noop_task(),
         save_io=False,
-        backend=None,  # type: ignore
+        model=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
@@ -167,11 +167,11 @@ def test_type_checking_invalid(noop_config) -> None:
     assert (
         str(record[0].message)
         == "Type returned from `task.generate_prompts()` (`typing.Iterable[int]`) doesn't match type "
-        "expected by `backend` (`typing.Iterable[str]`)."
+        "expected by `model` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)
-        == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
+        == "Type returned from `model` (`typing.Iterable[str]`) doesn't match type "
         "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
     )
 
@@ -209,8 +209,7 @@ def test_llm_logs_at_debug_level(
 
 
 def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixture):
-
-    doc = nlp("This is a test")
+    nlp("This is a test")
 
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -274,10 +273,9 @@ def test_pipe_labels():
     @llm_tasks = "spacy.TextCat.v2"
     labels = ["COMPLIMENT", "INSULT"]
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
+    config = {"temperature": 0.3}
     """
 
     config = Config().from_str(cfg_string)
