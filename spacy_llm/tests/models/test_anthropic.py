@@ -11,7 +11,7 @@ def test_anthropic_api_response_is_correct():
     """Check if we're getting the expected response and we're parsing it properly"""
     anthropic = Anthropic(
         name="claude-instant-1",
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config={"max_tokens_to_sample": 10},
         strict=False,
         max_tries=10,
@@ -33,7 +33,7 @@ def test_anthropic_api_response_when_error():
     incorrect_temperature = "one"  # should be an int
     anthropic = Anthropic(
         name="claude-instant-1",
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config={
             "max_tokens_to_sample": 10,
             "temperature": incorrect_temperature,
@@ -58,7 +58,7 @@ def test_anthropic_error_unsupported_model():
     with pytest.raises(ValueError) as err:
         Anthropic(
             name=incorrect_model,
-            endpoint=Endpoints.COMPLETIONS,
+            endpoint=Endpoints.COMPLETIONS.value,
             config={"max_tokens_to_sample": 10},
             strict=False,
             max_tries=10,
