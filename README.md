@@ -277,7 +277,7 @@ An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the functionality to parse the resulting response
   back into structured fields on spaCy's [Doc](https://spacy.io/api/doc) objects.
-- A [**model**](#model) defining the model and how to connect to it. Note that `spacy-llm` supports both access to external
+- A [**model**](#models) defining the model and how to connect to it. Note that `spacy-llm` supports both access to external
   APIs (such as OpenAI) as well as access to self-hosted open-source LLMs (such as using Dolly through Hugging Face).
 
 Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality to avoid running
@@ -738,7 +738,7 @@ using REST, and accesses the `"gpt-3.5-turbo"` model.
 > from each other. It makes sense that the feature sets of such third-party libraries and `spacy-llm` aren't identical -
 > and users might want to take advantage of features not available in `spacy-llm`.
 >
-> The advantage of implementing our own REST and HuggingFace integrations is that we can ensure a larger degree of stability of robustness, as
+> The advantage of implementing our own REST and HuggingFace integrations is that we can ensure a larger degree of stability and robustness, as
 > we can guarantee backwards-compatibility and more smoothly integrated error handling.
 >
 > If however there are features or APIs not natively covered by `spacy-llm`, it's trivial to utilize a third-party
@@ -767,7 +767,7 @@ config = {"temperature": 0.3}
 
 | Argument    | Type             | Default | Description                                                                                                                                               |
 | ----------- | ---------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | `str`            |         | Model name. This might be any of the supported variants for this particular model (e. g. "gpt-3-5-turbo" or "gpt-3.5-turbo-16k" for ""spacy.gpt-3-5.v1"). |
+| `name`      | `str`            |         | Model name. This might be any of the supported variants for this particular model (e. g. "gpt-3-5-turbo" or "gpt-3.5-turbo-16k" for "spacy.gpt-3-5.v1"). |
 | `config`    | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the model.                                                                                                             |
 | `strict`    | `bool`           | `True`  | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is.                                      |
 | `max_tries` | `int`            | `3`     | Max. number of tries for API request.                                                                                                                     |
@@ -933,7 +933,7 @@ Example config block:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.OpenLLaMAHF.v1"
+@llm_models = "spacy.OpenLLaMA.v1"
 name = "open_llama_3b_350bt_preview"
 ```
 
