@@ -8,6 +8,7 @@ from spacy.tokens import Doc, DocBin
 from spacy.vocab import Vocab
 
 from .registry import registry
+from .ty import LLMTask
 
 
 @registry.llm_misc("spacy.BatchCache.v1")
@@ -32,7 +33,7 @@ class BatchCache:
         batch_size: int,
         max_batches_in_mem: int,
     ):
-        """Initialize Cache instance.
+        """Initialize Cache instance. Acts as NoOp if path is None.
         path (Optional[Union[str,Path]]): Cache directory.
         batch_size (int): Number of docs in one batch (file).
         max_batches_in_mem (int): Max. number of batches to hold in memory.
@@ -66,6 +67,15 @@ class BatchCache:
         }
 
         self._init_cache_dir()
+
+    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
+        """
+        Initialize cache with data not available at construction time.
+        vocab (Vocab): Vocab object.
+        task (LLMTask): Task.
+        """
+        self._vocab = vocab
+        self.prompt_template = task.prompt_template
 
     @property
     def prompt_template(self) -> Optional[str]:
@@ -101,20 +111,6 @@ class BatchCache:
                     f"current prompt template. Reset your cache if you are using a new prompt "
                     f"template."
                 )
-
-    @property
-    def vocab(self) -> Optional[Vocab]:
-        """Vocab used for deserializing docs.
-        RETURNS (Vocab): Vocab used for deserializing docs.
-        """
-        return self._vocab
-
-    @vocab.setter
-    def vocab(self, vocab: Vocab) -> None:
-        """Set vocab to use for deserializing docs.
-        vocab (Vocab): Vocab to use for deserializing docs.
-        """
-        self._vocab = vocab
 
     def _init_cache_dir(self) -> None:
         """Init cache directory with index and prompt template file."""

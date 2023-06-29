@@ -91,16 +91,11 @@ class Labeled(Protocol):
 class Cache(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    @property
-    def vocab(self) -> Optional[Vocab]:
-        """Vocab used for deserializing docs.
-        RETURNS (Vocab): Vocab used for deserializing docs.
+    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
         """
-
-    @vocab.setter
-    def vocab(self, vocab: Vocab) -> None:
-        """Set vocab to use for deserializing docs.
-        vocab (Vocab): Vocab to use for deserializing docs.
+        Initialize cache with data not available at construction time.
+        vocab (Vocab): Vocab object.
+        task (LLMTask): Task.
         """
 
     def add(self, doc: Doc) -> None:
