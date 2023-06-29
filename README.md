@@ -1229,7 +1229,7 @@ name = "falcon-7b"
 | `config_run`  | `Dict[str, Any]`                                                                    | `{}`            | Further configuration used during model inference.                                               |
 
 Note that Hugging Face will download this model the first time you use it - you can
-[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+[define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
 #### spacy.StableLM.v1
