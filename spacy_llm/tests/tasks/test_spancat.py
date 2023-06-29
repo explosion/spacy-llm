@@ -4,7 +4,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
@@ -42,10 +41,8 @@ def zeroshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
     """
 
 
@@ -73,10 +70,8 @@ def fewshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config: {{}}
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
     """
 
 
@@ -486,10 +481,8 @@ def test_example_not_following_basemodel():
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
-            make_spancat_task_v2(
-                labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path)
-            )
+    with pytest.raises(ValueError):
+        make_spancat_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 @pytest.fixture
@@ -512,8 +505,8 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     output = "PER: Bob,Alice"
     """
 

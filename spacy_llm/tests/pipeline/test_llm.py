@@ -6,18 +6,23 @@ from typing import Any, Dict, Iterable
 
 import pytest
 import spacy
+import srsly
+from confection import Config
 from spacy.language import Language
 from spacy.tokens import Doc
+from spacy.util import make_tempdir
 from thinc.api import NumpyOps, get_current_ops
 
 import spacy_llm
-from spacy_llm.backends.rest.noop import _NOOP_RESPONSE
+from spacy_llm.models.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import make_noop_task
 from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
+from ...registry.reader import fewshot_reader
+from ...util import assemble_from_config
 from ..compat import has_openai_key
 
 
@@ -29,7 +34,7 @@ def noop_config() -> Dict[str, Any]:
     return {
         "save_io": True,
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
-        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+        "model": {"@llm_models": "spacy.NoOp.v1"},
     }
 
 
@@ -74,7 +79,7 @@ def test_llm_pipe_with_cache(tmp_path: Path, n_process: int):
 
     config = {
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
-        "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+        "model": {"@llm_models": "spacy.NoOp.v1"},
         "cache": {
             "path": str(path),
             "batch_size": 1,  # Eager caching
@@ -106,7 +111,7 @@ def test_llm_serialize_bytes():
     llm = LLMWrapper(
         task=make_noop_task(),
         save_io=False,
-        backend=None,  # type: ignore
+        model=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
@@ -117,7 +122,7 @@ def test_llm_serialize_disk():
     llm = LLMWrapper(
         task=make_noop_task(),
         save_io=False,
-        backend=None,  # type: ignore
+        model=None,  # type: ignore
         cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
         vocab=None,  # type: ignore
     )
@@ -162,11 +167,11 @@ def test_type_checking_invalid(noop_config) -> None:
     assert (
         str(record[0].message)
         == "Type returned from `task.generate_prompts()` (`typing.Iterable[int]`) doesn't match type "
-        "expected by `backend` (`typing.Iterable[str]`)."
+        "expected by `model` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)
-        == "Type returned from `backend` (`typing.Iterable[str]`) doesn't match type "
+        == "Type returned from `model` (`typing.Iterable[str]`) doesn't match type "
         "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
     )
 
@@ -204,8 +209,7 @@ def test_llm_logs_at_debug_level(
 
 
 def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixture):
-
-    doc = nlp("This is a test")
+    nlp("This is a test")
 
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -230,3 +234,54 @@ def test_llm_logs_default_null_handler(nlp: Language, capsys: pytest.CaptureFixt
     assert f"Generated prompt for doc: {doc.text}" not in captured.out
     assert "Don't do anything" not in captured.out
     assert f"LLM response for doc: {doc.text}" not in captured.out
+
+
+def test_fewshot_reader_file_format_handling():
+    """Test if fewshot reader copes with file formats as expected."""
+    example = [
+        {
+            "text": "Circe lived on Aeaea.",
+            "entities": {"PER": ["Circe"], "LOC": ["Aeaea"]},
+        }
+    ]
+    with make_tempdir() as tmpdir:
+        srsly.write_yaml(tmpdir / "example.yml", example)
+        srsly.write_yaml(tmpdir / "example.json", example)
+        srsly.write_yaml(tmpdir / "example.foo", example)
+
+        fewshot_reader(tmpdir / "example.yml")
+        fewshot_reader(tmpdir / "example.json")
+        fewshot_reader(tmpdir / "example.foo")
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_pipe_labels():
+    """Test pipe labels with serde."""
+
+    cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.TextCat.v2"
+    labels = ["COMPLIMENT", "INSULT"]
+
+    [components.llm.model]
+    @llm_models = "spacy.gpt-3-5.v1"
+    config = {"temperature": 0.3}
+    """
+
+    config = Config().from_str(cfg_string)
+    nlp = assemble_from_config(config)
+
+    with spacy.util.make_tempdir() as tmpdir:
+        nlp.to_disk(tmpdir / "tst.nlp")
+        nlp = spacy.load(tmpdir / "tst.nlp")
+        assert nlp.pipe_labels["llm"] == ["COMPLIMENT", "INSULT"]
