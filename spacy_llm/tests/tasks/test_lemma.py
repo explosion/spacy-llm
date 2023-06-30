@@ -35,7 +35,7 @@ def noop_config():
     @llm_tasks = "spacy.Lemma.v1"
 
     [components.llm.model]
-    @llm_model = "test.NoOpModel.v1"
+    @llm_models = "test.NoOpModel.v1"
     """
 
 
