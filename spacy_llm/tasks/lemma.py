@@ -131,5 +131,5 @@ class LemmaTask(SerializableTask[LemmaExample]):
 
     def _create_prompt_example(self, example: Example) -> LemmaExample:
         """Create a lemma prompt example from a spaCy example."""
-        lemma_dict = [{t.text: t.lemma_ for t in example.reference}]
+        lemma_dict = [{t.text: t.lemma_} for t in example.reference]
         return LemmaExample(text=example.reference.text, lemmas=lemma_dict)
