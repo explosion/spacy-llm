@@ -135,7 +135,7 @@ class RELTask(SerializableTask[RELExample]):
         self._verbose = verbose
 
     @classmethod
-    def _check_rel_extention(cls):
+    def _check_rel_extension(cls):
         """Add `rel` extension if need be."""
         if not Doc.has_extension("rel"):
             Doc.set_extension("rel", default=[])
@@ -174,7 +174,7 @@ class RELTask(SerializableTask[RELExample]):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        self._check_rel_extention()
+        self._check_rel_extension()
 
         for doc, prompt_response in zip(docs, responses):
             rels = self._format_response(prompt_response)
@@ -203,7 +203,7 @@ class RELTask(SerializableTask[RELExample]):
         infer_prompt_examples (int): How many prompt examples to infer from the Example objects.
             0 by default. Takes all examples if set to -1.
         """
-        self._check_rel_extention()
+        self._check_rel_extension()
 
         if not labels:
             labels = list(self._label_dict.values())
