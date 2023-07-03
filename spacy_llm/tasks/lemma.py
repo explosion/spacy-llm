@@ -67,7 +67,7 @@ class LemmaTask(SerializableTask[LemmaExample]):
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        infer_prompt_examples (int): How many prompt examples to infer from the Example objects.
+        infer_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
         """
         for eg in get_examples():
