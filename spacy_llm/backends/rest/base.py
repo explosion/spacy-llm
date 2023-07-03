@@ -127,7 +127,8 @@ class Backend(abc.ABC):
         if _HTTPRetryErrorCodes.has(response.status_code):
             raise ConnectionError(
                 f"API could not be reached after {(time.time() - start_time):.3f} seconds in total and attempting to "
-                f"connect {self._max_tries} times. Check your network connection and the API's availability."
+                f"connect {self._max_tries} times. Check your network connection and the API's availability.\n"
+                f"{response.status_code}\t{response.reason}"
             )
 
         return response
