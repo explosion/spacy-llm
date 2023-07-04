@@ -68,7 +68,7 @@ factory = "llm"
 labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.model]
-@llm_models = "spacy.gpt-3-5.v1"
+@llm_models = "spacy.GPT-3-5.v1"
 config = {"temperature": 0.3}
 ```
 
@@ -776,7 +776,7 @@ and for Anthropic
 export ANTHROPIC_API_KEY="..."
 ```
 
-#### spacy.gpt-4.v1
+#### spacy.GPT-4.v1
 
 OpenAI's `gpt-4` model family.
 
@@ -784,7 +784,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.gpt-4.v1"
+@llm_models = "spacy.GPT-4.v1"
 name = "gpt-4"
 config = {"temperature": 0.3}
 ```
@@ -797,7 +797,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                                           | `3`       | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                                           | `30`      | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.gpt-3-5.v1
+#### spacy.GPT-3-5.v1
 
 OpenAI's `gpt-3-5` model family.
 
@@ -805,7 +805,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.gpt-3-5.v1"
+@llm_models = "spacy.GPT-3-5.v1"
 name = "gpt-3.5-turbo"
 config = {"temperature": 0.3}
 ```
@@ -818,7 +818,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                                                                           | `3`               | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                                                                           | `30`              | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.text-davinci.v1
+#### spacy.Text-Davinci.v1
 
 OpenAI's `text-davinci` model family.
 
@@ -826,7 +826,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.text-davinci.v1"
+@llm_models = "spacy.Text-Davinci.v1"
 name = "text-davinci-003"
 config = {"temperature": 0.3}
 ```
@@ -839,7 +839,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                             | `3`                  | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                             | `30`                 | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.code-davinci.v1
+#### spacy.Code-Davinci.v1
 
 OpenAI's `code-davinci` model family.
 
@@ -847,7 +847,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.code-davinci.v1"
+@llm_models = "spacy.Code-Davinci.v1"
 name = "code-davinci-002"
 config = {"temperature": 0.3}
 ```
@@ -860,7 +860,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                         | `3`                  | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                         | `30`                 | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.text-curie.v1
+#### spacy.Text-Curie.v1
 
 OpenAI's `text-curie` model family.
 
@@ -868,7 +868,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.text-curie.v1"
+@llm_models = "spacy.Text-Curie.v1"
 name = "text-curie-001"
 config = {"temperature": 0.3}
 ```
@@ -881,7 +881,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                       | `3`                | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                       | `30`               | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.text-babbage.v1
+#### spacy.Text-Babbage.v1
 
 OpenAI's `text-babbage` model family.
 
@@ -889,7 +889,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.text-babbage.v1"
+@llm_models = "spacy.Text-Babbage.v1"
 name = "text-babbage-001"
 config = {"temperature": 0.3}
 ```
@@ -902,7 +902,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                         | `3`                  | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                         | `30`                 | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.text-ada.v1
+#### spacy.Text-Ada.v1
 
 OpenAI's `text-ada` model family.
 
@@ -910,7 +910,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.text-ada.v1"
+@llm_models = "spacy.Text-Ada.v1"
 name = "text-ada-001"
 config = {"temperature": 0.3}
 ```
@@ -923,7 +923,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                     | `3`              | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                     | `30`             | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.davinci.v1
+#### spacy.Davinci.v1
 
 OpenAI's `davinci` model family.
 
@@ -931,7 +931,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.davinci.v1 "
+@llm_models = "spacy.Davinci.v1 "
 name = "davinci"
 config = {"temperature": 0.3}
 ```
@@ -944,7 +944,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                | `3`         | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                | `30`        | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.curie.v1
+#### spacy.Curie.v1
 
 OpenAI's `curie` model family.
 
@@ -952,7 +952,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.curie.v1 "
+@llm_models = "spacy.Curie.v1 "
 name = "curie"
 config = {"temperature": 0.3}
 ```
@@ -965,7 +965,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`              | `3`       | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`              | `30`      | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.babbage.v1
+#### spacy.Babbage.v1
 
 OpenAI's `babbage` model family.
 
@@ -973,7 +973,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.babbage.v1 "
+@llm_models = "spacy.Babbage.v1 "
 name = "babbage"
 config = {"temperature": 0.3}
 ```
@@ -986,7 +986,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                | `3`         | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                | `30`        | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.ada.v1
+#### spacy.Ada.v1
 
 OpenAI's `ada` model family.
 
@@ -994,7 +994,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.ada.v1 "
+@llm_models = "spacy.Ada.v1 "
 name = "ada"
 config = {"temperature": 0.3}
 ```
@@ -1007,7 +1007,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`            | `3`     | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`            | `30`    | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.command.v1
+#### spacy.Command.v1
 
 Cohere's `command` model family.
 
@@ -1015,7 +1015,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.command.v1 "
+@llm_models = "spacy.Command.v1 "
 name = "command"
 config = {"temperature": 0.3}
 ```
@@ -1028,7 +1028,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                                                             | `3`         | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                                                             | `30`        | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.claude-1.v1
+#### spacy.Claude-1.v1
 
 Anthropic's `claude-1` model family.
 
@@ -1036,7 +1036,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.claude-1.v1 "
+@llm_models = "spacy.Claude-1.v1 "
 name = "claude-1"
 config = {"temperature": 0.3}
 ```
@@ -1049,7 +1049,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                  | `3`          | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                  | `30`         | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.claude-instant-1.v1
+#### spacy.Claude-instant-1.v1
 
 Anthropic's `claude-instant-1` model family.
 
@@ -1057,7 +1057,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.claude-instant-1.v1 "
+@llm_models = "spacy.Claude-instant-1.v1 "
 name = "claude-instant-1"
 config = {"temperature": 0.3}
 ```
@@ -1070,7 +1070,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                                  | `3`                  | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                                  | `30`                 | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.claude-instant-1-1.v1
+#### spacy.Claude-instant-1-1.v1
 
 Anthropic's `claude-instant-1.1` model family.
 
@@ -1078,7 +1078,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.claude-instant-1-1.v1 "
+@llm_models = "spacy.Claude-instant-1-1.v1 "
 name = "claude-instant-1.1"
 config = {"temperature": 0.3}
 ```
@@ -1091,7 +1091,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                                                      | `3`                    | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                                                      | `30`                   | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.claude-1-0.v1
+#### spacy.Claude-1-0.v1
 
 Anthropic's `claude-1.0` model family.
 
@@ -1099,7 +1099,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.claude-1-0.v1 "
+@llm_models = "spacy.Claude-1-0.v1 "
 name = "claude-1.0"
 config = {"temperature": 0.3}
 ```
@@ -1112,7 +1112,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                   | `3`            | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                   | `30`           | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.claude-1-2.v1
+#### spacy.Claude-1-2.v1
 
 Anthropic's `claude-1.2` model family.
 
@@ -1120,7 +1120,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.claude-1-2.v1 "
+@llm_models = "spacy.Claude-1-2.v1 "
 name = "claude-1.2"
 config = {"temperature": 0.3}
 ```
@@ -1133,7 +1133,7 @@ config = {"temperature": 0.3}
 | `max_tries` | `int`                   | `3`            | Max. number of tries for API request.                                                                                |
 | `timeout`   | `int`                   | `30`           | Timeout for API request in seconds.                                                                                  |
 
-#### spacy.claude-1-3.v1
+#### spacy.Claude-1-3.v1
 
 Anthropic's `claude-1.3` model family.
 
@@ -1141,7 +1141,7 @@ Example config:
 
 ```ini
 [components.llm.model]
-@llm_models = "spacy.claude-1-3.v1 "
+@llm_models = "spacy.Claude-1-3.v1 "
 name = "claude-1.3"
 config = {"temperature": 0.3}
 ```

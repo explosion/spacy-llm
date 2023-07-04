@@ -7,7 +7,7 @@ from ....registry import registry
 from .model import Anthropic, Endpoints
 
 
-@registry.llm_models("spacy.claude-1.v1")
+@registry.llm_models("spacy.Claude-1.v1")
 def anthropic_claude_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["claude-1", "claude-1-100k"] = "claude-1",  # noqa: F722
@@ -41,7 +41,7 @@ def anthropic_claude_1(
     )
 
 
-@registry.llm_models("spacy.claude-instant-1.v1")
+@registry.llm_models("spacy.Claude-instant-1.v1")
 def anthropic_claude_instant_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[
@@ -77,7 +77,7 @@ def anthropic_claude_instant_1(
     )
 
 
-@registry.llm_models("spacy.claude-instant-1-1.v1")
+@registry.llm_models("spacy.Claude-instant-1-1.v1")
 def anthropic_claude_instant_1_1(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[
@@ -113,7 +113,7 @@ def anthropic_claude_instant_1_1(
     )
 
 
-@registry.llm_models("spacy.claude-1-0.v1")
+@registry.llm_models("spacy.Claude-1-0.v1")
 def anthropic_claude_1_0(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["claude-1.0"] = "claude-1.0",  # noqa: F722
@@ -147,7 +147,7 @@ def anthropic_claude_1_0(
     )
 
 
-@registry.llm_models("spacy.claude-1-2.v1")
+@registry.llm_models("spacy.Claude-1-2.v1")
 def anthropic_claude_1_2(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["claude-1.2"] = "claude-1.2",  # noqa: F722
@@ -181,7 +181,7 @@ def anthropic_claude_1_2(
     )
 
 
-@registry.llm_models("spacy.claude-1-3.v1")
+@registry.llm_models("spacy.Claude-1-3.v1")
 def anthropic_claude_1_3(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["claude-1.3", "claude-1.3-100k"] = "claude-1.3",  # noqa: F722
