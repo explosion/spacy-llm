@@ -7,7 +7,7 @@ from ....registry import registry
 from .model import Endpoints, OpenAI
 
 
-@registry.llm_models("spacy.gpt-4.v1")
+@registry.llm_models("spacy.GPT-4.v1")
 def openai_gpt_4(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[
@@ -43,7 +43,7 @@ def openai_gpt_4(
     )
 
 
-@registry.llm_models("spacy.gpt-3-5.v1")
+@registry.llm_models("spacy.GPT-3-5.v1")
 def openai_gpt_3_5(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[
@@ -82,7 +82,7 @@ def openai_gpt_3_5(
     )
 
 
-@registry.llm_models("spacy.text-davinci.v1")
+@registry.llm_models("spacy.Text-Davinci.v1")
 def openai_text_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal[
@@ -118,7 +118,7 @@ def openai_text_davinci(
     )
 
 
-@registry.llm_models("spacy.code-davinci.v1")
+@registry.llm_models("spacy.Code-Davinci.v1")
 def openai_code_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["code-davinci-002"] = "code-davinci-002",  # noqa: F722
@@ -152,7 +152,7 @@ def openai_code_davinci(
     )
 
 
-@registry.llm_models("spacy.text-curie.v1")
+@registry.llm_models("spacy.Text-Curie.v1")
 def openai_text_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["text-curie-001"] = "text-curie-001",  # noqa: F722
@@ -186,7 +186,7 @@ def openai_text_curie(
     )
 
 
-@registry.llm_models("spacy.text-babbage.v1")
+@registry.llm_models("spacy.Text-Babbage.v1")
 def openai_text_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["text-babbage-001"] = "text-babbage-001",  # noqa: F722
@@ -220,7 +220,7 @@ def openai_text_babbage(
     )
 
 
-@registry.llm_models("spacy.text-ada.v1")
+@registry.llm_models("spacy.Text-Ada.v1")
 def openai_text_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["text-ada-001"] = "text-ada-001",  # noqa: F722
@@ -254,7 +254,7 @@ def openai_text_ada(
     )
 
 
-@registry.llm_models("spacy.davinci.v1")
+@registry.llm_models("spacy.Davinci.v1")
 def openai_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["davinci"] = "davinci",  # noqa: F722
@@ -288,7 +288,7 @@ def openai_davinci(
     )
 
 
-@registry.llm_models("spacy.curie.v1")
+@registry.llm_models("spacy.Curie.v1")
 def openai_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["curie"] = "curie",  # noqa: F722
@@ -322,7 +322,7 @@ def openai_curie(
     )
 
 
-@registry.llm_models("spacy.babbage.v1")
+@registry.llm_models("spacy.Babbage.v1")
 def openai_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["babbage"] = "babbage",  # noqa: F722
@@ -356,7 +356,7 @@ def openai_babbage(
     )
 
 
-@registry.llm_models("spacy.ada.v1")
+@registry.llm_models("spacy.Ada.v1")
 def openai_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(),
     name: Literal["ada"] = "ada",  # noqa: F722
