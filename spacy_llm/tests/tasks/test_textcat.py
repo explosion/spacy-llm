@@ -6,7 +6,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.training import Example
 from spacy.util import make_tempdir
 
@@ -44,10 +43,8 @@ def zeroshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -76,10 +73,8 @@ def fewshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {{}}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -110,10 +105,8 @@ def ext_template_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {{}}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -141,10 +134,8 @@ def zeroshot_cfg_string_v3_lds():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -585,7 +576,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError):
             make_textcat_task_v3(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
@@ -643,7 +634,7 @@ INSULTS = [
 
 @pytest.mark.parametrize("n_insults", range(len(INSULTS) + 1))
 def test_textcat_scoring(zeroshot_cfg_string, n_insults):
-    @registry.llm_backends("Dummy")
+    @registry.llm_models("Dummy")
     def factory():
         def b(prompts: Iterable[str]) -> Iterable[str]:
             for _ in prompts:
@@ -652,7 +643,7 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
         return b
 
     config = Config().from_str(zeroshot_cfg_string)
-    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    config["components"]["llm"]["model"] = {"@llm_models": "Dummy"}
     config["components"]["llm"]["task"]["labels"] = "Insult"
     nlp = assemble_from_config(config)
 
@@ -738,8 +729,8 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     """
 
 

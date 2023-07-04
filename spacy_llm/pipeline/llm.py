@@ -16,7 +16,7 @@ from spacy.vocab import Vocab
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
 from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
-from ..ty import validate_types
+from ..ty import validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -34,10 +34,8 @@ class CacheConfigType(TypedDict):
     assigns=[],
     default_config={
         "task": None,
-        "backend": {
-            "@llm_backends": "spacy.REST.v1",
-            "api": "OpenAI",
-            "config": {"model": "gpt-3.5-turbo"},
+        "model": {
+            "@llm_models": "spacy.GPT-3-5.v1",
             "strict": True,
         },
         "cache": {
@@ -47,15 +45,17 @@ class CacheConfigType(TypedDict):
             "max_batches_in_mem": 4,
         },
         "save_io": False,
+        "validate_types": True,
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
-    backend: PromptExecutor,
+    model: PromptExecutor,
     cache: Cache,
     save_io: bool,
+    validate_types: bool,
 ) -> "LLMWrapper":
     """Construct an LLM component.
 
@@ -64,22 +64,24 @@ def make_llm(
         losses during training.
     task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
-    backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
+    model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
     save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
+    validate_types (bool): Whether to check if signatures of configured backend and task are consistent.
     """
     if task is None:
         raise ValueError(
             "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
             "'spacy.NER.v2'})."
         )
-    validate_types(task, backend)
+    if validate_types:
+        validate_type_consistency(task, model)
 
     return LLMWrapper(
         name=name,
         task=task,
         save_io=save_io,
-        backend=backend,
+        model=model,
         cache=cache,
         vocab=nlp.vocab,
     )
@@ -94,7 +96,7 @@ class LLMWrapper(Pipe):
         *,
         vocab: Vocab,
         task: LLMTask,
-        backend: PromptExecutor,
+        model: PromptExecutor,
         cache: Cache,
         save_io: bool,
     ) -> None:
@@ -106,13 +108,13 @@ class LLMWrapper(Pipe):
         vocab (Vocab): Pipeline vocabulary.
         task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
             structured information and set that back on the docs.
-        backend (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
+        model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
         save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
         """
         self._name = name
         self._task = task
-        self._backend = backend
+        self._model = model
         self._cache = cache
         self._cache.vocab = vocab
         self._save_io = save_io
@@ -173,8 +175,8 @@ class LLMWrapper(Pipe):
                 error_handler(self._name, self, doc_batch, e)
 
     def _process_docs(self, docs: List[Doc]) -> List[Doc]:
-        """Process a batch of docs with the configured LLM backend and task.
-        If a cache is configured, only sends prompts to backend for docs not found in cache.
+        """Process a batch of docs with the configured LLM model and task.
+        If a cache is configured, only sends prompts to model for docs not found in cache.
 
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
@@ -194,7 +196,7 @@ class LLMWrapper(Pipe):
             prompts_iters = tee(
                 self._task.generate_prompts(noncached_doc_batch), n_iters
             )
-            responses_iters = tee(self._backend(prompts_iters[0]), n_iters)
+            responses_iters = tee(self._model(prompts_iters[0]), n_iters)
             for prompt, response, doc in zip(
                 prompts_iters[1], responses_iters[1], noncached_doc_batch
             ):
@@ -242,8 +244,8 @@ class LLMWrapper(Pipe):
 
         if isinstance(self._task, Serializable):
             serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._backend, Serializable):
-            serialize["backend"] = lambda: self._backend.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._model, Serializable):
+            serialize["model"] = lambda: self._model.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
 
         return util.to_bytes(serialize, exclude)
 
@@ -264,8 +266,8 @@ class LLMWrapper(Pipe):
 
         if isinstance(self._task, Serializable):
             deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._backend, Serializable):
-            deserialize["backend"] = lambda b: self._backend.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._model, Serializable):
+            deserialize["model"] = lambda b: self._model.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
 
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -282,8 +284,8 @@ class LLMWrapper(Pipe):
 
         if isinstance(self._task, Serializable):
             serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._backend, Serializable):
-            serialize["backend"] = lambda p: self._backend.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._model, Serializable):
+            serialize["model"] = lambda p: self._model.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
         return util.to_disk(path, serialize, exclude)
 
@@ -300,8 +302,8 @@ class LLMWrapper(Pipe):
 
         if isinstance(self._task, Serializable):
             serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._backend, Serializable):
-            serialize["backend"] = lambda p: self._backend.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+        if isinstance(self._model, Serializable):
+            serialize["model"] = lambda p: self._model.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
         util.from_disk(path, serialize, exclude)
         return self
