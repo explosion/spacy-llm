@@ -213,3 +213,7 @@ class SpanCatTask(SpanTask):
             "_case_sensitive_matching",
             "_single_match",
         ]
+
+    @property
+    def _Example(self) -> type[SpanExample]:
+        return SpanExample

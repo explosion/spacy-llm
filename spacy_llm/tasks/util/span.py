@@ -1,25 +1,27 @@
-from collections import defaultdict
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 import jinja2
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal
 from ...registry import lowercase_normalizer
-from .examples import COTSpanExample, SpanExample, SpanReason
+from .examples import COTSpanExample, SpanExample
 from .parsing import find_substrings
 from .serialization import SerializableTask
 
+_ExampleT = TypeVar("_ExampleT", SpanExample, COTSpanExample)
 
-class SpanTask(SerializableTask[SpanExample]):
+
+class SpanTask(SerializableTask[_ExampleT]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
         self,
         labels: List[str],
         template: str,
-        label_definitions: Optional[Dict[str, str]] = {},
-        examples: Optional[List[SpanExample]] = None,
+        description: Optional[str] = None,
+        label_definitions: Optional[Dict[str, str]] = None,
+        examples: Optional[List[_ExampleT]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -30,6 +32,7 @@ class SpanTask(SerializableTask[SpanExample]):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {self._normalizer(label): label for label in labels}
         self._template = template
+        self._description = description
         self._label_definitions = label_definitions
         self._examples = examples
         self._validate_alignment(alignment_mode)
@@ -47,6 +50,7 @@ class SpanTask(SerializableTask[SpanExample]):
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,
+                description=self._description,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
                 examples=self._examples,
@@ -124,120 +128,3 @@ class SpanTask(SerializableTask[SpanExample]):
             "_case_sensitive_matching",
             "_single_match",
         ]
-
-    @property
-    def _Example(self) -> Type[SpanExample]:
-        return SpanExample
-
-
-class SpanTaskV2(SerializableTask[COTSpanExample]):
-    def __init__(
-        self,
-        labels: List[str],
-        template: str,
-        description: str,
-        examples: List[COTSpanExample],
-        label_definitions: Optional[Dict[str, str]] = {},
-        normalizer: Optional[Callable[[str], str]] = None,
-        alignment_mode: Literal[
-            "strict", "contract", "expand"  # noqa: F821
-        ] = "contract",
-        case_sensitive_matching: bool = False,
-        single_match: bool = False,
-    ):
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
-        self._template = template
-        self._description = description
-        self._examples = examples
-        self._label_definitions = label_definitions
-        self._validate_alignment(alignment_mode)
-        self._alignment_mode = alignment_mode
-        self._case_sensitive_matching = case_sensitive_matching
-        self._single_match = single_match
-
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        environment = jinja2.Environment()
-        _template = environment.from_string(self._template)
-        for doc in docs:
-            prompt = _template.render(
-                text=doc.text,
-                description=self._description,
-                labels=list(self._label_dict.values()),
-                label_definitions=self._label_definitions,
-                examples=self._examples,
-            )
-            yield prompt
-
-    def _format_response(self, response: str) -> Dict[str, List[str]]:
-        """Parse raw string response into a structured format"""
-        output = defaultdict(list)
-        assert self._normalizer is not None
-        for line in response.strip().split("\n"):
-            entity = SpanReason.from_str(line)
-            norm_label = self._normalizer(entity.label)
-            if norm_label not in self._label_dict:
-                continue
-            label = self._label_dict[norm_label]
-            output[label].append(entity.text)
-        return output
-
-    @staticmethod
-    def _validate_alignment(alignment_mode: str):
-        """Raises error if specified alignment_mode is not supported.
-        alignment_mode (str): Alignment mode to check.
-        """
-        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
-        alignment_modes = ("strict", "contract", "expand")
-        if alignment_mode not in alignment_modes:
-            raise ValueError(
-                f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
-            )
-
-    def assign_spans(
-        self,
-        doc: Doc,
-        spans: List[Span],
-    ) -> None:
-        """Assign spans to the document."""
-        raise NotImplementedError()
-
-    def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, responses):
-            spans = []
-            formatted_response = self._format_response(prompt_response)
-            for label, phrases in formatted_response.items():
-                # For each phrase, find the substrings in the text
-                # and create a Span
-                offsets = find_substrings(
-                    doc.text,
-                    phrases,
-                    case_sensitive=self._case_sensitive_matching,
-                    single_match=self._single_match,
-                )
-                for start, end in offsets:
-                    span = doc.char_span(
-                        start, end, alignment_mode=self._alignment_mode, label=label
-                    )
-                    if span is not None:
-                        spans.append(span)
-
-            self.assign_spans(doc, spans)
-            yield doc
-
-    @property
-    def _cfg_keys(self) -> List[str]:
-        return [
-            "_label_dict",
-            "_template",
-            "_label_definitions",
-            "_alignment_mode",
-            "_case_sensitive_matching",
-            "_single_match",
-        ]
-
-    @property
-    def _Example(self) -> Type[COTSpanExample]:
-        return COTSpanExample

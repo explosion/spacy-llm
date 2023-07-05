@@ -1,4 +1,5 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from collections import defaultdict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from spacy.language import Language
 from spacy.scorer import get_ner_prf
@@ -12,8 +13,7 @@ from ..ty import COTExamplesConfigType, ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 from .util import SpanExample, SpanTask
-from .util.examples import COTSpanExample
-from .util.span import SpanTaskV2
+from .util.examples import COTSpanExample, SpanReason
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
 _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
@@ -144,7 +144,7 @@ def make_ner_task_v3(
     raw_examples = examples() if callable(examples) else examples
     span_examples = [COTSpanExample(**eg) for eg in raw_examples]
 
-    return NERTaskV2(
+    return COTNERTask(
         labels=labels_list,
         template=template,
         description=description,
@@ -157,7 +157,7 @@ def make_ner_task_v3(
     )
 
 
-class NERTask(SpanTask):
+class NERTask(SpanTask[SpanExample]):
     def __init__(
         self,
         labels: List[str] = [],
@@ -248,14 +248,18 @@ class NERTask(SpanTask):
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
 
+    @property
+    def _Example(self) -> type[SpanExample]:
+        return SpanExample
 
-class NERTaskV2(SpanTaskV2):
+
+class COTNERTask(SpanTask[COTSpanExample]):
     def __init__(
         self,
         labels: List[str],
         template: str,
-        description: str,
-        examples: List[COTSpanExample],
+        description: Optional[str] = None,
+        examples: Optional[List[COTSpanExample]] = None,
         label_definitions: Optional[Dict[str, str]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
@@ -263,16 +267,65 @@ class NERTaskV2(SpanTaskV2):
         single_match: bool = False,
     ):
         super().__init__(
-            labels,
-            template,
-            description,
-            examples,
-            label_definitions,
-            normalizer,
-            alignment_mode,
-            case_sensitive_matching,
-            single_match,
+            labels=labels,
+            template=template,
+            description=description,
+            label_definitions=label_definitions,
+            examples=examples,
+            normalizer=normalizer,
+            alignment_mode=alignment_mode,
+            case_sensitive_matching=case_sensitive_matching,
+            single_match=single_match,
         )
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable["Example"]],
+        nlp: Language,
+        labels: List[str] = [],
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the NER task, by auto-discovering labels.
+
+        Labels can be set through, by order of precedence:
+
+        - the `[initialize]` section of the pipeline configuration
+        - the `labels` argument supplied to the task factory
+        - the labels found in the examples
+
+        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
+            for initialization.
+        nlp (Language): Language instance.
+        labels (List[str]): Optional list of labels.
+        """
+
+        examples = get_examples()
+
+        if not labels:
+            labels = list(self._label_dict.values())
+
+        if not labels:
+            label_set = set()
+
+            for eg in examples:
+                for ent in eg.reference.ents:
+                    label_set.add(ent.label_)
+            labels = list(label_set)
+
+        self._label_dict = {self._normalizer(label): label for label in labels}
+
+    def _format_response(self, response: str) -> Iterable[Tuple[str, Iterable[str]]]:
+        """Parse raw string response into a structured format"""
+        output: dict[str, list[str]] = defaultdict(list)
+        assert self._normalizer is not None
+        for line in response.strip().split("\n"):
+            entity = SpanReason.from_str(line)
+            norm_label = self._normalizer(entity.label)
+            if norm_label not in self._label_dict:
+                continue
+            label = self._label_dict[norm_label]
+            output[label].append(entity.text)
+        return output.items()
 
     def assign_spans(
         self,
@@ -281,3 +334,13 @@ class NERTaskV2(SpanTaskV2):
     ) -> None:
         """Assign spans to the document."""
         doc.set_ents(filter_spans(spans))
+
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        return get_ner_prf(examples)
+
+    @property
+    def _Example(self) -> type[COTSpanExample]:
+        return COTSpanExample
