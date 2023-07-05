@@ -12,6 +12,7 @@ from ..registry import registry
 from ..ty import COTExamplesConfigType, ExamplesConfigType
 from ..util import split_labels
 from .span import COTSpanExample, SpanExample, SpanReason, SpanTask
+from .span import check_span_label_consistency
 from .templates import read_template
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
@@ -195,6 +196,16 @@ class NERTask(SpanTask[SpanExample]):
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
+        )
+
+    def _check_label_consistency(self) -> List[SpanExample]:
+        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
+        RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
+        """
+        return check_span_label_consistency(
+            normalizer=self._normalizer,
+            label_dict=self._label_dict,
+            prompt_examples=self._prompt_examples,
         )
 
     def initialize(

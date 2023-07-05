@@ -124,14 +124,15 @@ class SpanTask(SerializableTask[_PromptExampleT]):
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
-    def check_label_consistency(self):
-        return check_span_label_consistency(
-            self._normalizer, self._label_dict, self._prompt_examples
-        )
+        if self._prompt_examples:
+            self._prompt_examples = self._check_label_consistency()
 
     @property
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
+
+    def _check_label_consistency(self) -> List[_PromptExampleT]:
+        raise NotImplementedError()
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
