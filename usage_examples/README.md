@@ -60,7 +60,6 @@ need to implement two functions:
 
 The `spacy-llm` library requires tasks to be defined as a class and registered in the `llm_tasks` registry:
 
-
 ```python
 from spacy_llm.registry import registry
 from spacy_llm.util import split_labels
@@ -99,8 +98,8 @@ in the `spacy_llm/tasks/` directory. We also recommend checking out the
 
 ## Using LangChain
 
-`spacy-llm` integrates [LangChain](https://github.com/hwchase17/langchain) to allow users to leverage its features for 
-prompt management and LLM usage in their spaCy workflows.  
+`spacy-llm` integrates [LangChain](https://github.com/hwchase17/langchain) to allow users to leverage its features for
+prompt management and LLM usage in their spaCy workflows.
 
 LangChain can be used like so:
 
@@ -109,7 +108,6 @@ LangChain can be used like so:
 @llm_models = "langchain.OpenAI.v1"
 name = "gpt-3.5-turbo"
 ```
-
 
 <!-- The `usage_examples` directory contains example for all integrated third-party -->
 
@@ -148,7 +146,7 @@ def random_textcat(labels: str):
     def _classify(prompts: Iterable[str]) -> Iterable[str]:
         for _ in prompts:
             yield random.choice(labels)
-    
+
     return _classify
 ```
 
@@ -171,6 +169,6 @@ But it does show how you would go about writing custom
 and arbitrary logic to interact with any LLM implementation.
 
 Note that in all built-in tasks prompts and responses are expected to be of type `str`, while all built-in model
-support `str` (or `Any`) types. All built-in tasks and models are therefore inter-operable. It's possible to work with 
+support `str` (or `Any`) types. All built-in tasks and models are therefore inter-operable. It's possible to work with
 arbitrary objects instead of `str` though - which might be useful if you want some third-party abstractions for prompts
 or responses.

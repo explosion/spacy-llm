@@ -1,13 +1,18 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
+from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 
-from ...compat import Literal
-from ...registry import lowercase_normalizer
-from .examples import SpanExample
-from .parsing import find_substrings
-from .serialization import SerializableTask
+from ..compat import Literal
+from ..registry import lowercase_normalizer
+from .util.parsing import find_substrings
+from .util.serialization import SerializableTask
+
+
+class SpanExample(BaseModel):
+    text: str
+    entities: Dict[str, List[str]]
 
 
 class SpanTask(SerializableTask[SpanExample]):
@@ -18,7 +23,7 @@ class SpanTask(SerializableTask[SpanExample]):
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]] = {},
-        examples: Optional[List[SpanExample]] = None,
+        prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -27,10 +32,12 @@ class SpanTask(SerializableTask[SpanExample]):
         single_match: bool = False,
     ):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
         self._template = template
         self._label_definitions = label_definitions
-        self._examples = examples
+        self._prompt_examples = prompt_examples or []
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
@@ -52,7 +59,7 @@ class SpanTask(SerializableTask[SpanExample]):
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                examples=self._examples,
+                examples=self._prompt_examples,
             )
             yield prompt
 
