@@ -305,6 +305,39 @@ Moreover, the task may define an optional [`scorer` method](https://spacy.io/api
 It should accept an iterable of `Example`s as input and return a score dictionary.
 If the `scorer` method is defined, `spacy-llm` will call it to evaluate the component.
 
+#### Providing examples for few-shot prompts
+
+All built-in tasks support few-shot prompts, i. e. including examples in a prompt. Examples can be supplied in two ways:
+(1) as a separate file containing only examples or (2) by initializing `llm` with a `get_examples()` callback (like any
+other spaCy pipeline component).
+
+##### (1) Few-shot example file
+
+A file containing examples for few-shot prompting can be configured like this:
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+The supplied file has to conform to the format expected by the required task (see the task documentation further down).
+
+##### (2) Initializing the `llm` component with a `get_examples()` callback
+
+Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for
+[`nlp.initialize`](https://spacy.io/api/language#initialize) and setting `n_prompt_examples` to a positive number to
+automatically fetch a few examples for few-shot learning. Set `n_prompt_examples` to `-1` to use all examples as
+part of the few-shot learning prompt.
+
+```ini
+[initialize.components.llm]
+n_prompt_examples = 3
+```
+
 #### <kbd>function</kbd> `task.generate_prompts`
 
 Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.
@@ -389,7 +422,10 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
-If you don't have specific examples to provide to the LLM, you can write definitions for each label and provide them via the `label_definitions` argument. This lets you tell the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name. Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief description along with some examples and counter examples seems to work quite well.
+You can also write definitions for each label and provide them via the `label_definitions` argument. This lets you tell
+the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name.
+Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief
+description along with some examples and counter examples seems to work quite well.
 
 ```ini
 [components.llm.task]
@@ -627,14 +663,10 @@ labels = ["LivesIn", "Visits"]
 To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 
-```json
+```jsonl
 {"text": "Laura bought a house in Boston with her husband Mark.", "ents": [{"start_char": 0, "end_char": 5, "label": "PERSON"}, {"start_char": 24, "end_char": 30, "label": "GPE"}, {"start_char": 48, "end_char": 52, "label": "PERSON"}], "relations": [{"dep": 0, "dest": 1, "relation": "LivesIn"}, {"dep": 2, "dest": 1, "relation": "LivesIn"}]}
 {"text": "Michael travelled through South America by bike.", "ents": [{"start_char": 0, "end_char": 7, "label": "PERSON"}, {"start_char": 26, "end_char": 39, "label": "LOC"}], "relations": [{"dep": 0, "dest": 1, "relation": "Visits"}]}
 ```
-
-Note: the REL task relies on pre-extracted entities to make its prediction.
-Hence, you'll need to add a component that populates `doc.ents` with recognized
-spans to your spaCy pipeline and put it _before_ the REL component.
 
 ```ini
 [components.llm.task]
@@ -644,6 +676,10 @@ labels = ["LivesIn", "Visits"]
 @misc = "spacy.FewShotReader.v1"
 path = "rel_examples.jsonl"
 ```
+
+Note: the REL task relies on pre-extracted entities to make its prediction.
+Hence, you'll need to add a component that populates `doc.ents` with recognized
+spans to your spaCy pipeline and put it _before_ the REL component.
 
 #### spacy.Lemma.v1
 
