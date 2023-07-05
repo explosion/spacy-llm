@@ -1,6 +1,7 @@
 from typing import Any, Callable, Iterable, List, Optional, Type
 
 import jinja2
+from pydantic import BaseModel
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
@@ -9,10 +10,14 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
-from .util.examples import SummarizationExample
 from .util.serialization import ExampleType
 
 _DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization")
+
+
+class SummarizationExample(BaseModel):
+    text: str
+    summary: str
 
 
 @registry.llm_tasks("spacy.Summarization.v1")
@@ -62,6 +67,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         self._examples = examples
         self._max_n_words = max_n_words
         self._field = field
+        self._prompt_examples = examples or []
         if not Doc.has_extension(field):
             Doc.set_extension(field, default=None)
 
@@ -69,14 +75,24 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
+        n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Nothing to initialize for this task.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
+        n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
+            0 by default. Takes all examples if set to -1.
         """
+        for eg in get_examples():
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
+                self._prompt_examples.append(
+                    SummarizationExample(
+                        text=eg.reference.text,
+                        summary=getattr(eg.reference._, self._field),
+                    )
+                )
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
