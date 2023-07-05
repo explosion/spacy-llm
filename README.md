@@ -305,6 +305,39 @@ Moreover, the task may define an optional [`scorer` method](https://spacy.io/api
 It should accept an iterable of `Example`s as input and return a score dictionary.
 If the `scorer` method is defined, `spacy-llm` will call it to evaluate the component.
 
+#### Providing examples for few-shot prompts
+
+All built-in tasks support few-shot prompts, i. e. including examples in a prompt. Examples can be supplied in two ways:
+(1) as a separate file containing only examples or (2) by initializing `llm` with a `get_examples()` callback (like any
+other spaCy pipeline component).
+
+##### (1) Few-shot example file
+
+A file containing examples for few-shot prompting can be configured like this:
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+The supplied file has to conform to the format expected by the required task (see the task documentation further down).
+
+##### (2) Initializing the `llm` component with a `get_examples()` callback
+
+Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for
+[`nlp.initialize`](https://spacy.io/api/language#initialize) and setting `infer_prompt_examples` to a positive number to
+automatically fetch a few examples for few-shot learning. Set `infer_prompt_examples` to `-1` to use all examples as
+part of the few-shot learning prompt.
+
+```ini
+[initialize.components.llm]
+infer_prompt_examples = 3
+```
+
 #### <kbd>function</kbd> `task.generate_prompts`
 
 Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.
@@ -389,17 +422,10 @@ labels = PERSON,ORGANISATION,LOCATION
 path = "ner_examples.yml"
 ```
 
-Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
-and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
-
-```ini
-[initialize.components.llm]
-infer_prompt_examples = 3
-```
-
-or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
-
-If you don't have specific examples to provide to the LLM, you can write definitions for each label and provide them via the `label_definitions` argument. This lets you tell the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name. Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief description along with some examples and counter examples seems to work quite well.
+You can also write definitions for each label and provide them via the `label_definitions` argument. This lets you tell
+the LLM exactly what you're looking for rather than relying on the LLM to interpret its task given just the label name.
+Label descriptions are freeform so you can write whatever you want here, but through some experiments a brief
+description along with some examples and counter examples seems to work quite well.
 
 ```ini
 [components.llm.task]
@@ -569,16 +595,6 @@ labels = ["COMPLIMENT", "INSULT"]
 path = "textcat_examples.json"
 ```
 
-Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
-and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
-
-```ini
-[initialize.components.llm]
-infer_prompt_examples = 3
-```
-
-or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
-
 #### spacy.TextCat.v1
 
 The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
@@ -661,16 +677,6 @@ labels = ["LivesIn", "Visits"]
 path = "rel_examples.jsonl"
 ```
 
-Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
-and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
-
-```ini
-[initialize.components.llm]
-infer_prompt_examples = 3
-```
-
-or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
-
 Note: the REL task relies on pre-extracted entities to make its prediction.
 Hence, you'll need to add a component that populates `doc.ents` with recognized
 spans to your spaCy pipeline and put it _before_ the REL component.
@@ -741,16 +747,6 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 path = "lemma_examples.yml"
 ```
 
-Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for [`nlp.initialize`](https://spacy.io/api/language#initialize) 
-and setting `infer_prompt_examples` to a positive number to automatically fetch a few examples for few-shot learning.
-
-```ini
-[initialize.components.llm]
-infer_prompt_examples = 3
-```
-
-or set this parameter to `-1` to use all examples as part of the few-shot learning prompt.
-
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.
@@ -771,11 +767,12 @@ All built-in models are registered in `llm_models`. If no model is specified, th
 using REST, and accesses the `"gpt-3.5-turbo"` model.
 
 Currently three different approaches to use LLMs are supported:
+
 1. `spacy-llm`s native REST backend. This is the default for all hosted models (e. g. OpenAI, Cohere, Anthropic, ...).
 2. A HuggingFace integration that allows to run a limited set of HF models locally.
-3. A LangChain integration that allows to run any model supported by LangChain  (hosted or locally).
+3. A LangChain integration that allows to run any model supported by LangChain (hosted or locally).
 
-Approaches 1. and 2 are the default for hosted model and local models, respectively. Alternatively you can use LangChain 
+Approaches 1. and 2 are the default for hosted model and local models, respectively. Alternatively you can use LangChain
 to access hosted or local models by specifying one of the models registered with the `langchain.` prefix.
 
 > :question: Why LangChain if there are also are a native REST and a HuggingFace backend? When should I use what?
@@ -789,10 +786,10 @@ to access hosted or local models by specifying one of the models registered with
 > The advantage of implementing our own REST and HuggingFace integrations is that we can ensure a larger degree of stability and robustness, as
 > we can guarantee backwards-compatibility and more smoothly integrated error handling.
 >
-> If however there are features or APIs not natively covered by `spacy-llm`, it's trivial to utilize LangChain to cover 
+> If however there are features or APIs not natively covered by `spacy-llm`, it's trivial to utilize LangChain to cover
 > this - and easy to customize the prompting mechanism, if so required.
 
-Note that when using hosted services, you have to ensure that the proper API keys are set as environment variables as 
+Note that when using hosted services, you have to ensure that the proper API keys are set as environment variables as
 described by the corresponding provider's documentation.
 
 E. g. when using OpenAI, you have to get an API key from openai.com, and ensure that the keys are set as
@@ -803,11 +800,14 @@ export OPENAI_API_KEY="sk-..."
 export OPENAI_API_ORG="org-..."
 ```
 
-For Cohere it's 
+For Cohere it's
+
 ```shell
 export CO_API_KEY="..."
 ```
+
 and for Anthropic
+
 ```shell
 export ANTHROPIC_API_KEY="..."
 ```
@@ -817,6 +817,7 @@ export ANTHROPIC_API_KEY="..."
 OpenAI's `gpt-4` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.gpt-4.v1"
@@ -824,20 +825,20 @@ name = "gpt-4"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type             | Default | Description                                                                                                         |
-| ----------- | ---------------- |---------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`            | `"gpt-4"`  | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`           | `True`  | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`            | `3`     | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`            | `30`    | Timeout for API request in seconds.                                                                                 |
-
+| Argument    | Type                                                            | Default   | Description                                                                                                          |
+| ----------- | --------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]` | `"gpt-4"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                                                | `{}`      | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                                          | `True`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                                           | `3`       | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                                           | `30`      | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.gpt-3-5.v1
 
 OpenAI's `gpt-3-5` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.gpt-3-5.v1"
@@ -845,20 +846,20 @@ name = "gpt-3.5-turbo"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                                                                                             | Default         | Description                                                                                                         |
-| ----------- |--------------------------------------------------------------------------------------------------|-----------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]` | `"gpt-3.5-turbo"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`                                                                                 | `{}`            | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`                                                                                           | `True`          | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                                                                                            | `3`             | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                                                                                            | `30`            | Timeout for API request in seconds.                                                                                 |
-
+| Argument    | Type                                                                                            | Default           | Description                                                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]` | `"gpt-3.5-turbo"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                                                                                | `{}`              | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                                                                          | `True`            | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                                                                           | `3`               | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                                                                           | `30`              | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.text-davinci.v1
 
 OpenAI's `text-davinci` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.text-davinci.v1"
@@ -866,19 +867,20 @@ name = "text-davinci-003"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                                                                                             | Default              | Description                                                                                                         |
-| ----------- |--------------------------------------------------------------------------------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["text-davinci-002", "text-davinci-003"]` | `"text-davinci-003"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`                                                                                 | `{}`                 | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`                                                                                           | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                                                                                            | `3`                  | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                                                                                            | `30`                 | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                                              | Default              | Description                                                                                                          |
+| ----------- | ------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["text-davinci-002", "text-davinci-003"]` | `"text-davinci-003"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                                  | `{}`                 | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                            | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                             | `3`                  | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                             | `30`                 | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.code-davinci.v1
 
 OpenAI's `code-davinci` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.code-davinci.v1"
@@ -886,19 +888,20 @@ name = "code-davinci-002"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                                             | Default              | Description                                                                                                         |
-| ----------- |--------------------------------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["code-davinci-002"]` | `"code-davinci-002"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`                                 | `{}`                 | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`                                           | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                                            | `3`                  | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                                            | `30`                 | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                          | Default              | Description                                                                                                          |
+| ----------- | ----------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["code-davinci-002"]` | `"code-davinci-002"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`              | `{}`                 | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                        | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                         | `3`                  | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                         | `30`                 | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.text-curie.v1
 
 OpenAI's `text-curie` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.text-curie.v1"
@@ -906,19 +909,20 @@ name = "text-curie-001"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                                             | Default              | Description                                                                                                         |
-| ----------- |--------------------------------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["text-curie-001"]` | `"text-curie-001"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`                                 | `{}`                 | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`                                           | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                                            | `3`                  | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                                            | `30`                 | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                        | Default            | Description                                                                                                          |
+| ----------- | --------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["text-curie-001"]` | `"text-curie-001"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`            | `{}`               | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                      | `True`             | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                       | `3`                | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                       | `30`               | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.text-babbage.v1
 
 OpenAI's `text-babbage` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.text-babbage.v1"
@@ -926,19 +930,20 @@ name = "text-babbage-001"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                                             | Default              | Description                                                                                                         |
-| ----------- |--------------------------------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["text-babbage-001"]` | `"text-babbage-001"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`                                 | `{}`                 | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`                                           | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                                            | `3`                  | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                                            | `30`                 | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                          | Default              | Description                                                                                                          |
+| ----------- | ----------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["text-babbage-001"]` | `"text-babbage-001"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`              | `{}`                 | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                        | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                         | `3`                  | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                         | `30`                 | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.text-ada.v1
 
 OpenAI's `text-ada` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.text-ada.v1"
@@ -946,19 +951,20 @@ name = "text-ada-001"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                      | Default          | Description                                                                                                         |
-| ----------- |---------------------------|------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["text-ada-001"]` | `"text-ada-001"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`          | `{}`             | Further configuration passed on to the model.                                                                       |
+| Argument    | Type                      | Default          | Description                                                                                                          |
+| ----------- | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["text-ada-001"]` | `"text-ada-001"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`          | `{}`             | Further configuration passed on to the model.                                                                        |
 | `strict`    | `bool`                    | `True`           | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                     | `3`              | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                     | `30`             | Timeout for API request in seconds.                                                                                 |
+| `max_tries` | `int`                     | `3`              | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                     | `30`             | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.davinci.v1
 
 OpenAI's `davinci` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.davinci.v1 "
@@ -966,19 +972,20 @@ name = "davinci"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                 | Default          | Description                                                                                                         |
-| ----------- |----------------------|------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["davinci"]` | `"davinci"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`     | `{}`             | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`               | `True`           | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                | `3`              | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                | `30`             | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                 | Default     | Description                                                                                                          |
+| ----------- | -------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["davinci"]` | `"davinci"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`     | `{}`        | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`               | `True`      | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                | `3`         | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                | `30`        | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.curie.v1
 
 OpenAI's `curie` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.curie.v1 "
@@ -986,20 +993,20 @@ name = "curie"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default   | Description                                                                                                         |
-| ----------- |--------------------|-----------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["curie"]` | `"curie"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`      | Further configuration passed on to the model.                                                                       |
+| Argument    | Type               | Default   | Description                                                                                                          |
+| ----------- | ------------------ | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["curie"]` | `"curie"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`   | `{}`      | Further configuration passed on to the model.                                                                        |
 | `strict`    | `bool`             | `True`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`       | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`      | Timeout for API request in seconds.                                                                                 |
-
+| `max_tries` | `int`              | `3`       | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`              | `30`      | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.babbage.v1
 
 OpenAI's `babbage` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.babbage.v1 "
@@ -1007,19 +1014,20 @@ name = "babbage"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default   | Description                                                                                                         |
-| ----------- |--------------------|-----------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["babbage"]` | `"babbage"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`      | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`       | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`      | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                 | Default     | Description                                                                                                          |
+| ----------- | -------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["babbage"]` | `"babbage"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`     | `{}`        | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`               | `True`      | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                | `3`         | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                | `30`        | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.ada.v1
 
 OpenAI's `ada` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.ada.v1 "
@@ -1027,19 +1035,20 @@ name = "ada"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default   | Description                                                                                                         |
-| ----------- |--------------------|-----------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["ada"]` | `"ada"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`      | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`       | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`      | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type             | Default | Description                                                                                                          |
+| ----------- | ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["ada"]` | `"ada"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]` | `{}`    | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`           | `True`  | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`            | `3`     | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`            | `30`    | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.command.v1
 
 Cohere's `command` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.command.v1 "
@@ -1047,20 +1056,20 @@ name = "command"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default     | Description                                                                                                         |
-| ----------- |--------------------|-------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["command", "command-light", "command-light-nightly", "command-nightly"]` | `"command"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`        | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`      | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`         | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`        | Timeout for API request in seconds.                                                                                 |
-
+| Argument    | Type                                                                              | Default     | Description                                                                                                          |
+| ----------- | --------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["command", "command-light", "command-light-nightly", "command-nightly"]` | `"command"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                                                                  | `{}`        | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                                                            | `True`      | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                                                             | `3`         | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                                                             | `30`        | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.claude-1.v1
 
 Anthropic's `claude-1` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.claude-1.v1 "
@@ -1068,20 +1077,20 @@ name = "claude-1"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default      | Description                                                                                                         |
-| ----------- |--------------------|--------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["claude-1", "claude-1-100k"]` | `"claude-1"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`         | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`       | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`          | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`         | Timeout for API request in seconds.                                                                                 |
-
+| Argument    | Type                                   | Default      | Description                                                                                                          |
+| ----------- | -------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["claude-1", "claude-1-100k"]` | `"claude-1"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                       | `{}`         | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                 | `True`       | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                  | `3`          | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                  | `30`         | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.claude-instant-1.v1
 
 Anthropic's `claude-instant-1` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.claude-instant-1.v1 "
@@ -1089,19 +1098,20 @@ name = "claude-instant-1"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default              | Description                                                                                                         |
-| ----------- |--------------------|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["claude-instant-1", "claude-instant-1-100k"]` | `"claude-instant-1"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`                 | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`                  | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`                 | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                                                   | Default              | Description                                                                                                          |
+| ----------- | ------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["claude-instant-1", "claude-instant-1-100k"]` | `"claude-instant-1"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                                       | `{}`                 | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                                 | `True`               | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                                  | `3`                  | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                                  | `30`                 | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.claude-instant-1-1.v1
 
 Anthropic's `claude-instant-1.1` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.claude-instant-1-1.v1 "
@@ -1109,20 +1119,20 @@ name = "claude-instant-1.1"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default               | Description                                                                                                         |
-| ----------- |--------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["claude-instant-1.1", "claude-instant-1.1-100k"]` | `"claude-instant-1.1"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`                  | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`                | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`                   | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`                  | Timeout for API request in seconds.                                                                                 |
-
+| Argument    | Type                                                       | Default                | Description                                                                                                          |
+| ----------- | ---------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["claude-instant-1.1", "claude-instant-1.1-100k"]` | `"claude-instant-1.1"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                                           | `{}`                   | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                                     | `True`                 | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                                      | `3`                    | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                                      | `30`                   | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.claude-1-0.v1
 
 Anthropic's `claude-1.0` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.claude-1-0.v1 "
@@ -1130,19 +1140,20 @@ name = "claude-1.0"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type               | Default               | Description                                                                                                         |
-| ----------- |--------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["claude-1.0"]` | `"claude-1.0"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`   | `{}`                  | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`             | `True`                | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`              | `3`                   | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`              | `30`                  | Timeout for API request in seconds.                                                                                 |
+| Argument    | Type                    | Default        | Description                                                                                                          |
+| ----------- | ----------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["claude-1.0"]` | `"claude-1.0"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`        | `{}`           | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                  | `True`         | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                   | `3`            | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                   | `30`           | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.claude-1-2.v1
 
 Anthropic's `claude-1.2` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.claude-1-2.v1 "
@@ -1150,19 +1161,20 @@ name = "claude-1.2"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                    | Default        | Description                                                                                                         |
-| ----------- |-------------------------|----------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["claude-1.2"]` | `"claude-1.2"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`        | `{}`           | Further configuration passed on to the model.                                                                       |
+| Argument    | Type                    | Default        | Description                                                                                                          |
+| ----------- | ----------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["claude-1.2"]` | `"claude-1.2"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`        | `{}`           | Further configuration passed on to the model.                                                                        |
 | `strict`    | `bool`                  | `True`         | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                   | `3`            | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                   | `30`           | Timeout for API request in seconds.                                                                                 |
+| `max_tries` | `int`                   | `3`            | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                   | `30`           | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.claude-1-3.v1
 
 Anthropic's `claude-1.3` model family.
 
 Example config:
+
 ```ini
 [components.llm.model]
 @llm_models = "spacy.claude-1-3.v1 "
@@ -1170,15 +1182,13 @@ name = "claude-1.3"
 config = {"temperature": 0.3}
 ```
 
-| Argument    | Type                    | Default        | Description                                                                                                         |
-| ----------- |-------------------------|----------------|---------------------------------------------------------------------------------------------------------------------|
-| `name`      | `Literal["claude-1.3", "claude-1.3-100k"]` | `"claude-1.3"` | Model name, i. e. any supported variant for this particular model.                                           |
-| `config`    | `Dict[Any, Any]`        | `{}`           | Further configuration passed on to the model.                                                                       |
-| `strict`    | `bool`                  | `True`         | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
-| `max_tries` | `int`                   | `3`            | Max. number of tries for API request.                                                                               |
-| `timeout`   | `int`                   | `30`           | Timeout for API request in seconds.                                                                                 |
-
-
+| Argument    | Type                                       | Default        | Description                                                                                                          |
+| ----------- | ------------------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`      | `Literal["claude-1.3", "claude-1.3-100k"]` | `"claude-1.3"` | Model name, i. e. any supported variant for this particular model.                                                   |
+| `config`    | `Dict[Any, Any]`                           | `{}`           | Further configuration passed on to the model.                                                                        |
+| `strict`    | `bool`                                     | `True`         | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. |
+| `max_tries` | `int`                                      | `3`            | Max. number of tries for API request.                                                                                |
+| `timeout`   | `int`                                      | `30`           | Timeout for API request in seconds.                                                                                  |
 
 #### spacy.Dolly.v1
 
@@ -1206,11 +1216,11 @@ Example config block:
 name = "dolly-v2-3b"
 ```
 
-| Argument      | Type             | Default | Description                                                                                      |
-| ------------- | ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `name`        | `Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]`            |         | The name of a Dolly model that is supported (e. g. "dolly-v2-3b" or "dolly-v2-12b").             |
-| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
-| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                               |
+| Argument      | Type                                                    | Default | Description                                                                                      |
+| ------------- | ------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `name`        | `Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]` |         | The name of a Dolly model that is supported (e. g. "dolly-v2-3b" or "dolly-v2-12b").             |
+| `config_init` | `Dict[str, Any]`                                        | `{}`    | Further configuration passed on to the construction of the model with `transformers.pipeline()`. |
+| `config_run`  | `Dict[str, Any]`                                        | `{}`    | Further configuration used during model inference.                                               |
 
 Supported models (see the [Databricks models page](https://huggingface.co/databricks) on Hugging Face for details):
 
@@ -1247,11 +1257,11 @@ Example config block:
 name = "stablelm-tuned-alpha-7b"
 ```
 
-| Argument      | Type             | Default | Description                                                                                                                  |
-| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | `Literal["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]`            |         | The name of a StableLM model that is supported (e. g. "stablelm-tuned-alpha-7b").                                            |
-| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
-| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
+| Argument      | Type                                                                                                                | Default | Description                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | `Literal["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` |         | The name of a StableLM model that is supported (e. g. "stablelm-tuned-alpha-7b").                                            |
+| `config_init` | `Dict[str, Any]`                                                                                                    | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]`                                                                                                    | `{}`    | Further configuration used during model inference.                                                                           |
 
 See the [Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha) for details.
 
@@ -1289,18 +1299,17 @@ Example config block:
 name = "open_llama_3b_350bt_preview"
 ```
 
-| Argument      | Type             | Default | Description                                                                                                                  |
-| ------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | `Literal["open_llama_3b_350bt_preview", "open_llama_3b_600bt_preview", "open_llama_7b_400bt_preview", "open_llama_7b_600bt_preview"]`            |         | The name of a OpenLLaMA model that is supported (e. g. "open_llama_3b_350bt_preview").                                       |
-| `config_init` | `Dict[str, Any]` | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
-| `config_run`  | `Dict[str, Any]` | `{}`    | Further configuration used during model inference.                                                                           |
+| Argument      | Type                                                                                                                                  | Default | Description                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | `Literal["open_llama_3b_350bt_preview", "open_llama_3b_600bt_preview", "open_llama_7b_400bt_preview", "open_llama_7b_600bt_preview"]` |         | The name of a OpenLLaMA model that is supported (e. g. "open_llama_3b_350bt_preview").                                       |
+| `config_init` | `Dict[str, Any]`                                                                                                                      | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]`                                                                                                                      | `{}`    | Further configuration used during model inference.                                                                           |
 
 See the [OpenLM Research OpenLLaMA GitHub repo](https://github.com/openlm-research/open_llama) for details.
 
 Note that Hugging Face will download this model the first time you use it - you can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
-
 
 #### LangChain models
 
@@ -1311,11 +1320,12 @@ python -m pip install "langchain==0.0.191"
 # Or install with spacy-llm directly
 python -m pip install "spacy-llm[extras]"
 ```
+
 Note that LangChain currently only supports Python 3.9 and beyond.
 
 LangChain models in `spacy-llm` work slightly differently. `langchain`'s models are parsed automatically, each
-LLM class in `langchain` has one entry in `spacy-llm`'s registry. As `langchain`'s design has one class per API and 
-not per model, this results in registry entries like `langchain.OpenAI.v1` - i. e. there is one registry entry per API 
+LLM class in `langchain` has one entry in `spacy-llm`'s registry. As `langchain`'s design has one class per API and
+not per model, this results in registry entries like `langchain.OpenAI.v1` - i. e. there is one registry entry per API
 and not per model (family), as for the REST- and HuggingFace-based entries.
 
 The name of the model to be used has to be passed in via the `name` attribute.
@@ -1331,7 +1341,7 @@ config = {"temperature": 0.3}
 ```
 
 | Argument | Type                                                                           | Default | Description                                                                          |
-|----------| ------------------------------------------------------------------------------ | ------- |--------------------------------------------------------------------------------------|
+| -------- | ------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------ |
 | `name`   | `str`                                                                          |         | The name of a mdodel supported by LangChain for this API.                            |
 | `config` | `Dict[Any, Any]`                                                               | `{}`    | Configuration passed on to the LangChain model.                                      |
 | `query`  | `Optional[Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]]` | `None`  | Function that executes the prompts. If `None`, defaults to `spacy.CallLangChain.v1`. |
