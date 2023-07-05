@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -200,7 +201,7 @@ def test_ner_config(cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -827,3 +828,55 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     nlp2.from_disk(path)
 
     assert task1._label_dict == task2._label_dict == labels
+
+
+def test_label_inconsistency():
+    """Test whether inconsistency between specified labels and labels in examples is detected."""
+    cfg = f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v2"
+    labels = ["PERSON", "LOCATION"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
+
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+    """
+
+    config = Config().from_str(cfg)
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Examples contain labels that are not specified in the task configuration. The latter contains the "
+            "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
+            "['TECH']. Please ensure your label specification and example labels are consistent."
+        ),
+    ):
+        nlp = assemble_from_config(config)
+
+    prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
+    assert len(prompt_examples) == 2
+    assert prompt_examples[0].text == "Jack and Jill went up the hill."
+    assert prompt_examples[0].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
+    assert (
+        prompt_examples[1].text
+        == "Jack and Jill went up the hill and spaCy is a great tool."
+    )
+    assert prompt_examples[1].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
