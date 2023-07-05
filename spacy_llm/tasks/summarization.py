@@ -78,7 +78,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Nothing to initialize for this task.
+        """Initializes prompt examples from Doc examples.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.

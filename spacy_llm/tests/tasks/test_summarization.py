@@ -32,7 +32,7 @@ def zeroshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.Summarization.v1"
-    max_n_words = 10
+    max_n_words = 20
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -55,7 +55,7 @@ def fewshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.Summarization.v1"
-    max_n_words = 10
+    max_n_words = 20
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -83,7 +83,7 @@ def ext_template_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.Summarization.v1"
-    max_n_words = 10
+    max_n_words = 20
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
@@ -181,7 +181,7 @@ def test_summarization_predict(cfg_string, example_text, request):
     if "ext" not in orig_cfg_string:
         assert (
             len(nlp(doc._.summary))
-            <= orig_config["components"]["llm"]["task"]["max_n_words"] * 2
+            <= orig_config["components"]["llm"]["task"]["max_n_words"] * 1.5
         )
 
 
@@ -230,13 +230,12 @@ def test_jinja_template_rendering_without_examples(example_text):
         prompt.strip()
         == f"""
 You are an expert summarization system. Your task is to accept Text as input and summarize the Text in a concise way.
-The summary must not contain more than 10 words.
-Here is the text that needs to be summarized:
+The summary must not, under any circumstances, contain more than 10 words.
+Here is the Text that needs to be summarized:
 '''
 {example_text}
 '''
-Summary:
-""".strip()
+Summary:""".strip()
     )
 
 
@@ -263,9 +262,10 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
 
     assert (
         prompt.strip()
-        == """
+        == f"""
 You are an expert summarization system. Your task is to accept Text as input and summarize the Text in a concise way.
-The summary must not contain more than 10 words.Below are some examples (only use these as a guide):
+The summary must not, under any circumstances, contain more than 10 words.
+Below are some examples (only use these as a guide):
 
 Text:
 '''
@@ -275,9 +275,7 @@ The UN was established after World War II with the aim of preventing future worl
 '''
 Summary:
 '''
-The United Nations, referred to informally as the UN, is an intergovernmental organization whose stated purposes are to maintain international peace and security, develop friendly relations among nations, achieve international cooperation, and serve as a centre for harmonizing the actions of nations. It is the world's largest international organization. The UN is headquartered on international territory in New York City, and the organization has other offices in Geneva, Nairobi, Vienna, and The Hague, where the International Court of Justice is headquartered.
-
-The UN was established after World War II with the aim of preventing future world wars, and succeeded the League of Nations, which was characterized as ineffective. On 25 April 1945, 50 nations met in San Francisco, California for a conference and started drafting the UN Charter, which was adopted on 25 June 1945. The charter took effect on 24 October 1945, when the UN began operations. The organization's objectives, as defined by its charter, include maintaining international peace and security, protecting human rights, delivering humanitarian aid, promoting sustainable development, and upholding international law. At its founding, the UN had 51 member states; as of 2023, it has 193 – almost all of the world's sovereign states.
+UN is an intergovernmental organization to foster international peace, security, and cooperation. Established after WW2 with 51 members, it now has 193.
 '''
 
 Text:
@@ -290,18 +288,15 @@ Organisms, or the individual entities of life, are generally thought to be open 
 '''
 Summary:
 '''
-Life is a quality that distinguishes matter that has biological processes, such as signaling and self-sustaining processes, from matter that does not, and is defined by the capacity for growth, reaction to stimuli, metabolism, energy transformation, and reproduction. Various forms of life exist, such as plants, animals, fungi, protists, archaea, and bacteria. Biology is the science that studies life.
-
-The gene is the unit of heredity, whereas the cell is the structural and functional unit of life. There are two kinds of cells, prokaryotic and eukaryotic, both of which consist of cytoplasm enclosed within a membrane and contain many biomolecules such as proteins and nucleic acids. Cells reproduce through a process of cell division, in which the parent cell divides into two or more daughter cells and passes its genes onto a new generation, sometimes producing genetic variation.
-
-Organisms, or the individual entities of life, are generally thought to be open systems that maintain homeostasis, are composed of cells, have a life cycle, undergo metabolism, can grow, adapt to their environment, respond to stimuli, reproduce and evolve over multiple generations. Other definitions sometimes include non-cellular life forms such as viruses and viroids, but they are usually excluded because they do not function on their own; rather, they exploit the biological processes of hosts.
+Life is a quality defined by biological processes, including reproduction, genetics, and metabolism. There are two types of cells and organisms that can grow, respond, reproduce, and evolve.
 '''
 
-Here is the text that needs to be summarized:
+Here is the Text that needs to be summarized:
 '''
-The atmosphere of Earth is the layer of gases, known collectively as air, retained by Earth's gravity that surrounds the planet and forms its planetary atmosphere. The atmosphere of Earth creates pressure, absorbs most meteoroids and ultraviolet solar radiation, warms the surface through heat retention (greenhouse effect), allowing life and liquid water to exist on the Earth's surface, and reduces temperature extremes between day and night (the diurnal temperature variation).
+{example_text}
 '''
-Summary:""".strip()
+Summary:
+""".strip()
     )
 
 

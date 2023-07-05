@@ -1,10 +1,11 @@
 You are an expert summarization system. Your task is to accept Text as input and summarize the Text in a concise way.
 {%- if max_n_words -%}
 {# whitespace #}
-The summary must not contain more than {{ max_n_words }} words.
+The summary must not, under any circumstances, contain more than {{ max_n_words }} words.
 {%- endif -%}
 {# whitespace #}
 {%- if examples -%}
+{# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {%- for example in examples -%}
@@ -15,14 +16,14 @@ Text:
 '''
 Summary:
 '''
-{{ example.text }}
+{{ example.summary }}
 '''
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
 {%- endif -%}
 {# whitespace #}
-Here is the text that needs to be summarized:
+Here is the Text that needs to be summarized:
 '''
 {{ text }}
 '''
