@@ -13,6 +13,7 @@ openai>=0.27; python_version>="3.9"
 # Necessary for running all local models on GPU.
 transformers[sentencepiece]>=4.0.0,<4.30
 torch
+einops>=0.4
 
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
