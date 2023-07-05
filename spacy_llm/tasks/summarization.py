@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Callable, Iterable, List, Optional, Type
 
 import jinja2
@@ -68,6 +69,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         self._max_n_words = max_n_words
         self._field = field
         self._prompt_examples = examples or []
+        self._are_example_summaries_checked = False
         if not Doc.has_extension(field):
             Doc.set_extension(field, default=None)
 
@@ -94,7 +96,31 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
                     )
                 )
 
+    def _check_prompt_example_summary_len(self) -> None:
+        """Checks whether summaries of prompt examples are of expected lengths. Warns if they aren't."""
+        if self._max_n_words is None:
+            return
+
+        for pr_ex in self._prompt_examples:
+            len_summary = len(pr_ex.summary.split())
+            len_text = len(pr_ex.text.split())
+            if len_summary >= len_text:
+                warnings.warn(
+                    f"The provided example '{pr_ex.text[:30]}...' has a summary of length {len_summary} and a text "
+                    f"of length {len_text}. Ensure that your examples' summaries are shorter than their original "
+                    f"texts."
+                )
+            if len_summary > self._max_n_words:
+                warnings.warn(
+                    f"The provided example '{pr_ex.text[:20]}...' has a summary of length {len_summary}, but "
+                    f"`max_n_words` == {self._max_n_words}. If your examples are longer than they should be, the "
+                    f"LLM will likely produce responses that are too long."
+                )
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+        if not self._are_example_summaries_checked:
+            self._check_prompt_example_summary_len()
+
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         for doc in docs:

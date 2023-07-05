@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import regex
 import spacy
 from confection import Config
 from spacy.util import make_tempdir
@@ -175,10 +176,23 @@ def test_summarization_predict(cfg_string, example_text, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
-    doc = nlp(example_text)
+
+    # One of the examples exceeds the set max_n_words, so we expect a warning to be emitted.
+    if orig_cfg_string == "fewshot_cfg_string":
+        with pytest.warns(
+            UserWarning,
+            match=regex.escape(
+                "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
+            ),
+        ):
+            doc = nlp(example_text)
+    else:
+        doc = nlp(example_text)
+
     # Check whether a non-empty summary was written and we are somewhat close to the desired upper length limit.
     assert 0 < len(doc._.summary)
     if "ext" not in orig_cfg_string:
+        nlp.select_pipes(disable=["llm"])
         assert (
             len(nlp(doc._.summary))
             <= orig_config["components"]["llm"]["task"]["max_n_words"] * 1.5
@@ -205,12 +219,24 @@ def test_summarization_io(cfg_string, example_text, request):
         nlp.to_disk(tmpdir)
         nlp2 = spacy.load(tmpdir)
     assert nlp2.pipe_names == ["llm"]
-    doc = nlp2(example_text)
+
+    if orig_cfg_string == "fewshot_cfg_string":
+        with pytest.warns(
+            UserWarning,
+            match=regex.escape(
+                "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
+            ),
+        ):
+            doc = nlp2(example_text)
+    else:
+        doc = nlp2(example_text)
+
+    nlp2.select_pipes(disable=["llm"])
     assert 0 < len(nlp2(doc._.summary))
     if "ext" not in orig_cfg_string:
         assert (
             len(nlp2(doc._.summary))
-            <= orig_config["components"]["llm"]["task"]["max_n_words"] * 2
+            <= orig_config["components"]["llm"]["task"]["max_n_words"] * 1.5
         )
 
 
@@ -257,14 +283,21 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
     doc = nlp.make_doc(example_text)
 
     examples = fewshot_reader(examples_path)
-    llm_ner = make_summarization_task(examples=examples, max_n_words=10)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    llm_ner = make_summarization_task(examples=examples, max_n_words=20)
+
+    with pytest.warns(
+        UserWarning,
+        match=regex.escape(
+            "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
+        ),
+    ):
+        prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
         == f"""
 You are an expert summarization system. Your task is to accept Text as input and summarize the Text in a concise way.
-The summary must not, under any circumstances, contain more than 10 words.
+The summary must not, under any circumstances, contain more than 20 words.
 Below are some examples (only use these as a guide):
 
 Text:
@@ -275,7 +308,7 @@ The UN was established after World War II with the aim of preventing future worl
 '''
 Summary:
 '''
-UN is an intergovernmental organization to foster international peace, security, and cooperation. Established after WW2 with 51 members, it now has 193.
+UN is an intergovernmental organization to foster international peace, security, and cooperation. Established after WW2 with 51 members, now 193.
 '''
 
 Text:
