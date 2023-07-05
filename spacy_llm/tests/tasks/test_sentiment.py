@@ -7,7 +7,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, file_reader
 
-from ...tasks import make_lemma_task
+from ...tasks import make_sentiment_task
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -28,7 +28,7 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Sentiment.v1"
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -50,11 +50,11 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Sentiment.v1"
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "lemma_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "sentiment.yml"))}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -77,11 +77,11 @@ def ext_template_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Sentiment.v1"
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "lemma.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "sentiment.jinja2"))}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -99,7 +99,7 @@ def ext_template_cfg_string():
         "ext_template_cfg_string",
     ],
 )
-def test_lemma_config(cfg_string, request):
+def test_sentiment_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
@@ -124,20 +124,17 @@ def test_lemma_config(cfg_string, request):
         "ext_template_cfg_string",
     ],
 )
-def test_lemma_predict(cfg_string, request):
-    """Use OpenAI to get zero-shot LEMMA results.
+def test_sentiment_predict(cfg_string, request):
+    """Use OpenAI to get zero-shot sentiment results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
-    lemmas = [str(token.lemma_) for token in nlp("I've watered the plants.")]
-    # Compare lemmas for correctness, if we are not using the external dummy template.
     if cfg_string != "ext_template_cfg_string":
-        assert lemmas in (
-            ["-PRON-", "have", "water", "the", "plant", "."],
-            ["I", "have", "water", "the", "plant", "."],
-        )
+        assert nlp("This is horrible.")._.sentiment == 0
+        assert 0 < nlp("This is meh.")._.sentiment <= 0.5
+        assert nlp("This is perfect.")._.sentiment == 1
 
 
 @pytest.mark.external
@@ -158,12 +155,9 @@ def test_lemma_io(cfg_string, request):
         nlp.to_disk(tmpdir)
         nlp2 = spacy.load(tmpdir)
     assert nlp2.pipe_names == ["llm"]
-    lemmas = [str(token.lemma_) for token in nlp2("I've watered the plants.")]
+    score = nlp2("This is perfect.")._.sentiment
     if cfg_string != "ext_template_cfg_string":
-        assert lemmas in (
-            ["-PRON-", "have", "water", "the", "plant", "."],
-            ["I", "have", "water", "the", "plant", "."],
-        )
+        assert score == 1
 
 
 def test_jinja_template_rendering_without_examples():
@@ -173,40 +167,30 @@ def test_jinja_template_rendering_without_examples():
     with annoying newlines and spaces at the edge of the text.
     """
     nlp = spacy.blank("xx")
-    text = "Alice and Bob went to the supermarket"
+    text = "They're indifferent."
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(examples=None)
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    sentiment_task = make_sentiment_task(examples=None)
+    prompt = list(sentiment_task.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
-        == f"""
-You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
-Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
-Output each original word on a new line, followed by a colon and the word's lemma - like this:
-'''
-Word1: Lemma of Word1
-Word2: Lemma of Word2
-'''
-Include the final punctuation token in this list.
-Prefix with your output with "Lemmatized text".
+        == f"""Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 is strictly positive, 0 is strictly negative.
 
-
-Here is the text that needs to be lemmatized:
+Text:
 '''
 {text}
 '''
-""".strip()
+Answer:""".strip()
     )
 
 
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "lemma_examples.json"),
-        str(EXAMPLES_DIR / "lemma_examples.yml"),
-        str(EXAMPLES_DIR / "lemma_examples.jsonl"),
+        str(EXAMPLES_DIR / "sentiment.json"),
+        str(EXAMPLES_DIR / "sentiment.yml"),
+        str(EXAMPLES_DIR / "sentiment.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
@@ -216,107 +200,62 @@ def test_jinja_template_rendering_with_examples(examples_path):
     with annoying newlines and spaces at the edge of the text.
     """
     nlp = spacy.blank("xx")
-    text = "Alice and Bob went to the supermarket."
+    text = "It was the happiest day of her life."
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    sentiment_task = make_sentiment_task(examples=fewshot_reader(examples_path))
+    prompt = list(sentiment_task.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
-        == f"""
-You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
-Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
-Output each original word on a new line, followed by a colon and the word's lemma - like this:
-'''
-Word1: Lemma of Word1
-Word2: Lemma of Word2
-'''
-Include the final punctuation token in this list.
-Prefix with your output with "Lemmatized text".
-
+        == """Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 is strictly positive, 0 is strictly negative.
 Below are some examples (only use these as a guide):
 
 Text:
 '''
-The arc of the moral universe is long, but it bends toward justice.
+This is horrifying.
 '''
-Lemmas:
-'''
-The: The
-arc: arc
-of: of
-the: the
-moral: moral
-universe: universe
-is: be
-long: long
-,: ,
-but: but
-it: it
-bends: bend
-toward: toward
-justice: justice
-.: .
-'''
+Answer: 0.0
 
 Text:
 '''
-Life can only be understood backwards; but it must be lived forwards.
+This is underwhelming.
 '''
-Lemmas:
-'''
-Life: Life
-can: can
-only: only
-be: be
-understood: understand
-backwards: backwards
-;: ;
-but: but
-it: it
-must: must
-be: be
-lived: lived
-forwards: forwards
-.: .
-'''
+Answer: 0.25
 
 Text:
 '''
-I'm buying ice cream.
+This is ok.
 '''
-Lemmas:
-'''
-I: I
-'m: be
-buying: buy
-ice: ice
-cream: cream
-.: .
-'''
+Answer: 0.5
 
-Here is the text that needs to be lemmatized:
+Text:
 '''
-{text}
+I'm looking forward to this!
 '''
-""".strip()
+Answer: 1.0
+
+Text:
+'''
+It was the happiest day of her life.
+'''
+Answer:""".strip()
     )
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "lemma.jinja2")
+    template_path = str(TEMPLATES_DIR / "sentiment.jinja2")
     template = file_reader(template_path)
-    text = "Alice and Bob went to the supermarket"
+    text = "There is a silver lining."
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(template=template)
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    sentiment_task = make_sentiment_task(template=template)
+    prompt = list(sentiment_task.generate_prompts([doc]))[0]
     assert (
         prompt.strip()
         == f"""
-This is a test LEMMA template.
-Here is the text: {text}
+Text: {text}
+Sentiment:
 """.strip()
     )

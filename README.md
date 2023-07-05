@@ -711,6 +711,44 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 path = "lemma_examples.yml"
 ```
 
+#### spacy.Sentiment.v1
+
+Performs sentiment analysis on provided texts. Scores between 0 and 1 are stored in `Doc._.sentiment` - the higher, the
+more positive. Note in cases of parsing issues (e. g. in case of unexpected LLM responses) the value might be `None0-`
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Sentiment.v2"
+examples = null
+```
+
+| Argument                  | Type                                    | Default                                                  | Description                                                                                                                                           |
+| ------------------------- | --------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                | `str`                                   | [ner.v2.jinja](./spacy_llm/tasks/templates/ner.v2.jinja) | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.                |
+| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                   | Optional function that generates examples for few-shot learning.                                                                                      |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: "This is horrifying."
+  score: 0
+- text: "This is underwhelming."
+  score: 0.25
+- text: "This is ok."
+  score: 0.5
+- text: "I'm looking forward to this!"
+  score: 1.0
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Sentiment.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "sentiment_examples.yml"
+```
+
 #### spacy.NoOp.v1
 
 This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.

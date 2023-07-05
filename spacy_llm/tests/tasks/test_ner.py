@@ -156,7 +156,7 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "ner_template.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "ner.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -656,7 +656,7 @@ def test_example_not_following_basemodel():
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "ner_template.jinja2")
+    template_path = str(TEMPLATES_DIR / "ner.jinja2")
     template = file_reader(template_path)
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
