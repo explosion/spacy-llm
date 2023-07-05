@@ -3,7 +3,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
 from spacy.language import Language
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 from wasabi import msg
 
@@ -45,6 +45,7 @@ def _preannotate(doc: Union[Doc, RELExample]) -> str:
     text = doc.text
 
     for i, ent in enumerate(doc.ents):
+        assert isinstance(ent, Span)
         end = ent.end_char
         before, after = text[: end + offset], text[end + offset :]
 
@@ -93,7 +94,7 @@ def make_rel_task(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=rel_examples,
+        prompt_examples=rel_examples,
         normalizer=normalizer,
         verbose=verbose,
     )
@@ -105,7 +106,7 @@ class RELTask(SerializableTask[RELExample]):
         labels: List[str] = [],
         template: str = _DEFAULT_REL_TEMPLATE,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[List[RELExample]] = None,
+        prompt_examples: Optional[List[RELExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         verbose: bool = False,
     ):
@@ -118,17 +119,19 @@ class RELTask(SerializableTask[RELExample]):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
+        prompt_examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
         self._template = template
         self._label_definitions = label_definitions
-        self._examples = examples
+        self._prompt_examples = prompt_examples or []
         self._verbose = verbose
 
     @classmethod
@@ -149,7 +152,7 @@ class RELTask(SerializableTask[RELExample]):
                 text=_preannotate(doc),
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                examples=self._examples,
+                examples=self._prompt_examples,
                 preannotate=_preannotate,
             )
             yield prompt
@@ -183,6 +186,7 @@ class RELTask(SerializableTask[RELExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
+        n_prompt_examples: int = 0,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
 
@@ -196,24 +200,29 @@ class RELTask(SerializableTask[RELExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
+            0 by default. Takes all examples if set to -1.
         """
         self._check_rel_extension()
 
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
+        if infer_labels:
+            labels = []
 
-            for eg in examples:
+        for eg in get_examples():
+            if infer_labels:
                 rels: List[RelationItem] = eg.reference._.rel
                 for rel in rels:
-                    label_set.add(rel.relation)
-            labels = list(label_set)
+                    labels.append(rel.relation)
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -227,3 +236,21 @@ class RELTask(SerializableTask[RELExample]):
     @property
     def _Example(self) -> Type[RELExample]:
         return RELExample
+
+    def _create_prompt_example(self, example: Example) -> RELExample:
+        """Create a REL prompt example from a spaCy example."""
+        entities = [
+            EntityItem(
+                start_char=ent.start_char,
+                end_char=ent.end_char,
+                label=ent.label_,
+            )
+            for ent in example.reference.ents
+        ]
+
+        rel_example = RELExample(
+            text=example.reference.text,
+            ents=entities,
+            relations=example.reference._.rel,
+        )
+        return rel_example

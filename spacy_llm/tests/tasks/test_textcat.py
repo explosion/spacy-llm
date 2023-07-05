@@ -44,7 +44,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -74,7 +74,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -106,7 +106,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -135,7 +135,7 @@ def zeroshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -353,7 +353,7 @@ def test_textcat_multilabel_labels_are_correct(
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     # Take only those that have scores
     pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
-    assert pred_cats == expected
+    assert set(pred_cats) == set(expected)
 
 
 @pytest.mark.parametrize(
@@ -453,7 +453,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
@@ -520,7 +520,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
@@ -687,7 +687,7 @@ def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
@@ -734,9 +734,13 @@ def noop_config():
     """
 
 
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 @pytest.mark.parametrize("init_from_config", [True, False])
-def test_textcat_init(noop_config, init_from_config: bool):
-
+def test_textcat_init(
+    noop_config,
+    init_from_config: bool,
+    n_prompt_examples: bool,
+):
     config = Config().from_str(noop_config)
     if init_from_config:
         config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
@@ -763,6 +767,11 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = set()
     assert set(task._label_dict.values()) == target
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
 
     nlp.initialize(lambda: examples)
 
@@ -771,10 +780,13 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(INSULTS)
 
 
 def test_textcat_serde(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
 
     nlp1 = assemble_from_config(config)
