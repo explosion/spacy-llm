@@ -11,9 +11,8 @@ from ..compat import Literal
 from ..registry import registry
 from ..ty import COTExamplesConfigType, ExamplesConfigType
 from ..util import split_labels
+from .span import COTSpanExample, SpanExample, SpanReason, SpanTask
 from .templates import read_template
-from .util import SpanExample, SpanTask
-from .util.examples import COTSpanExample, SpanReason
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
 _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
@@ -55,7 +54,7 @@ def make_ner_task(
     return NERTask(
         labels=labels_list,
         template=_DEFAULT_NER_TEMPLATE_V1,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -101,7 +100,7 @@ def make_ner_task_v2(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -149,7 +148,7 @@ def make_ner_task_v3(
         template=template,
         description=description,
         label_definitions=label_definitions,
-        examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -163,7 +162,7 @@ class NERTask(SpanTask[SpanExample]):
         labels: List[str] = [],
         template: str = _DEFAULT_NER_TEMPLATE_V2,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[List[SpanExample]] = None,
+        prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
@@ -191,7 +190,7 @@ class NERTask(SpanTask[SpanExample]):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            examples=examples,
+            prompt_examples=prompt_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -203,6 +202,7 @@ class NERTask(SpanTask[SpanExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
+        n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize the NER task, by auto-discovering labels.
@@ -217,22 +217,26 @@ class NERTask(SpanTask[SpanExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
+            0 by default. Takes all examples if set to -1.
         """
-
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
+        if infer_labels:
+            labels = []
 
-            for eg in examples:
+        for eg in get_examples():
+            if infer_labels:
                 for ent in eg.reference.ents:
-                    label_set.add(ent.label_)
-            labels = list(label_set)
+                    labels.append(ent.label_)
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
 
     def assign_spans(
         self,
@@ -252,6 +256,14 @@ class NERTask(SpanTask[SpanExample]):
     def _Example(self) -> type[SpanExample]:
         return SpanExample
 
+    def _create_prompt_example(self, example: Example) -> SpanExample:
+        """Create an NER prompt example from a spaCy example."""
+        entities = defaultdict(list)
+        for ent in example.reference.ents:
+            entities[ent.label_].append(ent.text)
+
+        return SpanExample(text=example.reference.text, entities=entities)
+
 
 class COTNERTask(SpanTask[COTSpanExample]):
     def __init__(
@@ -259,7 +271,7 @@ class COTNERTask(SpanTask[COTSpanExample]):
         labels: List[str],
         template: str,
         description: Optional[str] = None,
-        examples: Optional[List[COTSpanExample]] = None,
+        prompt_examples: Optional[List[COTSpanExample]] = None,
         label_definitions: Optional[Dict[str, str]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
@@ -271,12 +283,20 @@ class COTNERTask(SpanTask[COTSpanExample]):
             template=template,
             description=description,
             label_definitions=label_definitions,
-            examples=examples,
+            prompt_examples=prompt_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
+
+    def _check_label_consistency(self) -> List[SpanExample]:
+        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
+        RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
+        """
+        assert self._prompt_examples
+        # TODO: Implement for new COTSpanExample type
+        return self._prompt_examples
 
     def initialize(
         self,

@@ -1,18 +1,100 @@
+import warnings
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 import jinja2
+from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 
-from ...compat import Literal
-from ...registry import lowercase_normalizer
-from .examples import COTSpanExample, SpanExample
-from .parsing import find_substrings
-from .serialization import SerializableTask
-
-_ExampleT = TypeVar("_ExampleT", SpanExample, COTSpanExample)
+from ..compat import Literal
+from ..registry import lowercase_normalizer
+from .util.parsing import find_substrings
+from .util.serialization import SerializableTask
 
 
-class SpanTask(SerializableTask[_ExampleT]):
+class SpanExample(BaseModel):
+    text: str
+    entities: Dict[str, List[str]]
+
+
+class SpanReason(BaseModel):
+    text: str
+    is_entity: bool
+    label: str
+    reason: str
+
+    @classmethod
+    def from_str(cls, s: str, sep: str = "|"):
+        clean_str = s.strip()
+        if "." in clean_str:
+            clean_str = clean_str.split(".")[1]
+        components = [c.strip() for c in clean_str.split(sep)]
+        return cls(
+            text=components[0],
+            is_entity=components[1].lower() == "true",
+            label=components[2],
+            reason=components[3],
+        )
+
+    def __str__(self) -> str:
+        return self.to_str()
+
+    def to_str(self) -> str:
+        return f"{self.text} | {self.is_entity} | {self.label} | {self.reason}"
+
+
+class COTSpanExample(BaseModel):
+    text: str
+    entities: List[SpanReason]
+
+
+_PromptExampleT = TypeVar("_PromptExampleT", SpanExample, COTSpanExample)
+
+
+def check_span_label_consistency(
+    normalizer: Callable[[str], str],
+    label_dict: Dict[str, str],
+    prompt_examples: List[SpanExample],
+) -> List[SpanExample]:
+    """Checks consistency of labels between examples and defined labels.
+    Emits warning on inconsistency.
+    RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
+    """
+    assert prompt_examples
+    example_labels = {
+        normalizer(key): key for example in prompt_examples for key in example.entities
+    }
+    unspecified_labels = {
+        example_labels[key]
+        for key in (set(example_labels.keys()) - set(label_dict.keys()))
+    }
+    if not set(example_labels.keys()) <= set(label_dict.keys()):
+        warnings.warn(
+            f"Examples contain labels that are not specified in the task configuration. The latter contains the "
+            f"following labels: {sorted(list(set(label_dict.values())))}. Labels in examples missing from "
+            f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
+            f"and example labels are consistent."
+        )
+
+    # Return examples without non-declared labels.
+    # If an example only has undeclared labels, it is discarded.
+    return [
+        example
+        for example in [
+            SpanExample(
+                text=example.text,
+                entities={
+                    label: entities
+                    for label, entities in example.entities.items()
+                    if normalizer(label) in label_dict
+                },
+            )
+            for example in prompt_examples
+        ]
+        if len(example.entities)
+    ]
+
+
+class SpanTask(SerializableTask[_PromptExampleT]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
@@ -21,7 +103,7 @@ class SpanTask(SerializableTask[_ExampleT]):
         template: str,
         description: Optional[str] = None,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[List[_ExampleT]] = None,
+        prompt_examples: Optional[List[_PromptExampleT]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -30,15 +112,22 @@ class SpanTask(SerializableTask[_ExampleT]):
         single_match: bool = False,
     ):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
         self._template = template
         self._description = description
         self._label_definitions = label_definitions
-        self._examples = examples
+        self._prompt_examples = prompt_examples or []
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
+
+    def check_label_consistency(self):
+        return check_span_label_consistency(
+            self._normalizer, self._label_dict, self._prompt_examples
+        )
 
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -53,7 +142,7 @@ class SpanTask(SerializableTask[_ExampleT]):
                 description=self._description,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                examples=self._examples,
+                examples=self._prompt_examples,
             )
             yield prompt
 

@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -200,7 +201,7 @@ def test_ner_config(cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -511,9 +512,9 @@ def test_jinja_template_rendering_without_examples():
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Here is the text that needs labeling:
@@ -554,9 +555,9 @@ def test_jinja_template_rendering_with_examples(examples_path):
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Below are some examples (only use these as a guide):
@@ -618,9 +619,9 @@ def test_jinja_template_rendering_with_label_definitions():
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
 Assume these definitions are written by an expert and follow them closely.
@@ -668,9 +669,9 @@ def test_external_template_actually_loads():
         prompt.strip()
         == """
 This is a test NER template. Here are the labels
-PER
-ORG
 LOC
+ORG
+PER
 
 Here is the text: Alice and Bob went to the supermarket
 """.strip()
@@ -705,7 +706,6 @@ def noop_config():
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_ner_scoring(noop_config, n_detections):
-
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -727,10 +727,11 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-def test_ner_init(noop_config):
-
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_ner_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
+
     nlp = assemble_from_config(config)
 
     examples = []
@@ -754,12 +755,25 @@ def test_ner_init(noop_config):
     task: NERTask = llm._task
 
     assert set(task._label_dict.values()) == set()
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
     nlp.initialize(lambda: examples)
+
     assert set(task._label_dict.values()) == {"PER", "LOC"}
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(examples)
+
+    if n_prompt_examples > 0:
+        for eg in task._prompt_examples:
+            assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
 def test_ner_serde(noop_config):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -784,7 +798,6 @@ def test_ner_serde(noop_config):
 
 
 def test_ner_to_disk(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -815,3 +828,55 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     nlp2.from_disk(path)
 
     assert task1._label_dict == task2._label_dict == labels
+
+
+def test_label_inconsistency():
+    """Test whether inconsistency between specified labels and labels in examples is detected."""
+    cfg = f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v2"
+    labels = ["PERSON", "LOCATION"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
+
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+    """
+
+    config = Config().from_str(cfg)
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Examples contain labels that are not specified in the task configuration. The latter contains the "
+            "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
+            "['TECH']. Please ensure your label specification and example labels are consistent."
+        ),
+    ):
+        nlp = assemble_from_config(config)
+
+    prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
+    assert len(prompt_examples) == 2
+    assert prompt_examples[0].text == "Jack and Jill went up the hill."
+    assert prompt_examples[0].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
+    assert (
+        prompt_examples[1].text
+        == "Jack and Jill went up the hill and spaCy is a great tool."
+    )
+    assert prompt_examples[1].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
