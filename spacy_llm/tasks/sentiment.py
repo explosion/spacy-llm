@@ -55,6 +55,7 @@ class SentimentTask(SerializableTask[SentimentExample]):
         """
         self._template = template
         self._examples = examples
+        self._prompt_examples = examples or []
 
     @classmethod
     def _check_doc_extension(cls):
@@ -81,7 +82,11 @@ class SentimentTask(SerializableTask[SentimentExample]):
 
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(self._create_prompt_example(eg))
+                self._prompt_examples.append(
+                    SentimentExample(
+                        text=eg.reference.text, score=eg.reference._.sentiment
+                    )
+                )
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
