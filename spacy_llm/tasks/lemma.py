@@ -60,21 +60,18 @@ class LemmaTask(SerializableTask[LemmaExample]):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        infer_prompt_examples: int = 0,
+        n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Nothing to initialize for the LEMMA task.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        infer_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
+        n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
         """
         for eg in get_examples():
-            if (
-                infer_prompt_examples < 0
-                or len(self._prompt_examples) < infer_prompt_examples
-            ):
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:

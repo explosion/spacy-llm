@@ -329,13 +329,13 @@ The supplied file has to conform to the format expected by the required task (se
 ##### (2) Initializing the `llm` component with a `get_examples()` callback
 
 Alternatively, you can initialize your `nlp` pipeline by providing a `get_examples` callback for
-[`nlp.initialize`](https://spacy.io/api/language#initialize) and setting `infer_prompt_examples` to a positive number to
-automatically fetch a few examples for few-shot learning. Set `infer_prompt_examples` to `-1` to use all examples as
+[`nlp.initialize`](https://spacy.io/api/language#initialize) and setting `n_prompt_examples` to a positive number to
+automatically fetch a few examples for few-shot learning. Set `n_prompt_examples` to `-1` to use all examples as
 part of the few-shot learning prompt.
 
 ```ini
 [initialize.components.llm]
-infer_prompt_examples = 3
+n_prompt_examples = 3
 ```
 
 #### <kbd>function</kbd> `task.generate_prompts`

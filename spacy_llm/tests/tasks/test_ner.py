@@ -726,8 +726,8 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-@pytest.mark.parametrize("infer_prompt_examples", [-1, 0, 1, 2])
-def test_ner_init(noop_config, infer_prompt_examples: int):
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_ner_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -757,17 +757,17 @@ def test_ner_init(noop_config, infer_prompt_examples: int):
     assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "infer_prompt_examples": infer_prompt_examples
+        "n_prompt_examples": n_prompt_examples
     }
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    if infer_prompt_examples >= 0:
-        assert len(task._prompt_examples) == infer_prompt_examples
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
     else:
         assert len(task._prompt_examples) == len(examples)
 
-    if infer_prompt_examples > 0:
+    if n_prompt_examples > 0:
         for eg in task._prompt_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 

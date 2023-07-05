@@ -186,7 +186,7 @@ class RELTask(SerializableTask[RELExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        infer_prompt_examples: int = 0,
+        n_prompt_examples: int = 0,
     ) -> None:
         """Initialize the SpanCat task, by auto-discovering labels.
 
@@ -200,7 +200,7 @@ class RELTask(SerializableTask[RELExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        infer_prompt_examples (int): How many prompt examples to infer from the Example objects.
+        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
             0 by default. Takes all examples if set to -1.
         """
         self._check_rel_extension()
@@ -217,10 +217,7 @@ class RELTask(SerializableTask[RELExample]):
                 rels: List[RelationItem] = eg.reference._.rel
                 for rel in rels:
                     labels.append(rel.relation)
-            if (
-                infer_prompt_examples < 0
-                or len(self._prompt_examples) < infer_prompt_examples
-            ):
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
         self._label_dict = {
