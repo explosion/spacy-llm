@@ -89,10 +89,6 @@ class CohereBackend(Backend):
                     return {"error": [srsly.json_dumps(response)] * len(prompts)}
             return response
 
-        # Cohere API currently doesn't accept batch prompts, so we're making
-        # a request for each iteration. This approach can be prone to rate limit
-        # errors. In practice, you can adjust _max_request_time so that the
-        # timeout is larger.
         if "classify" in url:
             examples, inputs = zip(*[i.split("---") for i in prompts])
             inputs = [i.strip() for i in inputs]
@@ -105,6 +101,10 @@ class CohereBackend(Backend):
             api_responses = [
                 response["prediction"] for response in responses["classifications"]
             ]
+        # Cohere API currently doesn't accept batch prompts, so we're making
+        # a request for each iteration. This approach can be prone to rate limit
+        # errors. In practice, you can adjust _max_request_time so that the
+        # timeout is larger.
         else:
             responses = [_request({"prompt": prompt}) for prompt in prompts]
             for response in responses:
