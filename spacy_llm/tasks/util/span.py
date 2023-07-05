@@ -42,7 +42,7 @@ class SpanTask(SerializableTask[SpanExample]):
 
     def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
-        RETURNS ():
+        RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """
         assert self._examples
         example_labels = {
