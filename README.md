@@ -402,7 +402,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.summarization.v2"
+@llm_tasks = "spacy.summarization.v1"
 max_n_words = 20
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
