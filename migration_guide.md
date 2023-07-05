@@ -33,7 +33,7 @@ config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
 In `0.4.x`:
 ```ini
 [components.llm.model]
-@llm_models = "spacy.gpt-3-5.v1"
+@llm_models = "spacy.GPT-3-5.v1"
 name = "gpt-3-5-turbo"
 config = {"temperature": 0.3}
 ```

@@ -3,15 +3,40 @@ from pathlib import Path
 import pytest
 import spacy
 from confection import Config
+from spacy.tokens import Doc
+from spacy.training import Example
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, file_reader
+from spacy_llm.tasks.lemma import LemmaTask
+from spacy_llm.util import assemble_from_config
 
 from ...tasks import make_lemma_task
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+@pytest.fixture
+def noop_config():
+    return """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.Lemma.v1"
+
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+    """
 
 
 @pytest.fixture
@@ -31,7 +56,7 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.Lemma.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     config = {"temperature": 0}
     """
 
@@ -57,7 +82,7 @@ def fewshot_cfg_string():
     path = {str((Path(__file__).parent / "examples" / "lemma_examples.yml"))}
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     config = {{"temperature": 0}}
     """
 
@@ -84,7 +109,7 @@ def ext_template_cfg_string():
     path = {str((Path(__file__).parent / "templates" / "lemma_template.jinja2"))}
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     config = {{"temperature": 0}}
     """
 
@@ -320,3 +345,37 @@ This is a test LEMMA template.
 Here is the text: {text}
 """.strip()
     )
+
+
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_lemma_init(noop_config, n_prompt_examples: int):
+    config = Config().from_str(noop_config)
+    nlp = assemble_from_config(config)
+
+    examples = []
+    pred_words_1 = ["Alice", "works", "all", "evenings"]
+    gold_lemmas_1 = ["Alice", "work", "all", "evening"]
+    pred_1 = Doc(nlp.vocab, words=pred_words_1)
+    gold_1 = Doc(nlp.vocab, words=pred_words_1, lemmas=gold_lemmas_1)
+    examples.append(Example(pred_1, gold_1))
+
+    pred_words_2 = ["Bob", "loves", "living", "cities"]
+    gold_lemmas_2 = ["Bob", "love", "live", "city"]
+    pred_2 = Doc(nlp.vocab, words=pred_words_2)
+    gold_2 = Doc(nlp.vocab, words=pred_words_2, lemmas=gold_lemmas_2)
+    examples.append(Example(pred_2, gold_2))
+
+    _, llm = nlp.pipeline[0]
+    task: LemmaTask = llm._task
+
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
+    nlp.initialize(lambda: examples)
+
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(examples)

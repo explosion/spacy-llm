@@ -45,7 +45,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -75,7 +75,7 @@ def zeroshot_cfg_string_v2_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -104,7 +104,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -133,7 +133,7 @@ def fewshot_cfg_string_v2():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -163,7 +163,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.gpt-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -512,9 +512,9 @@ def test_jinja_template_rendering_without_examples():
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Here is the text that needs labeling:
@@ -555,9 +555,9 @@ def test_jinja_template_rendering_with_examples(examples_path):
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Below are some examples (only use these as a guide):
@@ -619,9 +619,9 @@ def test_jinja_template_rendering_with_label_definitions():
 You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
 Assume these definitions are written by an expert and follow them closely.
@@ -669,9 +669,9 @@ def test_external_template_actually_loads():
         prompt.strip()
         == """
 This is a test NER template. Here are the labels
-PER
-ORG
 LOC
+ORG
+PER
 
 Here is the text: Alice and Bob went to the supermarket
 """.strip()
@@ -706,7 +706,6 @@ def noop_config():
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_ner_scoring(noop_config, n_detections):
-
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -728,10 +727,11 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-def test_ner_init(noop_config):
-
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_ner_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
+
     nlp = assemble_from_config(config)
 
     examples = []
@@ -755,12 +755,25 @@ def test_ner_init(noop_config):
     task: NERTask = llm._task
 
     assert set(task._label_dict.values()) == set()
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
     nlp.initialize(lambda: examples)
+
     assert set(task._label_dict.values()) == {"PER", "LOC"}
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(examples)
+
+    if n_prompt_examples > 0:
+        for eg in task._prompt_examples:
+            assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
 def test_ner_serde(noop_config):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -785,7 +798,6 @@ def test_ner_serde(noop_config):
 
 
 def test_ner_to_disk(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 

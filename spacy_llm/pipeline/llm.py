@@ -35,7 +35,7 @@ class CacheConfigType(TypedDict):
     default_config={
         "task": None,
         "model": {
-            "@llm_models": "spacy.gpt-3-5.v1",
+            "@llm_models": "spacy.GPT-3-5.v1",
             "strict": True,
         },
         "cache": {
@@ -287,7 +287,7 @@ class LLMWrapper(Pipe):
         if isinstance(self._model, Serializable):
             serialize["model"] = lambda p: self._model.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
-        return util.to_disk(path, serialize, exclude)
+        util.to_disk(path, serialize, exclude)
 
     def from_disk(
         self, path: Path, *, exclude: Tuple[str] = cast(Tuple[str], tuple())
