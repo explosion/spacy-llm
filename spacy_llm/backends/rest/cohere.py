@@ -11,6 +11,7 @@ from .base import Backend
 
 class Endpoints(str, Enum):
     COMPLETION = "https://api.cohere.ai/v1/generate"
+    CLASSIFICATION = "https://api.cohere.ai/v1/classify"
 
 
 class CohereBackend(Backend):
@@ -24,6 +25,7 @@ class CohereBackend(Backend):
             "command-nightly": Endpoints.COMPLETION.value,
             "command-light": Endpoints.COMPLETION.value,
             "command-light-nightly": Endpoints.COMPLETION.value,
+            "embed-english-v2.0": Endpoints.CLASSIFICATION.value,
         }
 
     @property
@@ -91,16 +93,29 @@ class CohereBackend(Backend):
         # a request for each iteration. This approach can be prone to rate limit
         # errors. In practice, you can adjust _max_request_time so that the
         # timeout is larger.
-        responses = [_request({"prompt": prompt}) for prompt in prompts]
-        for response in responses:
-            for result in response["generations"]:
-                if "text" in result:
-                    # Although you can set the number of completions in Cohere
-                    # to be greater than 1, we only need to return a single value.
-                    # In this case, we will just return the very first output.
-                    api_responses.append(result["text"])
-                    break
-                else:
-                    api_responses.append(srsly.json_dumps(response))
+        if "classify" in url:
+            examples, inputs = zip(*[i.split("---") for i in prompts])
+            inputs = [i.strip() for i in inputs]
+            examples = examples[0].strip().split("\n")
+            examples = [
+                {"text": eg.split("\t")[0], "label": eg.split("\t")[1]}
+                for eg in examples
+            ]
+            responses = _request({"inputs": inputs, "examples": examples})
+            api_responses = [
+                response["prediction"] for response in responses["classifications"]
+            ]
+        else:
+            responses = [_request({"prompt": prompt}) for prompt in prompts]
+            for response in responses:
+                for result in response["generations"]:
+                    if "text" in result:
+                        # Although you can set the number of completions in Cohere
+                        # to be greater than 1, we only need to return a single value.
+                        # In this case, we will just return the very first output.
+                        api_responses.append(result["text"])
+                        break
+                    else:
+                        api_responses.append(srsly.json_dumps(response))
 
         return api_responses
