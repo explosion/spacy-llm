@@ -44,17 +44,17 @@ class SpanTask(SerializableTask[SpanExample]):
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
-        if self._examples:
-            self._examples = self._check_label_consistency()
+        if self._prompt_examples:
+            self._prompt_examples = self._check_label_consistency()
 
     def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
         RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """
-        assert self._examples
+        assert self._prompt_examples
         example_labels = {
             self._normalizer(key): key
-            for example in self._examples
+            for example in self._prompt_examples
             for key in example.entities
         }
         unspecified_labels = {
@@ -81,7 +81,7 @@ class SpanTask(SerializableTask[SpanExample]):
                         if self._normalizer(label) in self._label_dict
                     },
                 )
-                for example in self._examples
+                for example in self._prompt_examples
             ]
             if len(example.entities)
         ]
