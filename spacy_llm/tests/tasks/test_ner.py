@@ -201,7 +201,7 @@ def test_ner_config(cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -865,11 +865,18 @@ def test_label_inconsistency():
     ):
         nlp = assemble_from_config(config)
 
-    examples = nlp.get_pipe("llm")._task._examples
-    assert len(examples) == 2
-    assert examples[0].text == "Jack and Jill went up the hill."
-    assert examples[0].entities == {"LOCATION": ["hill"], "PERSON": ["Jack", "Jill"]}
+    prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
+    assert len(prompt_examples) == 2
+    assert prompt_examples[0].text == "Jack and Jill went up the hill."
+    assert prompt_examples[0].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
     assert (
-        examples[1].text == "Jack and Jill went up the hill and spaCy is a great tool."
+        prompt_examples[1].text
+        == "Jack and Jill went up the hill and spaCy is a great tool."
     )
-    assert examples[1].entities == {"LOCATION": ["hill"], "PERSON": ["Jack", "Jill"]}
+    assert prompt_examples[1].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
