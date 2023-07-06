@@ -596,9 +596,66 @@ Except for the `spans_key` parameter, the SpanCat task reuses the configuration
 from the NER task.
 Refer to [its documentation](#spacynerv1) for more insight.
 
+#### spacy.TextCat.v3
+
+Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows
+setting definitions of labels. Those definitions are included in the prompt.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v3"
+labels = ["COMPLIMENT", "INSULT"]
+label_definitions = {
+    "COMPLIMENT": "a polite expression of praise or admiration.",
+    "INSULT": "a disrespectful or scornfully abusive remark or act."
+}
+examples = null
+```
+
+| Argument            | Type                                    | Default                                                      | Description                                                                                                                                      |
+| ------------------- | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`            | `Union[List[str], str]`                 |                                                              | List of labels or str of comma-separated list of labels.                                                                                         |
+| `label_definitions` | `Optional[Dict[str, str]]`              | `None`                                                       | Dictionary of label definitions. Included in the prompt, if set.                                                                                 |
+| `template`          | `str`                                   | [`textcat.jinja`](./spacy_llm/tasks/templates/textcat.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.         |
+| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                       | Optional function that generates examples for few-shot learning.                                                                                 |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`                                                       | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
+| `exclusive_classes` | `bool`                                  | `False`                                                      | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
+| `allow_none`        | `bool`                                  | `True`                                                       | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
+| `verbose`           | `bool`                                  | `False`                                                      | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v3"
+labels = ["COMPLIMENT", "INSULT"]
+label_definitions = {
+    "COMPLIMENT": "a polite expression of praise or admiration.",
+    "INSULT": "a disrespectful or scornfully abusive remark or act."
+}
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
 #### spacy.TextCat.v2
 
-The built-in TextCat task supports both zero-shot and few-shot prompting.
+Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt
+template.
 
 ```ini
 [components.llm.task]
@@ -644,7 +701,7 @@ path = "textcat_examples.json"
 
 #### spacy.TextCat.v1
 
-The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
+Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
