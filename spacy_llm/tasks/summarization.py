@@ -104,13 +104,13 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         for pr_ex in self._prompt_examples:
             len_summary = len(pr_ex.summary.split())
             len_text = len(pr_ex.text.split())
-            if len_summary >= len_text:
+            if len_summary >= len_text * 1.2:
                 warnings.warn(
                     f"The provided example '{pr_ex.text[:30]}...' has a summary of length {len_summary} and a text "
                     f"of length {len_text}. Ensure that your examples' summaries are shorter than their original "
                     f"texts."
                 )
-            if len_summary > self._max_n_words:
+            if len_summary > self._max_n_words * 1.2:
                 warnings.warn(
                     f"The provided example '{pr_ex.text[:20]}...' has a summary of length {len_summary}, but "
                     f"`max_n_words` == {self._max_n_words}. If your examples are longer than they should be, the "
@@ -120,6 +120,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         if not self._are_example_summaries_checked:
             self._check_prompt_example_summary_len()
+            self._are_example_summaries_checked = True
 
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
