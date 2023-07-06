@@ -1475,7 +1475,17 @@ The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `
 Interacting with LLMs, either through an external API or a local instance, is costly.
 Since developing an NLP pipeline generally means a lot of exploration and prototyping,
 `spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run
-that keeps batches of documents stored on disk.
+that keeps batches of documents stored on disk. 
+
+The cache implementation also ensures that documents in one cache directory were all produced using the same prompt 
+template. This is only possible however if the specified task implements 
+```python
+@property
+def prompt_template() -> str:
+    ...
+``` 
+which returns the raw prompt template as string. If `prompt_template()` isn't implemented, the cache will emit a warning
+and not check for prompt template consistency.
 
 Example config block:
 
