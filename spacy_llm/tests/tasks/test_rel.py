@@ -67,7 +67,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str(EXAMPLES_DIR / "rel_examples.jsonl")}
+    path = {str(EXAMPLES_DIR / "rel.jsonl")}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"

@@ -116,8 +116,8 @@ class LLMWrapper(Pipe):
         self._task = task
         self._model = model
         self._cache = cache
-        self._cache.vocab = vocab
         self._save_io = save_io
+        self._cache.initialize(vocab, self._task)
 
         # This is done this way because spaCy's `validate_init_settings` function
         # does not support `**kwargs: Any`.

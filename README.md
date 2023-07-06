@@ -363,6 +363,53 @@ return type of the [model](#models).
 | `responses` | `Iterable[Any]` | The generated prompts.   |
 | **RETURNS** | `Iterable[Doc]` | The annotated documents. |
 
+
+#### spacy.Summarization.v1
+
+The `spacy.Summarization.v1` task supports both zero-shot and few-shot prompting.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Summarization.v1"
+examples = null
+max_n_words = null
+```
+
+| Argument      | Type                                    | Default                                                                | Description                                                                                                                              |
+|---------------|-----------------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `template`    | `str`                                   | [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples`    | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                                 | Optional function that generates examples for few-shot learning.                                                                         |
+| `max_n_words` | `Optional[int]`                         | `None`                                                                 | Maximum number of words to be used in summary. Note that this should not expected to work exactly.                                       |
+| `field`       | `str`                                   | `summary`                                                              | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`).                                |
+
+The summarization task prompts the model for a concise summary of the provided text. It optionally allows to limit the 
+response to a certain number of tokens - note that this requirement will be included in the prompt, but the task doesn't
+perform a hard cut-off. It's hence possible that your summary exceeds `max_n_words`.
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: >
+    The United Nations, referred to informally as the UN, is an intergovernmental organization whose stated purposes are 
+    to maintain international peace and security, develop friendly relations among nations, achieve international 
+    cooperation, and serve as a centre for harmonizing the actions of nations. It is the world's largest international 
+    organization. The UN is headquartered on international territory in New York City, and the organization has other 
+    offices in Geneva, Nairobi, Vienna, and The Hague, where the International Court of Justice is headquartered.\n\n
+    The UN was established after World War II with the aim of preventing future world wars, and succeeded the League of 
+    Nations, which was characterized as ineffective. 
+  summary: "The UN is an international organization that promotes global peace, cooperation, and harmony. Established after WWII, its purpose is to prevent future world wars."
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.summarization.v1"
+max_n_words = 20
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "summarization_examples.yml"
+```
+
 #### spacy.NER.v2
 
 The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.
@@ -802,6 +849,45 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "lemma_examples.yml"
+```
+
+#### spacy.Sentiment.v1
+
+Performs sentiment analysis on provided texts. Scores between 0 and 1 are stored in `Doc._.sentiment` - the higher, the
+more positive. Note in cases of parsing issues (e. g. in case of unexpected LLM responses) the value might be `None`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Sentiment.v1"
+examples = null
+```
+
+| Argument   | Type                                    | Default                                                        | Description                                                                                                                            |
+| ---------- | --------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | `str`                                   | [sentiment.jinja](./spacy_llm/tasks/templates/sentiment.jinja) | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples` | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                         | Optional function that generates examples for few-shot learning.                                                                       |
+| `field`    | `str`                                   | `sentiment`                                                    | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`).                              |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: "This is horrifying."
+  score: 0
+- text: "This is underwhelming."
+  score: 0.25
+- text: "This is ok."
+  score: 0.5
+- text: "I'm looking forward to this!"
+  score: 1.0
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Sentiment.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "sentiment_examples.yml"
 ```
 
 #### spacy.NoOp.v1
@@ -1446,7 +1532,17 @@ The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `
 Interacting with LLMs, either through an external API or a local instance, is costly.
 Since developing an NLP pipeline generally means a lot of exploration and prototyping,
 `spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run
-that keeps batches of documents stored on disk.
+that keeps batches of documents stored on disk. 
+
+The cache implementation also ensures that documents in one cache directory were all produced using the same prompt 
+template. This is only possible however if the specified task implements 
+```python
+@property
+def prompt_template() -> str:
+    ...
+``` 
+which returns the raw prompt template as string. If `prompt_template()` isn't implemented, the cache will emit a warning
+and not check for prompt template consistency.
 
 Example config block:
 
@@ -1461,11 +1557,11 @@ max_batches_in_mem = 4
 | Argument             | Type                         | Default | Description                                                                                                               |
 | -------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `path`               | `Optional[Union[str, Path]]` | `None`  | Cache directory. If `None`, no caching is performed, and this component will act as a NoOp.                               |
-| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file). Once a batch is full, it will be peristed to disk.                                    |
+| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file). Once a batch is full, it will be persisted to disk.                                   |
 | `max_batches_in_mem` | `int`                        | 4       | Max. number of batches to hold in memory. Allows you to limit the effect on your memory if you're handling a lot of docs. |
 
 When retrieving a document, the `BatchCache` will first figure out what batch the document belongs to. If the batch
-isn't in memory it will try to load the batch from disk and then move it into memory.
+isn't in memory it will try to load the batch from disk and then move it into memory. 
 
 Note that since the cache is generated by a registered function, you can also provide your own registered function
 returning your own cache implementation. If you wish to do so, ensure that your cache object adheres to the

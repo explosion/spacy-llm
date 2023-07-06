@@ -81,6 +81,13 @@ class LLMTask(Protocol):
 
 
 @runtime_checkable
+class PromptTemplateProvider(Protocol):
+    @property
+    def prompt_template(self) -> str:
+        ...
+
+
+@runtime_checkable
 class Labeled(Protocol):
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -91,21 +98,28 @@ class Labeled(Protocol):
 class Cache(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    @property
-    def vocab(self) -> Optional[Vocab]:
-        """Vocab used for deserializing docs.
-        RETURNS (Vocab): Vocab used for deserializing docs.
+    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
         """
-
-    @vocab.setter
-    def vocab(self, vocab: Vocab) -> None:
-        """Set vocab to use for deserializing docs.
-        vocab (Vocab): Vocab to use for deserializing docs.
+        Initialize cache with data not available at construction time.
+        vocab (Vocab): Vocab object.
+        task (LLMTask): Task.
         """
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc to cache (or to a queue that is added to the cache at a later point)
         doc (Doc): Doc to add to persistence queue.
+        """
+
+    @property
+    def prompt_template(self) -> Optional[str]:
+        """Get prompt template.
+        RETURNS (Optional[str]): Prompt template string used for docs to cache/cached docs.
+        """
+
+    @prompt_template.setter
+    def prompt_template(self, prompt_template: str) -> None:
+        """Set prompt template.
+        prompt_template (str): Prompt template string used for docs to cache/cached docs.
         """
 
     def __contains__(self, doc: Doc) -> bool:
