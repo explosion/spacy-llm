@@ -1404,7 +1404,7 @@ max_batches_in_mem = 4
 | Argument             | Type                         | Default | Description                                                                                                               |
 | -------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `path`               | `Optional[Union[str, Path]]` | `None`  | Cache directory. If `None`, no caching is performed, and this component will act as a NoOp.                               |
-| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file). Once a batch is full, it will be peristed to disk.                                    |
+| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file). Once a batch is full, it will be persisted to disk.                                   |
 | `max_batches_in_mem` | `int`                        | 4       | Max. number of batches to hold in memory. Allows you to limit the effect on your memory if you're handling a lot of docs. |
 
 When retrieving a document, the `BatchCache` will first figure out what batch the document belongs to. If the batch
