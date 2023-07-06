@@ -69,7 +69,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         self._max_n_words = max_n_words
         self._field = field
         self._prompt_examples = examples or []
-        self._are_example_summaries_checked = False
+        self._check_example_summaries = True
         if not Doc.has_extension(field):
             Doc.set_extension(field, default=None)
 
@@ -118,9 +118,9 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
                 )
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        if not self._are_example_summaries_checked:
+        if self._check_example_summaries:
             self._check_prompt_example_summary_len()
-            self._are_example_summaries_checked = True
+            self._check_example_summaries = False
 
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
