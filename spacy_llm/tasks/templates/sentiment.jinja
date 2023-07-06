@@ -1,0 +1,22 @@
+Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 represents an exclusively positive sentiment, 0 an exclusively negative sentiment.
+{# whitespace #}
+{%- if examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{%- for example in examples -%}
+{# whitespace #}
+Text:
+'''
+{{ example.text }}
+'''
+Answer: {{ example.score }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+Text:
+'''
+{{ text }}
+'''
+Answer:

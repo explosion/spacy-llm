@@ -1,20 +1,21 @@
 import copy
 import os
+import re
 import time
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Iterable
 
 import pytest
 import spacy
 import srsly  # type: ignore[import]
 from spacy.language import Language
-from spacy.tokens import DocBin
+from spacy.tokens import Doc, DocBin
 
 from ..cache import BatchCache
-from .compat import has_openai_key
+from ..registry import registry
 
 _DEFAULT_CFG = {
-    "backend": {"api": "NoOp", "config": {"model": "NoOp"}},
+    "model": {"@llm_models": "spacy.NoOp.v1"},
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
     "cache": {
         "batch_size": 2,
@@ -157,14 +158,10 @@ def test_path_dir_created():
         assert (tmpdir / "new_dir").exists()
 
 
-@pytest.mark.external
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_caching_llm_io() -> None:
     """Test availability of LLM IO after caching."""
     with spacy.util.make_tempdir() as tmpdir:
         config = copy.deepcopy(_DEFAULT_CFG)
-        config["backend"]["api"] = "OpenAI"  # type: ignore[index]
-        config["backend"]["config"] = {"model": "gpt-3.5-turbo"}  # type: ignore[index]
         config["cache"]["path"] = str(tmpdir)  # type: ignore[index]
         config["cache"]["batch_size"] = 3  # type: ignore[index]
         config["save_io"] = True
@@ -184,3 +181,54 @@ def test_caching_llm_io() -> None:
         )
         assert len(cached_docs) == 3
         assert all([doc.user_data["llm_io"]["llm"]] for doc in cached_docs)
+
+
+def test_prompt_template_handling():
+    """Tests that prompt template comparison is done properly."""
+    with spacy.util.make_tempdir() as tmpdir:
+        # Check if prompt template is written to file properly.
+        config = copy.deepcopy(_DEFAULT_CFG)
+        config["cache"]["path"] = str(tmpdir)
+        nlp = spacy.blank("en")
+        nlp.add_pipe("llm", config=config)
+        llm = nlp.get_pipe("llm")
+        docs = [nlp(text) for text in ("Test 1", "Test 2", "Test 3")]
+
+        prompt_template_filepath = tmpdir / "prompt_template.txt"
+        assert prompt_template_filepath.exists() and prompt_template_filepath.is_file()
+        with open(prompt_template_filepath, "r") as file:
+            assert hash("".join(file.readlines())) == hash(llm._task.prompt_template)
+
+        # This should fail, as the prompt template diverges from the persisted one.
+        with pytest.raises(ValueError, match="Prompt template in cache directory"):
+            llm._cache.prompt_template = llm._cache.prompt_template + " something else"
+
+        with pytest.warns(UserWarning, match="No prompt template set for Cache object"):
+            BatchCache(path=tmpdir, batch_size=3, max_batches_in_mem=4).add(docs[0])
+
+    # Check with task not providing a prompt template.
+    with spacy.util.make_tempdir() as tmpdir:
+
+        @registry.llm_tasks("NoPromptTemplate.v1")
+        class NoopTask_NoPromptTemplate:
+            def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+                return [""] * len(list(docs))
+
+            def parse_responses(
+                self, docs: Iterable[Doc], responses: Iterable[str]
+            ) -> Iterable[Doc]:
+                return docs
+
+        # Check if prompt template is written to file properly.
+        config = copy.deepcopy(_DEFAULT_CFG)
+        config["cache"]["path"] = str(tmpdir)
+        config["task"]["@llm_tasks"] = "NoPromptTemplate.v1"
+        nlp = spacy.blank("en")
+
+        with pytest.warns(
+            UserWarning,
+            match=re.escape(
+                "The specified task does not provide its prompt template via `prompt_template()`."
+            ),
+        ):
+            nlp.add_pipe("llm", config=config)

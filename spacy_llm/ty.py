@@ -9,8 +9,8 @@ from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .backends import integration
 from .compat import Protocol, runtime_checkable
+from .models import langchain
 
 _Prompt = Any
 _Response = Any
@@ -77,6 +77,13 @@ class LLMTask(Protocol):
 
 
 @runtime_checkable
+class PromptTemplateProvider(Protocol):
+    @property
+    def prompt_template(self) -> str:
+        ...
+
+
+@runtime_checkable
 class Labeled(Protocol):
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -87,21 +94,28 @@ class Labeled(Protocol):
 class Cache(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    @property
-    def vocab(self) -> Optional[Vocab]:
-        """Vocab used for deserializing docs.
-        RETURNS (Vocab): Vocab used for deserializing docs.
+    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
         """
-
-    @vocab.setter
-    def vocab(self, vocab: Vocab) -> None:
-        """Set vocab to use for deserializing docs.
-        vocab (Vocab): Vocab to use for deserializing docs.
+        Initialize cache with data not available at construction time.
+        vocab (Vocab): Vocab object.
+        task (LLMTask): Task.
         """
 
     def add(self, doc: Doc) -> None:
         """Adds processed doc to cache (or to a queue that is added to the cache at a later point)
         doc (Doc): Doc to add to persistence queue.
+        """
+
+    @property
+    def prompt_template(self) -> Optional[str]:
+        """Get prompt template.
+        RETURNS (Optional[str]): Prompt template string used for docs to cache/cached docs.
+        """
+
+    @prompt_template.setter
+    def prompt_template(self, prompt_template: str) -> None:
+        """Set prompt template.
+        prompt_template (str): Prompt template string used for docs to cache/cached docs.
         """
 
     def __contains__(self, doc: Doc) -> bool:
@@ -140,25 +154,25 @@ def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
     )
 
 
-def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
-    """Extract call signature from backend object.
-    backend (PromptExecutor): Backend object to extract call signature from.
+def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
+    """Extract call signature from model object.
+    model (PromptExecutor): Model object to extract call signature from.
     RETURNS (Dict[str, Any]): Type per argument name.
     """
-    if inspect.isfunction(backend):
-        return typing.get_type_hints(backend)
+    if inspect.isfunction(model):
+        return typing.get_type_hints(model)
 
-    if not hasattr(backend, "__call__"):
-        raise ValueError("The object supplied as backend must implement `__call__()`.")
+    if not hasattr(model, "__call__"):
+        raise ValueError("The object supplied as model must implement `__call__()`.")
 
-    # Assume that __call__() has the necessary type info - except in the case of integration.Backend, for which
+    # Assume that __call__() has the necessary type info - except in the case of integration.Model, for which
     # we know this is not the case.
-    if not isinstance(backend, integration.RemoteBackend):
-        return typing.get_type_hints(backend.__call__)
+    if not isinstance(model, langchain.LangChain):
+        return typing.get_type_hints(model.__call__)
 
-    # If this is an instance of integrations.RemoteBackend: read type information from .query() instead, only keep
+    # If this is an instance of integrations.Model: read type information from .query() instead, only keep
     # information on Iterable args.
-    signature = typing.get_type_hints(backend.query).items()
+    signature = typing.get_type_hints(model.query).items()
     to_ignore: List[str] = []
     for k, v in signature:
         if not (hasattr(v, "__origin__") and issubclass(v.__origin__, Iterable)):
@@ -166,7 +180,7 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
 
     signature = {
         k: v
-        for k, v in typing.get_type_hints(backend.query).items()
+        for k, v in typing.get_type_hints(model.query).items()
         # In Python 3.8+ (or 3.6+ if typing_utils is installed) the check for the origin class should be done using
         # typing.get_origin().
         if k not in to_ignore
@@ -176,10 +190,10 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_type_consistency(task: LLMTask, backend: PromptExecutor) -> None:
-    """Check whether the types of the task and backend signatures match.
+def validate_type_consistency(task: LLMTask, model: PromptExecutor) -> None:
+    """Check whether the types of the task and model signatures match.
     task (LLMTask): Specified task.
-    backend (PromptExecutor): Specified backend.
+    backend (PromptExecutor): Specified model.
     """
     # Raises an error or prints a warning if something looks wrong/odd.
     if not isinstance(task, LLMTask):
@@ -199,23 +213,23 @@ def validate_type_consistency(task: LLMTask, backend: PromptExecutor) -> None:
     type_hints = {
         "template": typing.get_type_hints(task.generate_prompts),
         "parse": typing.get_type_hints(task.parse_responses),
-        "backend": _extract_backend_call_signature(backend),
+        "model": _extract_model_call_signature(model),
     }
 
     parse_input: Optional[Type] = None
-    backend_input: Optional[Type] = None
-    backend_output: Optional[Type] = None
+    model_input: Optional[Type] = None
+    model_output: Optional[Type] = None
 
-    # Validate the 'backend' object
-    if not (len(type_hints["backend"]) == 2 and "return" in type_hints["backend"]):
+    # Validate the 'model' object
+    if not (len(type_hints["model"]) == 2 and "return" in type_hints["model"]):
         raise ValueError(
-            "The 'backend' Callable should have one input argument and one return value."
+            "The 'model' Callable should have one input argument and one return value."
         )
-    for k in type_hints["backend"]:
+    for k in type_hints["model"]:
         if k == "return":
-            backend_output = type_hints["backend"][k]
+            model_output = type_hints["model"][k]
         else:
-            backend_input = type_hints["backend"][k]
+            model_input = type_hints["model"][k]
 
     # validate the 'parse' object
     if not (len(type_hints["parse"]) == 3 and "return" in type_hints["parse"]):
@@ -234,10 +248,10 @@ def validate_type_consistency(task: LLMTask, backend: PromptExecutor) -> None:
     for var, msg in (
         (template_output, "`task.generate_prompts()` needs to return an `Iterable`."),
         (
-            backend_input,
-            "The prompts variable in the 'backend' needs to be an `Iterable`.",
+            model_input,
+            "The prompts variable in the 'model' needs to be an `Iterable`.",
         ),
-        (backend_output, "The `backend` function needs to return an `Iterable`."),
+        (model_output, "The `model` function needs to return an `Iterable`."),
         (
             parse_input,
             "`responses` in `task.parse_responses()` needs to be an `Iterable`.",
@@ -246,16 +260,16 @@ def validate_type_consistency(task: LLMTask, backend: PromptExecutor) -> None:
         if not var != Iterable:
             raise ValueError(msg)
 
-    # Ensure that the template returns the same type as expected by the backend
-    if not _do_args_match(template_output, backend_input):  # type: ignore[arg-type]
+    # Ensure that the template returns the same type as expected by the model
+    if not _do_args_match(template_output, model_input):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
-            f"`backend` (`{backend_input}`)."
+            f"`model` (`{model_input}`)."
         )
 
-    # Ensure that the parser expects the same type as returned by the backend
-    if not _do_args_match(backend_output, parse_input):  # type: ignore[arg-type]
+    # Ensure that the parser expects the same type as returned by the model
+    if not _do_args_match(model_output, parse_input):  # type: ignore[arg-type]
         warnings.warn(
-            f"Type returned from `backend` (`{backend_output}`) doesn't match type expected by "
+            f"Type returned from `model` (`{model_output}`) doesn't match type expected by "
             f"`task.parse_responses()` (`{parse_input}`)."
         )

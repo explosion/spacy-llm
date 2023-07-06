@@ -1,0 +1,8 @@
+- text: "This is horrifying."
+  score: 0
+- text: "This is underwhelming."
+  score: 0.25
+- text: "This is ok."
+  score: 0.5
+- text: "I'm looking forward to this!"
+  score: 1.0
