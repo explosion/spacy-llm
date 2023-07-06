@@ -106,8 +106,8 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
             len_text = len(pr_ex.text.split())
             if len_summary >= len_text:
                 warnings.warn(
-                    f"The provided example '{pr_ex.text[:30]}...' has a summary of length {len_summary} and a text "
-                    f"of length {len_text}. Ensure that your examples' summaries are shorter than their original "
+                    f"The provided example '{pr_ex.text[:30]}...' has a summary of token length {len_summary} and a text "
+                    f"of token length {len_text}. Ensure that your examples' summaries are shorter than their original "
                     f"texts."
                 )
             if len_summary > self._max_n_words:
