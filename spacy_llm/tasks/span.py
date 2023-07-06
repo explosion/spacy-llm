@@ -26,14 +26,15 @@ class SpanReason(BaseModel):
     def from_str(cls, s: str, sep: str = "|"):
         clean_str = s.strip()
         if "." in clean_str:
-            clean_str = clean_str.split(".")[1]
+            clean_str = clean_str.split(".", maxsplit=1)[1]
         components = [c.strip() for c in clean_str.split(sep)]
-        return cls(
-            text=components[0],
-            is_entity=components[1].lower() == "true",
-            label=components[2],
-            reason=components[3],
-        )
+        if len(components) == 4:
+            return cls(
+                text=components[0],
+                is_entity=components[1].lower() == "true",
+                label=components[2],
+                reason=components[3],
+            )
 
     def __str__(self) -> str:
         return self.to_str()

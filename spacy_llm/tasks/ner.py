@@ -351,11 +351,12 @@ class COTNERTask(SpanTask[COTSpanExample]):
         assert self._normalizer is not None
         for line in response.strip().split("\n"):
             entity = SpanReason.from_str(line)
-            norm_label = self._normalizer(entity.label)
-            if norm_label not in self._label_dict:
-                continue
-            label = self._label_dict[norm_label]
-            output[label].append(entity.text)
+            if entity:
+                norm_label = self._normalizer(entity.label)
+                if norm_label not in self._label_dict:
+                    continue
+                label = self._label_dict[norm_label]
+                output[label].append(entity.text)
         return output.items()
 
     def assign_spans(
