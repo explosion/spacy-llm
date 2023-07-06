@@ -199,19 +199,24 @@ def test_summarization_predict(cfg_string, example_text, request):
         )
 
 
-@pytest.mark.external
+# @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize(
-    "cfg_string",
+    "cfg_string_and_field",
     [
-        "zeroshot_cfg_string",
-        "fewshot_cfg_string",
-        "ext_template_cfg_string",
+        ("zeroshot_cfg_string", None),
+        ("fewshot_cfg_string", None),
+        ("ext_template_cfg_string", None),
+        ("zeroshot_cfg_string", "summary_x"),
     ],
 )
-def test_summarization_io(cfg_string, example_text, request):
+def test_summarization_io(cfg_string_and_field, example_text, request):
+    cfg_string, field = cfg_string_and_field
     orig_cfg_string = cfg_string
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
+    if field:
+        orig_config["components"]["llm"]["task"]["field"] = field
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
@@ -231,11 +236,12 @@ def test_summarization_io(cfg_string, example_text, request):
     else:
         doc = nlp2(example_text)
 
+    field = "summary" if field is None else field
     nlp2.select_pipes(disable=["llm"])
-    assert 0 < len(nlp2(doc._.summary))
+    assert 0 < len(nlp2(getattr(doc._, field)))
     if "ext" not in orig_cfg_string:
         assert (
-            len(nlp2(doc._.summary))
+            len(nlp2(getattr(doc._, field)))
             <= orig_config["components"]["llm"]["task"]["max_n_words"] * 1.5
         )
 
