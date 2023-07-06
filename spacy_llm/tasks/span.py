@@ -85,45 +85,6 @@ class SpanTask(SerializableTask[_PromptExampleT]):
         if self._prompt_examples:
             self._prompt_examples = self._check_label_consistency()
 
-    def _check_label_consistency(self) -> List[SpanExample]:
-        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
-        RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
-        """
-        assert self._prompt_examples
-        example_labels = {
-            self._normalizer(key): key
-            for example in self._prompt_examples
-            for key in example.entities
-        }
-        unspecified_labels = {
-            example_labels[key]
-            for key in (set(example_labels.keys()) - set(self._label_dict.keys()))
-        }
-        if not set(example_labels.keys()) <= set(self._label_dict.keys()):
-            warnings.warn(
-                f"Examples contain labels that are not specified in the task configuration. The latter contains the "
-                f"following labels: {sorted(list(set(self._label_dict.values())))}. Labels in examples missing from "
-                f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
-                f"and example labels are consistent."
-            )
-
-        # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
-        return [
-            example
-            for example in [
-                SpanExample(
-                    text=example.text,
-                    entities={
-                        label: entities
-                        for label, entities in example.entities.items()
-                        if self._normalizer(label) in self._label_dict
-                    },
-                )
-                for example in self._prompt_examples
-            ]
-            if len(example.entities)
-        ]
-
     @property
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
