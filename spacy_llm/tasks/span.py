@@ -1,3 +1,4 @@
+import typing
 import warnings
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Type
 
@@ -9,11 +10,6 @@ from ..compat import Literal
 from ..registry import lowercase_normalizer
 from .util.parsing import find_substrings
 from .util.serialization import SerializableTask
-
-
-class SpanExample(BaseModel):
-    text: str
-    entities: Dict[str, List[str]]
 
 
 class SpanReason(BaseModel):
@@ -43,56 +39,17 @@ class SpanReason(BaseModel):
         return f"{self.text} | {self.is_entity} | {self.label} | {self.reason}"
 
 
+class SpanExample(BaseModel):
+    text: str
+    entities: Dict[str, List[str]]
+
+
 class COTSpanExample(BaseModel):
     text: str
     entities: List[SpanReason]
 
 
 _PromptExampleT = TypeVar("_PromptExampleT", SpanExample, COTSpanExample)
-
-
-def check_span_label_consistency(
-    normalizer: Callable[[str], str],
-    label_dict: Dict[str, str],
-    prompt_examples: List[SpanExample],
-) -> List[SpanExample]:
-    """Checks consistency of labels between examples and defined labels.
-    Emits warning on inconsistency.
-    RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
-    """
-    assert prompt_examples
-    example_labels = {
-        normalizer(key): key for example in prompt_examples for key in example.entities
-    }
-    unspecified_labels = {
-        example_labels[key]
-        for key in (set(example_labels.keys()) - set(label_dict.keys()))
-    }
-    if not set(example_labels.keys()) <= set(label_dict.keys()):
-        warnings.warn(
-            f"Examples contain labels that are not specified in the task configuration. The latter contains the "
-            f"following labels: {sorted(list(set(label_dict.values())))}. Labels in examples missing from "
-            f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
-            f"and example labels are consistent."
-        )
-
-    # Return examples without non-declared labels.
-    # If an example only has undeclared labels, it is discarded.
-    return [
-        example
-        for example in [
-            SpanExample(
-                text=example.text,
-                entities={
-                    label: entities
-                    for label, entities in example.entities.items()
-                    if normalizer(label) in label_dict
-                },
-            )
-            for example in prompt_examples
-        ]
-        if len(example.entities)
-    ]
 
 
 class SpanTask(SerializableTask[_PromptExampleT]):
@@ -128,7 +85,7 @@ class SpanTask(SerializableTask[_PromptExampleT]):
         if self._prompt_examples:
             self._prompt_examples = self._check_label_consistency()
 
-    def _check_label_consistency(self) -> List[_PromptExampleT]:
+    def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
         RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """

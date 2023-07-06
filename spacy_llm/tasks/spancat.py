@@ -10,7 +10,7 @@ from ..compat import Literal
 from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
-from .span import SpanExample, SpanTask, check_span_label_consistency
+from .span import SpanExample, SpanTask
 from .templates import read_template
 
 _DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")
@@ -149,16 +149,6 @@ class SpanCatTask(SpanTask):
             single_match=single_match,
         )
         self._spans_key = spans_key
-
-    def _check_label_consistency(self) -> List[SpanExample]:
-        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
-        RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
-        """
-        return check_span_label_consistency(
-            normalizer=self._normalizer,
-            label_dict=self._label_dict,
-            prompt_examples=self._prompt_examples,
-        )
 
     def assign_spans(
         self,
