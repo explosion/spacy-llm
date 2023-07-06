@@ -175,7 +175,8 @@ def test_jinja_template_rendering_without_examples():
 
     assert (
         prompt.strip()
-        == f"""Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 is strictly positive, 0 is strictly negative.
+        == f"""
+Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 represents an exclusively positive sentiment, 0 an exclusively negative sentiment.
 
 Text:
 '''
@@ -208,7 +209,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
 
     assert (
         prompt.strip()
-        == """Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 is strictly positive, 0 is strictly negative.
+        == """
+Analyse whether the text surrounded by ''' is positive or negative. Respond with a float value between 0 and 1. 1 represents an exclusively positive sentiment, 0 an exclusively negative sentiment.
 Below are some examples (only use these as a guide):
 
 Text:
