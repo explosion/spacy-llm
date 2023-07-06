@@ -209,7 +209,7 @@ def test_textcat_config(task, cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
