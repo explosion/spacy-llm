@@ -8,7 +8,7 @@ from spacy.tokens import Doc, DocBin
 from spacy.vocab import Vocab
 
 from .registry import registry
-from .ty import LLMTask
+from .ty import LLMTask, PromptTemplateProvider
 
 
 @registry.llm_misc("spacy.BatchCache.v1")
@@ -75,7 +75,16 @@ class BatchCache:
         task (LLMTask): Task.
         """
         self._vocab = vocab
-        self.prompt_template = task.prompt_template
+        if isinstance(task, PromptTemplateProvider):
+            self.prompt_template = task.prompt_template
+        else:
+            self.prompt_template = ""
+            if self._path:
+                warnings.warn(
+                    "The specified task does not provide its prompt template via `prompt_template()`. This means that "
+                    "the cache cannot verify whether all cached documents were generated using the same prompt "
+                    "template."
+                )
 
     @property
     def prompt_template(self) -> Optional[str]:

@@ -75,6 +75,9 @@ class LLMTask(Protocol):
     ) -> Iterable[Doc]:
         ...
 
+
+@runtime_checkable
+class PromptTemplateProvider(Protocol):
     @property
     def prompt_template(self) -> str:
         ...

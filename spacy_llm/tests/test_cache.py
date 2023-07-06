@@ -1,16 +1,18 @@
 import copy
 import os
+import re
 import time
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Iterable
 
 import pytest
 import spacy
 import srsly  # type: ignore[import]
 from spacy.language import Language
-from spacy.tokens import DocBin
+from spacy.tokens import Doc, DocBin
 
 from ..cache import BatchCache
+from ..registry import registry
 
 _DEFAULT_CFG = {
     "model": {"@llm_models": "spacy.NoOp.v1"},
@@ -203,3 +205,30 @@ def test_prompt_template_handling():
 
         with pytest.warns(UserWarning, match="No prompt template set for Cache object"):
             BatchCache(path=tmpdir, batch_size=3, max_batches_in_mem=4).add(docs[0])
+
+    # Check with task not providing a prompt template.
+    with spacy.util.make_tempdir() as tmpdir:
+
+        @registry.llm_tasks("NoPromptTemplate.v1")
+        class NoopTask_NoPromptTemplate:
+            def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+                return [""] * len(list(docs))
+
+            def parse_responses(
+                self, docs: Iterable[Doc], responses: Iterable[str]
+            ) -> Iterable[Doc]:
+                return docs
+
+        # Check if prompt template is written to file properly.
+        config = copy.deepcopy(_DEFAULT_CFG)
+        config["cache"]["path"] = str(tmpdir)
+        config["task"]["@llm_tasks"] = "NoPromptTemplate.v1"
+        nlp = spacy.blank("en")
+
+        with pytest.warns(
+            UserWarning,
+            match=re.escape(
+                "The specified task does not provide its prompt template via `prompt_template()`."
+            ),
+        ):
+            nlp.add_pipe("llm", config=config)
