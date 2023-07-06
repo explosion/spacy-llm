@@ -375,11 +375,12 @@ examples = null
 max_n_words = null
 ```
 
-| Argument                  | Type                                    | Default                                                                | Description                                                                                                                              |
-|---------------------------|-----------------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `template`                | `str`                                   | [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
-| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                                 | Optional function that generates examples for few-shot learning.                                                                         |
-| `max_n_words`             | `Optional[int]`                           | `None`                                                                 | Maximum number of words to be used in summary. Note that this should not expected to work exactly.                                       |
+| Argument      | Type                                    | Default                                                                | Description                                                                                                                              |
+|---------------|-----------------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `template`    | `str`                                   | [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples`    | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                                 | Optional function that generates examples for few-shot learning.                                                                         |
+| `max_n_words` | `Optional[int]`                         | `None`                                                                 | Maximum number of words to be used in summary. Note that this should not expected to work exactly.                                       |
+| `field`       | `str`                                   | `summary`                                                              | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`).                                |
 
 The summarization task prompts the model for a concise summary of the provided text. It optionally allows to limit the 
 response to a certain number of tokens - note that this requirement will be included in the prompt, but the task doesn't
