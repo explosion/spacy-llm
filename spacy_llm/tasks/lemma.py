@@ -74,6 +74,10 @@ class LemmaTask(SerializableTask[LemmaExample]):
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
+    @property
+    def prompt_template(self) -> str:
+        return self._template
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
