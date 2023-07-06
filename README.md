@@ -219,11 +219,9 @@ spacy_llm.logger.setLevel(logging.DEBUG)
 
 > NOTE: Any `logging` handler will work here so you probably want to use some sort of rotating `FileHandler` as the generated prompts can be quite long, especially for tasks with few-shot examples.
 
-
 Then when using the pipeline you'll be able to view the prompt and response.
 
 E.g. with the config and code from [Example 1](##example-1-add-a-text-classifier-using-a-gpt-3-model-from-openai) above:
-
 
 ```python
 from spacy_llm.util import assemble
@@ -270,12 +268,13 @@ COMPLIMENT
 
 `spacy-llm` exposes a `llm` factory that accepts the following configuration options:
 
-| Argument  | Type                                        | Description                                                                         |
-| --------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `task`    | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
-| `backend` | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
-| `cache`   | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
-| `save_io` | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`                  |
+| Argument         | Type                                        | Description                                                                         |
+| ---------------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `task`           | `Optional[LLMTask]`                         | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks).        |
+| `backend`        | `Callable[[Iterable[Any]], Iterable[Any]]]` | Callable querying a specific LLM API. See [docs](#backends).                        |
+| `cache`          | `Cache`                                     | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). |
+| `save_io`        | `bool`                                      | Whether to save prompts/responses within `Doc.user_data["llm_io"]`.                 |
+| `validate_types` | `bool`                                      | Whether to check if signatures of configured backend and task are consistent.       |
 
 An `llm` component is defined by two main settings:
 
@@ -292,6 +291,10 @@ within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
 `Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM component
 within the spaCy pipeline. Each entry is itself a dictionary, with two keys:
 `prompt` and `response`.
+
+A note on `validate_types`: by default, `spacy-llm` checks whether the signatures of the `backend` and `task` callables
+are consistent with each other and emits a warning if they don't. `validate_types` can be set to `False` if you want to
+disable this behavior.
 
 ### Tasks
 
@@ -513,9 +516,66 @@ Except for the `spans_key` parameter, the SpanCat task reuses the configuration
 from the NER task.
 Refer to [its documentation](#spacynerv1) for more insight.
 
+#### spacy.TextCat.v3
+
+Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows
+setting definitions of labels. Those definitions are included in the prompt.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v3"
+labels = ["COMPLIMENT", "INSULT"]
+label_definitions = {
+    "COMPLIMENT": "a polite expression of praise or admiration.",
+    "INSULT": "a disrespectful or scornfully abusive remark or act."
+}
+examples = null
+```
+
+| Argument            | Type                                    | Default                                                      | Description                                                                                                                                      |
+| ------------------- | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`            | `Union[List[str], str]`                 |                                                              | List of labels or str of comma-separated list of labels.                                                                                         |
+| `label_definitions` | `Optional[Dict[str, str]]`              | `None`                                                       | Dictionary of label definitions. Included in the prompt, if set.                                                                                 |
+| `template`          | `str`                                   | [`textcat.jinja`](./spacy_llm/tasks/templates/textcat.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.         |
+| `examples`          | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                       | Optional function that generates examples for few-shot learning.                                                                                 |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`                                                       | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                             |
+| `exclusive_classes` | `bool`                                  | `False`                                                      | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels.                         |
+| `allow_none`        | `bool`                                  | `True`                                                       | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. |
+| `verbose`           | `bool`                                  | `False`                                                      | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                             |
+
+To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
+The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v3"
+labels = ["COMPLIMENT", "INSULT"]
+label_definitions = {
+    "COMPLIMENT": "a polite expression of praise or admiration.",
+    "INSULT": "a disrespectful or scornfully abusive remark or act."
+}
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
 #### spacy.TextCat.v2
 
-The built-in TextCat task supports both zero-shot and few-shot prompting.
+Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt
+template.
 
 ```ini
 [components.llm.task]
@@ -561,7 +621,7 @@ path = "textcat_examples.json"
 
 #### spacy.TextCat.v1
 
-The original version of the built-in TextCat task supports both zero-shot and few-shot prompting.
+Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.
 
 ```ini
 [components.llm.task]
@@ -655,14 +715,15 @@ The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attrib
 examples = null
 ```
 
-| Argument                  | Type                                    | Default                                                   | Description                                                                                                                                           |
-| ------------------------- | --------------------------------------- |-----------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`                | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.              |
-| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                    | Optional function that generates examples for few-shot learning.                                                                                      |
+| Argument   | Type                                    | Default                                                | Description                                                                                                                              |
+| ---------- | --------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | `str`                                   | [lemma.jinja](./spacy_llm/tasks/templates/lemma.jinja) | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples` | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                 | Optional function that generates examples for few-shot learning.                                                                         |
 
 `Lemma.v1` prompts the LLM to lemmatize the passed text and return the lemmatized version as a list of tokens and their
-corresponding lemma. E. g. the text 
+corresponding lemma. E. g. the text
 `I'm buying ice cream for my friends` should invoke the response
+
 ```
 I: I
 'm: be
@@ -675,7 +736,7 @@ friends: friend
 .: .
 ```
 
-If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized 
+If for any given text/doc instance the number of lemmas returned by the LLM doesn't match the number of tokens recognized
 by spaCy, no lemmas are stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is updated with
 the lemma suggested by the LLM.
 
@@ -693,7 +754,7 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
     - ".": "."
 
 - text: I've watered the plants.
-  lemmas: 
+  lemmas:
     - "I": "I"
     - "'ve": "have"
     - "watered": "water"
@@ -990,23 +1051,27 @@ by setting the environmental variable `HF_HOME`.
 
 Interacting with LLMs, either through an external API or a local instance, is costly.
 Since developing an NLP pipeline generally means a lot of exploration and prototyping,
-`spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run.
+`spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run
+that keeps batches of documents stored on disk.
 
 Example config block:
 
 ```ini
 [components.llm.cache]
-@llm_misc = "spacy.BatchCache.v1",
+@llm_misc = "spacy.BatchCache.v1"
 path = "path/to/cache"
 batch_size = 64
 max_batches_in_mem = 4
 ```
 
-| Argument             | Type                         | Default | Description                                          |
-| -------------------- | ---------------------------- | ------- | ---------------------------------------------------- |
-| `path`               | `Optional[Union[str, Path]]` | `None`  | Cache directory. If `None`, no caching is performed. |
-| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file).                  |
-| `max_batches_in_mem` | `int`                        | 4       | Max. number of batches to hold in memory.            |
+| Argument             | Type                         | Default | Description                                                                                                               |
+| -------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `path`               | `Optional[Union[str, Path]]` | `None`  | Cache directory. If `None`, no caching is performed, and this component will act as a NoOp.                               |
+| `batch_size`         | `int`                        | 64      | Number of docs in one batch (file). Once a batch is full, it will be peristed to disk.                                    |
+| `max_batches_in_mem` | `int`                        | 4       | Max. number of batches to hold in memory. Allows you to limit the effect on your memory if you're handling a lot of docs. |
+
+When retrieving a document, the `BatchCache` will first figure out what batch the document belongs to. If the batch
+isn't in memory it will try to load the batch from disk and then move it into memory.
 
 Note that since the cache is generated by a registered function, you can also provide your own registered function
 returning your own cache implementation. If you wish to do so, ensure that your cache object adheres to the

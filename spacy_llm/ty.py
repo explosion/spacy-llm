@@ -180,8 +180,11 @@ def _extract_backend_call_signature(backend: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_types(task: LLMTask, backend: PromptExecutor) -> None:
-    # Inspect the types of the three main parameters to ensure they match internally
+def validate_type_consistency(task: LLMTask, backend: PromptExecutor) -> None:
+    """Check whether the types of the task and backend signatures match.
+    task (LLMTask): Specified task.
+    backend (PromptExecutor): Specified backend.
+    """
     # Raises an error or prints a warning if something looks wrong/odd.
     if not isinstance(task, LLMTask):
         raise ValueError(
