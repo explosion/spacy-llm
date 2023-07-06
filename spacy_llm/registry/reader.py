@@ -1,6 +1,6 @@
 import functools
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union, cast
 
 import srsly
 
@@ -30,22 +30,52 @@ def fewshot_reader(path: Union[str, Path]) -> Callable[[], Iterable[Dict[str, An
     return functools.partial(_fewshot_reader, eg_path=eg_path)
 
 
-def _fewshot_reader(eg_path: Path) -> Iterable[Any]:
+def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
+    data: Optional[List] = None
+
     if eg_path is None:
         data = []
-    elif eg_path.suffix in (".yml", ".yaml"):
-        data = srsly.read_yaml(eg_path)
-    elif eg_path.suffix == ".json":
-        data = srsly.read_json(eg_path)
-    elif eg_path.suffix == ".jsonl":
-        data = list(srsly.read_jsonl(eg_path))
+
     else:
-        raise ValueError(
-            "The examples file expects a .yml, .yaml, .json, or .jsonl file type."
-        )
+        suffix = eg_path.suffix.replace("yaml", "yml")
+        readers = {
+            ".yml": srsly.read_yaml,
+            ".json": srsly.read_json,
+            ".jsonl": lambda path: list(srsly.read_jsonl(eg_path)),
+        }
+
+        # Try to read in indicated format.
+        success = False
+        if suffix in readers:
+            try:
+                data = readers[suffix](eg_path)
+                success = True
+            except Exception:
+                pass
+        if not success:
+            # Try to read file in all supported formats.
+            for file_format, reader in readers.items():
+                if file_format == suffix:
+                    continue
+                try:
+                    data = reader(eg_path)
+                    success = True
+                    break
+                except Exception:
+                    pass
+
+        # Raise error if reading file didn't work.
+        if not success:
+            raise ValueError(
+                "The examples file expects a .yml, .yaml, .json, or .jsonl file type. Ensure that your file "
+                "corresponds to one of these file formats."
+            )
 
     if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
         raise ValueError(
-            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting"
+            f"Cannot interpret prompt examples from {str(eg_path)}. Please check your formatting to ensure that the "
+            f"examples specified in {eg_path} are described as list of dictionaries that fit the structure described by"
+            f" the prompt example class for the corresponding class."
         )
+
     return cast(Iterable[Dict[str, Any]], data)
