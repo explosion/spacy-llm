@@ -138,16 +138,21 @@ def test_sentiment_predict(cfg_string, request):
 
 
 @pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize(
-    "cfg_string",
+    "cfg_string_field",
     [
-        "zeroshot_cfg_string",
-        "fewshot_cfg_string",
+        ("zeroshot_cfg_string", None),
+        ("fewshot_cfg_string", None),
+        ("zeroshot_cfg_string", "sentiment_x"),
     ],
 )
-def test_lemma_io(cfg_string, request):
+def test_lemma_io(cfg_string_field, request):
+    cfg_string, field = cfg_string_field
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
+    if field:
+        orig_config["components"]["llm"]["task"]["field"] = field
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
@@ -155,7 +160,7 @@ def test_lemma_io(cfg_string, request):
         nlp.to_disk(tmpdir)
         nlp2 = spacy.load(tmpdir)
     assert nlp2.pipe_names == ["llm"]
-    score = nlp2("This is perfect.")._.sentiment
+    score = getattr(nlp2("This is perfect.")._, field if field else "sentiment")
     if cfg_string != "ext_template_cfg_string":
         assert score == 1
 

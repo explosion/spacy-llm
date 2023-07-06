@@ -758,10 +758,11 @@ more positive. Note in cases of parsing issues (e. g. in case of unexpected LLM 
 examples = null
 ```
 
-| Argument                  | Type                                    | Default                                                        | Description                                                                                                                                           |
-| ------------------------- | --------------------------------------- |----------------------------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`                | `str`                                   | [sentiment.jinja](./spacy_llm/tasks/templates/sentiment.jinja) | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory.                |
-| `examples`                | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                         | Optional function that generates examples for few-shot learning.                                                                                      |
+| Argument   | Type                                    | Default                                                        | Description                                                                                                                            |
+| ---------- | --------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | `str`                                   | [sentiment.jinja](./spacy_llm/tasks/templates/sentiment.jinja) | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `examples` | `Optional[Callable[[], Iterable[Any]]]` | `None`                                                         | Optional function that generates examples for few-shot learning.                                                                       |
+| `field`    | `str`                                   | `sentiment`                                                    | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`).                              |
 
 To perform few-shot learning, you can write down a few examples in a separate file, and provide these to be injected into the prompt to the LLM.
 The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.

@@ -24,6 +24,7 @@ class SentimentExample(BaseModel):
 def make_sentiment_task(
     template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
     examples: ExamplesConfigType = None,
+    field: str = "sentiment",
 ):
     """Sentiment.v1 task factory.
 
@@ -31,13 +32,14 @@ def make_sentiment_task(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
+    field (str): The name of the doc extension in which to store the summary.
     """
     raw_examples = examples() if callable(examples) else examples
     sentiment_examples = (
         [SentimentExample(**eg) for eg in raw_examples] if raw_examples else None
     )
 
-    return SentimentTask(template=template, examples=sentiment_examples)
+    return SentimentTask(template=template, examples=sentiment_examples, field=field)
 
 
 class SentimentTask(SerializableTask[SentimentExample]):
@@ -45,6 +47,7 @@ class SentimentTask(SerializableTask[SentimentExample]):
         self,
         template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
         examples: Optional[List[SentimentExample]] = None,
+        field: str = "sentiment",
     ):
         """Sentiment analysis task.
 
@@ -52,16 +55,18 @@ class SentimentTask(SerializableTask[SentimentExample]):
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
+        field (str): The name of the doc extension in which to store the summary.
         """
         self._template = template
         self._examples = examples
         self._prompt_examples = examples or []
+        self._field = field
+        self._check_doc_extension()
 
-    @classmethod
-    def _check_doc_extension(cls):
-        """Add `sentiment` extension if need be."""
-        if not Doc.has_extension("sentiment"):
-            Doc.set_extension("sentiment", default=None)
+    def _check_doc_extension(self):
+        """Add extension if need be."""
+        if not Doc.has_extension(self._field):
+            Doc.set_extension(self._field, default=None)
 
     def initialize(
         self,
@@ -84,7 +89,8 @@ class SentimentTask(SerializableTask[SentimentExample]):
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(
                     SentimentExample(
-                        text=eg.reference.text, score=eg.reference._.sentiment
+                        text=eg.reference.text,
+                        score=getattr(eg.reference._, self._field),
                     )
                 )
 
@@ -105,11 +111,15 @@ class SentimentTask(SerializableTask[SentimentExample]):
 
         for doc, prompt_response in zip(docs, responses):
             try:
-                doc._.sentiment = float(
-                    "".join(prompt_response.replace("Answer:", "").strip().split())
+                setattr(
+                    doc._,
+                    self._field,
+                    float(
+                        "".join(prompt_response.replace("Answer:", "").strip().split())
+                    ),
                 )
             except ValueError:
-                doc._.sentiment = None
+                setattr(doc._, self._field, None)
 
             yield doc
 
