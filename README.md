@@ -754,7 +754,7 @@ more positive. Note in cases of parsing issues (e. g. in case of unexpected LLM 
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.Sentiment.v2"
+@llm_tasks = "spacy.Sentiment.v1"
 examples = null
 ```
 
