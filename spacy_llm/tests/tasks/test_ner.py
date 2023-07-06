@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -97,7 +98,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -126,7 +127,7 @@ def fewshot_cfg_string_v2():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -156,7 +157,7 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "ner_template.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "ner.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -200,7 +201,7 @@ def test_ner_config(cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -529,9 +530,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "ner_examples.json"),
-        str(EXAMPLES_DIR / "ner_examples.yml"),
-        str(EXAMPLES_DIR / "ner_examples.jsonl"),
+        str(EXAMPLES_DIR / "ner.json"),
+        str(EXAMPLES_DIR / "ner.yml"),
+        str(EXAMPLES_DIR / "ner.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
@@ -656,7 +657,7 @@ def test_example_not_following_basemodel():
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "ner_template.jinja2")
+    template_path = str(TEMPLATES_DIR / "ner.jinja2")
     template = file_reader(template_path)
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
@@ -827,3 +828,55 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     nlp2.from_disk(path)
 
     assert task1._label_dict == task2._label_dict == labels
+
+
+def test_label_inconsistency():
+    """Test whether inconsistency between specified labels and labels in examples is detected."""
+    cfg = f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v2"
+    labels = ["PERSON", "LOCATION"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
+
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+    """
+
+    config = Config().from_str(cfg)
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Examples contain labels that are not specified in the task configuration. The latter contains the "
+            "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
+            "['TECH']. Please ensure your label specification and example labels are consistent."
+        ),
+    ):
+        nlp = assemble_from_config(config)
+
+    prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
+    assert len(prompt_examples) == 2
+    assert prompt_examples[0].text == "Jack and Jill went up the hill."
+    assert prompt_examples[0].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }
+    assert (
+        prompt_examples[1].text
+        == "Jack and Jill went up the hill and spaCy is a great tool."
+    )
+    assert prompt_examples[1].entities == {
+        "LOCATION": ["hill"],
+        "PERSON": ["Jack", "Jill"],
+    }

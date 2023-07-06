@@ -79,7 +79,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "lemma_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "lemma.yml"))}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -106,7 +106,7 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "lemma_template.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "lemma.jinja2"))}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -229,9 +229,9 @@ Here is the text that needs to be lemmatized:
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "lemma_examples.json"),
-        str(EXAMPLES_DIR / "lemma_examples.yml"),
-        str(EXAMPLES_DIR / "lemma_examples.jsonl"),
+        str(EXAMPLES_DIR / "lemma.json"),
+        str(EXAMPLES_DIR / "lemma.yml"),
+        str(EXAMPLES_DIR / "lemma.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
@@ -330,7 +330,7 @@ Here is the text that needs to be lemmatized:
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "lemma_template.jinja2")
+    template_path = str(TEMPLATES_DIR / "lemma.jinja2")
     template = file_reader(template_path)
     text = "Alice and Bob went to the supermarket"
     nlp = spacy.blank("xx")

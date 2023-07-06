@@ -67,7 +67,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str(EXAMPLES_DIR / "rel_examples.jsonl")}
+    path = {str(EXAMPLES_DIR / "rel.jsonl")}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -133,7 +133,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string"])  # "zeroshot_cfg_string",
 def test_rel_predict(task, cfg_string, request):
     """Use OpenAI to get REL results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable

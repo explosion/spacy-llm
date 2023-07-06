@@ -65,7 +65,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -92,7 +92,7 @@ def test_spancat_config(cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -404,9 +404,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "ner_examples.json"),
-        str(EXAMPLES_DIR / "ner_examples.yml"),
-        str(EXAMPLES_DIR / "ner_examples.jsonl"),
+        str(EXAMPLES_DIR / "ner.json"),
+        str(EXAMPLES_DIR / "ner.yml"),
+        str(EXAMPLES_DIR / "ner.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):

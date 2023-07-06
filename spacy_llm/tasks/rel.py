@@ -3,7 +3,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 import jinja2
 from pydantic import BaseModel, Field, ValidationError, validator
 from spacy.language import Language
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
@@ -45,7 +45,6 @@ def _preannotate(doc: Union[Doc, RELExample]) -> str:
     text = doc.text
 
     for i, ent in enumerate(doc.ents):
-        assert isinstance(ent, Span)
         end = ent.end_char
         before, after = text[: end + offset], text[end + offset :]
 

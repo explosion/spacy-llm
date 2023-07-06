@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 import jinja2
 from pydantic import BaseModel
 from spacy.language import Language
-from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 
@@ -11,50 +10,63 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
+from .util.serialization import ExampleType
 
-_DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
+_DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment")
 
 
-class LemmaExample(BaseModel):
+class SentimentExample(BaseModel):
     text: str
-    lemmas: List[Dict[str, str]]
+    score: float
 
 
-@registry.llm_tasks("spacy.Lemma.v1")
-def make_lemma_task(
-    template: str = _DEFAULT_LEMMA_TEMPLATE_V1,
+@registry.llm_tasks("spacy.Sentiment.v1")
+def make_sentiment_task(
+    template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
     examples: ExamplesConfigType = None,
+    field: str = "sentiment",
 ):
-    """Lemma.v1 task factory.
+    """Sentiment.v1 task factory.
 
     template (str): Prompt template passed to the model.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
+    field (str): The name of the doc extension in which to store the summary.
     """
     raw_examples = examples() if callable(examples) else examples
-    lemma_examples = (
-        [LemmaExample(**eg) for eg in raw_examples] if raw_examples else None
+    sentiment_examples = (
+        [SentimentExample(**eg) for eg in raw_examples] if raw_examples else None
     )
 
-    return LemmaTask(template=template, examples=lemma_examples)
+    return SentimentTask(template=template, examples=sentiment_examples, field=field)
 
 
-class LemmaTask(SerializableTask[LemmaExample]):
+class SentimentTask(SerializableTask[SentimentExample]):
     def __init__(
         self,
-        template: str = _DEFAULT_LEMMA_TEMPLATE_V1,
-        examples: Optional[List[LemmaExample]] = None,
+        template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
+        examples: Optional[List[SentimentExample]] = None,
+        field: str = "sentiment",
     ):
-        """Default lemmatization task.
+        """Sentiment analysis task.
 
         template (str): Prompt template passed to the model.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
+        field (str): The name of the doc extension in which to store the summary.
         """
         self._template = template
+        self._examples = examples
         self._prompt_examples = examples or []
+        self._field = field
+        self._check_doc_extension()
+
+    def _check_doc_extension(self):
+        """Add extension if need be."""
+        if not Doc.has_extension(self._field):
+            Doc.set_extension(self._field, default=None)
 
     def initialize(
         self,
@@ -63,20 +75,24 @@ class LemmaTask(SerializableTask[LemmaExample]):
         n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initializes prompt examples from Doc examples.
+        """Initialize sentiment task.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
+        labels (List[str]): Optional list of labels.
         n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
         """
+        self._check_doc_extension()
+
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(self._create_prompt_example(eg))
-
-    @property
-    def prompt_template(self) -> str:
-        return self._template
+                self._prompt_examples.append(
+                    SentimentExample(
+                        text=eg.reference.text,
+                        score=getattr(eg.reference._, self._field),
+                    )
+                )
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
@@ -84,32 +100,26 @@ class LemmaTask(SerializableTask[LemmaExample]):
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,
-                examples=self._prompt_examples,
+                examples=self._examples,
             )
             yield prompt
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
+        self._check_doc_extension()
+
         for doc, prompt_response in zip(docs, responses):
-            parsed_response = [
-                [pr_part.strip() for pr_part in pr.split(":")]
-                for pr in prompt_response.replace("Lemmatized text:", "")
-                .replace("'''", "")
-                .strip()
-                .split("\n")
-            ]
-            tokens = [token for token in doc]
-
-            # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
-            # match.
-            if len(tokens) != len(parsed_response):
-                yield doc
-
-            # Assign lemmas.
-            for token, lemma_info in zip(tokens, parsed_response):
-                if len(lemma_info) > 0:
-                    token.lemma_ = lemma_info[1]
+            try:
+                setattr(
+                    doc._,
+                    self._field,
+                    float(
+                        "".join(prompt_response.replace("Answer:", "").strip().split())
+                    ),
+                )
+            except ValueError:
+                setattr(doc._, self._field, None)
 
             yield doc
 
@@ -120,17 +130,13 @@ class LemmaTask(SerializableTask[LemmaExample]):
         """Scores lemmatization accuracy on provided examples.
         examples (Iterable[Example]): Examples to determine score against.
         """
-        return Scorer.score_token_attr(examples, "pos")
+        # todo
+        return {"sentiment_diff": 0}
 
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
 
     @property
-    def _Example(self) -> Type[LemmaExample]:
-        return LemmaExample
-
-    def _create_prompt_example(self, example: Example) -> LemmaExample:
-        """Create a lemma prompt example from a spaCy example."""
-        lemma_dict = [{t.text: t.lemma_} for t in example.reference]
-        return LemmaExample(text=example.reference.text, lemmas=lemma_dict)
+    def _Example(self) -> Type[ExampleType]:
+        return SentimentExample
