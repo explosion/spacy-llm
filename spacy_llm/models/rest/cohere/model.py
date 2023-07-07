@@ -27,7 +27,7 @@ class Cohere(REST):
         return {"Authorization": f"Bearer {api_key}"}
 
     def _verify_auth(self) -> None:
-        pass
+        self(["test"])
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
