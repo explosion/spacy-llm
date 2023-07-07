@@ -20,6 +20,7 @@ def test_anthropic_api_response_is_correct():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        verify_auth=True,
     )
 
     prompt = "Count the number of characters in this string: hello"
@@ -46,6 +47,7 @@ def test_anthropic_api_response_when_error():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        verify_auth=True,
     )
 
     prompt = "Count the number of characters in this string: hello"
@@ -71,4 +73,5 @@ def test_anthropic_error_unsupported_model():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            verify_auth=True,
         )

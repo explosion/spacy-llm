@@ -20,11 +20,15 @@ class NoOpModel(REST):
             max_tries=1,
             interval=1,
             max_request_time=1,
+            verify_auth=True,
         )
 
     @property
     def credentials(self) -> Dict[str, str]:
         return {}
+
+    def _verify_auth(self) -> None:
+        pass
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         # Assume time penalty for API calls.

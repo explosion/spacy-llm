@@ -17,6 +17,7 @@ def cohere_command(
     max_tries: int = Cohere.DEFAULT_MAX_TRIES,
     interval: float = Cohere.DEFAULT_INTERVAL,
     max_request_time: float = Cohere.DEFAULT_MAX_REQUEST_TIME,
+    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Cohere instance for 'command' model using REST to prompt API.
     name (Literal["command", "command-light", "command-light-nightly", "command-nightly"]): Model  to use.
@@ -29,6 +30,7 @@ def cohere_command(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Cohere instance for 'command' model using REST to prompt API.
     """
     return Cohere(
@@ -39,4 +41,5 @@ def cohere_command(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        verify_auth=verify_auth,
     )

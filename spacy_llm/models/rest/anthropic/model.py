@@ -30,7 +30,7 @@ class Anthropic(REST):
 
     @property
     def credentials(self) -> Dict[str, str]:
-        # Fetch and check the key
+        # Fetch and check the key, set up headers
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if api_key is None:
             raise ValueError(
@@ -39,10 +39,10 @@ class Anthropic(REST):
                 "an environment variable 'ANTHROPIC_API_KEY."
             )
 
-        # Set-up headers
-        headers = {"X-API-Key": api_key}
-        assert api_key is not None
-        return headers
+        return {"X-API-Key": api_key}
+
+    def _verify_auth(self) -> None:
+        pass
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
