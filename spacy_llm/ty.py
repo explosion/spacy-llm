@@ -20,6 +20,10 @@ ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
 
+COTExamplesConfigType = Union[
+    Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]]
+]
+
 
 @runtime_checkable
 class Serializable(Protocol):

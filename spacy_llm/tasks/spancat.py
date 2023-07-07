@@ -218,6 +218,10 @@ class SpanCatTask(SpanTask):
             "_single_match",
         ]
 
+    @property
+    def _Example(self) -> type[SpanExample]:
+        return SpanExample
+
     def _create_prompt_example(self, example: Example) -> SpanExample:
         """Create a spancat prompt example from a spaCy example."""
         entities = defaultdict(list)

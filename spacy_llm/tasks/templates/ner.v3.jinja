@@ -1,0 +1,19 @@
+{{ description }}
+{# whitespace #}
+{# whitespace #}
+Q: Given the paragraph below, identify a list of possible entities, and for each entry explain why it is or is not an entity:
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+Paragraph: {{ example.text }}
+Answer:
+{# whitespace #}
+{%- for span in example.entities -%}
+{{ loop.index }}. {{ span.to_str() }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+Paragraph: {{ text }}
+Answer:
