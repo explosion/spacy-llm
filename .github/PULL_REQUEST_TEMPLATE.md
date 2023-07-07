@@ -7,6 +7,9 @@ ran. If your test fixes a bug reported in an issue, don't forget to include the
 issue number. If your PR is still a work in progress, that's totally fine – just
 include a note to let us know. -->
 
+### Corresponding documentation PR
+<!--- Add the link to the corresponding documentation PR here, if applicable. -->
+
 ### Types of change
 <!-- What type of change does your PR cover? Is it a bug fix, an enhancement
 or new feature, or a change to the documentation? -->
