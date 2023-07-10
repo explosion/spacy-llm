@@ -33,7 +33,6 @@ class REST(abc.ABC):
         max_tries: int,
         interval: float,
         max_request_time: float,
-        verify_auth: bool,
     ):
         """Initializes new instance of REST-based model.
         name (str): Model name.
@@ -48,7 +47,6 @@ class REST(abc.ABC):
         interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential
             backoff at each retry.
         max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-        verify_auth (bool): Whether to verify API authentication before executing the first prompt.
         """
         self._name = name
         self._endpoint = endpoint
@@ -59,14 +57,12 @@ class REST(abc.ABC):
         self._max_request_time = max_request_time
         self._credentials = self.credentials
 
-        if verify_auth:
-            self._verify_auth()
-
         assert self._max_tries >= 1
         assert self._interval > 0
         assert self._max_request_time > 0
 
         self._check_model()
+        self._verify_auth()
 
     def _check_model(self) -> None:
         """Checks whether model is supported. Raises if it isn't."""

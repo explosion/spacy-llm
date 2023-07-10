@@ -17,7 +17,6 @@ def openai_gpt_4(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -30,7 +29,6 @@ def openai_gpt_4(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model using REST to
         prompt API.
     """
@@ -42,7 +40,6 @@ def openai_gpt_4(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -59,7 +56,6 @@ def openai_gpt_3_5(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -72,7 +68,6 @@ def openai_gpt_3_5(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model using REST to
         prompt API.
     """
@@ -84,7 +79,6 @@ def openai_gpt_3_5(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -98,7 +92,6 @@ def openai_text_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -111,7 +104,6 @@ def openai_text_davinci(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'text-davinci' model using REST to
         prompt API.
     """
@@ -123,7 +115,6 @@ def openai_text_davinci(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -135,7 +126,6 @@ def openai_code_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -148,7 +138,6 @@ def openai_code_davinci(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'code-davinci' model using REST to
         prompt API.
     """
@@ -160,7 +149,6 @@ def openai_code_davinci(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -172,7 +160,6 @@ def openai_text_curie(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-curie' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -185,7 +172,6 @@ def openai_text_curie(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'text-curie' model using REST to
         prompt API.
     """
@@ -197,7 +183,6 @@ def openai_text_curie(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -209,7 +194,6 @@ def openai_text_babbage(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-babbage' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -222,7 +206,6 @@ def openai_text_babbage(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'text-babbage' model using REST to
         prompt API.
     """
@@ -234,7 +217,6 @@ def openai_text_babbage(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -246,7 +228,6 @@ def openai_text_ada(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-ada' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -259,7 +240,6 @@ def openai_text_ada(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
@@ -271,7 +251,6 @@ def openai_text_ada(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -283,7 +262,6 @@ def openai_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'davinci' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -296,7 +274,6 @@ def openai_davinci(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
@@ -308,7 +285,6 @@ def openai_davinci(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -320,7 +296,6 @@ def openai_curie(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'curie' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -333,7 +308,6 @@ def openai_curie(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
@@ -345,7 +319,6 @@ def openai_curie(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -357,7 +330,6 @@ def openai_babbage(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'babbage' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -370,7 +342,6 @@ def openai_babbage(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
@@ -382,7 +353,6 @@ def openai_babbage(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )
 
 
@@ -394,7 +364,6 @@ def openai_ada(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-    verify_auth: bool = True,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'ada' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -407,7 +376,6 @@ def openai_ada(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    verify_auth (bool): Whether to verify API authentication before executing the first prompt.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
@@ -419,5 +387,4 @@ def openai_ada(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
-        verify_auth=verify_auth,
     )

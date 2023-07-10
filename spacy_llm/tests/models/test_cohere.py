@@ -18,7 +18,6 @@ def test_cohere_api_response_is_correct():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
-        verify_auth=True,
     )
     prompt = "Count the number of characters in this string: hello"
     num_prompts = 3  # arbitrary number to check multiple inputs
@@ -45,7 +44,6 @@ def test_cohere_api_response_n_generations():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
-        verify_auth=True,
     )
 
     prompt = "Count the number of characters in this string: hello"
@@ -62,20 +60,16 @@ def test_cohere_api_response_when_error():
     # Incorrect config because temperature is in incorrect range [0, 5]
     # c.f. https://docs.cohere.com/reference/generate
     incorrect_temperature = 1000  # must be between 0 and 5
-    cohere = Cohere(
-        name="command",
-        endpoint=Endpoints.COMPLETION.value,
-        config={"temperature": incorrect_temperature},
-        strict=False,
-        max_tries=10,
-        interval=5.0,
-        max_request_time=20,
-        verify_auth=True,
-    )
-    prompt = "Count the number of characters in this string: hello"
-    num_prompts = 3  # arbitrary number to check multiple inputs
-    with pytest.raises(ValueError):
-        cohere(prompts=[prompt] * num_prompts)
+    with pytest.raises(ValueError, match="Request to Cohere API failed:"):
+        Cohere(
+            name="command",
+            endpoint=Endpoints.COMPLETION.value,
+            config={"temperature": incorrect_temperature},
+            strict=False,
+            max_tries=10,
+            interval=5.0,
+            max_request_time=20,
+        )
 
 
 @pytest.mark.external
@@ -92,5 +86,4 @@ def test_cohere_error_unsupported_model():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
-            verify_auth=True,
         )
