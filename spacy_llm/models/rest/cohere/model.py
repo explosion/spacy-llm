@@ -16,18 +16,6 @@ class Endpoints(str, Enum):
 
 class Cohere(REST):
     @property
-    def supported_models(self) -> Dict[str, str]:
-        """Returns supported models with their endpoints.
-        RETURNS (Dict[str, str]): Supported models with their endpoints.
-        """
-        return {
-            "command": Endpoints.COMPLETION.value,
-            "command-nightly": Endpoints.COMPLETION.value,
-            "command-light": Endpoints.COMPLETION.value,
-            "command-light-nightly": Endpoints.COMPLETION.value,
-        }
-
-    @property
     def credentials(self) -> Dict[str, str]:
         api_key = os.getenv("CO_API_KEY")
         if api_key is None:
