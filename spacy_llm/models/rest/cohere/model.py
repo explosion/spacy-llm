@@ -74,17 +74,17 @@ class Cohere(REST):
                 {"text": eg.split("\t")[0], "label": eg.split("\t")[1]}
                 for eg in examples
             ]
-            responses = _request({"inputs": inputs, "examples": examples})
+            pred_responses = _request({"inputs": inputs, "examples": examples})
             api_responses = [
-                response["prediction"] for response in responses["classifications"]
+                response["prediction"] for response in pred_responses["classifications"]
             ]
         # Cohere API currently doesn't accept batch prompts, so we're making
         # a request for each iteration. This approach can be prone to rate limit
         # errors. In practice, you can adjust _max_request_time so that the
         # timeout is larger.
         else:
-            responses = [_request({"prompt": prompt}) for prompt in prompts]
-            for response in responses:
+            llm_responses = [_request({"prompt": prompt}) for prompt in prompts]
+            for response in llm_responses:
                 for result in response["generations"]:
                     if "text" in result:
                         # Although you can set the number of completions in Cohere
