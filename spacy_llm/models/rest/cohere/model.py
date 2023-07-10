@@ -99,4 +99,10 @@ class Cohere(REST):
 
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:
-        return "command", "command-light", "command-light-nightly", "command-nightly", "embed-english-v2.0"
+        return (
+            "command",
+            "command-light",
+            "command-light-nightly",
+            "command-nightly",
+            "embed-english-v2.0",
+        )
