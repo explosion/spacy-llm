@@ -22,3 +22,10 @@ class NoopTask:
     ) -> Iterable[Doc]:
         # Not doing anything
         return docs
+
+    @property
+    def prompt_template(self) -> str:
+        return """
+        This is the NoOp
+        prompt template
+        """

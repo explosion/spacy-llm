@@ -6,7 +6,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.training import Example
 from spacy.util import make_tempdir
 
@@ -44,10 +43,8 @@ def zeroshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -71,15 +68,13 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str(EXAMPLES_DIR / "textcat_examples.yml")}
+    path = {str(EXAMPLES_DIR / "textcat.yml")}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {{}}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -105,15 +100,13 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "textcat_template.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "textcat.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {{}}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -141,10 +134,8 @@ def zeroshot_cfg_string_v3_lds():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -154,7 +145,7 @@ def binary():
     labels = "Recipe"
     gold_cats = ["Recipe"]
     exclusive_classes = True
-    examples_path = str(EXAMPLES_DIR / "textcat_binary_examples.yml")
+    examples_path = str(EXAMPLES_DIR / "textcat_binary.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -164,7 +155,7 @@ def multilabel_excl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = True
-    examples_path = str(EXAMPLES_DIR / "textcat_multi_excl_examples.yml")
+    examples_path = str(EXAMPLES_DIR / "textcat_multi_excl.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -174,7 +165,7 @@ def multilabel_nonexcl():
     labels = "Recipe,Feedback,Comment"
     gold_cats = ["Recipe", "Feedback", "Comment"]
     exclusive_classes = False
-    examples_path = str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml")
+    examples_path = str(EXAMPLES_DIR / "textcat_multi_nonexcl.yml")
     return text, labels, gold_cats, exclusive_classes, examples_path
 
 
@@ -218,7 +209,7 @@ def test_textcat_config(task, cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -362,15 +353,15 @@ def test_textcat_multilabel_labels_are_correct(
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     # Take only those that have scores
     pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
-    assert pred_cats == expected
+    assert set(pred_cats) == set(expected)
 
 
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "textcat_binary_examples.json"),
-        str(EXAMPLES_DIR / "textcat_binary_examples.yml"),
-        str(EXAMPLES_DIR / "textcat_binary_examples.jsonl"),
+        str(EXAMPLES_DIR / "textcat_binary.json"),
+        str(EXAMPLES_DIR / "textcat_binary.yml"),
+        str(EXAMPLES_DIR / "textcat_binary.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary):
@@ -437,9 +428,9 @@ Get 1 cup of sugar, half a cup of butter, and mix them together to make a cream
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "textcat_multi_excl_examples.json"),
-        str(EXAMPLES_DIR / "textcat_multi_excl_examples.yml"),
-        str(EXAMPLES_DIR / "textcat_multi_excl_examples.jsonl"),
+        str(EXAMPLES_DIR / "textcat_multi_excl.json"),
+        str(EXAMPLES_DIR / "textcat_multi_excl.yml"),
+        str(EXAMPLES_DIR / "textcat_multi_excl.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
@@ -462,7 +453,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
@@ -504,9 +495,9 @@ You need to increase the temperature when baking, it looks undercooked.
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.json"),
-        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.yml"),
-        str(EXAMPLES_DIR / "textcat_multi_nonexcl_examples.jsonl"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl.json"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl.yml"),
+        str(EXAMPLES_DIR / "textcat_multi_nonexcl.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
@@ -529,7 +520,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is non-exclusive, so you can provide more than one label as long as
 they're comma-delimited. For example: Label1, Label2, Label3.
@@ -585,7 +576,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError):
             make_textcat_task_v3(
                 labels=labels,
                 examples=fewshot_reader(tmp_path),
@@ -594,7 +585,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "textcat_template.jinja2")
+    template_path = str(TEMPLATES_DIR / "textcat.jinja2")
     template = file_reader(template_path)
     labels = "Recipe"
     nlp = spacy.blank("xx")
@@ -643,7 +634,7 @@ INSULTS = [
 
 @pytest.mark.parametrize("n_insults", range(len(INSULTS) + 1))
 def test_textcat_scoring(zeroshot_cfg_string, n_insults):
-    @registry.llm_backends("Dummy")
+    @registry.llm_models("Dummy")
     def factory():
         def b(prompts: Iterable[str]) -> Iterable[str]:
             for _ in prompts:
@@ -652,7 +643,7 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
         return b
 
     config = Config().from_str(zeroshot_cfg_string)
-    config["components"]["llm"]["backend"] = {"@llm_backends": "Dummy"}
+    config["components"]["llm"]["model"] = {"@llm_models": "Dummy"}
     config["components"]["llm"]["task"]["labels"] = "Insult"
     nlp = assemble_from_config(config)
 
@@ -696,7 +687,7 @@ def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
 You are an expert Text Classification system. Your task is to accept Text as input
 and provide a category for the text based on the predefined labels.
 
-Classify the text below to any of the following labels: Recipe, Feedback, Comment
+Classify the text below to any of the following labels: Comment, Feedback, Recipe
 
 The task is exclusive, so only choose one label from what I provided.
 Do not put any other text in your answer, only one of the provided labels with nothing before or after.
@@ -738,14 +729,18 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     """
 
 
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 @pytest.mark.parametrize("init_from_config", [True, False])
-def test_textcat_init(noop_config, init_from_config: bool):
-
+def test_textcat_init(
+    noop_config,
+    init_from_config: bool,
+    n_prompt_examples: bool,
+):
     config = Config().from_str(noop_config)
     if init_from_config:
         config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
@@ -772,6 +767,11 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = set()
     assert set(task._label_dict.values()) == target
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
 
     nlp.initialize(lambda: examples)
 
@@ -780,10 +780,13 @@ def test_textcat_init(noop_config, init_from_config: bool):
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(INSULTS)
 
 
 def test_textcat_serde(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
 
     nlp1 = assemble_from_config(config)

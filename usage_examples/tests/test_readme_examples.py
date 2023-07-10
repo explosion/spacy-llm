@@ -1,10 +1,10 @@
-from typing import Iterable, Callable
+from typing import Callable, Iterable
 
 import pytest
 import spacy
+from spacy import util
 from thinc.compat import has_torch_cuda_gpu
 
-from spacy import util
 from spacy_llm.registry import registry
 from spacy_llm.util import assemble
 
@@ -26,10 +26,9 @@ def test_example_1_classifier():
         @llm_tasks = "spacy.TextCat.v2"
         labels = ["COMPLIMENT", "INSULT"]
 
-        [components.llm.backend]
-        @llm_backends = "spacy.REST.v1"
-        api = "OpenAI"
-        config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
+        [components.llm.model]
+        @llm_models = "spacy.GPT-3-5.v1"
+        config = {"temperature": 0.3}
         """
 
         with open(tmpdir / "cfg", "w") as text_file:
@@ -57,10 +56,10 @@ def test_example_2_ner_hf():
         @llm_tasks = "spacy.NER.v2"
         labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
-        [components.llm.backend]
-        @llm_backends = "spacy.Dolly_HF.v1"
+        [components.llm.model]
+        @llm_models = "spacy.Dolly.v1"
         # For better performance, use databricks/dolly-v2-12b instead
-        model = "databricks/dolly-v2-3b"
+        name = "dolly-v2-3b"
         """
 
         with open(tmpdir / "cfg", "w") as text_file:
@@ -81,10 +80,8 @@ def test_example_3_python():
                 "@llm_tasks": "spacy.NER.v2",
                 "labels": ["PERSON", "ORGANISATION", "LOCATION"],
             },
-            "backend": {
-                "@llm_backends": "spacy.REST.v1",
-                "api": "OpenAI",
-                "config": {"model": "gpt-3.5-turbo"},
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
             },
         },
     )
@@ -93,10 +90,10 @@ def test_example_3_python():
     print([(ent.text, ent.label_) for ent in doc.ents])  # noqa: T201
 
 
-def test_example_4_custom_backend():
+def test_example_4_custom_model():
     import random
 
-    @registry.llm_backends("RandomClassification.v1")
+    @registry.llm_models("RandomClassification.v1")
     def random_textcat(labels: str) -> Callable[[Iterable[str]], Iterable[str]]:
         labels = labels.split(",")
 
@@ -121,8 +118,8 @@ def test_example_4_custom_backend():
         @llm_tasks = "spacy.TextCat.v2"
         labels = ORDER,INFORMATION
 
-        [components.llm.backend]
-        @llm_backends = "RandomClassification.v1"
+        [components.llm.model]
+        @llm_models = "RandomClassification.v1"
         labels = ${components.llm.task.labels}
         """
 

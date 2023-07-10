@@ -68,7 +68,7 @@ def make_textcat_task(
     return TextCatTask(
         labels=labels_list,
         template=_DEFAULT_TEXTCAT_TEMPLATE_V1,
-        examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -122,7 +122,7 @@ def make_textcat_task_v2(
     return TextCatTask(
         labels=labels_list,
         template=template,
-        examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -182,7 +182,7 @@ def make_textcat_task_v3(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -196,7 +196,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         labels: List[str] = [],
         template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[List[TextCatExample]] = None,
+        prompt_examples: Optional[List[TextCatExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         exclusive_classes: bool = False,
         allow_none: bool = True,
@@ -222,7 +222,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
-        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
@@ -233,9 +233,11 @@ class TextCatTask(SerializableTask[TextCatExample]):
         """
         self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
         self._label_definitions = label_definitions
-        self._examples = examples
+        self._prompt_examples = prompt_examples or []
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
@@ -253,6 +255,10 @@ class TextCatTask(SerializableTask[TextCatExample]):
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
 
+    @property
+    def prompt_template(self) -> str:
+        return self._template
+
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
@@ -261,7 +267,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                examples=self._examples,
+                examples=self._prompt_examples,
                 exclusive_classes=self._exclusive_classes,
                 allow_none=self._allow_none,
             )
@@ -324,6 +330,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
+        n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize the TextCat task, by auto-discovering labels.
@@ -338,21 +345,26 @@ class TextCatTask(SerializableTask[TextCatExample]):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
+        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
+            0 by default. Takes all examples if set to -1.
         """
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
+        infer_labels = not labels
 
-        if not labels:
-            label_set = set()
+        if infer_labels:
+            labels = []
 
-            for eg in examples:
+        for eg in get_examples():
+            if infer_labels:
                 for cat in eg.reference.cats.keys():
-                    label_set.add(cat)
-            labels = list(label_set)
+                    labels.append(cat)
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
 
-        self._label_dict = {self._normalizer(label): label for label in labels}
+        self._label_dict = {
+            self._normalizer(label): label for label in sorted(set(labels))
+        }
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -369,3 +381,26 @@ class TextCatTask(SerializableTask[TextCatExample]):
     @property
     def _Example(self) -> Type[TextCatExample]:
         return TextCatExample
+
+    def _create_prompt_example(self, example: Example) -> TextCatExample:
+        """Create a textcat prompt example from a spaCy example."""
+        if self._use_binary:
+            answer = (
+                "POS"
+                if example.reference.cats[list(self._label_dict.values())[0]] == 1.0
+                else "NEG"
+            )
+        else:
+            answer = ",".join(
+                [
+                    label
+                    for label, score in example.reference.cats.items()
+                    if score == 1.0
+                ]
+            )
+
+        textcat_example = TextCatExample(
+            text=example.reference.text,
+            answer=answer,
+        )
+        return textcat_example

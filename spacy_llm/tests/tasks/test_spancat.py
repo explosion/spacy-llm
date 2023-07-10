@@ -4,7 +4,6 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
@@ -42,10 +41,8 @@ def zeroshot_cfg_string():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config = {}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -68,15 +65,13 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_examples.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
-    config: {{}}
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
     """
 
 
@@ -97,7 +92,7 @@ def test_spancat_config(cfg_string, request):
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
-    assert task.labels == tuple(labels)
+    assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
@@ -391,9 +386,9 @@ You are an expert Named Entity Recognition (NER) system. Your task is to accept 
 The entities you extract for each label can overlap with each other.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Here is the text that needs labeling:
@@ -409,9 +404,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "ner_examples.json"),
-        str(EXAMPLES_DIR / "ner_examples.yml"),
-        str(EXAMPLES_DIR / "ner_examples.jsonl"),
+        str(EXAMPLES_DIR / "ner.json"),
+        str(EXAMPLES_DIR / "ner.yml"),
+        str(EXAMPLES_DIR / "ner.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
@@ -435,9 +430,9 @@ You are an expert Named Entity Recognition (NER) system. Your task is to accept 
 The entities you extract for each label can overlap with each other.
 From the Text input provided, extract named entities for each label in the following format:
 
-PER: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
 LOC: <comma delimited list of strings>
+ORG: <comma delimited list of strings>
+PER: <comma delimited list of strings>
 
 
 Below are some examples (only use these as a guide):
@@ -486,10 +481,8 @@ def test_example_not_following_basemodel():
         tmp_path = tmpdir / "wrong_example.yml"
         srsly.write_yaml(tmp_path, wrong_example)
 
-        with pytest.raises(ValidationError):
-            make_spancat_task_v2(
-                labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path)
-            )
+    with pytest.raises(ValueError):
+        make_spancat_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 @pytest.fixture
@@ -512,15 +505,14 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     output = "PER: Bob,Alice"
     """
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_spancat_scoring(noop_config, n_detections):
-
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -542,8 +534,8 @@ def test_spancat_scoring(noop_config, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-def test_spancat_init(noop_config):
-
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_spancat_init(noop_config, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
@@ -569,12 +561,26 @@ def test_spancat_init(noop_config):
     task: SpanCatTask = llm._task
 
     assert set(task._label_dict.values()) == set()
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
+
     nlp.initialize(lambda: examples)
+
     assert set(task._label_dict.values()) == {"PER", "LOC"}
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(examples)
+
+    if n_prompt_examples > 0:
+        for eg in task._prompt_examples:
+            assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
 def test_spancat_serde(noop_config):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 

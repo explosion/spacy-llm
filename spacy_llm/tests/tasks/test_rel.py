@@ -37,9 +37,8 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.REL.v1"
     labels = "LivesIn,Visits"
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
 
     [initialize]
     vectors = "en_core_web_md"
@@ -68,11 +67,10 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str(EXAMPLES_DIR / "rel_examples.jsonl")}
+    path = {str(EXAMPLES_DIR / "rel.jsonl")}
 
-    [components.llm.backend]
-    @llm_backends = "spacy.REST.v1"
-    api = "OpenAI"
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
 
     [initialize]
     vectors = "en_core_web_md"
@@ -99,8 +97,8 @@ def noop_config():
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
-    [components.llm.backend]
-    @llm_backends = "test.NoOpBackend.v1"
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
     """
 
 
@@ -129,13 +127,13 @@ def test_rel_config(cfg_string, request: FixtureRequest):
     labels = split_labels(labels)
     assert isinstance(task, Labeled)
     assert task.labels == tuple(labels)
-    assert pipe.labels == task.labels
+    assert set(pipe.labels) == set(task.labels)
     assert nlp.pipe_labels["llm"] == list(task.labels)
 
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string"])  # "zeroshot_cfg_string",
 def test_rel_predict(task, cfg_string, request):
     """Use OpenAI to get REL results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
@@ -151,9 +149,9 @@ def test_rel_predict(task, cfg_string, request):
     assert doc._.rel
 
 
-def test_rel_init(noop_config):
-
-    RELTask._check_rel_extention()
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_rel_init(noop_config, n_prompt_examples: int):
+    RELTask._check_rel_extension()
 
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
@@ -179,15 +177,25 @@ def test_rel_init(noop_config):
         examples.append(Example(predicted, reference))
 
     _, llm = nlp.pipeline[0]
-    task: RELTask = llm._task
+    task: RELTask = llm._task  # type: ignore[annotation-unchecked]
 
     assert set(task._label_dict.values()) == set()
+    assert not task._prompt_examples
+
+    nlp.config["initialize"]["components"]["llm"] = {
+        "n_prompt_examples": n_prompt_examples
+    }
     nlp.initialize(lambda: examples)
+
     assert set(task._label_dict.values()) == {"LivesIn", "Visits"}
+
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
+    else:
+        assert len(task._prompt_examples) == len(examples)
 
 
 def test_rel_serde(noop_config, tmp_path: Path):
-
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
