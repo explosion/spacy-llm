@@ -11,6 +11,7 @@ from .. import textcat_openai
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 @pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_ner_dolly(config_name: str):
