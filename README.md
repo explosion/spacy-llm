@@ -1475,14 +1475,14 @@ Example config block:
 ```ini
 [components.llm.model]
 @llm_models = "spacy.OpenLLaMA.v1"
-name = "open_llama_3b_350bt_preview"
+name = "open_llama_3b"
 ```
 
-| Argument      | Type                                                                                                                                  | Default | Description                                                                                                                  |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | `Literal["open_llama_3b_350bt_preview", "open_llama_3b_600bt_preview", "open_llama_7b_400bt_preview", "open_llama_7b_600bt_preview"]` |         | The name of a OpenLLaMA model that is supported (e. g. "open_llama_3b_350bt_preview").                                       |
-| `config_init` | `Dict[str, Any]`                                                                                                                      | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
-| `config_run`  | `Dict[str, Any]`                                                                                                                      | `{}`    | Further configuration used during model inference.                                                                           |
+| Argument      | Type                                                                                            | Default | Description                                                                                                                  |
+| ------------- |-------------------------------------------------------------------------------------------------| ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | `Literal["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]` |         | The name of a OpenLLaMA model that is supported.                                       |
+| `config_init` | `Dict[str, Any]`                                                                                | `{}`    | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. |
+| `config_run`  | `Dict[str, Any]`                                                                                | `{}`    | Further configuration used during model inference.                                                                           |
 
 See the [OpenLM Research OpenLLaMA GitHub repo](https://github.com/openlm-research/open_llama) for details.
 
