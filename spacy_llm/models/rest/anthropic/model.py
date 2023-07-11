@@ -30,7 +30,7 @@ class Anthropic(REST):
 
     @property
     def credentials(self) -> Dict[str, str]:
-        # Fetch and check the key
+        # Fetch and check the key, set up headers
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if api_key is None:
             raise ValueError(
@@ -39,10 +39,11 @@ class Anthropic(REST):
                 "an environment variable 'ANTHROPIC_API_KEY."
             )
 
-        # Set-up headers
-        headers = {"X-API-Key": api_key}
-        assert api_key is not None
-        return headers
+        return {"X-API-Key": api_key}
+
+    def _verify_auth(self) -> None:
+        # Execute a dummy prompt. If the API setup is incorrect, we should fail at initialization time.
+        self(["test"])
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
@@ -67,9 +68,11 @@ class Anthropic(REST):
             except HTTPError as ex:
                 res_content = srsly.json_loads(r.content.decode("utf-8"))
                 # Include specific error message in exception.
-                raise ValueError(
-                    f"Request to Anthropic API failed: {res_content.get('error', {})}"
-                ) from ex
+                error = res_content.get("error", {})
+                error_msg = f"Request to Anthropic API failed: {error}"
+                if error["type"] == "not_found_error":
+                    error_msg += f". Ensure that the selected model ({self._name}) is supported by the API."
+                raise ValueError(error_msg) from ex
             response = r.json()
 
             # c.f. https://console.anthropic.com/docs/api/errors

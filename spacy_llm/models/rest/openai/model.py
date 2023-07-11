@@ -34,10 +34,20 @@ class OpenAI(REST):
         }
         if api_org:
             headers["OpenAI-Organization"] = api_org
+
+        # Ensure endpoint is supported.
+        if self._endpoint not in (Endpoints.NON_CHAT, Endpoints.CHAT):
+            raise ValueError(
+                f"Endpoint {self._endpoint} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
+            )
+
+        return headers
+
+    def _verify_auth(self) -> None:
         r = self.retry(
             call_method=requests.get,
             url="https://api.openai.com/v1/models",
-            headers=headers,
+            headers=self._credentials,
             timeout=self._max_request_time,
         )
         if r.status_code == 422:
@@ -56,15 +66,6 @@ class OpenAI(REST):
             raise ValueError(
                 f"The specified model '{self._name}' is not available. Choices are: {sorted(set(models))}"
             )
-
-        # Ensure endpoint is supported.
-        if self._endpoint not in (Endpoints.NON_CHAT, Endpoints.CHAT):
-            raise ValueError(
-                f"Endpoint {self._endpoint} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
-            )
-
-        assert api_key is not None
-        return headers
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
