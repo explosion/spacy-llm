@@ -41,7 +41,6 @@ class OpenAI(REST):
                 f"Endpoint {self._endpoint} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
             )
 
-        assert api_key is not None
         return headers
 
     def _verify_auth(self) -> None:
