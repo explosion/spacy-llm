@@ -9,7 +9,7 @@ from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import registry
-from ..ty import ExamplesConfigType
+from ..ty import ExamplesConfigType, Normalizer
 from ..util import split_labels
 from .span import SpanExample, SpanTask
 from .templates import read_template
@@ -22,7 +22,7 @@ _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
 def make_ner_task(
     labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
-    normalizer: Optional[Callable[[str], str]] = None,
+    normalizer: Union[Normalizer, str] = "spacy.LowercaseNormalizer.v1",
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
@@ -67,7 +67,7 @@ def make_ner_task_v2(
     template: str = _DEFAULT_NER_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
-    normalizer: Optional[Callable[[str], str]] = None,
+    normalizer: Union[Normalizer, str] = "spacy.LowercaseNormalizer.v1",
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
@@ -114,7 +114,7 @@ class NERTask(SpanTask):
         template: str = _DEFAULT_NER_TEMPLATE_V2,
         label_definitions: Optional[Dict[str, str]] = None,
         prompt_examples: Optional[List[SpanExample]] = None,
-        normalizer: Optional[Callable[[str], str]] = None,
+        normalizer: Union[Normalizer, str] = "spacy.LowercaseNormalizer.v1",
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,

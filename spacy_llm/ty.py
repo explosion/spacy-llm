@@ -19,6 +19,7 @@ PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
+Normalizer = Callable[[str], str]
 
 
 @runtime_checkable

@@ -65,7 +65,7 @@ def make_rel_task(
     template: str = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
-    normalizer: Optional[Callable[[str], str]] = None,
+    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
     verbose: bool = False,
 ) -> "RELTask":
     """REL.v1 task factory.
@@ -106,7 +106,7 @@ class RELTask(SerializableTask[RELExample]):
         template: str = _DEFAULT_REL_TEMPLATE,
         label_definitions: Optional[Dict[str, str]] = None,
         prompt_examples: Optional[List[RELExample]] = None,
-        normalizer: Optional[Callable[[str], str]] = None,
+        normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
         verbose: bool = False,
     ):
         """Default REL task. Populates a `Doc._.rel` custom attribute.

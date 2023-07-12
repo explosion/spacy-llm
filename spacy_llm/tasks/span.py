@@ -1,12 +1,14 @@
+import typing
 import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import jinja2
 from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 
 from ..compat import Literal
-from ..registry import lowercase_normalizer
+from ..registry import registry
+from ..ty import Normalizer
 from .util.parsing import find_substrings
 from .util.serialization import SerializableTask
 
@@ -25,14 +27,18 @@ class SpanTask(SerializableTask[SpanExample]):
         template: str,
         label_definitions: Optional[Dict[str, str]] = {},
         prompt_examples: Optional[List[SpanExample]] = None,
-        normalizer: Optional[Callable[[str], str]] = None,
+        normalizer: Union[Normalizer, str] = "spacy.LowercaseNormalizer.v1",
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
         ] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
+        self._normalizer = (
+            SpanTask._init_normalizer_by_handle(normalizer)
+            if isinstance(normalizer, str)
+            else normalizer
+        )
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
         }
@@ -46,6 +52,22 @@ class SpanTask(SerializableTask[SpanExample]):
 
         if self._prompt_examples:
             self._prompt_examples = self._check_label_consistency()
+
+    @staticmethod
+    def _init_normalizer_by_handle(handle: str) -> Normalizer:
+        """Initializes normalizer by its registration handle.
+        handle (str): Registration handle for normalizer.
+        RETURNS (Normalizer): Instantiated normalizer Callable.
+        """
+        normalizer_factory = registry.misc.get(handle)
+        norm_fact_type = typing.get_type_hints(normalizer_factory)
+
+        if not norm_fact_type["return"] == Normalizer:
+            raise ValueError(
+                f"`normalizer` has to be of type {Normalizer}, but is of type {norm_fact_type}."
+            )
+
+        return normalizer_factory()
 
     def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.

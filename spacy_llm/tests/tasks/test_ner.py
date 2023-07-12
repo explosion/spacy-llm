@@ -382,7 +382,11 @@ def test_ner_zero_shot_task(text, response, gold_ents):
 def test_ner_labels(response, normalizer, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v2(labels=labels, normalizer=normalizer)
+    llm_ner = (
+        make_ner_task_v2(labels=labels, normalizer=normalizer)
+        if normalizer
+        else make_ner_task_v2(labels=labels)
+    )
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
