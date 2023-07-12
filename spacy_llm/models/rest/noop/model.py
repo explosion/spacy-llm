@@ -26,6 +26,9 @@ class NoOpModel(REST):
     def credentials(self) -> Dict[str, str]:
         return {}
 
+    def _verify_auth(self) -> None:
+        pass
+
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         # Assume time penalty for API calls.
         time.sleep(NoOpModel._CALL_TIMEOUT)

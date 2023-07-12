@@ -22,7 +22,8 @@ filterwarnings = [
     "ignore:^.*The 'warn' method is deprecated, use 'warning' instead.*:DeprecationWarning"
 ]
 markers = [
-    "external: interacts with a (potentially cost-incurring) third-party API"
+    "external: interacts with a (potentially cost-incurring) third-party API",
+    "gpu: requires a GPU to run"
 ]
 
 [tool.isort]

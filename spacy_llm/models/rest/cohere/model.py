@@ -23,9 +23,11 @@ class Cohere(REST):
                 "set up via https://dashboard.cohere.ai/api-keys, then make it available as "
                 "an environment variable 'CO_API_KEY'."
             )
-        headers = {"Authorization": f"Bearer {api_key}"}
-        assert api_key is not None
-        return headers
+
+        return {"Authorization": f"Bearer {api_key}"}
+
+    def _verify_auth(self) -> None:
+        self(["test"])
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {

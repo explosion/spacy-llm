@@ -8,7 +8,7 @@ from thinc.compat import has_torch_cuda_gpu
 _PIPE_CFG = {
     "model": {
         "@llm_models": "spacy.OpenLLaMA.v1",
-        "name": "open_llama_3b_350bt_preview",
+        "name": "open_llama_3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
@@ -29,10 +29,11 @@ factory = "llm"
 
 [components.llm.model]
 @llm_models = spacy.OpenLLaMA.v1
-name = open_llama_3b_350bt_preview
+name = open_llama_3b
 """
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init():
     """Test initialization and simple run."""
@@ -41,6 +42,7 @@ def test_init():
     nlp("This is a test.")
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_with_set_config():
     """Test initialization and simple run with changed config."""
@@ -51,6 +53,7 @@ def test_init_with_set_config():
     nlp("This is a test.")
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
@@ -58,6 +61,7 @@ def test_init_from_config():
     assert nlp.pipe_names == ["llm"]
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)

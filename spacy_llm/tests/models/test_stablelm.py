@@ -33,8 +33,9 @@ name = "stablelm-base-alpha-3b"
 """
 
 
-@pytest.mark.parametrize("name", ("stablelm-base-alpha-3b", "stablelm-tuned-alpha-3b"))
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+@pytest.mark.parametrize("name", ("stablelm-base-alpha-3b", "stablelm-tuned-alpha-3b"))
 def test_init(name: str):
     """Test initialization and simple run.
     name (str): Name of model to run.
@@ -46,6 +47,7 @@ def test_init(name: str):
     nlp("This is a test.")
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
@@ -53,6 +55,7 @@ def test_init_from_config():
     assert nlp.pipe_names == ["llm"]
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_with_set_config():
     """Test initialization and simple run with changed config."""
@@ -63,6 +66,7 @@ def test_init_with_set_config():
     nlp("This is a test.")
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)

@@ -20,5 +20,5 @@ tick off all the boxes. [] -> [x] -->
 - [ ] I confirm that I have the right to submit this contribution under the project's MIT license.
 - [ ] I ran all tests in `tests` and `usage_examples/tests`, and all new and existing tests passed. This includes
   - all external tests (i. e. `pytest` ran with `--external`)
-  - all tests requiring a GPU
+  - all tests requiring a GPU (i. e. `pytest` ran with `--gpu`)
 - [ ] My changes don't require a change to the documentation, or if they do, I've added all required information.
