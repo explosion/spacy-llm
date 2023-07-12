@@ -27,7 +27,7 @@ def ner_noop_config_str() -> str:
     [components.llm.task]
     @llm_tasks = "spacy.NER.v2"
     labels = ["PERSON", "LOCATION"]
-    
+
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
