@@ -1,10 +1,14 @@
 import abc
+import typing
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, cast
+from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, cast
 
 import srsly
 from pydantic import BaseModel
 from spacy import util
+
+from ...registry import registry
+from ...ty import Normalizer
 
 ExampleType = TypeVar("ExampleType", bound=BaseModel)
 
@@ -50,6 +54,25 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
         examples (List[Dict[str, Any]]): serialized examples.
         """
         self._prompt_examples = [self._Example.parse_obj(eg) for eg in examples]
+
+    @staticmethod
+    def _init_normalizer_by_handle(normalizer: Union[str, Normalizer]) -> Normalizer:
+        """Initializes normalizer by its registration handle. Returns normalizer if it's already a Callable.
+        handle (Union[str, Normalizer]): Normalizer or its registration handle.
+        RETURNS (Normalizer): Instantiated normalizer Callable.
+        """
+        if not isinstance(normalizer, str):
+            return normalizer
+
+        normalizer_factory = registry.misc.get(normalizer)
+        norm_fact_type = typing.get_type_hints(normalizer_factory)
+
+        if not norm_fact_type["return"] == Normalizer:
+            raise ValueError(
+                f"`normalizer` has to be of type {Normalizer}, but is of type {norm_fact_type}."
+            )
+
+        return normalizer_factory()
 
     def to_bytes(
         self,

@@ -10,7 +10,7 @@ from wasabi import msg
 
 from spacy_llm.tasks.util.serialization import SerializableTask
 
-from ..registry import lowercase_normalizer, registry
+from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
@@ -29,7 +29,7 @@ class TextCatExample(BaseModel):
 def make_textcat_task(
     labels: str = "",
     examples: ExamplesConfigType = None,
-    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+    normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
@@ -54,7 +54,7 @@ def make_textcat_task(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     exclusive_classes (bool): If True, require the language model to suggest only one
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
@@ -81,7 +81,7 @@ def make_textcat_task_v2(
     labels: Union[List[str], str] = [],
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V2,
     examples: ExamplesConfigType = None,
-    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+    normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
@@ -108,7 +108,7 @@ def make_textcat_task_v2(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     exclusive_classes (bool): If True, require the language model to suggest only one
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
@@ -136,7 +136,7 @@ def make_textcat_task_v3(
     template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
-    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+    normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
@@ -165,7 +165,7 @@ def make_textcat_task_v3(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     exclusive_classes (bool): If True, require the language model to suggest only one
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
@@ -197,7 +197,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         template: str = _DEFAULT_TEXTCAT_TEMPLATE_V3,
         label_definitions: Optional[Dict[str, str]] = None,
         prompt_examples: Optional[List[TextCatExample]] = None,
-        normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+        normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
         exclusive_classes: bool = False,
         allow_none: bool = True,
         verbose: bool = False,
@@ -225,14 +225,14 @@ class TextCatTask(SerializableTask[TextCatExample]):
         prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
-        normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+        normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
         """
         self._template = template
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
+        self._normalizer = SerializableTask._init_normalizer_by_handle(normalizer)
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
         }

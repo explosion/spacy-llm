@@ -21,7 +21,7 @@ _DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
 def make_spancat_task(
     labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
-    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+    normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
@@ -39,7 +39,7 @@ def make_spancat_task(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
@@ -66,7 +66,7 @@ def make_spancat_task_v2(
     template: str = _DEFAULT_SPANCAT_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
-    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+    normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
@@ -85,7 +85,7 @@ def make_spancat_task_v2(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
@@ -114,7 +114,7 @@ class SpanCatTask(SpanTask):
         label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
         prompt_examples: Optional[List[SpanExample]] = None,
-        normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+        normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
         single_match: bool = False,
@@ -132,7 +132,7 @@ class SpanCatTask(SpanTask):
         prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
-        normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+        normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in

@@ -39,7 +39,7 @@ def make_ner_task(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
@@ -85,7 +85,7 @@ def make_ner_task_v2(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
@@ -131,7 +131,7 @@ class NERTask(SpanTask):
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
-        normalizer (Optional[Callable[[str], str]]): optional normalizer function.
+        normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in

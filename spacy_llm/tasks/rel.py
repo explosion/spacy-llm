@@ -7,7 +7,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
-from ..registry import lowercase_normalizer, registry
+from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
@@ -65,7 +65,7 @@ def make_rel_task(
     template: str = _DEFAULT_REL_TEMPLATE,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
-    normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+    normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
     verbose: bool = False,
 ) -> "RELTask":
     """REL.v1 task factory.
@@ -83,7 +83,7 @@ def make_rel_task(
     examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
-    normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+    normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
     verbose (bool): Controls the verbosity of the task.
     """
     labels_list = split_labels(labels)
@@ -106,7 +106,7 @@ class RELTask(SerializableTask[RELExample]):
         template: str = _DEFAULT_REL_TEMPLATE,
         label_definitions: Optional[Dict[str, str]] = None,
         prompt_examples: Optional[List[RELExample]] = None,
-        normalizer: Union[Callable[[str], str]] = "spacy.LowercaseNormalizer.v1",
+        normalizer: Union[Callable[[str], str], str] = "spacy.LowercaseNormalizer.v1",
         verbose: bool = False,
     ):
         """Default REL task. Populates a `Doc._.rel` custom attribute.
@@ -121,10 +121,10 @@ class RELTask(SerializableTask[RELExample]):
         prompt_examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
-        normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
+        normalizer (Union[Callable[[str], str], str]): Normalizer function or its registration handle.
         verbose (bool): Controls the verbosity of the task.
         """
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
+        self._normalizer = SerializableTask._init_normalizer_by_handle(normalizer)
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
         }

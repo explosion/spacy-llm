@@ -255,7 +255,11 @@ def test_spancat_zero_shot_task(text, response, gold_spans):
 def test_spancat_labels(response, normalizer, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v2(labels=labels, normalizer=normalizer)
+    llm_spancat = (
+        make_spancat_task_v2(labels=labels, normalizer=normalizer)
+        if normalizer
+        else make_spancat_task_v2(labels=labels)
+    )
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
