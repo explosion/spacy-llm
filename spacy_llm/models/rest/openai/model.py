@@ -1,4 +1,5 @@
 import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized, Tuple
 
@@ -21,7 +22,7 @@ class OpenAI(REST):
         api_key = os.getenv("OPENAI_API_KEY")
         api_org = os.getenv("OPENAI_API_ORG")
         if api_key is None:
-            raise ValueError(
+            warnings.warn(
                 "Could not find the API key to access the OpenAI API. Ensure you have an API key "
                 "set up via https://platform.openai.com/account/api-keys, then make it available as "
                 "an environment variable 'OPENAI_API_KEY."
@@ -51,14 +52,20 @@ class OpenAI(REST):
             timeout=self._max_request_time,
         )
         if r.status_code == 422:
-            raise ValueError(
+            warnings.warn(
                 "Could not access api.openai.com -- 422 permission denied."
                 "Visit https://platform.openai.com/account/api-keys to check your API keys."
             )
         elif r.status_code != 200:
-            raise ValueError(
-                f"Error accessing api.openai.com ({r.status_code}): {r.text}"
-            )
+            if "Incorrect API key" in r.text:
+                warnings.warn(
+                    "Authentication with provided API key failed. Please double-check you provided the correct "
+                    "credentials."
+                )
+            else:
+                warnings.warn(
+                    f"Error accessing api.openai.com ({r.status_code}): {r.text}"
+                )
 
         response = r.json()["data"]
         models = [response[i]["id"] for i in range(len(response))]

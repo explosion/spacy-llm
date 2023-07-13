@@ -1,4 +1,5 @@
 import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized, Tuple
 
@@ -33,17 +34,26 @@ class Anthropic(REST):
         # Fetch and check the key, set up headers
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if api_key is None:
-            raise ValueError(
+            warnings.warn(
                 "Could not find the API key to access the Anthropic Claude API. Ensure you have an API key "
                 "set up via the Anthropic console (https://console.anthropic.com/), then make it available as "
                 "an environment variable 'ANTHROPIC_API_KEY."
             )
 
-        return {"X-API-Key": api_key}
+        return {"X-API-Key": api_key if api_key else ""}
 
     def _verify_auth(self) -> None:
         # Execute a dummy prompt. If the API setup is incorrect, we should fail at initialization time.
-        self(["test"])
+        try:
+            self(["test"])
+        except ValueError as err:
+            if "authentication_error" in str(err):
+                warnings.warn(
+                    "Authentication with provided API key failed. Please double-check you provided the correct "
+                    "credentials."
+                )
+            else:
+                raise err
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
