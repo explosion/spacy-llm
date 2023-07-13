@@ -160,12 +160,16 @@ class RELTask(SerializableTask[RELExample]):
             )
             yield prompt
 
-    def _format_response(self, response: str) -> List[RelationItem]:
+    def _format_response(self, response: str, doc: Doc) -> List[RelationItem]:
         """Parse raw string response into a structured format"""
         relations = []
         for line in response.strip().split("\n"):
             try:
-                relations.append(RelationItem.parse_raw(line))
+                rel_item = RelationItem.parse_raw(line)
+                if 0 <= rel_item.dep < len(doc.ents) and 0 <= rel_item.dest < len(
+                    doc.ents
+                ):
+                    relations.append(rel_item)
             except ValidationError:
                 msg.warn(
                     "Validation issue",
@@ -180,7 +184,7 @@ class RELTask(SerializableTask[RELExample]):
         self._check_rel_extension()
 
         for doc, prompt_response in zip(docs, responses):
-            rels = self._format_response(prompt_response)
+            rels = self._format_response(prompt_response, doc)
             doc._.rel = rels
             yield doc
 
