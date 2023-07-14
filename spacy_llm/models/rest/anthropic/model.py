@@ -26,6 +26,7 @@ class SystemPrompt(str, Enum):
 class Anthropic(REST):
     MODEL_NAMES = {
         "claude-1": Literal["claude-1", "claude-1-100k"],
+        "claude-2": Literal["claude-2", "claude-2-100k"],
     }
 
     @property
@@ -105,6 +106,9 @@ class Anthropic(REST):
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:
         return (
+            # claude-2
+            "claude-2",
+            "claude-2-100k",
             # claude-1
             "claude-1",
             "claude-1-100k",
