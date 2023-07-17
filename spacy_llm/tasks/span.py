@@ -41,18 +41,10 @@ class SpanReason(BaseModel):
 
 class SpanExample(BaseModel):
     text: str
-    entities: Dict[str, List[str]]
-
-
-class COTSpanExample(BaseModel):
-    text: str
     entities: List[SpanReason]
 
 
-_PromptExampleT = TypeVar("_PromptExampleT", SpanExample, COTSpanExample)
-
-
-class SpanTask(SerializableTask[_PromptExampleT]):
+class SpanTask(SerializableTask[SpanExample]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
@@ -61,7 +53,7 @@ class SpanTask(SerializableTask[_PromptExampleT]):
         template: str,
         description: Optional[str] = None,
         label_definitions: Optional[Dict[str, str]] = None,
-        prompt_examples: Optional[List[_PromptExampleT]] = None,
+        prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
@@ -93,24 +85,28 @@ class SpanTask(SerializableTask[_PromptExampleT]):
     def prompt_template(self) -> str:
         return self._template
 
-    def _check_label_consistency(self) -> List[_PromptExampleT]:
+    def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
         RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """
         assert self._prompt_examples
-        if isinstance(self._prompt_examples[0], SpanExample):
-            example_labels = {
-                self._normalizer(key): key
-                for example in self._prompt_examples
-                for key in example.entities
-            }
-        else:
-            example_labels = {
-                self._normalizer(key.label): key.label
-                for example in self._prompt_examples
-                for key in example.entities
-                if key.is_entity
-            }
+        null_labels = {
+            self._normalizer(entity.label): entity.label
+            for example in self._prompt_examples
+            for entity in example.entities
+            if not entity.is_entity
+        }
+        if len(null_labels) > 1:
+            warnings.warn(
+                f"Negative examples contain multiple negative labels: {', '.join(null_labels.keys())}."
+            )
+
+        example_labels = {
+            self._normalizer(entity.label): entity.label
+            for example in self._prompt_examples
+            for entity in example.entities
+            if entity.is_entity
+        }
 
         unspecified_labels = {
             example_labels[key]
@@ -124,32 +120,23 @@ class SpanTask(SerializableTask[_PromptExampleT]):
                 f"and example labels are consistent."
             )
 
-        # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
-        examples = []
-        for example in self._prompt_examples:
-            if isinstance(self._prompt_examples[0], SpanExample):
-                span_example = SpanExample(
-                    text=example.text,
-                    entities={
-                        label: entities
-                        for label, entities in example.entities.items()
-                        if self._normalizer(label) in self._label_dict
-                    },
-                )
-            else:
-                span_example = COTSpanExample(
-                    text=example.text,
-                    entities=[
-                        entity
-                        for entity in example.entities
-                        if self._normalizer(entity.label) in self._label_dict
-                    ],
-                )
-
-            if len(span_example.entities):
-                examples.append(span_example)
-
-        return examples
+            # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
+            return [
+                example
+                for example in [
+                    SpanExample(
+                        text=example.text,
+                        entities=[
+                            entity
+                            for entity in example.entities
+                            if self._normalizer(entity.label)
+                            in (self._label_dict | null_labels)
+                        ],
+                    )
+                    for example in self._prompt_examples
+                ]
+                if len(example.entities)
+            ]
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()

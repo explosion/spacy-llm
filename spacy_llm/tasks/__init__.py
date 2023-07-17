@@ -1,5 +1,5 @@
 from .lemma import LemmaTask, make_lemma_task
-from .ner import NERTask, make_ner_task, make_ner_task_v2
+from .ner import NERTask, make_ner_task_v3
 from .noop import NoopTask, make_noop_task
 from .rel import RELTask, make_rel_task
 from .sentiment import SentimentTask, make_sentiment_task
@@ -9,8 +9,7 @@ from .textcat import TextCatTask, make_textcat_task
 
 __all__ = [
     "make_lemma_task",
-    "make_ner_task",
-    "make_ner_task_v2",
+    "make_ner_task_v3",
     "make_noop_task",
     "make_rel_task",
     "make_sentiment_task",
