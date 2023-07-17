@@ -55,7 +55,9 @@ def make_ner_task_v3(
     raw_examples = examples() if callable(examples) else examples
     span_examples = [SpanExample(**eg) for eg in raw_examples]
     if not description:
-        description = f"Entities must take one of these labels: {', '.join(labels_list)}."
+        description = (
+            f"Entities must take one of these labels: {', '.join(labels_list)}."
+        )
 
     return NERTask(
         labels=labels_list,
@@ -83,7 +85,7 @@ class NERTask(SpanTask):
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
-        super().__init__(
+        super(NERTask, self).__init__(
             labels=labels,
             template=template,
             description=description,
@@ -131,20 +133,6 @@ class NERTask(SpanTask):
 
         self._label_dict = {self._normalizer(label): label for label in labels}
 
-    def _format_response(self, response: str) -> Iterable[Tuple[str, Iterable[str]]]:
-        """Parse raw string response into a structured format"""
-        output: dict[str, list[str]] = defaultdict(list)
-        assert self._normalizer is not None
-        for line in response.strip().split("\n"):
-            entity = SpanReason.from_str(line)
-            if entity:
-                norm_label = self._normalizer(entity.label)
-                if norm_label not in self._label_dict:
-                    continue
-                label = self._label_dict[norm_label]
-                output[label].append(entity.text)
-        return output.items()
-
     def assign_spans(
         self,
         doc: Doc,
@@ -158,7 +146,3 @@ class NERTask(SpanTask):
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
-
-    @property
-    def _Example(self) -> type[SpanExample]:
-        return SpanExample

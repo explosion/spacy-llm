@@ -3,6 +3,7 @@ import warnings
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Type
 
 import jinja2
+from collections import defaultdict
 from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 
@@ -151,23 +152,6 @@ class SpanTask(SerializableTask[SpanExample]):
             )
             yield prompt
 
-    def _format_response(self, response: str) -> Iterable[Tuple[str, Iterable[str]]]:
-        """Parse raw string response into a structured format"""
-        output = []
-        assert self._normalizer is not None
-        for line in response.strip().split("\n"):
-            # Check if the formatting we want exists
-            # <entity label>: ent1, ent2
-            if line and ":" in line:
-                label, phrases = line.split(":", 1)
-                norm_label = self._normalizer(label)
-                if norm_label in self._label_dict:
-                    # Get the phrases / spans for each entity
-                    if phrases.strip():
-                        _phrases = [p.strip() for p in phrases.strip().split(",")]
-                        output.append((self._label_dict[norm_label], _phrases))
-        return output
-
     @staticmethod
     def _validate_alignment(alignment_mode: str):
         """Raises error if specified alignment_mode is not supported.
@@ -187,6 +171,20 @@ class SpanTask(SerializableTask[SpanExample]):
     ) -> None:
         """Assign spans to the document."""
         raise NotImplementedError()
+
+    def _format_response(self, response: str) -> Iterable[Tuple[str, Iterable[str]]]:
+        """Parse raw string response into a structured format"""
+        output: dict[str, list[str]] = defaultdict(list)
+        assert self._normalizer is not None
+        for line in response.strip().split("\n"):
+            span_reason = SpanReason.from_str(line)
+            if span_reason:
+                norm_label = self._normalizer(span_reason.label)
+                if norm_label not in self._label_dict:
+                    continue
+                label = self._label_dict[norm_label]
+                output[label].append(span_reason.text)
+        return output.items()
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
@@ -215,6 +213,7 @@ class SpanTask(SerializableTask[SpanExample]):
     @property
     def _cfg_keys(self) -> List[str]:
         return [
+            "_spans_key",
             "_label_dict",
             "_template",
             "_label_definitions",
