@@ -120,23 +120,23 @@ class SpanTask(SerializableTask[SpanExample]):
                 f"and example labels are consistent."
             )
 
-            # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
-            return [
-                example
-                for example in [
-                    SpanExample(
-                        text=example.text,
-                        entities=[
-                            entity
-                            for entity in example.entities
-                            if self._normalizer(entity.label)
-                            in (self._label_dict | null_labels)
-                        ],
-                    )
-                    for example in self._prompt_examples
-                ]
-                if len(example.entities)
+        # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
+        return [
+            example
+            for example in [
+                SpanExample(
+                    text=example.text,
+                    entities=[
+                        entity
+                        for entity in example.entities
+                        if self._normalizer(entity.label)
+                        in (self._label_dict | null_labels)
+                    ],
+                )
+                for example in self._prompt_examples
             ]
+            if len(example.entities)
+        ]
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()

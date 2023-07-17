@@ -13,7 +13,7 @@ from spacy.util import make_tempdir
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
-from spacy_llm.tasks.ner import NERTask, make_ner_task_v2
+from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -323,7 +323,7 @@ def test_ensure_offsets_correspond_to_substrings(
 )
 def test_ner_zero_shot_task(text, response, gold_ents):
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v2(labels=labels)
+    llm_ner = make_ner_task_v3(labels=labels)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -382,7 +382,7 @@ def test_ner_zero_shot_task(text, response, gold_ents):
 def test_ner_labels(response, normalizer, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v2(labels=labels, normalizer=normalizer)
+    llm_ner = make_ner_task_v3(labels=labels, normalizer=normalizer)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -431,7 +431,7 @@ def test_ner_labels(response, normalizer, gold_ents):
 def test_ner_alignment(response, alignment_mode, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v2(labels=labels, alignment_mode=alignment_mode)
+    llm_ner = make_ner_task_v3(labels=labels, alignment_mode=alignment_mode)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -445,7 +445,7 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        make_ner_task_v2(labels=labels, alignment_mode="invalid")  # type: ignore
+        make_ner_task_v3(labels=labels, alignment_mode="invalid")  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -480,7 +480,7 @@ def test_invalid_alignment_mode():
 def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v2(
+    llm_ner = make_ner_task_v3(
         labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
     )
     # Prepare doc
@@ -503,7 +503,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = make_ner_task_v2(labels=labels, examples=None)
+    llm_ner = make_ner_task_v3(labels=labels, examples=None)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -546,7 +546,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)
-    llm_ner = make_ner_task_v2(labels=labels, examples=examples)
+    llm_ner = make_ner_task_v3(labels=labels, examples=examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -603,7 +603,7 @@ def test_jinja_template_rendering_with_label_definitions():
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
-    llm_ner = make_ner_task_v2(
+    llm_ner = make_ner_task_v3(
         labels=labels,
         label_definitions={
             "PER": "Person definition",
@@ -653,7 +653,7 @@ def test_example_not_following_basemodel():
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValueError):
-            make_ner_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+            make_ner_task_v3(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 def test_external_template_actually_loads():
@@ -663,7 +663,7 @@ def test_external_template_actually_loads():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = make_ner_task_v2(labels=labels, template=template)
+    llm_ner = make_ner_task_v3(labels=labels, template=template)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
     assert (
         prompt.strip()
