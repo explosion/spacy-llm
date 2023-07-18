@@ -387,7 +387,6 @@ def test_ner_labels(response, normalizer, gold_ents):
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
-    # Note: parser() returns a list
     doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
@@ -436,7 +435,6 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
-    # Note: parser() returns a list
     doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
@@ -490,6 +488,59 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     # Note: parser() returns a list
     doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
+    assert pred_ents == gold_ents
+
+
+@pytest.mark.parametrize(
+    "response,single_match,gold_ents",
+    [
+        (
+            "PER: Paris",
+            True,
+            [(0, "Paris", "PER")],
+        ),
+        (
+            "PER: Paris",
+            False,
+            [(0, "Paris", "PER"), (5, "Paris", "PER"), (9, "Paris", "PER")],
+        ),
+        (
+            """
+            PER: Paris
+            LOC: Paris
+            """,
+            False,
+            [(0, "Paris", "PER"), (5, "Paris", "PER"), (9, "Paris", "PER")],
+        ),
+        (
+            """
+            PER: Paris
+            LOC: Paris
+            """,
+            True,
+            [(0, "Paris", "PER"), (5, "Paris", "LOC")],
+        ),
+        (
+            """
+            PER: Paris
+            LOC: Paris
+            PER: Paris
+            """,
+            True,
+            [(0, "Paris", "PER"), (5, "Paris", "LOC"), (9, "Paris", "PER")],
+        ),
+    ],
+)
+def test_ner_multiple_occurrences(response, single_match, gold_ents):
+    text = "Paris was walking around in Paris while talking to Paris."
+    labels = "PER,ORG,LOC"
+    llm_ner = make_ner_task_v2(labels=labels, single_match=single_match)
+    # Prepare doc
+    nlp = spacy.blank("en")
+    doc_in = nlp.make_doc(text)
+    # Pass to the parser
+    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    pred_ents = [(ent.start, ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
 
