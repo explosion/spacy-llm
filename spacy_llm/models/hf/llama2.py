@@ -7,9 +7,9 @@ from ...registry.util import registry
 from .base import HuggingFace
 
 
-class Falcon(HuggingFace):
+class Llama2(HuggingFace):
     MODEL_NAMES = Literal[
-        "falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"
+        "Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"
     ]  # noqa: F722
 
     def __init__(
@@ -18,32 +18,26 @@ class Falcon(HuggingFace):
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
     ):
-        self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        self._device: Optional[str] = None
         super().__init__(name=name, config_init=config_init, config_run=config_run)
-
-        assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)
-        self._config_run["pad_token_id"] = self._tokenizer.pad_token_id
-
         # Instantiate GenerationConfig object from config dict.
         self._hf_config_run = transformers.GenerationConfig.from_pretrained(
-            self._name, **self._config_run
+            self._name,
+            **self._config_run,
         )
         # To avoid deprecation warning regarding usage of `max_length`.
         self._hf_config_run.max_new_tokens = self._hf_config_run.max_length
 
     def init_model(self) -> Any:
-        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
         return transformers.pipeline(
             "text-generation",
             model=self._name,
-            tokenizer=self._tokenizer,
+            use_auth_token=True,
             **self._config_init,
         )
 
     @property
     def hf_account(self) -> str:
-        return "tiiuae"
+        return "meta-llama"
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         return [
@@ -63,17 +57,17 @@ class Falcon(HuggingFace):
         )
 
 
-@registry.llm_models("spacy.Falcon.v1")
-def falcon_hf(
-    name: Falcon.MODEL_NAMES,
+@registry.llm_models("spacy.Llama2.v1")
+def llama2_hf(
+    name: Llama2.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Generates Falcon instance that can execute a set of prompts and return the raw responses.
-    name (Literal): Name of the Falcon model. Has to be one of Falcon.get_model_names().
+    """Generates Llama 2 instance that can execute a set of prompts and return the raw responses.
+    name (Literal): Name of the Llama 2 model. Has to be one of Llama2.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Falcon instance that can execute a set of prompts and return
         the raw responses.
     """
-    return Falcon(name=name, config_init=config_init, config_run=config_run)
+    return Llama2(name=name, config_init=config_init, config_run=config_run)
