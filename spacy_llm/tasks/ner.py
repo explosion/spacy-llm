@@ -71,7 +71,7 @@ class NERTask(SpanTask):
         self,
         labels: List[str],
         template: str,
-        description: Optional[str] = None,
+        description: str,
         prompt_examples: Optional[List[SpanExample]] = None,
         label_definitions: Optional[Dict[str, str]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
@@ -109,20 +109,15 @@ class NERTask(SpanTask):
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
         """
-
         examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
-
         if not labels:
             label_set = set()
-
             for eg in examples:
                 for ent in eg.reference.ents:
                     label_set.add(ent.label_)
             labels = list(label_set)
-
         self._label_dict = {self._normalizer(label): label for label in labels}
 
     def assign_spans(

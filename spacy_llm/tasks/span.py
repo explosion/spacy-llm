@@ -73,7 +73,7 @@ class SpanTask(SerializableTask[SpanExample]):
         self,
         labels: List[str],
         template: str,
-        description: Optional[str] = None,
+        description: str,
         label_definitions: Optional[Dict[str, str]] = None,
         prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
