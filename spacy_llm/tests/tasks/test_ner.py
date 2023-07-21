@@ -859,7 +859,9 @@ def test_regression_span_task_response_parse(text: str, person_first: bool):
 2. {span_reason_person.to_str()}
 """
 
-    ner_task = NERTask(["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3)
+    ner_task = NERTask(
+        ["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3, description="test"
+    )
     span_reasons = ner_task._format_response(example_response)
     assert len(span_reasons) == 2
 
