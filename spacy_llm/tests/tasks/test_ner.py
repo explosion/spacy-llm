@@ -15,6 +15,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
 from spacy_llm.tasks.ner import _DEFAULT_NER_TEMPLATE_V3, NERTask, make_ner_task_v3
+from spacy_llm.tasks.span import SpanReason
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -885,49 +886,60 @@ def test_label_inconsistency():
     }
 
 
-def test_span_task_response_parse():
+@pytest.mark.parametrize(
+    "text,person_first",
+    [
+        ("The woman Paris was walking around in Paris", True),
+        ("Walking around Paris as a woman named Paris is quite a trip.", False),
+    ],
+    ids=["person_first", "location_first"],
+)
+def test_regression_span_task_response_parse(text: str, person_first: bool):
+    """Test based on on spaCy issue: https://github.com/explosion/spaCy/discussions/12845
+    where parsing wasn't working for NER when the same text could map to 2 labels.
+    In the user's case "Paris" could be a person's name or a location.
+    """
 
     nlp = spacy.blank("en")
-    example_text = "The woman Paris was walking around in Paris"
-    example_doc = nlp.make_doc(example_text)
-    example_response = """
-    1. Paris | True | PERSON | is the name of the woman
-    2. Paris | True | LOCATION | is the name of a city in France
-    """
+    example_doc = nlp.make_doc(text)
+
+    span_reason_person = SpanReason(
+        text="Paris", is_entity=True, label="PERSON", reason="is the name of the woman"
+    )
+    span_reason_loc = SpanReason(
+        text="Paris",
+        is_entity=True,
+        label="LOCATION",
+        reason="is the name of a city in France",
+    )
+
+    if person_first:
+        example_response = f"""
+1. {span_reason_person.to_str()}
+2. {span_reason_loc.to_str()}
+"""
+    else:
+        example_response = f"""
+1. {span_reason_loc.to_str()}
+2. {span_reason_person.to_str()}
+"""
 
     ner_task = NERTask(["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3)
     span_reasons = ner_task._format_response(example_response)
-
     assert len(span_reasons) == 2
 
     docs = list(ner_task.parse_responses([example_doc], [example_response]))
-
     assert len(docs[0].ents) == 2
 
-    ent1 = docs[0].ents[0]
-    assert ent1.label_ == "PERSON"
+    if person_first:
+        ent1 = docs[0].ents[0]
+        assert ent1.label_ == "PERSON"
 
-    ent2 = docs[0].ents[1]
-    assert ent2.label_ == "LOCATION"
+        ent2 = docs[0].ents[1]
+        assert ent2.label_ == "LOCATION"
+    else:
+        ent1 = docs[0].ents[0]
+        assert ent1.label_ == "LOCATION"
 
-    example_text = "Walking around Paris as a woman named Paris is quite a trip."
-    example_doc = nlp.make_doc(example_text)
-    example_response = """
-    1. Paris | True | LOCATION | is the name of a city in France
-    2. Paris | True | PERSON | is the name of the woman
-    """
-
-    ner_task = NERTask(["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3)
-    span_reasons = ner_task._format_response(example_response)
-
-    assert len(span_reasons) == 2
-
-    docs = list(ner_task.parse_responses([example_doc], [example_response]))
-
-    assert len(docs[0].ents) == 2
-
-    ent1 = docs[0].ents[0]
-    assert ent1.label_ == "LOCATION"
-
-    ent2 = docs[0].ents[1]
-    assert ent2.label_ == "PERSON"
+        ent2 = docs[0].ents[1]
+        assert ent2.label_ == "PERSON"
