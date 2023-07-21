@@ -1,0 +1,24 @@
+You are an expert Semantic Role Labeling (SRL) system. Your task is to accept Text as input and extract \
+the Predicates and the Semantic Roles for each Predicate's ARGs in a step-by-step manner.
+{# whitespace #}
+Here is the text that needs labeling:
+{# whitespace #}
+Text:
+'''
+{{text}}
+'''
+{# whitespace #}
+{%- if predicates -%}
+Step 1: Use the following Predicates for the Text:
+Predicates: <comma delimited list of strings>
+{%- else -%}
+Step 1: Extract the Predicates for the Text in the following format :
+Predicates: <comma delimited list of strings>
+{%- endif -%}
+{# whitespace #}
+Step 2: For each Predicate, extract only the following Sematic Roles in '''Text''' in this format :
+Predicate: <string corresponding to the current Predicate>
+ARG-0 (Agent): <string corresponding to the Agent>
+ARG-1 (Patient or Theme): <string corresponding to the Patient or Theme>
+ARG-M-LOC (Location Modifier): <string corresponding to the Location Modifier>
+ARG-M-TMP (Temporal Modifier): <string corresponding to the Temporal Modifier>

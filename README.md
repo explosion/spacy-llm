@@ -785,6 +785,33 @@ Note: the REL task relies on pre-extracted entities to make its prediction.
 Hence, you'll need to add a component that populates `doc.ents` with recognized
 spans to your spaCy pipeline and put it _before_ the REL component.
 
+#### spacy.SRL.v1
+
+The built-in Semantic Role Labeling (SRL) task supports zero-shot prompting.
+The prompt contains two steps:
+  1. Predicate Identification
+2.  Semantic Role Identification for each Predicate
+
+We only focus on the 4 important semantic roles:
+1. ARG-0: Typical Agent
+2. ARG-1: Typical Patient or Theme
+3. ARG-M-TMP: Temporal Modifier
+4. ARG-M-LOC: Location Modifier
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.SRL.v1"
+labels = ARG-0,ARG-1,ARG-M-TMP,ARG-M-LOC
+```
+
+| Argument            | Type                                    | Default                                              | Description                                                                                                                            |
+| ------------------- | --------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | `Union[List[str], str]`                 |                                                      | List of labels or str of comma-separated list of labels.                                                                               |
+| `template`          | `str`                                   | [`rel.jinja`](./spacy_llm/tasks/templates/rel.jinja) | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. |
+| `label_description` | `Optional[Dict[str, str]]`              | `None`                                               | Dictionary providing a description for each relation label.                                                                            |
+| `normalizer`        | `Optional[Callable[[str], str]]`        | `None`                                               | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                   |
+| `verbose`           | `bool`                                  | `False`                                              | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                   |
+
+
 #### spacy.Lemma.v1
 
 The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.
