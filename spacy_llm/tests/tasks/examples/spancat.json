@@ -25,6 +25,12 @@
         "is_entity": true,
         "label": "LOC",
         "reason": "is a location"
+      },
+      {
+        "text": "hill",
+        "is_entity": true,
+        "label": "DESTINATION",
+        "reason": "is a destination"
       }
     ]
   }

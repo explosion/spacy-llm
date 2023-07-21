@@ -21,7 +21,7 @@ Q: Given the paragraph below, identify a list of entities, and for each entry ex
 Paragraph: {{ example.text }}
 Answer:
 {# whitespace #}
-{%- for span in example.entities -%}
+{%- for span in example.spans -%}
 {{ loop.index }}. {{ span.to_str() }}
 {# whitespace #}
 {%- endfor -%}

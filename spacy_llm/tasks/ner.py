@@ -144,3 +144,14 @@ class NERTask(SpanTask):
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_alignment_mode",
+            "_case_sensitive_matching",
+            "_single_match",
+        ]

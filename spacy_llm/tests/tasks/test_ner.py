@@ -7,6 +7,7 @@ import pytest
 import spacy
 import srsly
 from confection import Config
+from spacy.language import Language
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
@@ -27,33 +28,8 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 @pytest.fixture
-def zeroshot_cfg_string():
-    return """
-    [nlp]
-    lang = "en"
-    pipeline = ["llm"]
-    batch_size = 128
-
-    [components]
-
-    [components.llm]
-    factory = "llm"
-
-    [components.llm.task]
-    @llm_tasks = "spacy.NER.v1"
-    labels = PER,ORG,LOC
-
-    [components.llm.task.normalizer]
-    @misc = "spacy.LowercaseNormalizer.v1"
-
-    [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
-    """
-
-
-@pytest.fixture
-def zeroshot_cfg_string_v2_lds():
-    return """
+def fewshot_cfg_string_v3_lds():
+    return f"""
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -66,7 +42,12 @@ def zeroshot_cfg_string_v2_lds():
 
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
+    description = "This is a description"
     labels = PER,ORG,LOC
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
 
     [components.llm.task.label_definitions]
     PER = "Any named individual in the text"
@@ -82,36 +63,7 @@ def zeroshot_cfg_string_v2_lds():
 
 
 @pytest.fixture
-def fewshot_cfg_string():
-    return f"""
-    [nlp]
-    lang = "en"
-    pipeline = ["llm"]
-    batch_size = 128
-
-    [components]
-
-    [components.llm]
-    factory = "llm"
-
-    [components.llm.task]
-    @llm_tasks = "spacy.NER.v1"
-    labels = PER,ORG,LOC
-
-    [components.llm.task.examples]
-    @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
-
-    [components.llm.task.normalizer]
-    @misc = "spacy.LowercaseNormalizer.v1"
-
-    [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
-    """
-
-
-@pytest.fixture
-def fewshot_cfg_string_v2():
+def fewshot_cfg_string_v3():
     return f"""
     [nlp]
     lang = "en"
@@ -125,11 +77,12 @@ def fewshot_cfg_string_v2():
 
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
+    description = "This is a description"
     labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -155,7 +108,12 @@ def ext_template_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
-    labels = PER,ORG,LOC
+    description = "This is a description"
+    labels = ["PER", "ORG", "LOC"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
@@ -169,26 +127,33 @@ def ext_template_cfg_string():
     """
 
 
+@pytest.fixture(
+    params=[
+        "fewshot_cfg_string_v3_lds",
+        "fewshot_cfg_string_v3",
+        "ext_template_cfg_string",
+    ]
+)
+def config(request) -> Config:
+    cfg_str = request.getfixturevalue(request.param)
+    config = Config().from_str(cfg_str)
+    return config
+
+
+@pytest.fixture
+def nlp(config: Config) -> Language:
+    nlp = assemble_from_config(config)
+    return nlp
+
+
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize(
-    "cfg_string",
-    [
-        "zeroshot_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
-        "fewshot_cfg_string",
-        "fewshot_cfg_string_v2",
-        "ext_template_cfg_string",
-    ],
-)
-def test_ner_config(cfg_string, request):
-    cfg_string = request.getfixturevalue(cfg_string)
-    orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+def test_ner_config(config: Config):
+    nlp = assemble_from_config(config)
     assert nlp.pipe_names == ["llm"]
 
     # also test nlp config from a dict in add_pipe
-    component_cfg = dict(orig_config["components"]["llm"])
+    component_cfg = dict(config["components"]["llm"])
     component_cfg.pop("factory")
 
     nlp2 = spacy.blank("en")
@@ -199,7 +164,7 @@ def test_ner_config(cfg_string, request):
     assert isinstance(pipe, LLMWrapper)
     assert isinstance(pipe.task, LLMTask)
 
-    labels = orig_config["components"]["llm"]["task"]["labels"]
+    labels = config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
@@ -210,48 +175,20 @@ def test_ner_config(cfg_string, request):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize(
-    "cfg_string",
-    [
-        "zeroshot_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
-        "fewshot_cfg_string",
-        "fewshot_cfg_string_v2",
-        "ext_template_cfg_string",
-    ],
-)
-def test_ner_predict(cfg_string, request):
+def test_ner_predict(nlp: Language):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
-    orig_cfg_string = cfg_string
-    cfg_string = request.getfixturevalue(cfg_string)
-    orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     text = "Marc and Bob both live in Ireland."
     doc = nlp(text)
-
-    if orig_cfg_string != "ext_template_cfg_string":
-        assert len(doc.ents) > 0
-        for ent in doc.ents:
-            assert ent.label_ in ["PER", "ORG", "LOC"]
+    assert len(doc.ents) > 0
+    for ent in doc.ents:
+        assert ent.label_ in ["PER", "ORG", "LOC"]
 
 
 @pytest.mark.external
-@pytest.mark.parametrize(
-    "cfg_string",
-    [
-        "zeroshot_cfg_string",
-        "zeroshot_cfg_string_v2_lds",
-        "fewshot_cfg_string",
-        "fewshot_cfg_string_v2",
-        "ext_template_cfg_string",
-    ],
-)
-def test_ner_io(cfg_string, request):
-    cfg_string = request.getfixturevalue(cfg_string)
-    orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_ner_io(nlp: Language):
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
     with make_tempdir() as tmpdir:
@@ -716,16 +653,14 @@ def test_ner_scoring(noop_config, n_detections):
     for text in ["Alice works with Bob.", "Bob lives with Alice."]:
         predicted = nlp.make_doc(text)
         reference = predicted.copy()
-
-        reference.ents = [
+        ref_ents = [
             Span(reference, 0, 1, label="PER"),
             Span(reference, 3, 4, label="PER"),
         ][:n_detections]
-
+        reference.set_ents(ref_ents)
         examples.append(Example(predicted, reference))
 
     scores = nlp.evaluate(examples)
-
     assert scores["ents_p"] == n_detections / 2
 
 

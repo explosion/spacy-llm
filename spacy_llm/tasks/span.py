@@ -63,7 +63,7 @@ class SpanReason(BaseModel):
 
 class SpanExample(BaseModel):
     text: str
-    entities: List[SpanReason]
+    spans: List[SpanReason]
 
 
 class SpanTask(SerializableTask[SpanExample]):
@@ -113,7 +113,7 @@ class SpanTask(SerializableTask[SpanExample]):
         null_labels = {
             self._normalizer(entity.label): entity.label
             for example in self._prompt_examples
-            for entity in example.entities
+            for entity in example.spans
             if not entity.is_entity
         }
         if len(null_labels) > 1:
@@ -124,7 +124,7 @@ class SpanTask(SerializableTask[SpanExample]):
         example_labels = {
             self._normalizer(entity.label): entity.label
             for example in self._prompt_examples
-            for entity in example.entities
+            for entity in example.spans
             if entity.is_entity
         }
 
@@ -146,16 +146,16 @@ class SpanTask(SerializableTask[SpanExample]):
             for example in [
                 SpanExample(
                     text=example.text,
-                    entities=[
+                    spans=[
                         entity
-                        for entity in example.entities
+                        for entity in example.spans
                         if self._normalizer(entity.label)
                         in (self._label_dict | null_labels)
                     ],
                 )
                 for example in self._prompt_examples
             ]
-            if len(example.entities)
+            if len(example.spans)
         ]
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
@@ -212,12 +212,16 @@ class SpanTask(SerializableTask[SpanExample]):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
+        """Since we provide entities in a numbered list, we expect the LLM to
+        output entities in the order they occur in the text. This parse
+        function now incrementally finds substrings in the text and tracks the
+        last found span's end character to ensure we don't overwrite
+        previously found spans.
+        """
         for doc, llm_response in zip(docs, responses):
-
             last_span_end_char = 0
             spans = []
             span_reasons = self._format_response(llm_response)
-
             for span_reason in span_reasons:
                 # For each phrase, find the substrings in the text
                 # and create a Span

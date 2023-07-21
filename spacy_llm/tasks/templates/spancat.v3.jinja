@@ -8,7 +8,7 @@ Q: Given the paragraph below, identify a list of possible entities, and for each
 Paragraph: {{ example.text }}
 Answer:
 {# whitespace #}
-{%- for span in example.entities -%}
+{%- for span in example.spans -%}
 {{ loop.index }}. {{ span.to_str() }}
 {# whitespace #}
 {%- endfor -%}
