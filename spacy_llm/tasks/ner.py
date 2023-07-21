@@ -32,9 +32,9 @@ def make_ner_task_v3(
 ):
     """NER.v3 task factory.
 
-    examples (Union[Callable[[], Iterable[OTS]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
+    examples (RequiredExamplesConfigType): Callable
+        reads a file containing task examples for few-shot learning or inline List of
+        dicts to convert into SpanExample instances.
     labels (Union[str, List[str]]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
         Leave empty to populate it at initialization time (only if examples are provided).
