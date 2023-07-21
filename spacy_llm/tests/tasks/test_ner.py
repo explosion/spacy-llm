@@ -1,6 +1,7 @@
 import json
 import re
 from pathlib import Path
+from typing import cast
 
 import pytest
 import spacy
@@ -13,7 +14,7 @@ from spacy.util import make_tempdir
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
-from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
+from spacy_llm.tasks.ner import _DEFAULT_NER_TEMPLATE_V3, NERTask, make_ner_task_v3
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -63,7 +64,7 @@ def zeroshot_cfg_string_v2_lds():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
+    @llm_tasks = "spacy.NER.v3"
     labels = PER,ORG,LOC
 
     [components.llm.task.label_definitions]
@@ -122,7 +123,7 @@ def fewshot_cfg_string_v2():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
+    @llm_tasks = "spacy.NER.v3"
     labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
@@ -152,7 +153,7 @@ def ext_template_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
+    @llm_tasks = "spacy.NER.v3"
     labels = PER,ORG,LOC
 
     [components.llm.task.template]
@@ -692,7 +693,7 @@ def noop_config():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
+    @llm_tasks = "spacy.NER.v3"
     labels = PER,ORG,LOC
 
     [components.llm.task.normalizer]
@@ -743,11 +744,13 @@ def test_ner_init(noop_config, n_prompt_examples: int):
         predicted = nlp.make_doc(text)
         reference = predicted.copy()
 
-        reference.ents = [
-            Span(reference, 0, 1, label="PER"),
-            Span(reference, 3, 4, label="PER"),
-            Span(reference, 5, 6, label="LOC"),
-        ]
+        reference.set_ents(
+            [
+                Span(reference, 0, 1, label="PER"),
+                Span(reference, 3, 4, label="PER"),
+                Span(reference, 5, 6, label="LOC"),
+            ]
+        )
 
         examples.append(Example(predicted, reference))
 
@@ -770,7 +773,7 @@ def test_ner_init(noop_config, n_prompt_examples: int):
 
     if n_prompt_examples > 0:
         for eg in task._prompt_examples:
-            assert set(eg.entities.keys()) == {"PER", "LOC"}
+            assert set([ent.label for ent in eg.entities]) == {"PER", "LOC"}
 
 
 def test_ner_serde(noop_config):
@@ -782,8 +785,8 @@ def test_ner_serde(noop_config):
 
     labels = {"loc": "LOC", "per": "PER"}
 
-    task1: NERTask = nlp1.get_pipe("llm")._task
-    task2: NERTask = nlp2.get_pipe("llm")._task
+    task1 = cast(NERTask, nlp1.get_pipe("llm").task)
+    task2 = cast(NERTask, nlp2.get_pipe("llm").task)
 
     # Artificially add labels to task1
     task1._label_dict = labels
@@ -843,7 +846,7 @@ def test_label_inconsistency():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v2"
+    @llm_tasks = "spacy.NER.v3"
     labels = ["PERSON", "LOCATION"]
 
     [components.llm.task.examples]
@@ -880,3 +883,51 @@ def test_label_inconsistency():
         "LOCATION": ["hill"],
         "PERSON": ["Jack", "Jill"],
     }
+
+
+def test_span_task_response_parse():
+
+    nlp = spacy.blank("en")
+    example_text = "The woman Paris was walking around in Paris"
+    example_doc = nlp.make_doc(example_text)
+    example_response = """
+    1. Paris | True | PERSON | is the name of the woman
+    2. Paris | True | LOCATION | is the name of a city in France
+    """
+
+    ner_task = NERTask(["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3)
+    span_reasons = ner_task._format_response(example_response)
+
+    assert len(span_reasons) == 2
+
+    docs = list(ner_task.parse_responses([example_doc], [example_response]))
+
+    assert len(docs[0].ents) == 2
+
+    ent1 = docs[0].ents[0]
+    assert ent1.label_ == "PERSON"
+
+    ent2 = docs[0].ents[1]
+    assert ent2.label_ == "LOCATION"
+
+    example_text = "Walking around Paris as a woman named Paris is quite a trip."
+    example_doc = nlp.make_doc(example_text)
+    example_response = """
+    1. Paris | True | LOCATION | is the name of a city in France
+    2. Paris | True | PERSON | is the name of the woman
+    """
+
+    ner_task = NERTask(["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3)
+    span_reasons = ner_task._format_response(example_response)
+
+    assert len(span_reasons) == 2
+
+    docs = list(ner_task.parse_responses([example_doc], [example_response]))
+
+    assert len(docs[0].ents) == 2
+
+    ent1 = docs[0].ents[0]
+    assert ent1.label_ == "LOCATION"
+
+    ent2 = docs[0].ents[1]
+    assert ent2.label_ == "PERSON"

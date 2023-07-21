@@ -1,6 +1,4 @@
-import warnings
-from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from spacy.language import Language
 from spacy.scorer import get_ner_prf
@@ -10,9 +8,9 @@ from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import registry
-from ..ty import ExamplesConfigType
+from ..ty import RequiredExamplesConfigType
 from ..util import split_labels
-from .span import SpanExample, SpanReason, SpanTask
+from .span import SpanExample, SpanTask
 from .templates import read_template
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
@@ -22,7 +20,7 @@ _DEFAULT_NER_TEMPLATE_V3 = read_template("ner.v3")
 
 @registry.llm_tasks("spacy.NER.v3")
 def make_ner_task_v3(
-    examples: ExamplesConfigType,
+    examples: RequiredExamplesConfigType,
     labels: Union[List[str], str] = [],
     template: str = _DEFAULT_NER_TEMPLATE_V3,
     description: Optional[str] = None,

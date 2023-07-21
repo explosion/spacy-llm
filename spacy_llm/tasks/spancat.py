@@ -1,5 +1,4 @@
-from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from spacy.language import Language
 from spacy.pipeline.spancat import spancat_score
@@ -10,7 +9,7 @@ from ..compat import Literal
 from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
-from .span import SpanExample, SpanReason, SpanTask
+from .span import SpanExample, SpanTask
 from .templates import read_template
 
 _DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")

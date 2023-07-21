@@ -1,7 +1,20 @@
+You are an expert Named Entity Recognition (NER) system.
+Your task is to accept Text as input and extract named entities.
+{# whitespace #}
 {{ description }}
 {# whitespace #}
+{%- if label_definitions -%}
+Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
 {# whitespace #}
-Q: Given the paragraph below, identify a list of possible entities, and for each entry explain why it is or is not an entity:
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 {# whitespace #}
 {# whitespace #}
 {%- for example in examples -%}

@@ -16,9 +16,10 @@ _Prompt = Any
 _Response = Any
 
 PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
-ExamplesConfigType = Union[
+RequiredExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]]
 ]
+ExamplesConfigType = Optional[RequiredExamplesConfigType]
 
 
 @runtime_checkable
