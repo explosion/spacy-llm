@@ -34,7 +34,6 @@ name = "Llama-2-7b-hf"
 """
 
 
-@pytest.mark.skip(reason="BuildKite setup needs to be updated for secret management")
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init():
@@ -45,7 +44,6 @@ def test_init():
     nlp("This is a test.")
 
 
-@pytest.mark.skip(reason="BuildKite setup needs to be updated for secret management")
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
@@ -54,7 +52,6 @@ def test_init_from_config():
     assert nlp.pipe_names == ["llm"]
 
 
-@pytest.mark.skip(reason="BuildKite setup needs to be updated for secret management")
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
