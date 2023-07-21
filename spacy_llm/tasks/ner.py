@@ -28,7 +28,6 @@ def make_ner_task_v3(
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
-    single_match: bool = False,
 ):
     """NER.v3 task factory.
 
@@ -46,8 +45,6 @@ def make_ner_task_v3(
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
-    single_match (bool): If False, allow one substring to match multiple times in
-        the text. If True, returns the first hit.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -66,7 +63,6 @@ def make_ner_task_v3(
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
-        single_match=single_match,
     )
 
 
@@ -81,7 +77,6 @@ class NERTask(SpanTask):
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
-        single_match: bool = False,
     ):
         super(NERTask, self).__init__(
             labels=labels,
@@ -92,12 +87,11 @@ class NERTask(SpanTask):
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
-            single_match=single_match,
         )
 
     def initialize(
         self,
-        get_examples: Callable[[], Iterable["Example"]],
+        get_examples: Callable[[], Iterable[Example]],
         nlp: Language,
         labels: List[str] = [],
         **kwargs: Any,
@@ -153,5 +147,4 @@ class NERTask(SpanTask):
             "_label_definitions",
             "_alignment_mode",
             "_case_sensitive_matching",
-            "_single_match",
         ]

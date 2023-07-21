@@ -56,7 +56,6 @@ def make_spancat_task(
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
-        single_match=single_match,
     )
 
 
@@ -102,7 +101,6 @@ def make_spancat_task_v2(
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
-        single_match=single_match,
     )
 
 
@@ -116,7 +114,6 @@ def make_spancat_task_v3(
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
-    single_match: bool = False,
 ):
     """SpanCat.v3 task factory.
 
@@ -135,8 +132,6 @@ def make_spancat_task_v3(
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
-    single_match (bool): If False, allow one substring to match multiple times in
-        the text. If True, returns the first hit.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -150,7 +145,6 @@ def make_spancat_task_v3(
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
-        single_match=single_match,
     )
 
 
@@ -166,7 +160,6 @@ class SpanCatTask(SpanTask):
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
-        single_match: bool = False,
     ):
         """Default SpanCat task.
 
@@ -184,8 +177,6 @@ class SpanCatTask(SpanTask):
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
-        single_match (bool): If False, allow one substring to match multiple times in
-            the text. If True, returns the first hit.
         """
         super(SpanCatTask, self).__init__(
             labels=labels,
@@ -196,7 +187,6 @@ class SpanCatTask(SpanTask):
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
-            single_match=single_match,
         )
         self._spans_key = spans_key
 

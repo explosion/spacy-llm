@@ -79,7 +79,6 @@ class SpanTask(SerializableTask[SpanExample]):
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
-        single_match: bool = False,
     ):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
@@ -92,7 +91,6 @@ class SpanTask(SerializableTask[SpanExample]):
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
-        self._single_match = single_match
 
         if self._prompt_examples:
             self._prompt_examples = self._check_label_consistency()
@@ -254,7 +252,6 @@ class SpanTask(SerializableTask[SpanExample]):
             "_label_definitions",
             "_alignment_mode",
             "_case_sensitive_matching",
-            "_single_match",
         ]
 
     @property
