@@ -7,6 +7,7 @@ import pytest
 import spacy
 import srsly
 from confection import Config
+from pydantic import ValidationError
 from spacy.language import Language
 from spacy.tokens import Span
 from spacy.training import Example
@@ -26,6 +27,16 @@ from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+@pytest.fixture
+def examples_dir():
+    return EXAMPLES_DIR
+
+
+@pytest.fixture
+def templates_dir():
+    return TEMPLATES_DIR
 
 
 @pytest.fixture
@@ -403,39 +414,34 @@ def test_invalid_alignment_mode():
 
 
 @pytest.mark.parametrize(
-    "response,case_sensitive,single_match,gold_ents",
+    "response, case_sensitive, gold_ents",
     [
         (
-            "PER: Jean",
+            "1. Jean | True | PER | is a person's name",
             False,
-            False,
-            [("jean", "PER"), ("Jean", "PER"), ("Jean", "PER")],
-        ),
-        (
-            "PER: Jean",
-            False,
-            True,
             [("jean", "PER")],
         ),
         (
-            "PER: Jean",
-            True,
-            False,
-            [("Jean", "PER"), ("Jean", "PER")],
-        ),
-        (
-            "PER: Jean",
-            True,
+            "1. Jean | True | PER | is a person's name",
             True,
             [("Jean", "PER")],
         ),
+        (
+            "1. jean | True | PER | is a person's name\n"
+            "2. Jean | True | PER | is a person's name\n"
+            "3. Jean Foundation | True | ORG | is the name of an Organization name",
+            False,
+            [("jean", "PER"), ("Jean", "PER"), ("Jean Foundation", "ORG")],
+        ),
     ],
 )
-def test_ner_matching(response, case_sensitive, single_match, gold_ents):
+def test_ner_matching(
+    response: str, case_sensitive: bool, gold_ents: List[Tuple[str, str]]
+):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
     llm_ner = make_ner_task_v3(
-        labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
+        examples=[], labels=labels, case_sensitive_matching=case_sensitive
     )
     # Prepare doc
     nlp = spacy.blank("xx")
@@ -447,59 +453,23 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     assert pred_ents == gold_ents
 
 
-def test_jinja_template_rendering_without_examples():
-    """Test if jinja template renders as we expected
-
-    We apply the .strip() method for each prompt so that we don't have to deal
-    with annoying newlines and spaces at the edge of the text.
-    """
-    labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
-    doc = nlp.make_doc("Alice and Bob went to the supermarket")
-
-    llm_ner = make_ner_task_v3(labels=labels, examples=[])
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
-
-    assert (
-        prompt.strip()
-        == """
-You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
-From the Text input provided, extract named entities for each label in the following format:
-
-LOC: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
-PER: <comma delimited list of strings>
-
-
-Here is the text that needs labeling:
-
-Text:
-'''
-Alice and Bob went to the supermarket
-'''
-""".strip()
-    )
-
-
 @pytest.mark.parametrize(
-    "examples_path",
-    [
-        str(EXAMPLES_DIR / "ner.json"),
-        # str(EXAMPLES_DIR / "ner.yml"),
-        # str(EXAMPLES_DIR / "ner.jsonl"),
-    ],
+    "examples_file",
+    ["ner.json"]
+    # str(EXAMPLES_DIR / "ner.yml"),
+    # str(EXAMPLES_DIR / "ner.jsonl"),
 )
-def test_jinja_template_rendering_with_examples(examples_path: Path):
+def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_file: str):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
+
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
-
-    examples = fewshot_reader(examples_path)
+    examples = fewshot_reader(examples_dir / examples_file)
     llm_ner = make_ner_task_v3(examples=examples, labels=labels)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
@@ -525,15 +495,10 @@ Answer:
     )
 
 
-@pytest.mark.parametrize(
-    "examples_path",
-    [
-        str(EXAMPLES_DIR / "ner.json"),
-        # str(EXAMPLES_DIR / "ner.yml"),
-        # str(EXAMPLES_DIR / "ner.jsonl"),
-    ],
-)
-def test_jinja_template_rendering_with_label_definitions(examples_path: Path):
+@pytest.mark.parametrize("examples_file", ["ner.json"])
+def test_jinja_template_rendering_with_label_definitions(
+    examples_dir: Path, examples_file: str
+):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
@@ -542,7 +507,7 @@ def test_jinja_template_rendering_with_label_definitions(examples_path: Path):
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
-    examples = fewshot_reader(examples_path)
+    examples = fewshot_reader(examples_dir / examples_file)
     llm_ner = make_ner_task_v3(
         examples=examples,
         labels=labels,
@@ -582,20 +547,46 @@ Answer:
     )
 
 
-def test_example_not_following_basemodel():
-    wrong_example = [
-        {
-            "text": "I'm a wrong example. Entities should be a dict, not a list",
-            # Should be: {"PER": ["Entities"], "ORG": ["dict", "list"]}
-            "entities": [("PER", ("Entities")), ("ORG", ("dict", "list"))],
-        }
-    ]
+@pytest.mark.parametrize(
+    "value, expected_type",
+    [
+        (
+            {
+                "text": "I'm a wrong example. Entities should be a dict, not a list",
+                # Should be: {"PER": ["Entities"], "ORG": ["dict", "list"]}
+                "entities": [("PER", ("Entities")), ("ORG", ("dict", "list"))],
+            },
+            ValidationError,
+        ),
+        (
+            {
+                "text": "Jack is a name",
+                "spans": [
+                    {
+                        "text": "Jack",
+                        "is_entity": True,
+                        "label": "PER",
+                        "reason": "is a person's name",
+                    }
+                ],
+            },
+            NERTask,
+        ),
+    ],
+)
+def test_fewshot_example_data(value: dict, expected_type: type):
     with make_tempdir() as tmpdir:
         tmp_path = tmpdir / "wrong_example.yml"
-        srsly.write_yaml(tmp_path, wrong_example)
+        srsly.write_yaml(tmp_path, [value])
 
-        with pytest.raises(ValueError):
-            make_ner_task_v3(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+        try:
+            task = make_ner_task_v3(
+                examples=fewshot_reader(tmp_path), labels=["PER", "ORG", "LOC"]
+            )
+        except (ValidationError, ValueError) as e:
+            assert type(e) == expected_type
+        else:
+            assert type(task) == expected_type
 
 
 def test_external_template_actually_loads():
@@ -605,23 +596,13 @@ def test_external_template_actually_loads():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = make_ner_task_v3(labels=labels, template=template)
+    llm_ner = make_ner_task_v3(examples=[], labels=labels, template=template)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
-    assert (
-        prompt.strip()
-        == """
-This is a test NER template. Here are the labels
-LOC
-ORG
-PER
-
-Here is the text: Alice and Bob went to the supermarket
-""".strip()
-    )
+    assert prompt.strip().startswith("Here's the test template for the tests and stuff")
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_ner_scoring(noop_config, n_detections):
+def test_ner_scoring(noop_config: str, n_detections: int):
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -642,7 +623,7 @@ def test_ner_scoring(noop_config, n_detections):
 
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_ner_init(noop_config, n_prompt_examples: int):
+def test_ner_init(noop_config: str, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -664,12 +645,9 @@ def test_ner_init(noop_config, n_prompt_examples: int):
                 Span(reference, 5, 6, label="LOC"),
             ]
         )
-
         examples.append(Example(predicted, reference))
 
-    _, llm = nlp.pipeline[0]
-    task: NERTask = llm._task
-
+    task = cast(NERTask, nlp.get_pipe("llm").task)
     assert set(task._label_dict.values()) == set()
     assert not task._prompt_examples
 
@@ -686,10 +664,10 @@ def test_ner_init(noop_config, n_prompt_examples: int):
 
     if n_prompt_examples > 0:
         for eg in task._prompt_examples:
-            assert set([ent.label for ent in eg.entities]) == {"PER", "LOC"}
+            assert set([ent.label for ent in eg.spans]) == {"PER", "LOC"}
 
 
-def test_ner_serde(noop_config):
+def test_ner_serde(noop_config: str):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
