@@ -51,7 +51,7 @@ def make_ner_task_v3(
     span_examples = [SpanExample(**eg) for eg in raw_examples]
     if not description:
         description = (
-            f"Entities must take one of these labels: {', '.join(labels_list)}."
+            f"Entities must have one of these labels: {', '.join(labels_list)}."
         )
 
     return NERTask(

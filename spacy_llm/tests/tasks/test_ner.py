@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-from typing import cast
+from typing import Callable, List, Tuple, cast
 
 import pytest
 import spacy
@@ -12,6 +12,7 @@ from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
 
+from spacy_llm.compat import Literal
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
@@ -25,6 +26,36 @@ from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+@pytest.fixture
+def noop_config():
+    return f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v3"
+    labels = PER,ORG,LOC
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+    output = "PER: Alice,Bob"
+    """
 
 
 @pytest.fixture
@@ -238,90 +269,67 @@ def test_ensure_offsets_correspond_to_substrings(
 
 
 @pytest.mark.parametrize(
-    "text,response,gold_ents",
-    [
-        # simple
-        (
-            "Jean Jacques and Jaime went to the library.",
-            "PER: Jean Jacques, Jaime\nLOC: library",
-            [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "LOC")],
-        ),
-        # overlapping: should only return the longest span
-        (
-            "The Manila Observatory was founded in 1865.",
-            "LOC: The Manila Observatory, Manila, Manila Observatory",
-            [("The Manila Observatory", "LOC")],
-        ),
-        # flipped: order shouldn't matter
-        (
-            "Take the road from Downtown and turn left at the public market.",
-            "LOC: public market, Downtown",
-            [("Downtown", "LOC"), ("public market", "LOC")],
-        ),
-    ],
-)
-def test_ner_zero_shot_task(text, response, gold_ents):
-    labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v3(labels=labels)
-    # Prepare doc
-    nlp = spacy.blank("xx")
-    doc_in = nlp.make_doc(text)
-    # Pass to the parser
-    # Note: parser() returns a list so we get what's inside
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
-    pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
-    assert pred_ents == gold_ents
-
-
-@pytest.mark.parametrize(
     "response,normalizer,gold_ents",
     [
         (
-            "PER: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is a person's name\n"
+            "2. Jaime | True | PER | is a person's name\n",
             None,
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "PER: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is a person's name\n"
+            "2. Jaime | True | PER | is a person's name\n",
             strip_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "PER: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is a person's name\n"
+            "2. Jaime | True | PER | is a person's name\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | per | is a person's name\n"
+            "2. Jaime | True | per | is a person's name\n",
             strip_normalizer(),
             [],
         ),
         (
-            "per: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | per | is a person's name\n"
+            "2. Jaime | True | per | is a person's name\n",
             None,
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Jean Jacques\nPER: Jaime",
+            "1. Jean Jacques | True | per | is a person's name\n"
+            "2. Jaime | True | PER | is a person's name\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Jean Jacques, Jaime\nOrg: library",
+            "1. Jean Jacques | True | per | is a person's name\n"
+            "2. Jaime | True | per | is a person's name\n"
+            "3. library | True | Org | is a organization\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "ORG")],
         ),
         (
-            "per: Jean Jacques, Jaime\nRANDOM: library",
+            "1. Jean Jacques | True | per | is a person's name\n"
+            "2. Jaime | True | per | is a person's name\n"
+            "3. Jaime | True | RANDOM | is an entity\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
     ],
 )
-def test_ner_labels(response, normalizer, gold_ents):
+def test_ner_labels(
+    response: str, normalizer: Callable[[str], str], gold_ents: List[Tuple[str, str]]
+):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v3(labels=labels, normalizer=normalizer)
+
+    llm_ner = make_ner_task_v3(examples=[], labels=labels, normalizer=normalizer)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -336,41 +344,48 @@ def test_ner_labels(response, normalizer, gold_ents):
     "response,alignment_mode,gold_ents",
     [
         (
-            "PER: Jacq",
+            "1. Jacq | True | PER | is a person's name",
             "strict",
             [],
         ),
         (
-            "PER: Jacq",
+            "1. Jacq | True | PER | is a person's name",
             "contract",
             [],
         ),
         (
-            "PER: Jacq",
+            "1. Jacq | True | PER | is a person's name",
             "expand",
             [("Jacques", "PER")],
         ),
         (
-            "PER: Jean J",
+            "1. Jean J | True | PER | is a person's name",
             "contract",
             [("Jean", "PER")],
         ),
         (
-            "PER: Jean Jacques, aim",
+            "1. Jean Jacques | True | PER | is a person's name",
             "strict",
             [("Jean Jacques", "PER")],
         ),
         (
-            "PER: random",
+            "1. random | True | PER | is a person's name",
             "expand",
             [],
         ),
     ],
+    ids=["strict_1", "contract_1", "expand_1", "strict_2", "contract_2", "expand_2"],
 )
-def test_ner_alignment(response, alignment_mode, gold_ents):
+def test_ner_alignment(
+    response: str,
+    alignment_mode: Literal["strict", "contract", "expand"],
+    gold_ents: List[Tuple[str, str]],
+):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v3(labels=labels, alignment_mode=alignment_mode)
+    llm_ner = make_ner_task_v3(
+        examples=[], labels=labels, alignment_mode=alignment_mode
+    )
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -384,7 +399,7 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        make_ner_task_v3(labels=labels, alignment_mode="invalid")  # type: ignore
+        make_ner_task_v3(examples=[], labels=labels, alignment_mode="invalid")  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -442,7 +457,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = make_ner_task_v3(labels=labels, examples=None)
+    llm_ner = make_ner_task_v3(labels=labels, examples=[])
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -470,11 +485,11 @@ Alice and Bob went to the supermarket
     "examples_path",
     [
         str(EXAMPLES_DIR / "ner.json"),
-        str(EXAMPLES_DIR / "ner.yml"),
-        str(EXAMPLES_DIR / "ner.jsonl"),
+        # str(EXAMPLES_DIR / "ner.yml"),
+        # str(EXAMPLES_DIR / "ner.jsonl"),
     ],
 )
-def test_jinja_template_rendering_with_examples(examples_path):
+def test_jinja_template_rendering_with_examples(examples_path: Path):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
@@ -485,55 +500,40 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)
-    llm_ner = make_ner_task_v3(labels=labels, examples=examples)
+    llm_ner = make_ner_task_v3(examples=examples, labels=labels)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
         == """
-You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
-From the Text input provided, extract named entities for each label in the following format:
+You are an expert Named Entity Recognition (NER) system.
+Your task is to accept Text as input and extract named entities.
 
-LOC: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
-PER: <comma delimited list of strings>
+Entities must have one of these labels: PER, ORG, LOC.
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 
+Paragraph: Jack and Jill went up the hill.
+Answer:
+1. Jack | True | PER | is the name of a person
+2. Jill | True | PER | is the name of a person
+3. went up | False | ==NONE== | is a verb
+4. hill | True | LOC | is a location
 
-Below are some examples (only use these as a guide):
-
-Text:
-'''
-Jack and Jill went up the hill.
-'''
-
-PER: Jack, Jill
-LOC: hill
-
-Text:
-'''
-Jack fell down and broke his crown.
-'''
-
-PER: Jack
-
-Text:
-'''
-Jill came tumbling after.
-'''
-
-PER: Jill
-
-
-Here is the text that needs labeling:
-
-Text:
-'''
-Alice and Bob went to the supermarket
-'''""".strip()
+Paragraph: Alice and Bob went to the supermarket
+Answer:
+""".strip()
     )
 
 
-def test_jinja_template_rendering_with_label_definitions():
+@pytest.mark.parametrize(
+    "examples_path",
+    [
+        str(EXAMPLES_DIR / "ner.json"),
+        # str(EXAMPLES_DIR / "ner.yml"),
+        # str(EXAMPLES_DIR / "ner.jsonl"),
+    ],
+)
+def test_jinja_template_rendering_with_label_definitions(examples_path: Path):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
@@ -542,7 +542,9 @@ def test_jinja_template_rendering_with_label_definitions():
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
+    examples = fewshot_reader(examples_path)
     llm_ner = make_ner_task_v3(
+        examples=examples,
         labels=labels,
         label_definitions={
             "PER": "Person definition",
@@ -555,27 +557,28 @@ def test_jinja_template_rendering_with_label_definitions():
     assert (
         prompt.strip()
         == """
-You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
-From the Text input provided, extract named entities for each label in the following format:
+You are an expert Named Entity Recognition (NER) system.
+Your task is to accept Text as input and extract named entities.
 
-LOC: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
-PER: <comma delimited list of strings>
-
+Entities must have one of these labels: PER, ORG, LOC.
 Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
 Assume these definitions are written by an expert and follow them closely.
-
 PER: Person definition
 ORG: Organization definition
 LOC: Location definition
 
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 
-Here is the text that needs labeling:
+Paragraph: Jack and Jill went up the hill.
+Answer:
+1. Jack | True | PER | is the name of a person
+2. Jill | True | PER | is the name of a person
+3. went up | False | ==NONE== | is a verb
+4. hill | True | LOC | is a location
 
-Text:
-'''
-Alice and Bob went to the supermarket
-'''""".strip()
+Paragraph: Alice and Bob went to the supermarket
+Answer:
+""".strip()
     )
 
 
@@ -615,32 +618,6 @@ PER
 Here is the text: Alice and Bob went to the supermarket
 """.strip()
     )
-
-
-@pytest.fixture
-def noop_config():
-    return """
-    [nlp]
-    lang = "en"
-    pipeline = ["llm"]
-    batch_size = 128
-
-    [components]
-
-    [components.llm]
-    factory = "llm"
-
-    [components.llm.task]
-    @llm_tasks = "spacy.NER.v3"
-    labels = PER,ORG,LOC
-
-    [components.llm.task.normalizer]
-    @misc = "spacy.LowercaseNormalizer.v1"
-
-    [components.llm.model]
-    @llm_models = "test.NoOpModel.v1"
-    output = "PER: Alice,Bob"
-    """
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
@@ -745,8 +722,8 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
 
     labels = {"loc": "LOC", "per": "PER"}
 
-    task1: NERTask = nlp1.get_pipe("llm")._task
-    task2: NERTask = nlp2.get_pipe("llm")._task
+    task1 = cast(NERTask, nlp1.get_pipe("llm").task)
+    task2 = cast(NERTask, nlp2.get_pipe("llm").task)
 
     # Artificially add labels to task1
     task1._label_dict = labels

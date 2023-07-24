@@ -10,7 +10,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
-from spacy_llm.tasks import make_spancat_task_v2
+from spacy_llm.tasks import make_spancat_task_v3
 from spacy_llm.tasks.spancat import SpanCatTask
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
@@ -196,7 +196,7 @@ def test_ensure_offsets_correspond_to_substrings(
 )
 def test_spancat_zero_shot_task(text, response, gold_spans):
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v2(labels=labels)
+    llm_spancat = make_spancat_task_v3(labels=labels)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -255,7 +255,7 @@ def test_spancat_zero_shot_task(text, response, gold_spans):
 def test_spancat_labels(response, normalizer, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v2(labels=labels, normalizer=normalizer)
+    llm_spancat = make_spancat_task_v3(labels=labels, normalizer=normalizer)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -304,7 +304,7 @@ def test_spancat_labels(response, normalizer, gold_spans):
 def test_spancat_alignment(response, alignment_mode, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v2(labels=labels, alignment_mode=alignment_mode)
+    llm_spancat = make_spancat_task_v3(labels=labels, alignment_mode=alignment_mode)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -318,7 +318,7 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        make_spancat_task_v2(labels=labels, alignment_mode="invalid")
+        make_spancat_task_v3(labels=labels, alignment_mode="invalid")
 
 
 @pytest.mark.parametrize(
@@ -353,7 +353,7 @@ def test_invalid_alignment_mode():
 def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v2(
+    llm_spancat = make_spancat_task_v3(
         labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
     )
     # Prepare doc
@@ -376,7 +376,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_spancat = make_spancat_task_v2(labels=labels, examples=None)
+    llm_spancat = make_spancat_task_v3(labels=labels, examples=None)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
@@ -420,7 +420,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)
-    llm_spancat = make_spancat_task_v2(labels=labels, examples=examples)
+    llm_spancat = make_spancat_task_v3(labels=labels, examples=examples)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
@@ -482,7 +482,7 @@ def test_example_not_following_basemodel():
         srsly.write_yaml(tmp_path, wrong_example)
 
     with pytest.raises(ValueError):
-        make_spancat_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+        make_spancat_task_v3(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 @pytest.fixture
