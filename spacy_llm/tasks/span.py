@@ -189,8 +189,8 @@ class SpanTask(SerializableTask[SpanExample]):
         """Assign spans to the document."""
         raise NotImplementedError()
 
-    def _format_response(self, response: str) -> List[SpanReason]:
-        """Parse raw string response into a structured format"""
+    def _extract_span_reasons(self, response: str) -> List[SpanReason]:
+        """Parse raw string response into a list of SpanReasons"""
         span_reasons = []
         for line in response.strip().split("\n"):
             try:
@@ -219,7 +219,7 @@ class SpanTask(SerializableTask[SpanExample]):
         for doc, llm_response in zip(docs, responses):
             last_span_end_char = 0
             spans = []
-            span_reasons = self._format_response(llm_response)
+            span_reasons = self._extract_span_reasons(llm_response)
             for span_reason in span_reasons:
                 # For each phrase, find the substrings in the text
                 # and create a Span

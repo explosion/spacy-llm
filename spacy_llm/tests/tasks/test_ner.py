@@ -609,7 +609,7 @@ def test_ner_scoring(fewshot_cfg_string_v3: str, n_detections: int):
         reference = nlp.make_doc(text)
         ent1 = Span(reference, 0, 1, label="PER")
         ent2 = Span(reference, 3, 4, label="PER")
-        reference.ents = tuple([ent1, ent2][:n_detections])
+        reference.set_ents([ent1, ent2][:n_detections])
         examples.append(Example(predicted, reference))
 
     scores = nlp.evaluate(examples)
@@ -846,7 +846,7 @@ def test_regression_span_task_response_parse(text: str, person_first: bool):
     ner_task = NERTask(
         ["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3, description="test"
     )
-    span_reasons = ner_task._format_response(example_response)
+    span_reasons = ner_task._extract_span_reasons(example_response)
     assert len(span_reasons) == 2
 
     docs = list(ner_task.parse_responses([example_doc], [example_response]))
