@@ -76,17 +76,25 @@ def score_srl_spans(
         pred_doc = eg.predicted
         gold_doc = eg.reference
 
-        pred_predicates_spans.update([(i, PredicateItem(**dict(p))) for p in pred_doc._.predicates])
-        gold_predicates_spans.update([(i, PredicateItem(**dict(p))) for p in gold_doc._.predicates])
+        pred_predicates_spans.update(
+            [(i, PredicateItem(**dict(p))) for p in pred_doc._.predicates]
+        )
+        gold_predicates_spans.update(
+            [(i, PredicateItem(**dict(p))) for p in gold_doc._.predicates]
+        )
 
-        pred_relation_tuples.update([(i, ArgRELItem(**dict(r))) for r in pred_doc._.relations])
-        gold_relation_tuples.update([(i, ArgRELItem(**dict(r))) for r in gold_doc._.relations])
+        pred_relation_tuples.update(
+            [(i, ArgRELItem(**dict(r))) for r in pred_doc._.relations]
+        )
+        gold_relation_tuples.update(
+            [(i, ArgRELItem(**dict(r))) for r in gold_doc._.relations]
+        )
 
     def _overlap_prf(gold: set, pred: set):
         overlap = gold.intersection(pred)
-        p = 0. if not len(pred) else len(overlap)/len(pred)
-        r = 0. if not len(gold) else len(overlap)/len(gold)
-        f = 0. if not p or not r else 2*p*r/(p+r)
+        p = 0.0 if not len(pred) else len(overlap) / len(pred)
+        r = 0.0 if not len(gold) else len(overlap) / len(gold)
+        f = 0.0 if not p or not r else 2 * p * r / (p + r)
         return p, r, f
 
     predicates_prf = _overlap_prf(gold_predicates_spans, pred_predicates_spans)
@@ -102,7 +110,9 @@ def score_srl_spans(
     pred_label2relations = _get_label2rels(pred_relation_tuples)
     gold_label2relations = _get_label2rels(gold_relation_tuples)
 
-    all_labels = set.union(set(pred_label2relations.keys()), set(gold_label2relations.keys()))
+    all_labels = set.union(
+        set(pred_label2relations.keys()), set(gold_label2relations.keys())
+    )
     label2prf = {}
     for label in all_labels:
         pred_label_rels = pred_label2relations[label]
@@ -111,10 +121,7 @@ def score_srl_spans(
 
     return {
         "Predicates": predicates_prf,
-        "ARGs": {
-            "Overall": micro_rel_prf,
-            "PerLabel": label2prf
-        }
+        "ARGs": {"Overall": micro_rel_prf, "PerLabel": label2prf},
     }
 
 
@@ -129,7 +136,7 @@ def make_srl_task(
     case_sensitive_matching: bool = True,
     single_match: bool = True,
     verbose: bool = False,
-    predicate_key: str = "Predicate"
+    predicate_key: str = "Predicate",
 ):
     """SRL.v1 task factory.
 
@@ -217,7 +224,7 @@ class SRLTask(SerializableTask[SRLExample]):
     @classmethod
     def _check_extensions(cls):
         """Add `predicates` extension if need be.
-           Add `relations`  extension if need be."""
+        Add `relations`  extension if need be."""
 
         if not Doc.has_extension("predicates"):
             Doc.set_extension("predicates", default=[])
@@ -294,7 +301,7 @@ class SRLTask(SerializableTask[SRLExample]):
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
-                predicates=predicates
+                predicates=predicates,
             )
 
             yield prompt
@@ -313,10 +320,13 @@ class SRLTask(SerializableTask[SRLExample]):
                     label = label.split("(")[0].strip()
 
                     # strip any surrounding quotes
-                    phrase = phrase.strip('\'" -')
+                    phrase = phrase.strip("'\" -")
 
                     norm_label = self._normalizer(label)
-                    if norm_label in self._label_dict and norm_label not in found_labels:
+                    if (
+                        norm_label in self._label_dict
+                        and norm_label not in found_labels
+                    ):
                         if phrase.strip():
                             _phrase = phrase.strip()
                             found_labels.add(norm_label)
@@ -330,7 +340,7 @@ class SRLTask(SerializableTask[SRLExample]):
         return output
 
     def parse_responses(
-            self, docs: Iterable[Doc], responses: Iterable[str]
+        self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, responses):
             predicates = []
@@ -340,12 +350,18 @@ class SRLTask(SerializableTask[SRLExample]):
             # match lines that start with {Predicate:, Predicate 1:, Predicate1:}
             # assuming self.predicate_key = "Predicate"
             pred_patt = r"^" + re.escape(self._predicate_key) + r"\b\s*\d*[:\-\s]"
-            pred_indices, pred_lines = zip(*[(i, line) for i, line in enumerate(lines) if re.search(pred_patt, line)])
+            pred_indices, pred_lines = zip(
+                *[
+                    (i, line)
+                    for i, line in enumerate(lines)
+                    if re.search(pred_patt, line)
+                ]
+            )
 
             pred_indices = list(pred_indices)
 
             # extract the predicate strings
-            pred_strings = [line.split(":", 1)[1].strip('\'" ') for line in pred_lines]
+            pred_strings = [line.split(":", 1)[1].strip("'\" ") for line in pred_lines]
 
             # extract the line ranges (s, e) of predicate's content.
             # then extract the pred content lines using the ranges
@@ -356,17 +372,18 @@ class SRLTask(SerializableTask[SRLExample]):
             # assign the spans of the predicates and args
             # then create ArgRELItem from the identified predicates and arguments
             for pred_str, pred_content_lines in zip(pred_strings, pred_contents):
-                pred_offsets = list(find_substrings(
-                    doc.text,
-                    [pred_str],
-                    case_sensitive=True,
-                    single_match=True
-                ))
+                pred_offsets = list(
+                    find_substrings(
+                        doc.text, [pred_str], case_sensitive=True, single_match=True
+                    )
+                )
 
                 # ignore the args if the predicate is not found
                 if len(pred_offsets):
                     p_start_char, p_end_char = pred_offsets[0]
-                    pred_item = PredicateItem(text=pred_str, start_char=p_start_char, end_char=p_end_char)
+                    pred_item = PredicateItem(
+                        text=pred_str, start_char=p_start_char, end_char=p_end_char
+                    )
                     predicates.append(pred_item.dict())
 
                     for label, phrase in self._format_response(pred_content_lines):
@@ -374,11 +391,15 @@ class SRLTask(SerializableTask[SRLExample]):
                             doc.text,
                             [phrase],
                             case_sensitive=self._case_sensitive_matching,
-                            single_match=self._single_match
+                            single_match=self._single_match,
                         )
                         for start, end in arg_offsets:
-                            arg_item = SpanItem(text=phrase, start_char=start, end_char=end).dict()
-                            arg_rel_item = ArgRELItem(predicate=pred_item, role=arg_item, label=label).dict()
+                            arg_item = SpanItem(
+                                text=phrase, start_char=start, end_char=end
+                            ).dict()
+                            arg_rel_item = ArgRELItem(
+                                predicate=pred_item, role=arg_item, label=label
+                            ).dict()
                             relations.append(arg_rel_item)
 
             doc._.predicates = predicates

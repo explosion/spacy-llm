@@ -28,5 +28,5 @@ __all__ = [
     "SpanCatTask",
     "SummarizationTask",
     "TextCatTask",
-    "SRLTask"
+    "SRLTask",
 ]
