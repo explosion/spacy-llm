@@ -119,7 +119,7 @@ def score_srl_spans(
 
 @registry.llm_tasks("spacy.SRL.v1")
 def make_srl_task(
-    labels: str,
+    labels: Union[List[str], str] = [],
     template: str = _DEFAULT_SPAN_SRL_TEMPLATE_V1,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -187,7 +187,7 @@ class SRLTask(SerializableTask[SRLExample]):
 
     def __init__(
         self,
-        labels: List[str] = None,
+        labels: List[str] = [],
         template: str = _DEFAULT_SPAN_SRL_TEMPLATE_V1,
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[SRLExample]] = None,
