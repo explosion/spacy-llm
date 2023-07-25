@@ -1,20 +1,21 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union, Any, Literal
 
 import re
+
+from collections import defaultdict
 import jinja2
-from wasabi import msg
+from pydantic import BaseModel, Field, ValidationError, validator
+from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
-from .util.serialization import ExampleType
+from wasabi import msg
+
 from ..registry import lowercase_normalizer, registry
+from ..ty import ExamplesConfigType
 from ..util import split_labels
+from .templates import read_template
 from .util import SerializableTask
 from .util.parsing import find_substrings
-from collections import defaultdict
-from pydantic import BaseModel
-from pathlib import Path
-from .templates import read_template
-from spacy import Language
 
 _DEFAULT_SPAN_SRL_TEMPLATE_V1 = read_template("span-srl.v1")
 
@@ -82,9 +83,9 @@ def score_srl_spans(
 
     def _overlap_prf(gold: set, pred: set):
         overlap = gold.intersection(pred)
-        p = len(overlap)/len(pred)
-        r = len(overlap)/len(gold)
-        f = 2*p*r/(p+r)
+        p = 0. if not len(pred) else len(overlap)/len(pred)
+        r = 0. if not len(gold) else len(overlap)/len(gold)
+        f = 0. if not p or not r else 2*p*r/(p+r)
         return p, r, f
 
     predicates_prf = _overlap_prf(gold_predicates_spans, pred_predicates_spans)
@@ -121,7 +122,7 @@ def make_srl_task(
     labels: str,
     template: str = _DEFAULT_SPAN_SRL_TEMPLATE_V1,
     label_definitions: Optional[Dict[str, str]] = None,
-    examples: Optional[Callable[[], Iterable[Any]]] = None,
+    examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
@@ -284,11 +285,17 @@ class SRLTask(SerializableTask[SRLExample]):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         for doc in docs:
+            predicates = None
+            if len(doc._.predicates):
+                predicates = ','.join([p['text'] for p in doc._.predicates])
+
             prompt = _template.render(
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
+                predicates=predicates
             )
+
             yield prompt
 
     def _format_response(self, arg_lines):
@@ -297,21 +304,28 @@ class SRLTask(SerializableTask[SRLExample]):
         # this ensures unique arguments in the sentence for a predicate
         found_labels = set()
         for line in arg_lines:
-            if line.strip() and ':' in line:
-                label, phrase = line.strip().split(':', 1)
+            try:
+                if line.strip() and ':' in line:
+                    label, phrase = line.strip().split(':', 1)
 
-                # label is of the form "ARG-n (def)"
-                label = label.split('(')[0].strip()
+                    # label is of the form "ARG-n (def)"
+                    label = label.split('(')[0].strip()
 
-                # strip any surrounding quotes
-                phrase = phrase.strip('\'" ')
+                    # strip any surrounding quotes
+                    phrase = phrase.strip('\'" -')
 
-                norm_label = self._normalizer(label)
-                if norm_label in self._label_dict and norm_label not in found_labels:
-                    if phrase.strip():
-                        _phrase = phrase.strip()
-                        found_labels.add(norm_label)
-                        output.append((self._label_dict[norm_label], _phrase))
+                    norm_label = self._normalizer(label)
+                    if norm_label in self._label_dict and norm_label not in found_labels:
+                        if phrase.strip():
+                            _phrase = phrase.strip()
+                            found_labels.add(norm_label)
+                            output.append((self._label_dict[norm_label], _phrase))
+            except ValidationError:
+                msg.warn(
+                    "Validation issue",
+                    line,
+                    show=self._verbose,
+                )
         return output
 
     def parse_responses(
