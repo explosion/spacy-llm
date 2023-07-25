@@ -596,23 +596,28 @@ def test_external_template_actually_loads():
     assert prompt.strip().startswith("Here's the test template for the tests and stuff")
 
 
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_ner_scoring(noop_config: str, n_detections: int):
-    config = Config().from_str(noop_config)
+def test_ner_scoring(fewshot_cfg_string_v3: str, n_detections: int):
+    config = Config().from_str(fewshot_cfg_string_v3)
     nlp = assemble_from_config(config)
 
     examples = []
     for text in ["Alice works with Bob.", "Bob lives with Alice."]:
         predicted = nlp.make_doc(text)
-        reference = predicted.copy()
+        reference = nlp.make_doc(text)
         ent1 = Span(reference, 0, 1, label="PER")
         ent2 = Span(reference, 3, 4, label="PER")
-        predicted.set_ents([ent1, ent2][:n_detections])
-        reference.set_ents([ent1, ent2][:n_detections])
+        reference.ents = tuple([ent1, ent2][:n_detections])
         examples.append(Example(predicted, reference))
 
     scores = nlp.evaluate(examples)
     assert scores["ents_p"] == n_detections / 2
+    assert scores["ents_r"] == (1 if n_detections != 0 else 0)
+    assert scores["ents_f"] == (
+        pytest.approx(0.666666666) if n_detections == 1 else n_detections / 2
+    )
 
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
