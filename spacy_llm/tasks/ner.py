@@ -10,7 +10,7 @@ from ..compat import Literal
 from ..registry import registry
 from ..ty import RequiredExamplesConfigType
 from ..util import split_labels
-from .span import SpanExample, SpanTask
+from .span import SpanExample, SpanReason, SpanTask
 from .templates import read_template
 
 _DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
@@ -94,6 +94,7 @@ class NERTask(SpanTask):
         get_examples: Callable[[], Iterable[Example]],
         nlp: Language,
         labels: List[str] = [],
+        n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize the NER task, by auto-discovering labels.
@@ -109,15 +110,19 @@ class NERTask(SpanTask):
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
         """
-        examples = get_examples()
         if not labels:
             labels = list(self._label_dict.values())
+
+        examples = get_examples()
+        for eg in examples:
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
         if not labels:
             label_set = set()
             for eg in examples:
                 for ent in eg.reference.ents:
                     label_set.add(ent.label_)
-            labels = list(label_set)
+            labels = sorted(set(label_set))
         self._label_dict = {self._normalizer(label): label for label in labels}
 
     def assign_spans(
@@ -143,3 +148,20 @@ class NERTask(SpanTask):
             "_alignment_mode",
             "_case_sensitive_matching",
         ]
+
+    def _create_prompt_example(self, example: Example) -> SpanExample:
+        """Create an NER prompt example from a spaCy example."""
+        span_reasons = []
+        for ent in example.reference.ents:
+            span_reasons.append(
+                SpanReason(
+                    text=ent.text,
+                    is_entity=True,
+                    label=ent.label_,
+                    reason=f"is a {ent.label_}",
+                )
+            )
+        return SpanExample(
+            text=example.reference.text,
+            spans=span_reasons,
+        )
