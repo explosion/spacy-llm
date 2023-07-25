@@ -4,7 +4,7 @@ import re
 
 from collections import defaultdict
 import jinja2
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, ValidationError
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
@@ -125,8 +125,8 @@ def make_srl_task(
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
-    case_sensitive_matching: bool = False,
-    single_match: bool = False,
+    case_sensitive_matching: bool = True,
+    single_match: bool = True,
     verbose: bool = False,
     predicate_key: str = 'Predicate'
 ):
@@ -187,7 +187,7 @@ class SRLTask(SerializableTask[SRLExample]):
 
     def __init__(
         self,
-        labels: List[str] = [],
+        labels: List[str] = None,
         template: str = _DEFAULT_SPAN_SRL_TEMPLATE_V1,
         label_definitions: Optional[Dict[str, str]] = None,
         examples: Optional[List[SRLExample]] = None,
@@ -197,8 +197,8 @@ class SRLTask(SerializableTask[SRLExample]):
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
         ] = "contract",
-        case_sensitive_matching: bool = False,
-        single_match: bool = False,
+        case_sensitive_matching: bool = True,
+        single_match: bool = True,
     ):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {self._normalizer(label): label for label in labels}
@@ -240,7 +240,7 @@ class SRLTask(SerializableTask[SRLExample]):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        labels: List[str] = [],
+        labels: List[str] = None,
     ) -> None:
         """Initialize the task, by auto-discovering labels.
 

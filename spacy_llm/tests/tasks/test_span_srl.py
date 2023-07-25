@@ -4,7 +4,6 @@ import pytest
 from confection import Config
 from pytest import FixtureRequest
 from spacy_llm.pipeline import LLMWrapper
-from spacy_llm.tasks.srl_task import _DEFAULT_SPAN_SRL_TEMPLATE_V1, ArgRELItem, PredicateItem, SpanItem
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
