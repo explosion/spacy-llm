@@ -1,0 +1,18 @@
+- text: Jack and Jill went up the hill.
+  spans:
+    - text: Jack
+      is_entity: true
+      label: PER
+      reason: is the name of a person
+    - text: Jill
+      is_entity: true
+      label: PER
+      reason: is the name of a person
+    - text: went up
+      is_entity: false
+      label: ==NONE==
+      reason: is a verb
+    - text: hill
+      is_entity: true
+      label: LOC
+      reason: is a location

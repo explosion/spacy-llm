@@ -759,18 +759,50 @@ def test_label_inconsistency():
     prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
     assert len(prompt_examples) == 2
     assert prompt_examples[0].text == "Jack and Jill went up the hill."
-    assert prompt_examples[0].entities == {
-        "LOCATION": ["hill"],
-        "PERSON": ["Jack", "Jill"],
-    }
+    assert prompt_examples[0].spans == [
+        SpanReason(
+            text="Jack",
+            is_entity=True,
+            label="PERSON",
+            reason="is the name of a person",
+        ),
+        SpanReason(
+            text="Jill",
+            is_entity=True,
+            label="PERSON",
+            reason="is the name of a person",
+        ),
+        SpanReason(
+            text="went up", is_entity=False, label="==NONE==", reason="is a verb"
+        ),
+        SpanReason(
+            text="hill", is_entity=True, label="LOCATION", reason="is a location"
+        ),
+    ]
     assert (
         prompt_examples[1].text
         == "Jack and Jill went up the hill and spaCy is a great tool."
     )
-    assert prompt_examples[1].entities == {
-        "LOCATION": ["hill"],
-        "PERSON": ["Jack", "Jill"],
-    }
+    assert prompt_examples[1].spans == [
+        SpanReason(
+            text="Jack",
+            is_entity=True,
+            label="PERSON",
+            reason="is the name of a person",
+        ),
+        SpanReason(
+            text="Jill",
+            is_entity=True,
+            label="PERSON",
+            reason="is the name of a person",
+        ),
+        SpanReason(
+            text="went up", is_entity=False, label="==NONE==", reason="is a verb"
+        ),
+        SpanReason(
+            text="hill", is_entity=True, label="LOCATION", reason="is a location"
+        ),
+    ]
 
 
 @pytest.mark.parametrize(
