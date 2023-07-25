@@ -241,7 +241,7 @@ class SRLTask(SerializableTask[SRLExample]):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        labels: List[str] = None,
+        labels: List[str] = [],
     ) -> None:
         """Initialize the task, by auto-discovering labels.
 
