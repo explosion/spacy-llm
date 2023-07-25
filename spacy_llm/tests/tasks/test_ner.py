@@ -657,9 +657,6 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
         assert len(task._prompt_examples) == 1
     elif n_prompt_examples in (1, 2):
         assert len(task._prompt_examples) == n_prompt_examples
-    #     assert len(task._prompt_examples) == n_prompt_examples + 1
-    # else:
-    #     assert len(task._prompt_examples) == len(examples) + 1
 
     if n_prompt_examples > 0:
         for eg in task._prompt_examples:
