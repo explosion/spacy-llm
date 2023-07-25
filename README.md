@@ -23,13 +23,13 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[StableLM](https://huggingface.co/stabilityai)**
 - Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`  
 - Tasks available out of the box:
-  - named entity recognition
-  - text classification
-  - lemmatization
-  - relationship extraction
-  - sentiment analysis
-  - span categorization
-  - summarization
+  - Named Entity Recognition
+  - Text classification
+  - Lemmatization
+  - Relationship extraction
+  - Sentiment analysis
+  - Span categorization
+  - Summarization
 - Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
 
 ## 🧠 Motivation
