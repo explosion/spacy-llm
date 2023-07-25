@@ -691,26 +691,25 @@ def test_ner_serde(noop_config: str):
     assert task1._label_dict == task2._label_dict == labels
 
 
-def test_ner_to_disk(noop_config, tmp_path: Path):
+def test_ner_to_disk(noop_config: str, tmp_path: Path):
     config = Config().from_str(noop_config)
-    del config["components"]["llm"]["task"]["labels"]
 
     nlp1 = assemble_from_config(config)
     nlp2 = assemble_from_config(config)
 
-    labels = {"loc": "LOC", "per": "PER"}
+    labels = {"loc": "LOC", "org": "ORG", "per": "PER"}
 
     task1 = cast(NERTask, nlp1.get_pipe("llm").task)
     task2 = cast(NERTask, nlp2.get_pipe("llm").task)
 
     # Artificially add labels to task1
     task1._label_dict = labels
+    task2._label_dict = {}
 
     assert task1._label_dict == labels
     assert task2._label_dict == dict()
 
     path = tmp_path / "model"
-
     nlp1.to_disk(path)
 
     cfgs = list(path.rglob("cfg"))
@@ -720,7 +719,6 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     assert cfg["_label_dict"] == labels
 
     nlp2.from_disk(path)
-
     assert task1._label_dict == task2._label_dict == labels
 
 
