@@ -19,6 +19,7 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
+  - **[Llama 2](https://huggingface.co/meta-llama)**  
   - **[OpenLLaMA](https://huggingface.co/openlm-research)**
   - **[StableLM](https://huggingface.co/stabilityai)**
 - Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`  
