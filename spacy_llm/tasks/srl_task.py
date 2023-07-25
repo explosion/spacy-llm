@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union, Any, Literal
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union, Any
 
 import re
 
@@ -16,6 +16,7 @@ from ..util import split_labels
 from .templates import read_template
 from .util import SerializableTask
 from .util.parsing import find_substrings
+from ..compat import Literal
 
 _DEFAULT_SPAN_SRL_TEMPLATE_V1 = read_template("span-srl.v1")
 
