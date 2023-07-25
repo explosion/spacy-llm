@@ -30,7 +30,7 @@ class SpanItem(BaseModel):
 
 
 class PredicateItem(SpanItem):
-    roleset_id: str = ''
+    roleset_id: str = ""
 
     def __hash__(self):
         return hash((self.text, self.start_char, self.end_char, self.roleset_id))
@@ -55,7 +55,7 @@ def _preannotate(doc: Union[Doc, SRLExample]) -> str:
     """Creates a text version of the document with list of provided predicates."""
 
     text = doc.text
-    preds = ', '.join([s.text for s in doc.predicates])
+    preds = ", ".join([s.text for s in doc.predicates])
 
     formatted_text = f"{text}\nPredicates: {preds}"
 
@@ -109,10 +109,10 @@ def score_srl_spans(
         label2prf[label] = _overlap_prf(gold_label_rels, pred_label_rels)
 
     return {
-        'Predicates': predicates_prf,
-        'ARGs': {
-            'Overall': micro_rel_prf,
-            'PerLabel': label2prf
+        "Predicates": predicates_prf,
+        "ARGs": {
+            "Overall": micro_rel_prf,
+            "PerLabel": label2prf
         }
     }
 
@@ -128,7 +128,7 @@ def make_srl_task(
     case_sensitive_matching: bool = True,
     single_match: bool = True,
     verbose: bool = False,
-    predicate_key: str = 'Predicate'
+    predicate_key: str = "Predicate"
 ):
     """SRL.v1 task factory.
 
@@ -193,7 +193,7 @@ class SRLTask(SerializableTask[SRLExample]):
         examples: Optional[List[SRLExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         verbose: bool = False,
-        predicate_key: str = 'Predicate',
+        predicate_key: str = "Predicate",
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
         ] = "contract",
@@ -287,7 +287,7 @@ class SRLTask(SerializableTask[SRLExample]):
         for doc in docs:
             predicates = None
             if len(doc._.predicates):
-                predicates = ','.join([p['text'] for p in doc._.predicates])
+                predicates = ", ".join([p["text"] for p in doc._.predicates])
 
             prompt = _template.render(
                 text=doc.text,
@@ -305,11 +305,11 @@ class SRLTask(SerializableTask[SRLExample]):
         found_labels = set()
         for line in arg_lines:
             try:
-                if line.strip() and ':' in line:
-                    label, phrase = line.strip().split(':', 1)
+                if line.strip() and ":" in line:
+                    label, phrase = line.strip().split(":", 1)
 
                     # label is of the form "ARG-n (def)"
-                    label = label.split('(')[0].strip()
+                    label = label.split("(")[0].strip()
 
                     # strip any surrounding quotes
                     phrase = phrase.strip('\'" -')
@@ -334,11 +334,11 @@ class SRLTask(SerializableTask[SRLExample]):
         for doc, prompt_response in zip(docs, responses):
             predicates = []
             relations = []
-            lines = prompt_response.split('\n')
+            lines = prompt_response.split("\n")
 
             # match lines that start with {Predicate:, Predicate 1:, Predicate1:}
-            # assuming self.predicate_key = 'Predicate'
-            pred_patt = r'^' + re.escape(self._predicate_key) + r'\b\s*\d*[:\-\s]'
+            # assuming self.predicate_key = "Predicate"
+            pred_patt = r"^" + re.escape(self._predicate_key) + r"\b\s*\d*[:\-\s]"
             pred_indices, pred_lines = zip(*[(i, line) for i, line in enumerate(lines) if re.search(pred_patt, line)])
 
             pred_indices = list(pred_indices)
