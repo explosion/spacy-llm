@@ -67,7 +67,7 @@ def llama2_hf(
     name (Literal): Name of the Llama 2 model. Has to be one of Llama2.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Falcon instance that can execute a set of prompts and return
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Llama2 instance that can execute a set of prompts and return
         the raw responses.
     """
     return Llama2(name=name, config_init=config_init, config_run=config_run)
