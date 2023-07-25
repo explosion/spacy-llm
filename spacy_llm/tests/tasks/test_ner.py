@@ -453,12 +453,7 @@ def test_ner_matching(
     assert pred_ents == gold_ents
 
 
-@pytest.mark.parametrize(
-    "examples_file",
-    ["ner.json"]
-    # str(EXAMPLES_DIR / "ner.yml"),
-    # str(EXAMPLES_DIR / "ner.jsonl"),
-)
+@pytest.mark.parametrize("examples_file", ["ner.json", "ner.yml", "ner.jsonl"])
 def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_file: str):
     """Test if jinja2 template renders as expected
 
@@ -495,7 +490,7 @@ Answer:
     )
 
 
-@pytest.mark.parametrize("examples_file", ["ner.json"])
+@pytest.mark.parametrize("examples_file", ["ner.json", "ner.yml", "ner.jsonl"])
 def test_jinja_template_rendering_with_label_definitions(
     examples_dir: Path, examples_file: str
 ):
