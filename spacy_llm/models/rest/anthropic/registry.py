@@ -66,7 +66,7 @@ def anthropic_claude_1(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -138,7 +138,7 @@ def anthropic_claude_instant_1_1(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -172,7 +172,7 @@ def anthropic_claude_1_0(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -206,7 +206,7 @@ def anthropic_claude_1_2(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -240,7 +240,7 @@ def anthropic_claude_1_3(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
