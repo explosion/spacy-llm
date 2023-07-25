@@ -811,6 +811,16 @@ labels = ARG-0,ARG-1,ARG-M-TMP,ARG-M-LOC
 | `normalizer`        | `Optional[Callable[[str], str]]`        | `None`                                               | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`.                   |
 | `verbose`           | `bool`                                  | `False`                                              | If set to `True`, warnings will be generated when the LLM returns invalid responses.                                                   |
 
+Example usage:
+```python
+from spacy_llm.util import assemble
+
+
+nlp = assemble("config.cfg")
+doc = nlp("I love this sentence.")
+print(doc._.predicates)
+print(doc._.relations)
+```
 
 #### spacy.Lemma.v1
 
