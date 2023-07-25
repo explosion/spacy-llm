@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import cast
 
 import pytest
 import spacy
@@ -589,8 +590,8 @@ def test_spancat_serde(noop_config):
 
     labels = {"loc": "LOC", "per": "PER"}
 
-    task1: SpanCatTask = nlp1.get_pipe("llm")._task
-    task2: SpanCatTask = nlp2.get_pipe("llm")._task
+    task1 = cast(SpanCatTask, nlp1.get_pipe("llm").task)
+    task2 = cast(SpanCatTask, nlp2.get_pipe("llm").task)
 
     # Artificially add labels to task1
     task1._label_dict = labels

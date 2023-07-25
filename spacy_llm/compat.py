@@ -2,9 +2,10 @@
 import sys
 
 if sys.version_info[:2] >= (3, 8):  # Python 3.8+
-    from typing import Literal, Protocol, runtime_checkable
+    from typing import Literal, Protocol, Self, runtime_checkable
 else:
-    from typing_extensions import Literal, Protocol, runtime_checkable  # noqa: F401
+    from typing_extensions import runtime_checkable  # noqa: F401
+    from typing_extensions import Literal, Protocol, Self  # noqa: F401
 
 if sys.version_info[:2] >= (3, 9):  # Python 3.8+
     from typing import TypedDict  # noqa: F401
