@@ -668,7 +668,6 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
 
 def test_ner_serde(noop_config: str):
     config = Config().from_str(noop_config)
-    del config["components"]["llm"]["task"]["labels"]
 
     nlp1 = assemble_from_config(config)
     nlp2 = assemble_from_config(config)
@@ -680,6 +679,7 @@ def test_ner_serde(noop_config: str):
 
     # Artificially add labels to task1
     task1._label_dict = labels
+    task2._label_dict = {}
 
     assert task1._label_dict == labels
     assert task2._label_dict == dict()
