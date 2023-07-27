@@ -151,7 +151,7 @@ def make_srl_task(
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
-    alignment_mode (str): "strict", "contract" or "expand".
+    alignment_mode (Literal): "strict", "contract" or "expand".
     case_sensitive_matching: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
@@ -235,7 +235,7 @@ class SRLTask(SerializableTask[SRLExample]):
     @staticmethod
     def _validate_alignment(alignment_mode: str):
         """Raises error if specified alignment_mode is not supported.
-        alignment_mode (str): Alignment mode to check.
+        alignment_mode (Literal): Alignment mode to check.
         """
         # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
         alignment_modes = ("strict", "contract", "expand")
