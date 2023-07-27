@@ -8,7 +8,6 @@ from spacy_llm.tests.compat import has_openai_key
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
-
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 
