@@ -155,7 +155,7 @@ def make_srl_task(
     case_sensitive_matching: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
-    verbose (boole): Verbose ot not
+    verbose (bool): Verbose or not
     predicate_key: The str of Predicate in the template
     """
     labels_list = split_labels(labels)
