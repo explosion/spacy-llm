@@ -65,7 +65,8 @@ def noop_config():
 
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
-    output = "1. Bob | True | PER | is the name of a person\n2. Alice | True | PER | is the name of a person"
+    output = 1. Bob | True | PER | is the name of a person
+        2. Alice | True | PER | is the name of a person
     """
 
 
@@ -433,6 +434,11 @@ def test_invalid_alignment_mode():
             False,
             [("jean", "PER"), ("Jean", "PER"), ("Jean Foundation", "ORG")],
         ),
+    ],
+    ids=[
+        "single_ent_case_insensitive",
+        "single_ent_case_sensitive",
+        "multiple_ents_case_insensitive",
     ],
 )
 def test_ner_matching(

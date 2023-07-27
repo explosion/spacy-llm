@@ -220,7 +220,7 @@ class SpanTask(SerializableTask[SpanExample]):
         previously found spans.
         """
         for doc, llm_response in zip(docs, responses):
-            last_span_start_char = 0
+            find_after = 0
             spans = []
             span_reasons = self._extract_span_reasons(llm_response)
             for span_reason in span_reasons:
@@ -231,7 +231,7 @@ class SpanTask(SerializableTask[SpanExample]):
                     [span_reason.text],
                     case_sensitive=self._case_sensitive_matching,
                     single_match=True,
-                    find_after=last_span_start_char,
+                    find_after=find_after,
                 )
                 for start, end in offsets:
                     span = doc.char_span(
@@ -242,7 +242,7 @@ class SpanTask(SerializableTask[SpanExample]):
                     )
                     if span is not None:
                         spans.append(span)
-                        last_span_start_char = span.start_char
+                        find_after = span.start_char
             self.assign_spans(doc, spans)
             yield doc
 

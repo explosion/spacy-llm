@@ -3,7 +3,6 @@ from typing import cast
 
 import pytest
 import spacy
-import srsly
 from confection import Config
 from spacy.tokens import Span
 from spacy.training import Example
@@ -20,6 +19,11 @@ from spacy_llm.util import assemble_from_config, split_labels
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
+
+
+@pytest.fixture
+def examples_dir():
+    return EXAMPLES_DIR
 
 
 @pytest.fixture
@@ -48,7 +52,8 @@ def noop_config():
 
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
-    output = "1. Bob | True | PER | is the name of a person\n2. Alice | True | PER | is the name of a person"
+    output = 1. Bob | True | PER | is the name of a person
+        2. Alice | True | PER | is the name of a person
     """
 
 
@@ -96,17 +101,17 @@ def ext_template_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.NER.v3"
+    @llm_tasks = "spacy.SpanCat.v3"
     description = "This is a description"
     labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+    path = {str((Path(__file__).parent / "examples" / "spancat.json"))}
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "ner.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "spancat.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -411,123 +416,45 @@ def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
     assert pred_spans == gold_spans
 
 
-def test_jinja_template_rendering_without_examples():
-    """Test if jinja template renders as we expected
-
-    We apply the .strip() method for each prompt so that we don't have to deal
-    with annoying newlines and spaces at the edge of the text.
-    """
-    labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
-    doc = nlp.make_doc("Alice and Bob went to the supermarket")
-
-    llm_spancat = make_spancat_task_v3(labels=labels, examples=None)
-    prompt = list(llm_spancat.generate_prompts([doc]))[0]
-
-    assert (
-        prompt.strip()
-        == """
-You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
-The entities you extract for each label can overlap with each other.
-From the Text input provided, extract named entities for each label in the following format:
-
-LOC: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
-PER: <comma delimited list of strings>
-
-
-Here is the text that needs labeling:
-
-Text:
-'''
-Alice and Bob went to the supermarket
-'''
-""".strip()
-    )
-
-
 @pytest.mark.parametrize(
-    "examples_path",
-    [
-        str(EXAMPLES_DIR / "ner.json"),
-        str(EXAMPLES_DIR / "ner.yml"),
-        str(EXAMPLES_DIR / "ner.jsonl"),
-    ],
+    "examples_file", ["spancat.json", "spancat.yml", "spancat.jsonl"]
 )
-def test_jinja_template_rendering_with_examples(examples_path):
+def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_file: str):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    labels = "PER,ORG,LOC"
+    labels = "PER,ORG,LOC,DESTINATION"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(examples_path)
-    llm_spancat = make_spancat_task_v3(labels=labels, examples=examples)
+    examples = fewshot_reader(examples_dir / examples_file)
+    llm_spancat = make_spancat_task_v3(examples=examples, labels=labels)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
         == """
-You are an expert Named Entity Recognition (NER) system. Your task is to accept Text as input and extract named entities for the set of predefined entity labels.
-The entities you extract for each label can overlap with each other.
-From the Text input provided, extract named entities for each label in the following format:
+You are an expert Named Entity Recognition (NER) system.
+Your task is to accept Text as input and extract named entities.
+The entities you extract can overlap with each other.
 
-LOC: <comma delimited list of strings>
-ORG: <comma delimited list of strings>
-PER: <comma delimited list of strings>
+Entities must have one of these labels: PER, ORG, LOC, DESTINATION.
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 
+Paragraph: Jack and Jill went up the hill.
+Answer:
+1. Jack | True | PER | is the name of a person
+2. Jill | True | PER | is the name of a person
+3. went up | False | ==NONE== | is a verb
+4. hill | True | LOC | is a location
+5. hill | True | DESTINATION | is a destination
 
-Below are some examples (only use these as a guide):
-
-Text:
-'''
-Jack and Jill went up the hill.
-'''
-
-PER: Jack, Jill
-LOC: hill
-
-Text:
-'''
-Jack fell down and broke his crown.
-'''
-
-PER: Jack
-
-Text:
-'''
-Jill came tumbling after.
-'''
-
-PER: Jill
-
-
-Here is the text that needs labeling:
-
-Text:
-'''
-Alice and Bob went to the supermarket
-'''""".strip()
+Paragraph: Alice and Bob went to the supermarket
+Answer:
+""".strip()
     )
-
-
-def test_example_not_following_basemodel():
-    wrong_example = [
-        {
-            "text": "I'm a wrong example. Entities should be a dict, not a list",
-            # Should be: {"PER": ["Entities"], "ORG": ["dict", "list"]}
-            "entities": [("PER", ("Entities")), ("ORG", ("dict", "list"))],
-        }
-    ]
-    with make_tempdir() as tmpdir:
-        tmp_path = tmpdir / "wrong_example.yml"
-        srsly.write_yaml(tmp_path, wrong_example)
-
-    with pytest.raises(ValueError):
-        make_spancat_task_v3(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
@@ -554,8 +481,9 @@ def test_spancat_scoring(noop_config, n_detections):
 
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_spancat_init(noop_config, n_prompt_examples: bool):
+def test_spancat_init(noop_config: str, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
+    config["components"]["llm"]["task"]["labels"] = ["PER", "LOC", "DESTINATION"]
     nlp = assemble_from_config(config)
 
     examples = []
@@ -578,16 +506,13 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
     _, llm = nlp.pipeline[0]
     task: SpanCatTask = llm._task
 
-    assert set(task._label_dict.values()) == set()
-    assert not task._prompt_examples
-
     nlp.config["initialize"]["components"]["llm"] = {
         "n_prompt_examples": n_prompt_examples
     }
 
     nlp.initialize(lambda: examples)
 
-    assert set(task._label_dict.values()) == {"PER", "LOC"}
+    assert set(task._label_dict.values()) == {"PER", "LOC", "DESTINATION"}
     if n_prompt_examples == -1:
         assert len(task._prompt_examples) == 3
     elif n_prompt_examples == 0:
@@ -600,7 +525,7 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
             prompt_example_labels = {ent.label for ent in eg.spans}
             if "==NONE==" not in prompt_example_labels:
                 prompt_example_labels.add("==NONE==")
-            assert prompt_example_labels == {"==NONE==", "PER", "LOC"}
+            assert prompt_example_labels == {"==NONE==", "PER", "LOC", "DESTINATION"}
 
 
 def test_spancat_serde(noop_config):
