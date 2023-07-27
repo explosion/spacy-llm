@@ -52,7 +52,10 @@ class SpanReason(BaseModel):
         )
 
     def to_str(self, sep: str = "|") -> str:
-        """Output as a single str line representing the expected LLM COT output"""
+        """Output as a single line of text representing the expected LLM COT output
+        e.g.
+        'Golden State Warriors | BASKETBALL_TEAM | True | is a basketball team in the NBA'
+        """
         return (
             f"{self.text} {sep} {self.is_entity} {sep} {self.label} {sep} {self.reason}"
         )
