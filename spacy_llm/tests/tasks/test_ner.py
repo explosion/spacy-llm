@@ -65,7 +65,7 @@ def noop_config():
 
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
-    output = "PER: Alice,Bob"
+    output = "1. Bob | True | PER | is the name of a person\n2. Alice | True | PER | is the name of a person"
     """
 
 
