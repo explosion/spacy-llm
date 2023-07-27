@@ -7,9 +7,9 @@ from spacy.training import Example
 
 from ..compat import Literal
 from ..registry import registry
-from ..ty import ExamplesConfigType
+from ..ty import RequiredExamplesConfigType
 from ..util import split_labels
-from .span import SpanExample, SpanTask
+from .span import SpanExample, SpanReason, SpanTask
 from .templates import read_template
 
 _DEFAULT_SPANCAT_TEMPLATE_V3 = read_template("spancat.v3")
@@ -17,17 +17,20 @@ _DEFAULT_SPANCAT_TEMPLATE_V3 = read_template("spancat.v3")
 
 @registry.llm_tasks("spacy.SpanCat.v3")
 def make_spancat_task_v3(
+    examples: RequiredExamplesConfigType,
     labels: Union[List[str], str] = [],
     template: str = _DEFAULT_SPANCAT_TEMPLATE_V3,
     description: Optional[str] = None,
     label_definitions: Optional[Dict[str, str]] = None,
-    examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
 ):
     """SpanCat.v3 task factory.
 
+    examples (RequiredExamplesConfigType): Callable
+        reads a file containing task examples for few-shot learning or inline List of
+        dicts to convert into SpanExample instances.
     labels (Union[str, List[str]]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
         Leave empty to populate it at initialization time (only if examples are provided).
@@ -36,26 +39,23 @@ def make_spancat_task_v3(
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
         full examples, although both can be provided.
-    spans_key (str): Key of the `Doc.spans` dict to save under.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive: Whether to search without case sensitivity.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
-    span_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None
-    if description is None:
+    span_examples = [SpanExample(**eg) for eg in raw_examples]
+    if not description:
         description = (
-            f"Entities must take one of these labels: {', '.join(labels_list)}."
+            f"Entities must have one of these labels: {', '.join(labels_list)}."
         )
+
     return SpanCatTask(
         labels=labels_list,
         template=template,
-        label_definitions=label_definitions,
         description=description,
+        label_definitions=label_definitions,
         prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
@@ -76,24 +76,7 @@ class SpanCatTask(SpanTask):
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
     ):
-        """Default SpanCat task.
-
-        labels (List[str]): List of labels to pass to the template.
-            Leave empty to populate it at initialization time (only if examples are provided).
-        template (str): Prompt template passed to the model.
-        label_definitions (Optional[Dict[str, str]]): Map of label -> description
-            of the label to help the language model output the entities wanted.
-            It is usually easier to provide these definitions rather than
-            full examples, although both can be provided.
-        spans_key (str): Key of the `Doc.spans` dict to save under.
-        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
-        normalizer (Optional[Callable[[str], str]]): optional normalizer function.
-        alignment_mode (str): "strict", "contract" or "expand".
-        case_sensitive: Whether to search without case sensitivity.
-        """
-        super(SpanCatTask, self).__init__(
+        super().__init__(
             labels=labels,
             template=template,
             description=description,
@@ -105,33 +88,15 @@ class SpanCatTask(SpanTask):
         )
         self._spans_key = spans_key
 
-    def assign_spans(
-        self,
-        doc: Doc,
-        spans: List[Span],
-    ) -> None:
-        """Assign spans to the document."""
-        doc.spans[self._spans_key] = sorted(spans)  # type: ignore [type-var]
-
-    def scorer(
-        self,
-        examples: Iterable[Example],
-    ) -> Dict[str, Any]:
-        return spancat_score(
-            examples,
-            spans_key=self._spans_key,
-            allow_overlap=True,
-        )
-
     def initialize(
         self,
-        get_examples: Callable[[], Iterable["Example"]],
+        get_examples: Callable[[], Iterable[Example]],
         nlp: Language,
         labels: List[str] = [],
         n_prompt_examples: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize the SpanCat task, by auto-discovering labels.
+        """Initialize the NER task, by auto-discovering labels.
 
         Labels can be set through, by order of precedence:
 
@@ -144,18 +109,63 @@ class SpanCatTask(SpanTask):
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
         """
-
-        examples = get_examples()
-
         if not labels:
             labels = list(self._label_dict.values())
 
+        examples = get_examples()
+        for eg in examples:
+            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
+                self._prompt_examples.append(self._create_prompt_example(eg))
         if not labels:
             label_set = set()
-
             for eg in examples:
                 for ent in eg.reference.ents:
                     label_set.add(ent.label_)
-            labels = list(label_set)
-
+            labels = sorted(set(label_set))
         self._label_dict = {self._normalizer(label): label for label in labels}
+
+    def assign_spans(
+        self,
+        doc: Doc,
+        spans: List[Span],
+    ) -> None:
+        """Assign spans to the document."""
+        doc.spans[self._spans_key] = sorted(spans)
+
+    def scorer(
+        self,
+        examples: Iterable[Example],
+    ) -> Dict[str, Any]:
+        return spancat_score(
+            examples,
+            spans_key=self._spans_key,
+            allow_overlap=True,
+        )
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_alignment_mode",
+            "_case_sensitive_matching",
+            "_spans_key",
+        ]
+
+    def _create_prompt_example(self, example: Example) -> SpanExample:
+        """Create a SpanCat prompt example from a spaCy example."""
+        span_reasons = []
+        for span in example.reference.spans[self._spans_key]:
+            span_reasons.append(
+                SpanReason(
+                    text=span.text,
+                    is_entity=True,
+                    label=span.label_,
+                    reason=f"is a {span.label_}",
+                )
+            )
+        return SpanExample(
+            text=example.reference.text,
+            spans=span_reasons,
+        )

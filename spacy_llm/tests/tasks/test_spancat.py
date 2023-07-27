@@ -23,8 +23,8 @@ EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 
 @pytest.fixture
-def zeroshot_cfg_string():
-    return """
+def noop_config():
+    return f"""
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -36,14 +36,19 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v2"
-    labels = PER,ORG,LOC
+    @llm_tasks = "spacy.SpanCat.v3"
+    labels = ["PER", "ORG", "LOC", "DESTINATION"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "spancat.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "test.NoOpModel.v1"
+    output = "1. Bob | True | PER | is the name of a person\n2. Alice | True | PER | is the name of a person"
     """
 
 
@@ -61,12 +66,47 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v2"
+    @llm_tasks = "spacy.SpanCat.v3"
+    labels = ["PER", "ORG", "LOC", "DESTINATION"]
+
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "spancat.yml"))}
+
+    [components.llm.task.normalizer]
+    @misc = "spacy.LowercaseNormalizer.v1"
+
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
+    """
+
+
+@pytest.fixture
+def ext_template_cfg_string():
+    """Simple zero-shot config with an external template"""
+
+    return f"""
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+    batch_size = 128
+
+    [components]
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.NER.v3"
+    description = "This is a description"
     labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+
+    [components.llm.task.template]
+    @misc = "spacy.FileReader.v1"
+    path = {str((Path(__file__).parent / "templates" / "ner.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -99,7 +139,7 @@ def test_spancat_config(cfg_string, request):
 
 
 @pytest.mark.external
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
+@pytest.mark.parametrize("cfg_string", ["", "fewshot_cfg_string"])
 def test_spancat_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
@@ -197,7 +237,7 @@ def test_ensure_offsets_correspond_to_substrings(
 )
 def test_spancat_zero_shot_task(text, response, gold_spans):
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v3(labels=labels)
+    llm_spancat = make_spancat_task_v3(examples=[], labels=labels)
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -256,7 +296,9 @@ def test_spancat_zero_shot_task(text, response, gold_spans):
 def test_spancat_labels(response, normalizer, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v3(labels=labels, normalizer=normalizer)
+    llm_spancat = make_spancat_task_v3(
+        examples=[], labels=labels, normalizer=normalizer
+    )
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -305,7 +347,9 @@ def test_spancat_labels(response, normalizer, gold_spans):
 def test_spancat_alignment(response, alignment_mode, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v3(labels=labels, alignment_mode=alignment_mode)
+    llm_spancat = make_spancat_task_v3(
+        examples=[], labels=labels, alignment_mode=alignment_mode
+    )
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -319,7 +363,7 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        make_spancat_task_v3(labels=labels, alignment_mode="invalid")
+        make_spancat_task_v3(examples=[], labels=labels, alignment_mode="invalid")
 
 
 @pytest.mark.parametrize(
@@ -355,7 +399,7 @@ def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
     llm_spancat = make_spancat_task_v3(
-        labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
+        examples=[], labels=labels, case_sensitive_matching=case_sensitive
     )
     # Prepare doc
     nlp = spacy.blank("xx")
@@ -486,32 +530,6 @@ def test_example_not_following_basemodel():
         make_spancat_task_v3(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
-@pytest.fixture
-def noop_config():
-    return """
-    [nlp]
-    lang = "en"
-    pipeline = ["llm"]
-    batch_size = 128
-
-    [components]
-
-    [components.llm]
-    factory = "llm"
-
-    [components.llm.task]
-    @llm_tasks = "spacy.SpanCat.v2"
-    labels = ["PER", "ORG", "LOC"]
-
-    [components.llm.task.normalizer]
-    @misc = "spacy.LowercaseNormalizer.v1"
-
-    [components.llm.model]
-    @llm_models = "test.NoOpModel.v1"
-    output = "PER: Bob,Alice"
-    """
-
-
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_spancat_scoring(noop_config, n_detections):
     config = Config().from_str(noop_config)
@@ -538,7 +556,6 @@ def test_spancat_scoring(noop_config, n_detections):
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_spancat_init(noop_config, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
-    del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
 
     examples = []
@@ -571,19 +588,23 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    if n_prompt_examples >= 0:
+    if n_prompt_examples == -1:
+        assert len(task._prompt_examples) == 3
+    elif n_prompt_examples == 0:
+        assert len(task._prompt_examples) == 1
+    elif n_prompt_examples in (1, 2):
         assert len(task._prompt_examples) == n_prompt_examples
-    else:
-        assert len(task._prompt_examples) == len(examples)
 
     if n_prompt_examples > 0:
         for eg in task._prompt_examples:
-            assert set(eg.entities.keys()) == {"PER", "LOC"}
+            prompt_example_labels = {ent.label for ent in eg.spans}
+            if "==NONE==" not in prompt_example_labels:
+                prompt_example_labels.add("==NONE==")
+            assert prompt_example_labels == {"==NONE==", "PER", "LOC"}
 
 
 def test_spancat_serde(noop_config):
     config = Config().from_str(noop_config)
-    del config["components"]["llm"]["task"]["labels"]
 
     nlp1 = assemble_from_config(config)
     nlp2 = assemble_from_config(config)
