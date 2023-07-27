@@ -10,13 +10,13 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
+from ..compat import Literal
 from ..registry import lowercase_normalizer, registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 from .util import SerializableTask
 from .util.parsing import find_substrings
-from ..compat import Literal
 
 _DEFAULT_SPAN_SRL_TEMPLATE_V1 = read_template("span-srl.v1")
 

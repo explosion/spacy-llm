@@ -1,11 +1,10 @@
 import os
-from pathlib import Path
-from typing import Optional
-
 import typer
-from wasabi import msg
 
+from pathlib import Path
 from spacy_llm.util import assemble
+from typing import Optional
+from wasabi import msg
 
 Arg = typer.Argument
 Opt = typer.Option

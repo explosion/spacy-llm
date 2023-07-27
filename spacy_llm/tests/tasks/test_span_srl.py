@@ -1,13 +1,13 @@
-from pathlib import Path
-
 import pytest
+
 from confection import Config
+from pathlib import Path
 from pytest import FixtureRequest
 from spacy_llm.pipeline import LLMWrapper
+from spacy_llm.tests.compat import has_openai_key
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
-from spacy_llm.tests.compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
 
