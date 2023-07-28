@@ -11,11 +11,11 @@ from spacy.training import Example
 from wasabi import msg
 
 from ..compat import Literal
-from ..registry import lowercase_normalizer, registry
+from ..registry import registry
 from ..ty import ExamplesConfigType
 from ..util import split_labels
+from .span import SpanTask
 from .templates import read_template
-from .util import SerializableTask
 from .util.parsing import find_substrings
 
 _DEFAULT_SPAN_SRL_TEMPLATE_V1 = read_template("span-srl.v1")
@@ -151,7 +151,7 @@ def make_srl_task(
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
-    alignment_mode (Literal): "strict", "contract" or "expand".
+    alignment_mode (Literal["strict", "contract", "expand"]): "strict", "contract" or "expand".
     case_sensitive_matching: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
@@ -165,7 +165,7 @@ def make_srl_task(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=rel_examples,
+        prompt_examples=rel_examples,
         normalizer=normalizer,
         verbose=verbose,
         alignment_mode=alignment_mode,
@@ -175,49 +175,33 @@ def make_srl_task(
     )
 
 
-class SRLTask(SerializableTask[SRLExample]):
-    @property
-    def _Example(self) -> Type[SRLExample]:
-        return SRLExample
-
-    @property
-    def _cfg_keys(self) -> List[str]:
-        return [
-            "_label_dict",
-            "_template",
-            "_label_definitions",
-            "_verbose",
-            "_predicate_key",
-            "_alignment_mode",
-            "_case_sensitive_matching",
-            "_single_match",
-        ]
-
+class SRLTask(SpanTask[SRLExample]):
     def __init__(
         self,
         labels: List[str] = [],
         template: str = _DEFAULT_SPAN_SRL_TEMPLATE_V1,
         label_definitions: Optional[Dict[str, str]] = None,
-        examples: Optional[List[SRLExample]] = None,
+        prompt_examples: Optional[List[SRLExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
-        verbose: bool = False,
-        predicate_key: str = "Predicate",
         alignment_mode: Literal[
             "strict", "contract", "expand"  # noqa: F821
         ] = "contract",
         case_sensitive_matching: bool = True,
         single_match: bool = True,
+        verbose: bool = False,
+        predicate_key: str = "Predicate",
     ):
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {self._normalizer(label): label for label in labels}
-        self._template = template
-        self._label_definitions = label_definitions
-        self._examples = examples
+        super().__init__(
+            labels,
+            template,
+            label_definitions,
+            prompt_examples,
+            normalizer,
+            alignment_mode,
+            case_sensitive_matching,
+            single_match,
+        )
         self._verbose = verbose
-        self._validate_alignment(alignment_mode)
-        self._alignment_mode = alignment_mode
-        self._case_sensitive_matching = case_sensitive_matching
-        self._single_match = single_match
         self._predicate_key = predicate_key
         self._check_extensions()
 
@@ -231,18 +215,6 @@ class SRLTask(SerializableTask[SRLExample]):
 
         if not Doc.has_extension("relations"):
             Doc.set_extension("relations", default=[])
-
-    @staticmethod
-    def _validate_alignment(alignment_mode: str):
-        """Raises error if specified alignment_mode is not supported.
-        alignment_mode (Literal): Alignment mode to check.
-        """
-        # ideally, this list should be taken from spaCy, but it's not currently exposed from doc.pyx.
-        alignment_modes = ("strict", "contract", "expand")
-        if alignment_mode not in alignment_modes:
-            raise ValueError(
-                f"Unsupported alignment mode '{alignment_mode}'. Supported modes: {', '.join(alignment_modes)}"
-            )
 
     def initialize(
         self,
@@ -280,14 +252,6 @@ class SRLTask(SerializableTask[SRLExample]):
             labels = list(label_set)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
-
-    @property
-    def labels(self) -> Tuple[str, ...]:
-        return tuple(self._label_dict.values())
-
-    @property
-    def prompt_template(self) -> str:
-        return self._template
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
@@ -405,3 +369,20 @@ class SRLTask(SerializableTask[SRLExample]):
             doc._.predicates = predicates
             doc._.relations = relations
             yield doc
+
+    @property
+    def _cfg_keys(self) -> List[str]:
+        return [
+            "_label_dict",
+            "_template",
+            "_label_definitions",
+            "_verbose",
+            "_predicate_key",
+            "_alignment_mode",
+            "_case_sensitive_matching",
+            "_single_match",
+        ]
+
+    @property
+    def _Example(self) -> Type[SRLExample]:
+        return SRLExample

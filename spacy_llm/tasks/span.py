@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Callable, Dict, Generic, Iterable, List, Optional, Tuple, Type
 
 import jinja2
 from pydantic import BaseModel
@@ -8,7 +8,7 @@ from spacy.tokens import Doc, Span
 from ..compat import Literal
 from ..registry import lowercase_normalizer
 from .util.parsing import find_substrings
-from .util.serialization import SerializableTask
+from .util.serialization import ExampleType, SerializableTask
 
 
 class SpanExample(BaseModel):
@@ -16,7 +16,7 @@ class SpanExample(BaseModel):
     entities: Dict[str, List[str]]
 
 
-class SpanTask(SerializableTask[SpanExample]):
+class SpanTask(SerializableTask[SpanExample], Generic[ExampleType]):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
