@@ -4,6 +4,7 @@ from confection import Config
 from pathlib import Path
 from pytest import FixtureRequest
 from spacy_llm.pipeline import LLMWrapper
+from spacy_llm.tasks.srl_task import SRLExample
 from spacy_llm.tests.compat import has_openai_key
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -28,7 +29,7 @@ def zeroshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.SRL.v1"
-    labels = ARG-0,ARG-1,ARG-M-TMP,ARG-M-LOC
+    labels = ARG-0,ARG-1,ARG-M-LOC,ARG-M-TMP
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -38,8 +39,36 @@ def zeroshot_cfg_string():
 @pytest.fixture
 def task():
     text = "We love this sentence in Berlin right now ."
-    gold_relations = []
-    return text, gold_relations
+    predicate = {"text": "love", "start_char": 3, "end_char": 7}
+    srl_example = SRLExample(
+        **{
+            "text": text,
+            "predicates": [predicate],
+            "relations": [
+                {
+                    "label": "ARG-0",
+                    "predicate": predicate,
+                    "role": {"text": "We", "start_char": 0, "end_char": 2},
+                },
+                {
+                    "label": "ARG-1",
+                    "predicate": predicate,
+                    "role": {"text": "this sentence", "start_char": 8, "end_char": 21},
+                },
+                {
+                    "label": "ARG-M-LOC",
+                    "predicate": predicate,
+                    "role": {"text": "in Berlin", "start_char": 22, "end_char": 31},
+                },
+                {
+                    "label": "ARG-M-TMP",
+                    "predicate": predicate,
+                    "role": {"text": "right now", "start_char": 32, "end_char": 41},
+                },
+            ],
+        }
+    )
+    return text, srl_example
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
@@ -74,8 +103,15 @@ def test_rel_predict(task, cfg_string, request):
     orig_config = Config().from_str(cfg_string)
     nlp = assemble_from_config(orig_config)
 
-    text, _ = task
+    text, gold_example = task
     doc = nlp(text)
 
-    assert doc._.predicates
-    assert doc._.relations
+    assert len(doc._.predicates)
+    assert len(doc._.relations)
+
+    assert doc._.predicates[0]["text"] == gold_example.predicates[0].text
+
+    predicated_roles = tuple(sorted([r["role"]["text"] for r in doc._.relations]))
+    gold_roles = tuple(sorted([r.role.text for r in gold_example.relations]))
+
+    assert predicated_roles == gold_roles
