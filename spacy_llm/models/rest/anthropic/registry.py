@@ -32,7 +32,7 @@ def anthropic_claude_2(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
