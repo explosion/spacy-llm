@@ -152,6 +152,7 @@ class SpanCatTask(SpanTask):
         return [
             "_label_dict",
             "_template",
+            "_description",
             "_label_definitions",
             "_alignment_mode",
             "_case_sensitive_matching",
