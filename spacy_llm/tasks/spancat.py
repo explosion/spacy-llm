@@ -4,6 +4,7 @@ from spacy.language import Language
 from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
 from spacy.training import Example
+from spacy.util import filter_spans
 
 from ..compat import Literal
 from ..registry import registry
@@ -132,6 +133,8 @@ class SpanCatTask(SpanTask):
         spans: List[Span],
     ) -> None:
         """Assign spans to the document."""
+        if not self._allow_overlap:
+            spans = sorted(filter_spans(spans))
         doc.spans[self._spans_key] = sorted(spans)
 
     def scorer(

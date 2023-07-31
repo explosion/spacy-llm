@@ -169,6 +169,7 @@ class SpanTask(SerializableTask[SpanExample]):
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
                 examples=self._prompt_examples,
+                allow_overlap=self._allow_overlap,
             )
             yield prompt
 

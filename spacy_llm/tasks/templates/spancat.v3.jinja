@@ -1,6 +1,8 @@
 You are an expert Named Entity Recognition (NER) system.
 Your task is to accept Text as input and extract named entities.
+{%- if allow_overlap -%}
 The entities you extract can overlap with each other.
+{%- endif -%}
 {# whitespace #}
 {{ description }}
 {# whitespace #}
