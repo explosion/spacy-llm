@@ -85,6 +85,7 @@ class NERTask(SpanTask):
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
+            allow_overlap=False,
         )
 
     def initialize(

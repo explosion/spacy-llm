@@ -427,6 +427,8 @@ def test_invalid_alignment_mode():
             True,
             [("Jean", "PER")],
         ),
+        # TODO: Get this matching working again, issue is with the parsing
+        # allowing overlapping spans for spancat
         (
             "1. jean | True | PER | is a person's name\n"
             "2. Jean | True | PER | is a person's name\n"

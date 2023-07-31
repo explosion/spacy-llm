@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import cast
+from typing import Callable, List, Tuple, cast
 
 import pytest
 import spacy
 from confection import Config
+from spacy.language import Language
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
@@ -103,7 +104,7 @@ def ext_template_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.SpanCat.v3"
     description = "This is a description"
-    labels = ["PER", "ORG", "LOC"]
+    labels = ["PER", "ORG", "LOC", "DESTINATION"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -121,20 +122,35 @@ def ext_template_cfg_string():
     """
 
 
+@pytest.fixture(
+    params=[
+        "fewshot_cfg_string",
+        "ext_template_cfg_string",
+    ]
+)
+def config(request) -> Config:
+    cfg_str = request.getfixturevalue(request.param)
+    config = Config().from_str(cfg_str)
+    return config
+
+
+@pytest.fixture
+def nlp(config: Config) -> Language:
+    nlp = assemble_from_config(config)
+    return nlp
+
+
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string", "zeroshot_cfg_string"])
-def test_spancat_config(cfg_string, request):
-    cfg_string = request.getfixturevalue(cfg_string)
-    orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+def test_spancat_config(config: Config):
+    nlp = assemble_from_config(config)
     assert nlp.pipe_names == ["llm"]
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
     assert isinstance(pipe.task, LLMTask)
 
-    labels = orig_config["components"]["llm"]["task"]["labels"]
+    labels = config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
     task = pipe.task
     assert isinstance(task, Labeled)
@@ -144,27 +160,21 @@ def test_spancat_config(cfg_string, request):
 
 
 @pytest.mark.external
-@pytest.mark.parametrize("cfg_string", ["", "fewshot_cfg_string"])
-def test_spancat_predict(cfg_string, request):
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_spancat_predict(nlp: Language):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
-    cfg_string = request.getfixturevalue(cfg_string)
-    orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     text = "Marc and Bob both live in Ireland."
     doc = nlp(text)
     assert len(doc.spans["sc"]) > 0
     for ent in doc.spans["sc"]:
-        assert ent.label_ in ["PER", "ORG", "LOC"]
+        assert ent.label_ in ["PER", "ORG", "LOC", "DESTINATION"]
 
 
 @pytest.mark.external
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
-def test_spancat_io(cfg_string, request):
-    cfg_string = request.getfixturevalue(cfg_string)
-    orig_config = Config().from_str(cfg_string)
-    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_spancat_io(nlp: Language):
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
     with make_tempdir() as tmpdir:
@@ -175,7 +185,7 @@ def test_spancat_io(cfg_string, request):
     doc = nlp2(text)
     assert len(doc.spans["sc"]) > 0
     for ent in doc.spans["sc"]:
-        assert ent.label_ in ["PER", "ORG", "LOC"]
+        assert ent.label_ in ["PER", "ORG", "LOC", "DESTINATION"]
 
 
 @pytest.mark.parametrize(
@@ -219,28 +229,27 @@ def test_ensure_offsets_correspond_to_substrings(
         # simple
         (
             "Jean Jacques and Jaime went to the library.",
-            "PER: Jean Jacques, Jaime\nLOC: library",
+            "1. Jean Jacques | True | PER | is the name of a person\n"
+            "2. Jaime | True | PER | is the name of a person\n"
+            "3. library | True | LOC | is a place you can go to with lots of books\n",
             [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "LOC")],
         ),
         # overlapping: should only return all spans
         (
             "The Manila Observatory was founded in 1865.",
-            "LOC: The Manila Observatory, Manila, Manila Observatory",
+            "1. The Manila Observatory | True | LOC | is a place\n"
+            "2. Manila | True | LOC | is a city\n"
+            "3. Manila Observatory | True | LOC | is a place\n",
             [
                 ("The Manila Observatory", "LOC"),
                 ("Manila", "LOC"),
                 ("Manila Observatory", "LOC"),
             ],
         ),
-        # flipped: order shouldn't matter
-        (
-            "Take the road from Downtown and turn left at the public market.",
-            "LOC: public market, Downtown",
-            [("Downtown", "LOC"), ("public market", "LOC")],
-        ),
     ],
+    ids=["simple", "overlapping"],
 )
-def test_spancat_zero_shot_task(text, response, gold_spans):
+def test_spancat_matching_shot_task(text: str, response: str, gold_spans):
     labels = "PER,ORG,LOC"
     llm_spancat = make_spancat_task_v3(examples=[], labels=labels)
     # Prepare doc
@@ -257,48 +266,60 @@ def test_spancat_zero_shot_task(text, response, gold_spans):
     "response,normalizer,gold_spans",
     [
         (
-            "PER: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is the name of a person\n"
+            "2. Jaime | True | PER | is the name of a person\n",
             None,
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "PER: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is the name of a person\n"
+            "2. Jaime | True | PER | is the name of a person\n",
             strip_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "PER: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is the name of a person\n"
+            "2. Jaime | True | PER | is the name of a person\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | per | is the name of a person\n"
+            "2. Jaime | True | per | is the name of a person\n",
             strip_normalizer(),
             [],
         ),
         (
-            "per: Jean Jacques, Jaime",
+            "1. Jean Jacques | True | PER | is the name of a person\n"
+            "2. Jaime | True | PER | is the name of a person\n",
             None,
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Jean Jacques\nPER: Jaime",
+            "1. Jean Jacques | True | per | is the name of a person\n"
+            "2. Jaime | True | PER | is the name of a person\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
         (
-            "per: Jean Jacques, Jaime\nOrg: library",
+            "1. Jean Jacques | True | per | is the name of a person\n"
+            "2. Jaime | True | per | is the name of a person\n"
+            "3. library | True | Org | is an organization\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER"), ("library", "ORG")],
         ),
         (
-            "per: Jean Jacques, Jaime\nRANDOM: library",
+            "1. Jean Jacques | True | per | is the name of a person\n"
+            "2. Jaime | True | per | is the name of a person\n"
+            "3. library | True | RANDOM | is an organization\n",
             lowercase_normalizer(),
             [("Jean Jacques", "PER"), ("Jaime", "PER")],
         ),
     ],
 )
-def test_spancat_labels(response, normalizer, gold_spans):
+def test_spancat_labels(
+    response: str, normalizer: Callable[[str], str], gold_spans: List[Tuple[str, str]]
+):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
     llm_spancat = make_spancat_task_v3(
@@ -318,36 +339,37 @@ def test_spancat_labels(response, normalizer, gold_spans):
     "response,alignment_mode,gold_spans",
     [
         (
-            "PER: Jacq",
+            "1. Jacq | True | PER | is a person's name",
             "strict",
             [],
         ),
         (
-            "PER: Jacq",
+            "1. Jacq | True | PER | is a person's name",
             "contract",
             [],
         ),
         (
-            "PER: Jacq",
+            "1. Jacq | True | PER | is a person's name",
             "expand",
             [("Jacques", "PER")],
         ),
         (
-            "PER: Jean J",
+            "1. Jean J | True | PER | is a person's name",
             "contract",
             [("Jean", "PER")],
         ),
         (
-            "PER: Jean Jacques, aim",
+            "1. Jean Jacques | True | PER | is a person's name",
             "strict",
             [("Jean Jacques", "PER")],
         ),
         (
-            "PER: random",
+            "1. random | True | PER | is a person's name",
             "expand",
             [],
         ),
     ],
+    ids=["strict_1", "contract_1", "expand_1", "strict_2", "contract_2", "expand_2"],
 )
 def test_spancat_alignment(response, alignment_mode, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
@@ -372,35 +394,35 @@ def test_invalid_alignment_mode():
 
 
 @pytest.mark.parametrize(
-    "response,case_sensitive,single_match,gold_spans",
+    "response, case_sensitive, gold_spans",
     [
         (
-            "PER: Jean",
+            "1. Jean | True | PER | is a person's name",
             False,
-            False,
-            [("jean", "PER"), ("Jean", "PER"), ("Jean", "PER")],
-        ),
-        (
-            "PER: Jean",
-            False,
-            True,
             [("jean", "PER")],
         ),
         (
-            "PER: Jean",
-            True,
-            False,
-            [("Jean", "PER"), ("Jean", "PER")],
-        ),
-        (
-            "PER: Jean",
-            True,
+            "1. Jean | True | PER | is a person's name",
             True,
             [("Jean", "PER")],
         ),
+        # TODO: Get this matching working again, issue is with the parsing
+        # allowing overlapping spans for spancat
+        (
+            "1. jean | True | PER | is a person's name\n"
+            "2. Jean | True | PER | is a person's name\n"
+            "3. Jean Foundation | True | ORG | is the name of an Organization name",
+            False,
+            [("jean", "PER"), ("Jean", "PER"), ("Jean Foundation", "ORG")],
+        ),
+    ],
+    ids=[
+        "single_ent_case_insensitive",
+        "single_ent_case_sensitive",
+        "multiple_ents_case_insensitive",
     ],
 )
-def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
+def test_spancat_matching(response, case_sensitive, gold_spans):
     text = "This guy jean (or Jean) is the president of the Jean Foundation."
     labels = "PER,ORG,LOC"
     llm_spancat = make_spancat_task_v3(

@@ -75,6 +75,7 @@ class SpanCatTask(SpanTask):
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
+        allow_overlap: Optional[bool] = True,
     ):
         super().__init__(
             labels=labels,
@@ -85,6 +86,7 @@ class SpanCatTask(SpanTask):
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
+            allow_overlap=allow_overlap,
         )
         self._spans_key = spans_key
 

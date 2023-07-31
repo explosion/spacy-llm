@@ -24,7 +24,7 @@ class SpanReason(BaseModel):
         assignment.
 
         e.g. expected line would look like:
-        1. Golden State Warriors | BASKETBALL_TEAM | True | is a basketball team in the NBA
+        1. Golden State Warriors | True | BASKETBALL_TEAM | is a basketball team in the NBA
 
         Handles an optional numbered list which we put in the prompt by default so the LLM
         can better structure the order of output for the spans. This number isn't crucial for
@@ -54,11 +54,9 @@ class SpanReason(BaseModel):
     def to_str(self, sep: str = "|") -> str:
         """Output as a single line of text representing the expected LLM COT output
         e.g.
-        'Golden State Warriors | BASKETBALL_TEAM | True | is a basketball team in the NBA'
+        'Golden State Warriors | True | BASKETBALL_TEAM | is a basketball team in the NBA'
         """
-        return (
-            f"{self.text} {sep} {self.is_entity} {sep} {self.label} {sep} {self.reason}"
-        )
+        return f"{self.text} {sep} {self.is_entity} {sep} {self.label} {sep} {self.reason} {sep} {self.start_char} {sep} {self.end_char}"
 
     def __str__(self) -> str:
         return self.to_str()
@@ -82,6 +80,7 @@ class SpanTask(SerializableTask[SpanExample]):
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
+        allow_overlap: Optional[bool] = True,
     ):
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
@@ -94,6 +93,7 @@ class SpanTask(SerializableTask[SpanExample]):
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
+        self._allow_overlap = allow_overlap
 
         if self._prompt_examples:
             self._prompt_examples = self._check_label_consistency()
@@ -223,6 +223,8 @@ class SpanTask(SerializableTask[SpanExample]):
             find_after = 0
             spans = []
             span_reasons = self._extract_span_reasons(llm_response)
+            prev_span = None
+
             for span_reason in span_reasons:
                 # For each phrase, find the substrings in the text
                 # and create a Span
@@ -241,9 +243,14 @@ class SpanTask(SerializableTask[SpanExample]):
                         label=span_reason.label,
                     )
                     if span is not None:
+                        if span == prev_span:
+                            continue
                         spans.append(span)
-                        find_after = span.start_char
-            self.assign_spans(doc, spans)
+                        find_after = (
+                            span.start_char if self._allow_overlap else span.end_char
+                        )
+                        prev_span = span
+            self.assign_spans(doc, sorted(set(spans)))
             yield doc
 
     @property
