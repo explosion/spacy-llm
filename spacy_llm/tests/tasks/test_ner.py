@@ -420,7 +420,7 @@ def test_invalid_alignment_mode():
         (
             "1. Jean | True | PER | is a person's name",
             False,
-            [("jean", "PER")],
+            [("Jean", "PER")],
         ),
         (
             "1. Jean | True | PER | is a person's name",
@@ -855,17 +855,21 @@ def test_regression_span_task_response_parse(text: str, person_first: bool):
     assert len(span_reasons) == 2
 
     docs = list(ner_task.parse_responses([example_doc], [example_response]))
-    assert len(docs[0].ents) == 2
+    assert len(docs) == 1
+    doc = docs[0]
+    ents = list(doc.ents)
+
+    assert len(ents) == 2
 
     if person_first:
-        ent1 = docs[0].ents[0]
+        ent1 = ents[0]
         assert ent1.label_ == "PERSON"
 
-        ent2 = docs[0].ents[1]
+        ent2 = ents[1]
         assert ent2.label_ == "LOCATION"
     else:
-        ent1 = docs[0].ents[0]
+        ent1 = ents[0]
         assert ent1.label_ == "LOCATION"
 
-        ent2 = docs[0].ents[1]
+        ent2 = ents[1]
         assert ent2.label_ == "PERSON"
