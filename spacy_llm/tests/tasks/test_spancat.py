@@ -479,27 +479,28 @@ Answer:
     )
 
 
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
-def test_spancat_scoring(noop_config, n_detections):
-    config = Config().from_str(noop_config)
+def test_spancat_scoring(fewshot_cfg_string: str, n_detections: int):
+    config = Config().from_str(fewshot_cfg_string)
     nlp = assemble_from_config(config)
 
     examples = []
-
     for text in ["Alice works with Bob.", "Bob lives with Alice."]:
         predicted = nlp.make_doc(text)
-        reference = predicted.copy()
-
-        reference.spans["sc"] = [
-            Span(reference, 0, 1, label="PER"),
-            Span(reference, 3, 4, label="PER"),
-        ][:n_detections]
-
+        reference = nlp.make_doc(text)
+        ent1 = Span(reference, 0, 1, label="PER")
+        ent2 = Span(reference, 3, 4, label="PER")
+        reference.spans["sc"] = [ent1, ent2][:n_detections]
         examples.append(Example(predicted, reference))
 
     scores = nlp.evaluate(examples)
-
     assert scores["spans_sc_p"] == n_detections / 2
+    assert scores["spans_sc_r"] == (1 if n_detections != 0 else 0)
+    assert scores["spans_sc_f"] == (
+        pytest.approx(0.666666666) if n_detections == 1 else n_detections / 2
+    )
 
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])

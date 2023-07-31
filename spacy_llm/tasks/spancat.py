@@ -144,7 +144,7 @@ class SpanCatTask(SpanTask):
         return spancat_score(
             examples,
             spans_key=self._spans_key,
-            allow_overlap=True,
+            allow_overlap=self._allow_overlap,
         )
 
     @property
