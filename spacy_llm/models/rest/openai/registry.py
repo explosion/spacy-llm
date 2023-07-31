@@ -84,7 +84,7 @@ def openai_gpt_3_5(
 
 @registry.llm_models("spacy.Text-Davinci.v1")
 def openai_text_davinci(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal[
         "text-davinci-002", "text-davinci-003"
     ] = "text-davinci-003",  # noqa: F722
@@ -120,7 +120,7 @@ def openai_text_davinci(
 
 @registry.llm_models("spacy.Code-Davinci.v1")
 def openai_code_davinci(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["code-davinci-002"] = "code-davinci-002",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -154,7 +154,7 @@ def openai_code_davinci(
 
 @registry.llm_models("spacy.Text-Curie.v1")
 def openai_text_curie(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["text-curie-001"] = "text-curie-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -188,7 +188,7 @@ def openai_text_curie(
 
 @registry.llm_models("spacy.Text-Babbage.v1")
 def openai_text_babbage(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["text-babbage-001"] = "text-babbage-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -222,7 +222,7 @@ def openai_text_babbage(
 
 @registry.llm_models("spacy.Text-Ada.v1")
 def openai_text_ada(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["text-ada-001"] = "text-ada-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -256,7 +256,7 @@ def openai_text_ada(
 
 @registry.llm_models("spacy.Davinci.v1")
 def openai_davinci(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["davinci"] = "davinci",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -290,7 +290,7 @@ def openai_davinci(
 
 @registry.llm_models("spacy.Curie.v1")
 def openai_curie(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["curie"] = "curie",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -324,7 +324,7 @@ def openai_curie(
 
 @registry.llm_models("spacy.Babbage.v1")
 def openai_babbage(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["babbage"] = "babbage",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -358,7 +358,7 @@ def openai_babbage(
 
 @registry.llm_models("spacy.Ada.v1")
 def openai_ada(
-    config: Dict[Any, Any] = SimpleFrozenDict(),
+    config: Dict[Any, Any] = SimpleFrozenDict(max_tokens=100),
     name: Literal["ada"] = "ada",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
