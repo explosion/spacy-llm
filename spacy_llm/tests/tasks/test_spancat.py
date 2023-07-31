@@ -562,6 +562,7 @@ def test_spancat_serde(noop_config):
 
     # Artificially add labels to task1
     task1._label_dict = labels
+    task2._label_dict = dict()
 
     assert task1._label_dict == labels
     assert task2._label_dict == dict()
