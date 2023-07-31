@@ -134,8 +134,8 @@ class SpanCatTask(SpanTask):
     ) -> None:
         """Assign spans to the document."""
         if not self._allow_overlap:
-            spans = sorted(filter_spans(spans))
-        doc.spans[self._spans_key] = sorted(spans)
+            spans = filter_spans(spans)
+        doc.spans[self._spans_key] = spans
 
     def scorer(
         self,

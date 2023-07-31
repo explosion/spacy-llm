@@ -197,7 +197,10 @@ class SpanTask(SerializableTask[SpanExample]):
         raise NotImplementedError()
 
     def _extract_span_reasons(self, response: str) -> List[SpanReason]:
-        """Parse raw string response into a list of SpanReasons"""
+        """Parse raw string response into a list of SpanReasons
+        response (str): Raw string response from the LLM.
+        RETURNS (List[SpanReason]): List of SpanReasons parsed from the response.
+        """
         span_reasons = []
         for line in response.strip().split("\n"):
             try:
@@ -214,6 +217,48 @@ class SpanTask(SerializableTask[SpanExample]):
             span_reasons.append(span_reason)
         return span_reasons
 
+    def _find_spans(self, doc: Doc, span_reasons: List[SpanReason]) -> List[Span]:
+        """Find a list of spaCy Spans from a list of SpanReasons
+        for a single spaCy Doc
+
+        doc (Doc): Input doc to parse spans for
+        span_reasons (List[SpanReason]): List of SpanReasons to find in doc
+        RETURNS (List[Span]): List of spaCy Spans found in doc
+        """
+        find_after = 0
+        spans = []
+        for span_reason in span_reasons:
+            # For each phrase, find the SpanReason substring in the text
+            # and create a Span
+            offsets = find_substrings(
+                doc.text,
+                [span_reason.text],
+                case_sensitive=True,
+                single_match=True,
+                find_after=find_after,
+            )
+            if not offsets and self._case_sensitive_matching:
+                offsets = find_substrings(
+                    doc.text,
+                    [span_reason.text],
+                    case_sensitive=True,
+                    single_match=True,
+                    find_after=find_after,
+                )
+            for start, end in offsets:
+                span = doc.char_span(
+                    start,
+                    end,
+                    alignment_mode=self._alignment_mode,
+                    label=span_reason.label,
+                )
+                if span is not None:
+                    spans.append(span)
+                    find_after = (
+                        span.start_char if self._allow_overlap else span.end_char
+                    )
+        return sorted(set(spans))
+
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
@@ -224,41 +269,9 @@ class SpanTask(SerializableTask[SpanExample]):
         previously found spans.
         """
         for doc, llm_response in zip(docs, responses):
-            find_after = 0
-            spans = []
             span_reasons = self._extract_span_reasons(llm_response)
-            for span_reason in span_reasons:
-                # For each phrase, find the SpanReason substring in the text
-                # and create a Span
-
-                offsets = find_substrings(
-                    doc.text,
-                    [span_reason.text],
-                    case_sensitive=True,
-                    single_match=True,
-                    find_after=find_after,
-                )
-                if not offsets and self._case_sensitive_matching:
-                    offsets = find_substrings(
-                        doc.text,
-                        [span_reason.text],
-                        case_sensitive=True,
-                        single_match=True,
-                        find_after=find_after,
-                    )
-                for start, end in offsets:
-                    span = doc.char_span(
-                        start,
-                        end,
-                        alignment_mode=self._alignment_mode,
-                        label=span_reason.label,
-                    )
-                    if span is not None:
-                        spans.append(span)
-                        find_after = (
-                            span.start_char if self._allow_overlap else span.end_char
-                        )
-            self.assign_spans(doc, sorted(set(spans)))
+            spans = self._find_spans(doc, span_reasons)
+            self.assign_spans(doc, spans)
             yield doc
 
     @property
