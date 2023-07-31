@@ -56,7 +56,9 @@ class SpanReason(BaseModel):
         e.g.
         'Golden State Warriors | True | BASKETBALL_TEAM | is a basketball team in the NBA'
         """
-        return f"{self.text} {sep} {self.is_entity} {sep} {self.label} {sep} {self.reason} {sep} {self.start_char} {sep} {self.end_char}"
+        return (
+            f"{self.text} {sep} {self.is_entity} {sep} {self.label} {sep} {self.reason}"
+        )
 
     def __str__(self) -> str:
         return self.to_str()
