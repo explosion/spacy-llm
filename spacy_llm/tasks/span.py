@@ -232,13 +232,22 @@ class SpanTask(SerializableTask[SpanExample]):
             for span_reason in span_reasons:
                 # For each phrase, find the substrings in the text
                 # and create a Span
+
                 offsets = find_substrings(
                     doc.text,
                     [span_reason.text],
-                    case_sensitive=self._case_sensitive_matching,
+                    case_sensitive=True,
                     single_match=True,
                     find_after=find_after,
                 )
+                if not offsets and self._case_sensitive_matching:
+                    offsets = find_substrings(
+                        doc.text,
+                        [span_reason.text],
+                        case_sensitive=True,
+                        single_match=True,
+                        find_after=find_after,
+                    )
                 for start, end in offsets:
                     span = doc.char_span(
                         start,
