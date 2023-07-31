@@ -25,11 +25,6 @@ class SystemPrompt(str, Enum):
 
 
 class Anthropic(REST):
-    MODEL_NAMES = {
-        "claude-1": Literal["claude-1", "claude-1-100k"],
-        "claude-2": Literal["claude-2", "claude-2-100k"],
-    }
-
     @property
     def credentials(self) -> Dict[str, str]:
         # Fetch and check the key, set up headers
