@@ -142,6 +142,8 @@ class SpanTask(SerializableTask[SpanExample]):
             )
 
         # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
+        include_labels = dict(self._label_dict)
+        include_labels.update(null_labels)
         return [
             example
             for example in [
@@ -150,8 +152,7 @@ class SpanTask(SerializableTask[SpanExample]):
                     spans=[
                         entity
                         for entity in example.spans
-                        if self._normalizer(entity.label)
-                        in (self._label_dict | null_labels)
+                        if self._normalizer(entity.label) in include_labels
                     ],
                 )
                 for example in self._prompt_examples
