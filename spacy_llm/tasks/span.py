@@ -227,10 +227,8 @@ class SpanTask(SerializableTask[SpanExample]):
             find_after = 0
             spans = []
             span_reasons = self._extract_span_reasons(llm_response)
-            prev_span = None
-
             for span_reason in span_reasons:
-                # For each phrase, find the substrings in the text
+                # For each phrase, find the SpanReason substring in the text
                 # and create a Span
 
                 offsets = find_substrings(
@@ -256,13 +254,10 @@ class SpanTask(SerializableTask[SpanExample]):
                         label=span_reason.label,
                     )
                     if span is not None:
-                        if span == prev_span:
-                            continue
                         spans.append(span)
                         find_after = (
                             span.start_char if self._allow_overlap else span.end_char
                         )
-                        prev_span = span
             self.assign_spans(doc, sorted(set(spans)))
             yield doc
 
