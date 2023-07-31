@@ -630,6 +630,7 @@ def test_ner_scoring(fewshot_cfg_string_v3: str, n_detections: int):
 def test_ner_init(noop_config: str, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     config["components"]["llm"]["task"]["labels"] = ["PER", "LOC"]
+    config["components"]["llm"]["task"]["examples"] = []
     nlp = assemble_from_config(config)
 
     examples = []
@@ -658,10 +659,8 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
     assert set(task._label_dict.values()) == {"PER", "LOC"}
 
     if n_prompt_examples == -1:
-        assert len(task._prompt_examples) == 3
-    elif n_prompt_examples == 0:
-        assert len(task._prompt_examples) == 1
-    elif n_prompt_examples in (1, 2):
+        assert len(task._prompt_examples) == len(examples)
+    else:
         assert len(task._prompt_examples) == n_prompt_examples
 
     if n_prompt_examples > 0:

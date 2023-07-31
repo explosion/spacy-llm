@@ -506,6 +506,7 @@ def test_spancat_scoring(noop_config, n_detections):
 def test_spancat_init(noop_config: str, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
     config["components"]["llm"]["task"]["labels"] = ["PER", "LOC", "DESTINATION"]
+    config["components"]["llm"]["task"]["examples"] = []
     nlp = assemble_from_config(config)
 
     examples = []
@@ -536,10 +537,8 @@ def test_spancat_init(noop_config: str, n_prompt_examples: bool):
 
     assert set(task._label_dict.values()) == {"PER", "LOC", "DESTINATION"}
     if n_prompt_examples == -1:
-        assert len(task._prompt_examples) == 3
-    elif n_prompt_examples == 0:
-        assert len(task._prompt_examples) == 1
-    elif n_prompt_examples in (1, 2):
+        assert len(task._prompt_examples) == len(examples)
+    else:
         assert len(task._prompt_examples) == n_prompt_examples
 
     if n_prompt_examples > 0:
@@ -547,7 +546,7 @@ def test_spancat_init(noop_config: str, n_prompt_examples: bool):
             prompt_example_labels = {ent.label for ent in eg.spans}
             if "==NONE==" not in prompt_example_labels:
                 prompt_example_labels.add("==NONE==")
-            assert prompt_example_labels == {"==NONE==", "PER", "LOC", "DESTINATION"}
+            assert prompt_example_labels == {"==NONE==", "PER", "LOC"}
 
 
 def test_spancat_serde(noop_config):
