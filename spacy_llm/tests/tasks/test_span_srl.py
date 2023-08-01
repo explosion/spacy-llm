@@ -29,7 +29,14 @@ def zeroshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.SRL.v1"
-    labels = ARG-0,ARG-1,ARG-M-LOC,ARG-M-TMP
+    labels = ARG-0,ARG-1,ARG-2,ARG-M-LOC,ARG-M-TMP
+    
+    [components.llm.task.label_definitions]
+    ARG-0 = "Agent"
+    ARG-1 = "Patient or Theme"
+    ARG-2 = "ARG-2"
+    ARG-M-TMP = "Temporal Modifier"
+    ARG-M-LOC = "Location Modifier"
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -99,6 +106,11 @@ def test_rel_predict(task, cfg_string, request):
     """Use OpenAI to get REL results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
+    import logging
+    import spacy_llm
+    spacy_llm.logger.addHandler(logging.StreamHandler())
+    spacy_llm.logger.setLevel(logging.DEBUG)
+
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = assemble_from_config(orig_config)
