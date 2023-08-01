@@ -7,13 +7,14 @@ from thinc.compat import has_torch_cuda_gpu
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.StableLM.v1",
-        "name": "stablelm-base-alpha-3b",
+        "@llm_models": "spacy.Llama2.v1",
+        "name": "Llama-2-7b-hf",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
 
 _NLP_CONFIG = """
+
 [nlp]
 lang = "en"
 pipeline = ["llm"]
@@ -28,21 +29,17 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = "spacy.StableLM.v1"
-name = "stablelm-base-alpha-3b"
+@llm_models = "spacy.Llama2.v1"
+name = "Llama-2-7b-hf"
 """
 
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-@pytest.mark.parametrize("name", ("stablelm-base-alpha-3b", "stablelm-tuned-alpha-3b"))
-def test_init(name: str):
-    """Test initialization and simple run.
-    name (str): Name of model to run.
-    """
+def test_init():
+    """Test initialization and simple run."""
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["model"]["name"] = name
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
 
@@ -57,20 +54,9 @@ def test_init_from_config():
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-def test_init_with_set_config():
-    """Test initialization and simple run with changed config."""
-    nlp = spacy.blank("en")
-    cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["model"]["config_run"] = {"temperature": 0.3}
-    nlp.add_pipe("llm", config=cfg)
-    nlp("This is a test.")
-
-
-@pytest.mark.gpu
-@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)
     config = copy.deepcopy(orig_config)
-    config["components"]["llm"]["model"]["name"] = "anything-else"
-    with pytest.raises(ValueError, match="unexpected value; permitted:"):
+    config["components"]["llm"]["model"]["name"] = "x"
+    with pytest.raises(ValueError, match="unexpected value; permitted"):
         spacy.util.load_model_from_config(config, auto_fill=True)

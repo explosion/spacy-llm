@@ -40,6 +40,7 @@ def test_example_1_classifier():
         print(doc.cats)  # noqa: T201
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_example_2_classifier_hf():
     with util.make_tempdir() as tmpdir:

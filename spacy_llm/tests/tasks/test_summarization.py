@@ -1,7 +1,7 @@
+import re
 from pathlib import Path
 
 import pytest
-import regex
 import spacy
 from confection import Config
 from spacy.util import make_tempdir
@@ -181,7 +181,7 @@ def test_summarization_predict(cfg_string, example_text, request):
     if orig_cfg_string == "fewshot_cfg_string":
         with pytest.warns(
             UserWarning,
-            match=regex.escape(
+            match=re.escape(
                 "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
             ),
         ):
@@ -228,7 +228,7 @@ def test_summarization_io(cfg_string_and_field, example_text, request):
     if orig_cfg_string == "fewshot_cfg_string":
         with pytest.warns(
             UserWarning,
-            match=regex.escape(
+            match=re.escape(
                 "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
             ),
         ):
@@ -293,7 +293,7 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
 
     with pytest.warns(
         UserWarning,
-        match=regex.escape(
+        match=re.escape(
             "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
         ),
     ):

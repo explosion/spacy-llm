@@ -62,6 +62,7 @@ class REST(abc.ABC):
         assert self._max_request_time > 0
 
         self._check_model()
+        self._verify_auth()
 
     def _check_model(self) -> None:
         """Checks whether model is supported. Raises if it isn't."""
@@ -90,6 +91,10 @@ class REST(abc.ABC):
         """Get credentials for the LLM API.
         RETURNS (Dict[str, str]): Credentials.
         """
+
+    @abc.abstractmethod
+    def _verify_auth(self) -> None:
+        """Verifiy API authentication (and model choice, if possible)."""
 
     def retry(
         self, call_method: Callable[..., requests.Response], url: str, **kwargs

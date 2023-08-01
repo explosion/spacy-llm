@@ -34,11 +34,11 @@ In `0.4.x`:
 ```ini
 [components.llm.model]
 @llm_models = "spacy.GPT-3-5.v1"
-name = "gpt-3-5-turbo"
+name = "gpt-3.5-turbo"
 config = {"temperature": 0.3}
 ```
 Note that the factory function (marked with `@`) refers to the name of the model. Variants of the same model can be 
-specified with the `name` attribute - for `gpt-3.5` this could be `"gpt-3-5-turbo"` or `"gpt-3-5-turbo-16k"`.
+specified with the `name` attribute - for `gpt-3.5` this could be `"gpt-3.5-turbo"` or `"gpt-3.5-turbo-16k"`.
 
 ### Models using HuggingFace
 
@@ -78,7 +78,7 @@ In `0.4.x`:
 ```ini
 [components.llm.model]
 @llm_models = "langchain.OpenAI.v1"
-name = "gpt-3-5-turbo"
+name = "gpt-3.5-turbo"
 config = {"temperature": 0.3}
 ```
 

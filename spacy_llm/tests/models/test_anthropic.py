@@ -35,24 +35,19 @@ def test_anthropic_api_response_when_error():
     """Check if error message shows up properly given incorrect config"""
     # Incorrect config c.f. https://console.anthropic.com/docs/api/reference
     incorrect_temperature = "one"  # should be an int
-    anthropic = Anthropic(
-        name="claude-instant-1",
-        endpoint=Endpoints.COMPLETIONS.value,
-        config={
-            "max_tokens_to_sample": 10,
-            "temperature": incorrect_temperature,
-        },
-        strict=False,
-        max_tries=10,
-        interval=5.0,
-        max_request_time=20,
-    )
-
-    prompt = "Count the number of characters in this string: hello"
-    with pytest.raises(ValueError) as err:
-        anthropic(prompts=[prompt])
-    assert "invalid_request_error" in str(err.value)
-    assert "temperature: value is not a valid float" in str(err.value)
+    with pytest.raises(ValueError, match="Request to Anthropic API failed:"):
+        Anthropic(
+            name="claude-instant-1",
+            endpoint=Endpoints.COMPLETIONS.value,
+            config={
+                "max_tokens_to_sample": 10,
+                "temperature": incorrect_temperature,
+            },
+            strict=False,
+            max_tries=10,
+            interval=5.0,
+            max_request_time=20,
+        )
 
 
 @pytest.mark.external

@@ -7,6 +7,9 @@ ran. If your test fixes a bug reported in an issue, don't forget to include the
 issue number. If your PR is still a work in progress, that's totally fine – just
 include a note to let us know. -->
 
+### Corresponding documentation PR
+<!--- Add the link to the corresponding documentation PR here, if applicable. -->
+
 ### Types of change
 <!-- What type of change does your PR cover? Is it a bug fix, an enhancement
 or new feature, or a change to the documentation? -->
@@ -17,5 +20,5 @@ tick off all the boxes. [] -> [x] -->
 - [ ] I confirm that I have the right to submit this contribution under the project's MIT license.
 - [ ] I ran all tests in `tests` and `usage_examples/tests`, and all new and existing tests passed. This includes
   - all external tests (i. e. `pytest` ran with `--external`)
-  - all tests requiring a GPU
+  - all tests requiring a GPU (i. e. `pytest` ran with `--gpu`)
 - [ ] My changes don't require a change to the documentation, or if they do, I've added all required information.

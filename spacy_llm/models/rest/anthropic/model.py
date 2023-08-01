@@ -1,4 +1,5 @@
 import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized, Tuple
 
@@ -6,7 +7,6 @@ import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
 
-from ....compat import Literal
 from ..base import REST
 
 
@@ -24,25 +24,31 @@ class SystemPrompt(str, Enum):
 
 
 class Anthropic(REST):
-    MODEL_NAMES = {
-        "claude-1": Literal["claude-1", "claude-1-100k"],
-    }
-
     @property
     def credentials(self) -> Dict[str, str]:
-        # Fetch and check the key
+        # Fetch and check the key, set up headers
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if api_key is None:
-            raise ValueError(
+            warnings.warn(
                 "Could not find the API key to access the Anthropic Claude API. Ensure you have an API key "
                 "set up via the Anthropic console (https://console.anthropic.com/), then make it available as "
                 "an environment variable 'ANTHROPIC_API_KEY."
             )
 
-        # Set-up headers
-        headers = {"X-API-Key": api_key}
-        assert api_key is not None
-        return headers
+        return {"X-API-Key": api_key if api_key else ""}
+
+    def _verify_auth(self) -> None:
+        # Execute a dummy prompt. If the API setup is incorrect, we should fail at initialization time.
+        try:
+            self(["test"])
+        except ValueError as err:
+            if "authentication_error" in str(err):
+                warnings.warn(
+                    "Authentication with provided API key failed. Please double-check you provided the correct "
+                    "credentials."
+                )
+            else:
+                raise err
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
@@ -67,9 +73,11 @@ class Anthropic(REST):
             except HTTPError as ex:
                 res_content = srsly.json_loads(r.content.decode("utf-8"))
                 # Include specific error message in exception.
-                raise ValueError(
-                    f"Request to Anthropic API failed: {res_content.get('error', {})}"
-                ) from ex
+                error = res_content.get("error", {})
+                error_msg = f"Request to Anthropic API failed: {error}"
+                if error["type"] == "not_found_error":
+                    error_msg += f". Ensure that the selected model ({self._name}) is supported by the API."
+                raise ValueError(error_msg) from ex
             response = r.json()
 
             # c.f. https://console.anthropic.com/docs/api/errors
@@ -102,6 +110,9 @@ class Anthropic(REST):
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:
         return (
+            # claude-1
+            "claude-2",
+            "claude-2-100k",
             # claude-1
             "claude-1",
             "claude-1-100k",

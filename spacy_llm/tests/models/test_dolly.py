@@ -34,6 +34,7 @@ name = "dolly-v2-3b"
 """
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init():
     """Test initialization and simple run."""
@@ -45,6 +46,7 @@ def test_init():
     nlp.get_pipe("llm")._model.get_model_names()
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
@@ -52,6 +54,7 @@ def test_init_from_config():
     assert nlp.pipe_names == ["llm"]
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)

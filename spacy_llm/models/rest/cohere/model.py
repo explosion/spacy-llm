@@ -1,4 +1,5 @@
 import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized, Tuple
 
@@ -18,14 +19,25 @@ class Cohere(REST):
     def credentials(self) -> Dict[str, str]:
         api_key = os.getenv("CO_API_KEY")
         if api_key is None:
-            raise ValueError(
+            warnings.warn(
                 "Could not find the API key to access the Cohere API. Ensure you have an API key "
                 "set up via https://dashboard.cohere.ai/api-keys, then make it available as "
                 "an environment variable 'CO_API_KEY'."
             )
-        headers = {"Authorization": f"Bearer {api_key}"}
-        assert api_key is not None
-        return headers
+
+        return {"Authorization": f"Bearer {api_key}"}
+
+    def _verify_auth(self) -> None:
+        try:
+            self(["test"])
+        except ValueError as err:
+            if "invalid api token" in str(err):
+                warnings.warn(
+                    "Authentication with provided API key failed. Please double-check you provided the correct "
+                    "credentials."
+                )
+            else:
+                raise err
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
