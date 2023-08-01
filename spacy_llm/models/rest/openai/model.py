@@ -1,4 +1,5 @@
 import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized, Tuple
 
@@ -21,7 +22,7 @@ class OpenAI(REST):
         api_key = os.getenv("OPENAI_API_KEY")
         api_org = os.getenv("OPENAI_API_ORG")
         if api_key is None:
-            raise ValueError(
+            warnings.warn(
                 "Could not find the API key to access the OpenAI API. Ensure you have an API key "
                 "set up via https://platform.openai.com/account/api-keys, then make it available as "
                 "an environment variable 'OPENAI_API_KEY."
@@ -34,28 +35,6 @@ class OpenAI(REST):
         }
         if api_org:
             headers["OpenAI-Organization"] = api_org
-        r = self.retry(
-            call_method=requests.get,
-            url="https://api.openai.com/v1/models",
-            headers=headers,
-            timeout=self._max_request_time,
-        )
-        if r.status_code == 422:
-            raise ValueError(
-                "Could not access api.openai.com -- 422 permission denied."
-                "Visit https://platform.openai.com/account/api-keys to check your API keys."
-            )
-        elif r.status_code != 200:
-            raise ValueError(
-                f"Error accessing api.openai.com ({r.status_code}): {r.text}"
-            )
-
-        response = r.json()["data"]
-        models = [response[i]["id"] for i in range(len(response))]
-        if self._name not in models:
-            raise ValueError(
-                f"The specified model '{self._name}' is not available. Choices are: {sorted(set(models))}"
-            )
 
         # Ensure endpoint is supported.
         if self._endpoint not in (Endpoints.NON_CHAT, Endpoints.CHAT):
@@ -63,8 +42,37 @@ class OpenAI(REST):
                 f"Endpoint {self._endpoint} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
             )
 
-        assert api_key is not None
         return headers
+
+    def _verify_auth(self) -> None:
+        r = self.retry(
+            call_method=requests.get,
+            url="https://api.openai.com/v1/models",
+            headers=self._credentials,
+            timeout=self._max_request_time,
+        )
+        if r.status_code == 422:
+            warnings.warn(
+                "Could not access api.openai.com -- 422 permission denied."
+                "Visit https://platform.openai.com/account/api-keys to check your API keys."
+            )
+        elif r.status_code != 200:
+            if "Incorrect API key" in r.text:
+                warnings.warn(
+                    "Authentication with provided API key failed. Please double-check you provided the correct "
+                    "credentials."
+                )
+            else:
+                warnings.warn(
+                    f"Error accessing api.openai.com ({r.status_code}): {r.text}"
+                )
+
+        response = r.json()["data"]
+        models = [response[i]["id"] for i in range(len(response))]
+        if self._name not in models:
+            raise ValueError(
+                f"The specified model '{self._name}' is not available. Choices are: {sorted(set(models))}"
+            )
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {

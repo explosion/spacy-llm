@@ -13,6 +13,12 @@ def pytest_addoption(parser):
         default=bool(int(os.environ.get("TEST_EXTERNAL", 0))),
         help="include tests that connects to third-party API",
     )
+    parser.addoption(
+        "--gpu",
+        action="store_true",
+        default=bool(int(os.environ.get("TEST_GPU", 0))),
+        help="include tests that use a GPU",
+    )
 
 
 def pytest_runtest_setup(item):
@@ -20,19 +26,18 @@ def pytest_runtest_setup(item):
         return item.config.getoption(f"--{opt}", False)
 
     # Integration of boolean flags
-    for opt in ["external"]:
+    for opt in ["external", "gpu"]:
         if opt in item.keywords and not getopt(opt):
             pytest.skip(f"need --{opt} option to run")
 
 
 def pytest_collection_modifyitems(config, items):
-    if config.getoption("--external"):
-        return
-
-    skip_external = pytest.mark.skip(reason="need --external option to run")
+    types = ("external", "gpu")
+    skip_marks = [pytest.mark.skip(reason=f"need --{t} option to run") for t in types]
     for item in items:
-        if "external" in item.keywords:
-            item.add_marker(skip_external)
+        for t, sm in zip(types, skip_marks):
+            if (not config.getoption(f"--{t}")) and (t in item.keywords):
+                item.add_marker(sm)
 
 
 @registry.llm_models("test.NoOpModel.v1")

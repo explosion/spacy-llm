@@ -9,10 +9,10 @@ from .base import HuggingFace
 
 class OpenLLaMA(HuggingFace):
     MODEL_NAMES = Literal[
-        "open_llama_3b_350bt_preview",  # noqa: F722
-        "open_llama_3b_600bt_preview",  # noqa: F722
-        "open_llama_7b_400bt_preview",  # noqa: F722
-        "open_llama_7b_600bt_preview",  # noqa: F722
+        "open_llama_3b",  # noqa: F722
+        "open_llama_7b",  # noqa: F722
+        "open_llama_7b_v2",  # noqa: F722
+        "open_llama_13b",  # noqa: F722
     ]
 
     def __init__(

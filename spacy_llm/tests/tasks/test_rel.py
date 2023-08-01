@@ -4,11 +4,12 @@ from pathlib import Path
 import pytest
 from confection import Config
 from pytest import FixtureRequest
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 from spacy.training import Example
+from spacy.util import get_lang_class
 
 from spacy_llm.pipeline import LLMWrapper
-from spacy_llm.tasks.rel import RelationItem, RELTask
+from spacy_llm.tasks.rel import _DEFAULT_REL_TEMPLATE, RelationItem, RELTask
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
@@ -230,3 +231,21 @@ def test_rel_serde(noop_config, tmp_path: Path):
     nlp3.from_bytes(nlp1.to_bytes())
 
     assert task1._label_dict == task2._label_dict == task3._label_dict == labels
+
+
+def test_incorrect_indexing():
+    """Tests whether incorrect indexing is handled properly (i. e. when the LLM response indices non-existent
+    entities).
+    """
+    task = RELTask(labels=["LivesIn", "WorksIn"], template=_DEFAULT_REL_TEMPLATE)
+
+    doc = Doc(get_lang_class("en")().vocab, words=["This", "is", "a", "test"])
+    doc.ents = [Span(doc, 0, 1, label="TEST")]
+    assert (
+        len(task._format_response('{"dep": 0, "dest": 1, "relation": "LivesIn"}', doc))
+        == 0
+    )
+    assert (
+        len(task._format_response('{"dep": 0, "dest": 0, "relation": "LivesIn"}', doc))
+        == 1
+    )
