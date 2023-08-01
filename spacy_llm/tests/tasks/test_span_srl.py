@@ -106,11 +106,6 @@ def test_rel_predict(task, cfg_string, request):
     """Use OpenAI to get REL results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
-    import logging
-    import spacy_llm
-    spacy_llm.logger.addHandler(logging.StreamHandler())
-    spacy_llm.logger.setLevel(logging.DEBUG)
-
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = assemble_from_config(orig_config)
