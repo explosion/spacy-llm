@@ -45,13 +45,16 @@ The task and the model have to be supplied to the `llm` pipeline component using
 system](https://spacy.io/api/data-formats#config). This package provides various built-in
 functionality, as detailed in the [API](#-api) documentation.
 
-### Example 1: Add a text classifier using a GPT-3 model from OpenAI
 
-Create a new API key from openai.com or fetch an existing one, and ensure the keys are set as environmental variables.
-For more background information, see the [OpenAI](#openai) section.
+### Example 1: Add a text classifier using a GPT-3 model from OpenAI {id="example-1"}
 
-Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/textcat_openai)):
+Create a new API key from openai.com or fetch an existing one, and ensure the
+keys are set as environmental variables. For more background information, see
+the [OpenAI](/api/large-language-models#gpt-3-5) section.
+
+Create a config file `config.cfg` containing at least the following (or see the
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
 
 ```ini
 [nlp]
@@ -80,15 +83,21 @@ from spacy_llm.util import assemble
 nlp = assemble("config.cfg")
 doc = nlp("You look gorgeous!")
 print(doc.cats)
+# {"COMPLIMENT": 1.0, "INSULT": 0.0}
 ```
 
-### Example 2: Add NER using an open-source model through Hugging Face
+### Example 2: Add a text classifier using an open-source model through HuggingFace {id="example-2"}
 
-To run this example, ensure that you have a GPU enabled, and `transformers`, `torch` and CUDA installed.
-For more background information, see the [DollyHF](#spacydollyhfv1) section.
+The same TextCat task can also be used with an open source model from
+HuggingFace.
 
-Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/ner_dolly)):
+To run this example, ensure that you have a GPU enabled, and `transformers`,
+`torch` and CUDA installed. For more background information, see the
+[DollyHF](/api/large-language-models#dolly) section.
+
+Create a config file `config.cfg` containing at least the following (or see the
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_dolly)):
 
 ```ini
 [nlp]
@@ -101,9 +110,10 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.NER.v2"
-labels = ["PERSON", "ORGANISATION", "LOCATION"]
+@llm_tasks = "spacy.TextCat.v2"
+labels = ["COMPLIMENT", "INSULT"]
 
+# Use a local Dolly model instead of an API
 [components.llm.model]
 @llm_models = "spacy.Dolly.v1"
 # For better performance, use dolly-v2-12b instead
@@ -116,19 +126,127 @@ Now run:
 from spacy_llm.util import assemble
 
 nlp = assemble("config.cfg")
-doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
-print([(ent.text, ent.label_) for ent in doc.ents])
+doc = nlp("You look gorgeous!")
+print(doc.cats)
+# {"COMPLIMENT": 1.0, "INSULT": 0.0}
 ```
 
-Note that Hugging Face will download the `"databricks/dolly-v2-3b"` model the first time you use it. You can
+Note that Hugging Face will download the `"databricks/dolly-v2-3b"` model the
+first time you use it. You can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
-by setting the environmental variable `HF_HOME`.
-Also, you can upgrade the model to be `"databricks/dolly-v2-12b"` for better performance.
+by setting the environmental variable `HF_HOME`. Also, you can upgrade the model
+to be `"databricks/dolly-v2-12b"` for better performance.
 
-### Example 3: Create the component directly in Python
+### Example 3: Add NER using a GPT-3 model from OpenAI {id="example-3"}
 
-The `llm` component behaves as any other spaCy component does, so adding it to an existing pipeline follows the same
-pattern:
+In previous versions of the `spacy-llm` `NER` and `SpanCat` tasks, you could
+configure a zero-shot pipeline without any examples. The new `v3`
+(`spacy.NER.v3` and `spacy.SpanCat.v3`) tasks use few-shot learning exclusively
+require at least 1 prompt example to be configured.
+
+The old zero-shot prompt we were using really didn't work that well from our
+evaluations on well known NER datasets (# TODO: link to evaluation results?)
+
+The new v3 task prompts are based on the
+[PromptNER](https://arxiv.org/abs/2305.15444) paper and use chain-of-thought
+reasoning to improve model quality. The accuracy of this prompt should be much
+better for most NER cases but it does require a little bit more work upfront.
+
+Create a config file `config.cfg` containing at least the following (or see the
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_openai)):
+
+```ini
+[nlp]
+lang = "en"
+pipeline = ["llm"]
+
+[components]
+
+[components.llm]
+factory = "llm"
+
+[components.llm.task]
+@llm_tasks = "spacy.NER.v3"
+labels = ["DISH", "INGREDIENT", "EQUIPMENT"]
+description = Entities are the names food dishes,
+    ingredients, and any kind of cooking equipment.
+    Adjectives, verbs, adverbs are not entities.
+    Pronouns are not entities.
+
+[components.llm.task.label_definitions]
+DISH = "Known food dishes, e.g. Lobster Ravioli, garlic bread"
+INGREDIENT = "Individual parts of a food dish, including herbs and spices."
+EQUIPMENT = "Any kind of cooking equipment. e.g. oven, cooking pot, grill"
+
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.json"
+
+[components.llm.model]
+@llm_models = "spacy.GPT-3-5.v1"
+```
+
+```json
+# ner_examples.json
+[
+  {
+    "text": "You can't get a great chocolate flavor with carob.",
+    "spans": [
+      {
+        "text": "chocolate",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "is a flavor in this context, not an ingredient"
+      },
+      {
+        "text": "carob",
+        "is_entity": true,
+        "label": "INGREDIENT",
+        "reason": "is an ingredient to add chocolate flavor"
+      }
+    ]
+  },
+  {
+    "text": "You can probably sand-blast it if it's an anodized aluminum pan",
+    "spans": [
+      {
+        "text": "sand-blast",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "is a cleaning technique, not some kind of equipment"
+      },
+      {
+        "text": "anodized aluminum pan",
+        "is_entity": true,
+        "label": "EQUIPMENT",
+        "reason": "is a piece of cooking equipment, anodized is included since it describes the type of pan"
+      },
+    ]
+  }
+]
+```
+
+Now run:
+
+```python
+from spacy_llm.util import assemble
+
+nlp = assemble("config.cfg")
+doc = nlp(
+    "Sriracha sauce goes really well with hoisin stir fry, "
+    "but you should add it after you use the wok."
+)
+print([(ent.text, ent.label_) for ent in doc.ents])
+# [('Sriracha sauce', 'INGREDIENT'),
+#  ('hoisin stir fry', 'DISH'),
+#  ('wok', 'EQUIPMENT')]
+```
+
+### Example 4: Create the component directly in Python {id="example-4"}
+
+The `llm` component behaves as any other component does, so adding it to an
+existing pipeline follows the same pattern:
 
 ```python
 import spacy
@@ -138,21 +256,45 @@ nlp.add_pipe(
     "llm",
     config={
         "task": {
-            "@llm_tasks": "spacy.NER.v2",
-            "labels": ["PERSON", "ORGANISATION", "LOCATION"]
+            "@llm_tasks": "spacy.NER.v3",
+            "labels": ["DISH", "INGREDIENT", "EQUIPMENT"]
+            "examples": [
+                {
+                    "text": "You can't get a great chocolate flavor with carob.",
+                    "spans": [
+                        {
+                            "text": "chocolate",
+                            "is_entity": False,
+                            "label": "==NONE==",
+                            "reason": "is a flavor in this context, not an ingredient"
+                        },
+                        {
+                            "text": "carob",
+                            "is_entity": True,
+                            "label": "INGREDIENT",
+                            "reason": "is an ingredient to add chocolate flavor"
+                        }
+                    ]
+                },
+            ]
         },
         "model": {
-            "@llm_models": "spacy.gpt-3.5.v1",
+            "@llm_models": "spacy.GPT-3.5.v1"
         },
     },
 )
 nlp.initialize()
-doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
+doc = nlp(
+    "Sriracha sauce goes really well with hoisin stir fry, "
+    "but you should add it after you use the wok."
+)
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-Note that for efficient usage of resources, typically you would use [`nlp.pipe(docs)`](https://spacy.io/api/language#pipe)
-with a batch, instead of calling `nlp(doc)` with a single document.
+Note that for efficient usage of resources, typically you would use
+[`nlp.pipe(docs)`](/api/language#pipe) with a batch, instead of calling
+`nlp(doc)` with a single document.
+
 
 ### Example 4: Implement your own custom task
 
@@ -382,7 +524,7 @@ max_n_words = null
 | `max_n_words` | `Optional[int]`                         | `None`                                                                 | Maximum number of words to be used in summary. Note that this should not expected to work exactly.                                       |
 | `field`       | `str`                                   | `summary`                                                              | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`).                                |
 
-The summarization task prompts the model for a concise summary of the provided text. It optionally allows to limit the 
+The summarization task prompts the model for a concise summary of the provided text. It optionally allows to limit the
 response to a certain number of tokens - note that this requirement will be included in the prompt, but the task doesn't
 perform a hard cut-off. It's hence possible that your summary exceeds `max_n_words`.
 
@@ -391,13 +533,13 @@ The default reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` an
 
 ```yaml
 - text: >
-    The United Nations, referred to informally as the UN, is an intergovernmental organization whose stated purposes are 
-    to maintain international peace and security, develop friendly relations among nations, achieve international 
-    cooperation, and serve as a centre for harmonizing the actions of nations. It is the world's largest international 
-    organization. The UN is headquartered on international territory in New York City, and the organization has other 
+    The United Nations, referred to informally as the UN, is an intergovernmental organization whose stated purposes are
+    to maintain international peace and security, develop friendly relations among nations, achieve international
+    cooperation, and serve as a centre for harmonizing the actions of nations. It is the world's largest international
+    organization. The UN is headquartered on international territory in New York City, and the organization has other
     offices in Geneva, Nairobi, Vienna, and The Hague, where the International Court of Justice is headquartered.\n\n
-    The UN was established after World War II with the aim of preventing future world wars, and succeeded the League of 
-    Nations, which was characterized as ineffective. 
+    The UN was established after World War II with the aim of preventing future world wars, and succeeded the League of
+    Nations, which was characterized as ineffective.
   summary: "The UN is an international organization that promotes global peace, cooperation, and harmony. Established after WWII, its purpose is to prevent future world wars."
 ```
 
@@ -1532,15 +1674,15 @@ The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running `
 Interacting with LLMs, either through an external API or a local instance, is costly.
 Since developing an NLP pipeline generally means a lot of exploration and prototyping,
 `spacy-llm` implements a built-in cache to avoid reprocessing the same documents at each run
-that keeps batches of documents stored on disk. 
+that keeps batches of documents stored on disk.
 
-The cache implementation also ensures that documents in one cache directory were all produced using the same prompt 
-template. This is only possible however if the specified task implements 
+The cache implementation also ensures that documents in one cache directory were all produced using the same prompt
+template. This is only possible however if the specified task implements
 ```python
 @property
 def prompt_template() -> str:
     ...
-``` 
+```
 which returns the raw prompt template as string. If `prompt_template()` isn't implemented, the cache will emit a warning
 and not check for prompt template consistency.
 
@@ -1561,7 +1703,7 @@ max_batches_in_mem = 4
 | `max_batches_in_mem` | `int`                        | 4       | Max. number of batches to hold in memory. Allows you to limit the effect on your memory if you're handling a lot of docs. |
 
 When retrieving a document, the `BatchCache` will first figure out what batch the document belongs to. If the batch
-isn't in memory it will try to load the batch from disk and then move it into memory. 
+isn't in memory it will try to load the batch from disk and then move it into memory.
 
 Note that since the cache is generated by a registered function, you can also provide your own registered function
 returning your own cache implementation. If you wish to do so, ensure that your cache object adheres to the
