@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 from typing import cast
 
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
@@ -128,6 +128,22 @@ class Cache(Protocol):
         """Loads doc from cache. If doc is not in cache, None is returned.
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
+        """
+
+
+@runtime_checkable
+class CandidateSelector(Protocol):
+    def __call__(self, mention: Span, context: Optional[Doc]) -> Dict[str, str]:
+        """Return list of Candidates with their descriptios for given mention and context.
+        mention (Span): Entity mention.
+        context (Optional[Doc]): Context to allow for context-supported candidate retrieval.
+        RETURNS (Dict[str, str]): Entity ID -> description.
+        """
+
+    def get_entity_description(self, entity_id: Any) -> str:
+        """Retrieve entity description.
+        entity_id (Any): Entity ID.
+        RETURNS (str): Description for specified entity ID.
         """
 
 
