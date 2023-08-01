@@ -6,12 +6,12 @@ from ....compat import Literal
 from ....registry import registry
 from .model import Endpoints, OpenAI
 
-DEFAULT_TEMPERATURE = 0.0
+_DEFAULT_TEMPERATURE = 0.0
 
 
 @registry.llm_models("spacy.GPT-4.v1")
 def openai_gpt_4(
-    config: Dict[Any, Any] = SimpleFrozenDict(temperature=DEFAULT_TEMPERATURE),
+    config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
     name: Literal[
         "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"
     ] = "gpt-4",  # noqa: F722
@@ -47,7 +47,7 @@ def openai_gpt_4(
 
 @registry.llm_models("spacy.GPT-3-5.v1")
 def openai_gpt_3_5(
-    config: Dict[Any, Any] = SimpleFrozenDict(temperature=DEFAULT_TEMPERATURE),
+    config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
     name: Literal[
         "gpt-3.5-turbo",
         "gpt-3.5-turbo-16k",
@@ -87,7 +87,7 @@ def openai_gpt_3_5(
 @registry.llm_models("spacy.Text-Davinci.v1")
 def openai_text_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=1000, temperature=DEFAULT_TEMPERATURE
+        max_tokens=1000, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal[
         "text-davinci-002", "text-davinci-003"
@@ -125,7 +125,7 @@ def openai_text_davinci(
 @registry.llm_models("spacy.Code-Davinci.v1")
 def openai_code_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["code-davinci-002"] = "code-davinci-002",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -161,7 +161,7 @@ def openai_code_davinci(
 @registry.llm_models("spacy.Text-Curie.v1")
 def openai_text_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["text-curie-001"] = "text-curie-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -197,7 +197,7 @@ def openai_text_curie(
 @registry.llm_models("spacy.Text-Babbage.v1")
 def openai_text_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["text-babbage-001"] = "text-babbage-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -233,7 +233,7 @@ def openai_text_babbage(
 @registry.llm_models("spacy.Text-Ada.v1")
 def openai_text_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["text-ada-001"] = "text-ada-001",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -269,7 +269,7 @@ def openai_text_ada(
 @registry.llm_models("spacy.Davinci.v1")
 def openai_davinci(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["davinci"] = "davinci",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -305,7 +305,7 @@ def openai_davinci(
 @registry.llm_models("spacy.Curie.v1")
 def openai_curie(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["curie"] = "curie",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -341,7 +341,7 @@ def openai_curie(
 @registry.llm_models("spacy.Babbage.v1")
 def openai_babbage(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["babbage"] = "babbage",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
@@ -377,7 +377,7 @@ def openai_babbage(
 @registry.llm_models("spacy.Ada.v1")
 def openai_ada(
     config: Dict[Any, Any] = SimpleFrozenDict(
-        max_tokens=500, temperature=DEFAULT_TEMPERATURE
+        max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
     name: Literal["ada"] = "ada",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
