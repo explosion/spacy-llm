@@ -110,7 +110,7 @@ class Anthropic(REST):
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:
         return (
-            # claude-1
+            # claude-2
             "claude-2",
             "claude-2-100k",
             # claude-1
