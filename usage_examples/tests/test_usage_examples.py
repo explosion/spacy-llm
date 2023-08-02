@@ -45,6 +45,7 @@ def test_textcat_dolly(config_name: str):
     )
 
 
+@pytest.mark.external
 def test_ner_v3_openai():
     """Test NER v3 OpenAI usage example."""
     path = _USAGE_EXAMPLE_PATH / "ner_v3_openai"
@@ -57,6 +58,7 @@ def test_ner_v3_openai():
 
 
 @pytest.mark.external
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_ner_langchain_openai():
     """Test NER LangChain OpenAI usage example."""
     ner_langchain_openai.run_pipeline(
@@ -65,6 +67,7 @@ def test_ner_langchain_openai():
 
 
 @pytest.mark.external
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_multitask_openai(config_name: str):
     """Test multitask OpenAI example.

@@ -48,7 +48,7 @@ def make_ner_task(
         the text. If True, returns the first hit.
     """
     warnings.warn(
-        Warnings.W001.format(legacy_task="spacy.NER.v1", new_task="spacy.NER.v3"),
+        Warnings.LLMW001.format(legacy_task="spacy.NER.v1", new_task="spacy.NER.v3"),
         DeprecationWarning,
     )
 
@@ -98,7 +98,7 @@ def make_ner_task_v2(
         the text. If True, returns the first hit.
     """
     warnings.warn(
-        Warnings.W001.format(legacy_task="spacy.NER.v2", new_task="spacy.NER.v3"),
+        Warnings.LLMW001.format(legacy_task="spacy.NER.v2", new_task="spacy.NER.v3"),
         DeprecationWarning,
     )
     labels_list = split_labels(labels)

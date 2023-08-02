@@ -48,7 +48,7 @@ def make_spancat_task(
         the text. If True, returns the first hit.
     """
     warnings.warn(
-        Warnings.W001.format(
+        Warnings.LLMW001.format(
             legacy_task="spacy.SpanCat.v1", new_task="spacy.SpanCat.v3"
         ),
         DeprecationWarning,
@@ -100,7 +100,7 @@ def make_spancat_task_v2(
         the text. If True, returns the first hit.
     """
     warnings.warn(
-        Warnings.W001.format(
+        Warnings.LLMW001.format(
             legacy_task="spacy.SpanCat.v2", new_task="spacy.SpanCat.v3"
         ),
         DeprecationWarning,

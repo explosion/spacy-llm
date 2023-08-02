@@ -39,7 +39,8 @@ def _fewshot_reader(eg_path: Path) -> Iterable[Dict[str, Any]]:
     else:
         if not eg_path.exists():
             raise ValueError(
-                "Specified file path doesn't exist. Please ensure to provide a valid file path."
+                f"Specified file path: {str(eg_path)} doesn't exist. "
+                "Please ensure to provide a valid file path."
             )
 
         suffix = eg_path.suffix.replace("yaml", "yml")

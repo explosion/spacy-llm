@@ -74,12 +74,7 @@ def test_example_2_classifier_hf():
 
 @pytest.mark.external
 def test_example_3_ner():
-    examples_path = (
-        Path(__file__).parent.parent
-        / "usage_examples"
-        / "ner_v3_openai"
-        / "examples.json"
-    )
+    examples_path = Path(__file__).parent.parent / "ner_v3_openai" / "examples.json"
 
     with util.make_tempdir() as tmpdir:
 
