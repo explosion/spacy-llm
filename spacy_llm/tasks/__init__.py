@@ -1,3 +1,4 @@
+from .entity_linking import EntityLinkingTask, make_entitylinking_task
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task, make_ner_task_v2
 from .noop import NoopTask, make_noop_task
@@ -8,6 +9,7 @@ from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
 
 __all__ = [
+    "make_entitylinking_task",
     "make_lemma_task",
     "make_ner_task",
     "make_ner_task_v2",
@@ -18,6 +20,7 @@ __all__ = [
     "make_spancat_task_v2",
     "make_summarization_task",
     "make_textcat_task",
+    "EntityLinkingTask",
     "LemmaTask",
     "NERTask",
     "NoopTask",

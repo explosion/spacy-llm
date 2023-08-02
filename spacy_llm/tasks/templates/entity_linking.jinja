@@ -1,6 +1,9 @@
-For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES. Each of the MENTIONS in the TEXT is surrounded by *.
-For each of the MENTIONS appearing in the text, output the number of the description fitting them best. This number has to be surrounded by single <>, for example <1>.
-Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ". For each MENTION, describe your reasoning process in a single sentence.
+For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES.
+Each of the ENTITIES is prefixed by its ENTITY ID. Each of the MENTIONS in the TEXT is surrounded by *.
+For each of the MENTIONS appearing in the text, output the ID of the description fitting them best.
+This ID has to be surrounded by single <>, for example <1>.
+Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ".
+For each MENTION, describe your reasoning process in a single sentence.
 
 {# whitespace #}
 {%- if examples -%}
@@ -14,15 +17,18 @@ TEXT:
 '''
 MENTIONS: {{ example.mention_str }}
 ENTITIES:
-{%- for mention, ent_descs in zip(example.mentions, example.entity_descriptions) -%}
-- For *{{ mention }}*:
-{%- for i, ent_desc in enumerate(ent_descs) -%}
-    {{ i }}. {{ ent_desc }}
+{%- for ent_descs in example.entity_descriptions -%}
+{# whitespace #}
+- For *{{ example.mentions[loop.index0] }}*:
+{%- for ent_desc in ent_descs -%}
+    {# whitespace #}
+    {{ example.entity_ids[loop.index0] }}. {{ ent_desc }}
 {%- endfor -%}
 {%- endfor -%}
 SOLUTION:
-{%- for idx, solution, reason in enumerate(zip(example.solutions, example.reasons)) -%}
---- <{{ solution }}> {{ reason }}
+{%- for reason in example.reasons -%}
+{# whitespace #}
+--- <{{ example.solutions[loop.index0] }}> {{ reason }}
 {%- endfor -%}
 {# whitespace #}
 {%- endfor -%}
@@ -35,10 +41,13 @@ TEXT:
 '''
 MENTIONS: {{ mentions_str }}
 ENTITIES:
-{%- for mention, ent_descs in zip(mentions, entity_descriptions) -%}
-- For *{{ mention }}*:
-{%- for i, ent_desc in enumerate(ent_descs) -%}
-    {{ i }}. {{ ent_desc }}
+{%- for ent_descs in entity_descriptions -%}
+{# whitespace #}
+- For *{{ mentions[loop.index0] }}*:
+{%- for ent_desc in ent_descs -%}
+    {# whitespace #}
+    entity_ids[loop.index0]. {{ ent_desc }}
 {%- endfor -%}
 {%- endfor -%}
+{# whitespace #}
 SOLUTION:

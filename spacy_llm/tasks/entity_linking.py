@@ -1,6 +1,8 @@
 import csv
+import re
+import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import jinja2
 import spacy
@@ -36,38 +38,49 @@ class SpaCyPipelineCandidateLookup:
     def __init__(
         self,
         nlp_path: Union[Path, str],
-        kb_path: Union[Path, str],
         desc_path: Union[Path, str],
+        top_n: int = 5,
     ):
         """
         Loads spaCy pipeline, knowledge base, entity descriptions.
+        top_n (int): Top n candidates to include in prompt.
         nlp_path (Union[Path, str]): Path to stored spaCy pipeline.
-        kb_path (Union[Path, str]): Path to stored spaCy knowledge base.
         desc_path (Union[Path, str]): Path to .csv file with descriptions for entities. Has to have two columns
           with the first one being the entity ID, the second one being the description. The entity ID has to match with
           the entity ID in the stored knowledge base.
         """
         self._nlp = spacy.load(nlp_path)
-        if "entity_linker" not in self._nlp.pipe_names:
+        if "entity_linker" not in self._nlp.component_names:
             raise ValueError(
                 f"'entity_linker' component has to be available in specified pipeline at {nlp_path}, but "
                 f"isn't."
             )
         self._entity_linker: EntityLinker = self._nlp.get_pipe("entity_linker")
-        self._kb = InMemoryLookupKB(
-            vocab=self._nlp.vocab, entity_vector_length=self._nlp.vocab.vectors_length
-        )
-        self._kb.from_disk(kb_path)
+        self._kb = self._entity_linker.kb
         with open(desc_path) as csvfile:
             self._descs = {row[0]: row[1] for row in csv.reader(csvfile)}
+        self._top_n = top_n
 
-    def __call__(self, mention: Span, _: Optional[Doc]) -> Dict[str, str]:
-        return {
-            cand.entity_: self._descs[cand.entity_]
-            for cand in self._entity_linker.get_candidates(self._kb, mention)
-        }
+    def __call__(self, mentions: Iterable[Span]) -> Iterable[Dict[str, str]]:
+        """Retrieves top n candidates using spaCy's entity linker's .get_candidates_batch().
+        mentions (Iterable[Span]): Mentions to look up entity candidates for.
+        RETURNS (Iterable[Dict[str, str]]): Dicts of entity ID -> description for all candidates, per mention.
+        """
+        all_cands = self._entity_linker.get_candidates_batch(self._kb, mentions)
+        for cands in all_cands:
+            assert isinstance(cands, list)
+            cands.sort(key=lambda x: x.prior_prob, reverse=True)
+
+        return [
+            {cand.entity_: self._descs[cand.entity_] for cand in cands[: self._top_n]}
+            for cands in all_cands
+        ]
 
     def get_entity_description(self, entity_id: str) -> str:
+        if entity_id not in self._descs:
+            raise ValueError(
+                f"Entity with ID {entity_id} is not in provided descriptions file."
+            )
         return self._descs[entity_id]
 
 
@@ -141,7 +154,9 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
         """
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(self._create_prompt_example(eg))
+                prompt_example = self._create_prompt_example(eg)
+                if prompt_example:
+                    self._prompt_examples.append(prompt_example)
 
     @property
     def prompt_template(self) -> str:
@@ -151,24 +166,22 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         for doc in docs:
-            prompt = _template.render(
-                text=doc.text,
+            yield _template.render(
+                text=EntityLinkingTask._highlight_ents_in_text(doc),
+                mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
+                mentions=[ent.text for ent in doc.ents],
+                entity_descriptions=self._fetch_entity_info(doc)[0],
                 examples=self._prompt_examples,
             )
-            yield prompt
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, responses):
-            parsed_response = [
-                [pr_part.strip() for pr_part in pr.split(":")]
-                for pr in prompt_response.replace("Lemmatized text:", "")
-                .replace("'''", "")
-                .strip()
-                .split("\n")
-            ]
-            tokens = [token for token in doc]
+            solutions = re.findall(r"<\d+>", prompt_response)
+            # Skip document if the numbers of entities and solutions don't line up.
+            if len(solutions) != len(doc.ents):
+                continue
 
             # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
             # match.
@@ -199,40 +212,80 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
     def _Example(self) -> Type[EntityLinkingExample]:
         return EntityLinkingExample
 
-    def _create_prompt_example(self, example: Example) -> EntityLinkingExample:
+    def _create_prompt_example(
+        self, example: Example
+    ) -> Optional[EntityLinkingExample]:
         """Create a entity linking prompt example from a spaCy example."""
-        # todo create prompt examples
-        # - raise if len(ents) > 1, but no kb_id is set
-        # - set reasons to ""
-        """
-        text: str
-        mentions_str: str
-        mentions: List[str]
-        entity_descriptions: List[List[str]]
-        solutions: List[int]
-        reasons: Optional[List[str]]
-        """
         # Ensure that all entities have their knowledge base IDs set.
-        # todo can we warn instead, at least when not in strict mode?
         n_ents = len(example.reference.ents)
-        n_kb_ids = sum([ent.kb_id is not None for ent in example.reference.ents])
-        if n_ents and n_ents != n_kb_ids:
-            raise ValueError(
-                f"Not all entities in this document have their knowledge base IDs set ({n_kb_ids} out of {n_ents}):\n"
-                f"{example.reference}"
+        n_set_kb_ids = sum([ent.kb_id != 0 for ent in example.reference.ents])
+        if n_ents and n_ents != n_set_kb_ids:
+            warnings.warn(
+                f"Not all entities in this document have their knowledge base IDs set ({n_set_kb_ids} out of "
+                f"{n_ents}). Ignoring example:\n{example.reference}"
             )
+            return
 
         # Assemble example.
-        mentions = [str(ent) for ent in example.reference.ents]
-        mentions_str = ", ".join(  # noqa: F401, F841
-            [f"*{mention}*" for mention in mentions]
-        )
-        # cands = self._candidate_selector.get_entity_description()
-        entity_descriptions: List[List[str]] = [  # noqa: F401, F841
-            [ent.kb_id for ent in example.reference.ents]
-        ]
+        mentions = [ent.text for ent in example.reference.ents]
+        # Fetch candidates. If true entity not among candidates: fetch description separately and add manually.
+        entity_descriptions, solutions = self._fetch_entity_info(example.reference)
+        assert all([sol is not None for sol in solutions])
 
         return EntityLinkingExample(
-            text=example.reference.text,
-            lemmas=[{t.text: t.lemma_} for t in example.reference],
+            text=EntityLinkingTask._highlight_ents_in_text(example.reference),
+            mention_str=", ".join([f"*{mention}*" for mention in mentions]),
+            mentions=mentions,
+            entity_descriptions=entity_descriptions,
+            solutions=solutions,
+            reasons=[""] * len(mentions),
         )
+
+    def _fetch_entity_info(
+        self, doc: Doc
+    ) -> Tuple[List[List[Tuple[str, str]]], List[str]]:
+        """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
+        doc (Doc): Doc to fetch entity descriptions and solution numbers for. If entities' KB IDs are not set,
+            corresponding solution number will be None.
+        RETURNS (Tuple[List[List[Tuple[str, str]]], List[str]]): For each mention in doc: list of candidates
+            with ID and description, list of correct entity IDs.
+        """
+        cands_per_ent = self._candidate_selector(doc.ents)
+        entity_descriptions: List[List[str]] = []
+        solutions: List[Optional[int]] = []
+
+        for ent, cands in zip(doc.ents, cands_per_ent):
+            cand_ent_ids = list(cands.keys())
+            ent_descs: List[str] = [cands[ent_id] for ent_id in cand_ent_ids]
+
+            # In this case there is no guarantee that the correct entity description will be included.
+            if ent.kb_id == 0:
+                solutions.append(None)
+            # Correct entity not in suggested candidates: fetch description explicitly.
+            elif ent.kb_id not in cands:
+                ent_descs.append(
+                    self._candidate_selector.get_entity_description(ent.kb_id)
+                )
+                solutions.append(len(ent_descs) - 1)
+            else:
+                solutions.append(cand_ent_ids.index(ent.kb_id))
+
+            entity_descriptions.append(ent_descs)
+
+        return entity_descriptions, solutions
+
+    @staticmethod
+    def _highlight_ents_in_text(doc: Doc) -> str:
+        """Highlights entities in doc text with **.
+        doc (Doc): Doc whose entities are to be highlighted.
+        RETURNS (str): Doc text with highlighted entities.
+        """
+        text = doc.text
+        for i, ent in enumerate(doc.ents):
+            text = (
+                text[: ent.start_char + i * 2]
+                + f"*{ent.text}*"
+                + text[ent.end_char + i * 2 :]
+            )
+
+        return text
