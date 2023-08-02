@@ -24,5 +24,5 @@ jobs:
         env:
           INPUT_TOKEN: ${{ secrets.EXPLOSIONBOT_TOKEN }}
           INPUT_BK_TOKEN: ${{ secrets.BUILDKITE_SECRET }}
-          ENABLED_COMMANDS: "test_llm_gpu,test_llm_external"
+          ENABLED_COMMANDS: "test_gpu,test_llm_external"
           ALLOWED_TEAMS: "spaCy"
