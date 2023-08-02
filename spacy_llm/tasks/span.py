@@ -221,13 +221,52 @@ class SpanTask(SerializableTask[SpanExample]):
         """Find a list of spaCy Spans from a list of SpanReasons
         for a single spaCy Doc
 
+        Input:
+        "The woman Paris was walking around in Paris, talking to her friend Paris"
+
+        Response:
+
+        1. Paris | True | PER | is the name of the woman
+        2. Paris | True | LOC | is a city in France
+        3. Paris | True | PER | is the name of the woman
+
+
+        Expected output:
+        [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
+
+        1.
+        idx = 0
+        spans = []
+
+        The woman [Paris](PER) was walking around in Paris, talking to her friend Paris
+
+        2.
+        idx = 1
+        spans = [Span("Paris", "PER")]
+
+        [Paris](PER,LOC) was walking around in Paris, talking to her friend Paris
+
+        start checking at same prev_span.start_char and we find "Paris" again.
+
+        3.
+
+
+        "
+
+
+
         doc (Doc): Input doc to parse spans for
         span_reasons (List[SpanReason]): List of SpanReasons to find in doc
         RETURNS (List[Span]): List of spaCy Spans found in doc
         """
         find_after = 0
         spans = []
-        for span_reason in span_reasons:
+        prev_span = None
+        n_span_reasons = len(span_reasons)
+        idx = 0
+        while idx < n_span_reasons:
+            span_reason = span_reasons[idx]
+
             # For each phrase, find the SpanReason substring in the text
             # and create a Span
             offsets = find_substrings(
@@ -237,18 +276,37 @@ class SpanTask(SerializableTask[SpanExample]):
                 single_match=True,
                 find_after=find_after,
             )
-            for start, end in offsets:
-                span = doc.char_span(
-                    start,
-                    end,
-                    alignment_mode=self._alignment_mode,
-                    label=span_reason.label,
-                )
-                if span is not None:
-                    spans.append(span)
-                    find_after = (
-                        span.start_char if self._allow_overlap else span.end_char
-                    )
+            if not offsets:
+                idx += 1
+                continue
+
+            # Must have exactly one match because single_match=True
+            assert len(offsets) == 1
+            start, end = offsets[0]
+
+            span = doc.char_span(
+                start,
+                end,
+                alignment_mode=self._alignment_mode,
+                label=span_reason.label,
+            )
+
+            if span is None:
+                # If we couldn't resolve a span, just skip to the next
+                # span_reason
+                idx += 1
+                continue
+
+            if span == prev_span:
+                # If the span is the same as the previous span,
+                # re-run this span_reason but look farther into the text
+                find_after = span.end_char
+                continue
+
+            spans.append(span)
+            find_after = span.start_char if self._allow_overlap else span.end_char
+            prev_span = span
+            idx += 1
         return sorted(set(spans))
 
     def parse_responses(
