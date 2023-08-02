@@ -221,40 +221,6 @@ class SpanTask(SerializableTask[SpanExample]):
         """Find a list of spaCy Spans from a list of SpanReasons
         for a single spaCy Doc
 
-        Input:
-        "The woman Paris was walking around in Paris, talking to her friend Paris"
-
-        Response:
-
-        1. Paris | True | PER | is the name of the woman
-        2. Paris | True | LOC | is a city in France
-        3. Paris | True | PER | is the name of the woman
-
-
-        Expected output:
-        [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
-
-        1.
-        idx = 0
-        spans = []
-
-        The woman [Paris](PER) was walking around in Paris, talking to her friend Paris
-
-        2.
-        idx = 1
-        spans = [Span("Paris", "PER")]
-
-        [Paris](PER,LOC) was walking around in Paris, talking to her friend Paris
-
-        start checking at same prev_span.start_char and we find "Paris" again.
-
-        3.
-
-
-        "
-
-
-
         doc (Doc): Input doc to parse spans for
         span_reasons (List[SpanReason]): List of SpanReasons to find in doc
         RETURNS (List[Span]): List of spaCy Spans found in doc
