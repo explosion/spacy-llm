@@ -27,10 +27,26 @@ For example:
 
 ```sh
 python run_pipeline.py \
-    "Laura bought an apartment in Boston last month." \
+    "Laura bought an apartment last month in Berlin." \
     ./zeroshot.cfg
 ```
-Output:
+LLM-response:
+```shell
+LLM response for doc: Laura bought an apartment last month in Boston.
+
+Step 1: Extract the Predicates for the Text
+Predicates: bought
+
+Step 2: For each Predicate, extract the Semantic Roles in 'Text'
+Text: Laura bought an apartment last month in Boston.
+Predicate: bought
+ARG-0: Laura
+ARG-1: an apartment
+ARG-2: 
+ARG-M-TMP: last month
+ARG-M-LOC: in Boston
+```
+std output:
 ```shell
 Text: Laura bought an apartment last month in Boston.
 SRL Output:
