@@ -420,7 +420,7 @@ def test_invalid_alignment_mode():
         (
             "1. Jean | True | PER | is a person's name",
             False,
-            [("Jean", "PER")],
+            [("jean", "PER")],
         ),
         (
             "1. Jean | True | PER | is a person's name",
