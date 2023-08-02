@@ -4,6 +4,7 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
+
 import jinja2
 import spacy
 from pydantic import BaseModel
@@ -81,7 +82,9 @@ class SpaCyPipelineCandidateLookup:
             raise ValueError(
                 f"Entity with ID {entity_id} is not in provided descriptions file."
             )
+
         return self._descs[entity_id]
+
 
 
 @registry.llm_tasks("spacy.EntityLinking.v1")
@@ -182,6 +185,7 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
             # Skip document if the numbers of entities and solutions don't line up.
             if len(solutions) != len(doc.ents):
                 continue
+
 
             # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
             # match.
