@@ -37,19 +37,22 @@ class PredicateItem(SpanItem):
         return hash((self.text, self.start_char, self.end_char, self.roleset_id))
 
 
-class ArgRELItem(BaseModel):
-    predicate: PredicateItem
+class RoleItem(BaseModel):
     role: SpanItem
     label: str
 
     def __hash__(self):
-        return hash((self.predicate, self.role, self.label))
+        return hash((self.role, self.label))
 
 
 class SRLExample(BaseModel):
     text: str
     predicates: List[PredicateItem]
-    relations: List[ArgRELItem]
+    relations: List[Tuple[PredicateItem, List[RoleItem]]]
+
+    def __str__(self):
+        return f"""Predicates: {', '.join([p.text for p in self.predicates])}
+Relations: {str([(p.text, [(r.label, r.role.text) for r in rs]) for p, rs in self.relations])}"""
 
 
 def _preannotate(doc: Union[Doc, SRLExample]) -> str:
@@ -84,10 +87,18 @@ def score_srl_spans(
         )
 
         pred_relation_tuples.update(
-            [(i, ArgRELItem(**dict(r))) for r in pred_doc._.relations]
+            [
+                (i, PredicateItem(**dict(p)), RoleItem(**dict(r)))
+                for p, rs in pred_doc._.relations
+                for r in rs
+            ]
         )
         gold_relation_tuples.update(
-            [(i, ArgRELItem(**dict(r))) for r in gold_doc._.relations]
+            [
+                (i, PredicateItem(**dict(p)), RoleItem(**dict(r)))
+                for p, rs in gold_doc._.relations
+                for r in rs
+            ]
         )
 
     def _overlap_prf(gold: set, pred: set):
@@ -100,10 +111,10 @@ def score_srl_spans(
     predicates_prf = _overlap_prf(gold_predicates_spans, pred_predicates_spans)
     micro_rel_prf = _overlap_prf(gold_relation_tuples, pred_relation_tuples)
 
-    def _get_label2rels(rel_tuples: Iterable[Tuple[int, ArgRELItem]]):
+    def _get_label2rels(rel_tuples: Iterable[Tuple[int, PredicateItem, RoleItem]]):
         label2rels = defaultdict(set)
         for tup in rel_tuples:
-            label_ = tup[1].label
+            label_ = tup[-1].label
             label2rels[label_].add(tup)
         return label2rels
 
@@ -201,8 +212,8 @@ class SRLTask(SpanTask[SRLExample]):
             case_sensitive_matching,
             single_match,
         )
-        self._verbose = verbose
         self._predicate_key = predicate_key
+        self._verbose = verbose
         self._check_extensions()
 
     @classmethod
@@ -246,9 +257,10 @@ class SRLTask(SpanTask[SRLExample]):
             label_set = set()
 
             for eg in examples:
-                rels: List[ArgRELItem] = eg.reference._.relations
-                for rel in rels:
-                    label_set.add(rel.label)
+                rels: List[Tuple[PredicateItem, List[RoleItem]]] = eg.relations
+                for p, rs in rels:
+                    for r in rs:
+                        label_set.add(r.label)
             labels = list(label_set)
 
         self._label_dict = {self._normalizer(label): label for label in labels}
@@ -270,7 +282,7 @@ class SRLTask(SpanTask[SRLExample]):
 
             yield prompt
 
-    def _format_response(self, arg_lines):
+    def _format_response(self, arg_lines) -> List[Tuple[str, str]]:
         """Parse raw string response into a structured format"""
         output = []
         # this ensures unique arguments in the sentence for a predicate
@@ -350,6 +362,8 @@ class SRLTask(SpanTask[SRLExample]):
                     )
                     predicates.append(pred_item.dict())
 
+                    roles = []
+
                     for label, phrase in self._format_response(pred_content_lines):
                         arg_offsets = find_substrings(
                             doc.text,
@@ -361,10 +375,12 @@ class SRLTask(SpanTask[SRLExample]):
                             arg_item = SpanItem(
                                 text=phrase, start_char=start, end_char=end
                             ).dict()
-                            arg_rel_item = ArgRELItem(
+                            arg_rel_item = RoleItem(
                                 predicate=pred_item, role=arg_item, label=label
                             ).dict()
-                            relations.append(arg_rel_item)
+                            roles.append(arg_rel_item)
+
+                    relations.append((pred_item, roles))
 
             doc._.predicates = predicates
             doc._.relations = relations

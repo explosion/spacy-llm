@@ -27,6 +27,13 @@ For example:
 
 ```sh
 python run_pipeline.py \
-    "Laura just bought an apartment in Boston." \
+    "Laura bought an apartment in Boston last month." \
     ./zeroshot.cfg
+```
+Output:
+```shell
+Text: Laura bought an apartment last month in Boston.
+SRL Output:
+Predicates: ['bought']
+Relations: [('bought', [('ARG-0', 'Laura'), ('ARG-1', 'an apartment'), ('ARG-M-TMP', 'last month'), ('ARG-M-LOC', 'in Boston')])]
 ```

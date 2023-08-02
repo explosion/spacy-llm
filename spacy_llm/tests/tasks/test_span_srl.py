@@ -52,26 +52,39 @@ def task():
             "text": text,
             "predicates": [predicate],
             "relations": [
-                {
-                    "label": "ARG-0",
-                    "predicate": predicate,
-                    "role": {"text": "We", "start_char": 0, "end_char": 2},
-                },
-                {
-                    "label": "ARG-1",
-                    "predicate": predicate,
-                    "role": {"text": "this sentence", "start_char": 8, "end_char": 21},
-                },
-                {
-                    "label": "ARG-M-LOC",
-                    "predicate": predicate,
-                    "role": {"text": "in Berlin", "start_char": 22, "end_char": 31},
-                },
-                {
-                    "label": "ARG-M-TMP",
-                    "predicate": predicate,
-                    "role": {"text": "right now", "start_char": 32, "end_char": 41},
-                },
+                (
+                    predicate,
+                    [
+                        {
+                            "label": "ARG-0",
+                            "role": {"text": "We", "start_char": 0, "end_char": 2},
+                        },
+                        {
+                            "label": "ARG-1",
+                            "role": {
+                                "text": "this sentence",
+                                "start_char": 8,
+                                "end_char": 21,
+                            },
+                        },
+                        {
+                            "label": "ARG-M-LOC",
+                            "role": {
+                                "text": "in Berlin",
+                                "start_char": 22,
+                                "end_char": 31,
+                            },
+                        },
+                        {
+                            "label": "ARG-M-TMP",
+                            "role": {
+                                "text": "right now",
+                                "start_char": 32,
+                                "end_char": 41,
+                            },
+                        },
+                    ],
+                )
             ],
         }
     )
@@ -118,7 +131,11 @@ def test_rel_predict(task, cfg_string, request):
 
     assert doc._.predicates[0]["text"] == gold_example.predicates[0].text
 
-    predicated_roles = tuple(sorted([r["role"]["text"] for r in doc._.relations]))
-    gold_roles = tuple(sorted([r.role.text for r in gold_example.relations]))
+    predicated_roles = tuple(
+        sorted([r["role"]["text"] for p, rs in doc._.relations for r in rs])
+    )
+    gold_roles = tuple(
+        sorted([r.role.text for p, rs in gold_example.relations for r in rs])
+    )
 
     assert predicated_roles == gold_roles
