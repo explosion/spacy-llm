@@ -811,14 +811,27 @@ def test_label_inconsistency():
 
 
 @pytest.mark.parametrize(
-    "text,person_first",
+    "text, response, gold_ents",
     [
-        ("The woman Paris was walking around in Paris", True),
-        ("Walking around Paris as a woman named Paris is quite a trip.", False),
+        (
+            "The woman Paris was walking around in Paris, talking to her friend Paris",
+            "1. Paris | True | PER | is the name of the woman\n"
+            "2. Paris | True | LOC | is a city in France\n"
+            "3. Paris | True | PER | is the name of the woman\n",
+            [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
+        ),
+        (
+            "Walking around Paris as a woman named Paris is quite a trip.",
+            "1. Paris | True | LOC | is a city in France\n"
+            "2. Paris | True | PER | is the name of the woman\n",
+            [("Paris", "LOC"), ("Paris", "PER")],
+        ),
     ],
-    ids=["person_first", "location_first"],
+    ids=["3_ents", "2_ents"],
 )
-def test_regression_span_task_response_parse(text: str, person_first: bool):
+def test_regression_span_task_response_parse(
+    text: str, response: str, gold_ents: List[Tuple[str, str]]
+):
     """Test based on on spaCy issue: https://github.com/explosion/spaCy/discussions/12845
     where parsing wasn't working for NER when the same text could map to 2 labels.
     In the user's case "Paris" could be a person's name or a location.
@@ -826,50 +839,15 @@ def test_regression_span_task_response_parse(text: str, person_first: bool):
 
     nlp = spacy.blank("en")
     example_doc = nlp.make_doc(text)
-
-    span_reason_person = SpanReason(
-        text="Paris", is_entity=True, label="PERSON", reason="is the name of the woman"
-    )
-    span_reason_loc = SpanReason(
-        text="Paris",
-        is_entity=True,
-        label="LOCATION",
-        reason="is the name of a city in France",
-    )
-
-    if person_first:
-        example_response = f"""
-1. {span_reason_person.to_str()}
-2. {span_reason_loc.to_str()}
-"""
-    else:
-        example_response = f"""
-1. {span_reason_loc.to_str()}
-2. {span_reason_person.to_str()}
-"""
-
     ner_task = NERTask(
-        ["PERSON", "LOCATION"], template=_DEFAULT_NER_TEMPLATE_V3, description="test"
+        ["PER", "LOC"], template=_DEFAULT_NER_TEMPLATE_V3, description="test"
     )
-    span_reasons = ner_task._extract_span_reasons(example_response)
-    assert len(span_reasons) == 2
+    span_reasons = ner_task._extract_span_reasons(response)
+    assert len(span_reasons) == len(gold_ents)
 
-    docs = list(ner_task.parse_responses([example_doc], [example_response]))
+    docs = list(ner_task.parse_responses([example_doc], [response]))
     assert len(docs) == 1
+
     doc = docs[0]
-    ents = list(doc.ents)
-
-    assert len(ents) == 2
-
-    if person_first:
-        ent1 = ents[0]
-        assert ent1.label_ == "PERSON"
-
-        ent2 = ents[1]
-        assert ent2.label_ == "LOCATION"
-    else:
-        ent1 = ents[0]
-        assert ent1.label_ == "LOCATION"
-
-        ent2 = ents[1]
-        assert ent2.label_ == "PERSON"
+    pred_ents = [(ent.text, ent.label_) for ent in doc.ents]
+    assert pred_ents == gold_ents

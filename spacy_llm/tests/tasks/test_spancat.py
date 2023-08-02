@@ -411,7 +411,10 @@ def test_invalid_alignment_mode():
             "2. Jean | True | PER | is a person's name\n"
             "3. Jean Foundation | True | ORG | is the name of an Organization name",
             False,
-            [("jean", "PER"), ("Jean", "PER"), ("Jean Foundation", "ORG")],
+            [("jean", "PER"), ("Jean Foundation", "ORG")],
+            # [("jean", "PER"), ("Jean", "PER"), ("Jean Foundation", "ORG")],
+            # TODO: make a final decision on this test case, discussion here:
+            # https://github.com/explosion/spacy-llm/pull/180#discussion_r1282218156
         ),
     ],
     ids=[
