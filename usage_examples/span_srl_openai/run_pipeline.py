@@ -41,7 +41,7 @@ def run_pipeline(
     )
 
     msg.text(f"Text: {doc_srl.text}")
-    print(f"SRL Output:\n{str(doc_srl)}\n")
+    msg.text(f"SRL Output:\n{str(doc_srl)}\n")
 
 
 if __name__ == "__main__":
