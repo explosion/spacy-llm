@@ -139,7 +139,7 @@ class CandidateSelector(Protocol):
         RETURNS (Dict[str, str]): Entity ID -> description.
         """
 
-    def get_entity_description(self, entity_ids: Iterable[Any]) -> str:
+    def get_entity_description(self, entity_id: str) -> str:
         """Retrieve entity description.
         entity_id (Iterable[Any]): Entity IDs.
         RETURNS (str): Description for specified entity ID.

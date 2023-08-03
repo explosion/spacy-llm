@@ -26,14 +26,18 @@ ENTITIES:
     {{ example.entity_ids[mention_i][loop.index0] }}. {{ ent_desc }}
 {%- endfor -%}
 {%- endfor -%}
+{# whitespace #}
 SOLUTION:
 {%- for reason in example.reasons -%}
 {# whitespace #}
 --- <{{ example.solutions[loop.index0] }}> {{ reason }}
 {%- endfor -%}
 {# whitespace #}
+{# whitespace #}
 {%- endfor -%}
 {# whitespace #}
+{# whitespace #}
+End of examples.
 {%- endif -%}
 
 TEXT: 
