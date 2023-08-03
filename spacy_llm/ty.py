@@ -74,12 +74,14 @@ class LLMTask(Protocol):
         RETURNS (Iterable[_Prompt]): Iterable with one prompt per doc.
         """
 
-    @property
-    def response_parser(self) -> TaskResponseParser:
+    def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[_Response]
+    ) -> Iterable[Doc]:
         """
-        Returns Callable able to parse LLM responses for this task.
-        RETURNS (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable able to parse LLM responses
-            for this task.
+        Parses LLM responses.
+        docs (Iterable[Doc]): Docs to map responses into.
+        respones ([Iterable[_Response]]): LLM responses.
+        RETURNS (Iterable[Doc]]): Updated docs.
         """
 
 

@@ -44,20 +44,20 @@ class LemmaTask(SerializableTask[LemmaExample]):
     def __init__(
         self,
         template: str = _DEFAULT_LEMMA_TEMPLATE_V1,
-        response_parser: Optional[TaskResponseParser] = None,
+        parse_responses: Optional[TaskResponseParser] = None,
         examples: Optional[List[LemmaExample]] = None,
     ):
         """Default lemmatization task.
 
         template (str): Prompt template passed to the model.
-        response_parser (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+        parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         """
         self._template = template
-        self._response_parser = (
-            response_parser if response_parser else self.parse_responses
+        self._parse_responses = (
+            parse_responses if parse_responses else self._parse_responses_default
         )
         self._prompt_examples = examples or []
 
@@ -80,10 +80,6 @@ class LemmaTask(SerializableTask[LemmaExample]):
                 self._prompt_examples.append(self._create_prompt_example(eg))
 
     @property
-    def response_parser(self) -> TaskResponseParser:
-        return self._response_parser
-
-    @property
     def prompt_template(self) -> str:
         return self._template
 
@@ -98,6 +94,11 @@ class LemmaTask(SerializableTask[LemmaExample]):
             yield prompt
 
     def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[str]
+    ) -> Iterable[Doc]:
+        return self._parse_responses(docs, responses)
+
+    def _parse_responses_default(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, responses):
