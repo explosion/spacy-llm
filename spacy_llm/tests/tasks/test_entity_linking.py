@@ -3,15 +3,15 @@ from pathlib import Path
 import pytest
 import spacy
 from confection import Config
-from spacy.tokens import Doc, Span
-from spacy.training import Example
-from spacy.util import make_tempdir
+from spacy.tokens import Span
+from spacy.training import Example  # noqa: F401
+from spacy.util import make_tempdir  # noqa: F401
 
-from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.tasks.lemma import LemmaTask
-from spacy_llm.util import assemble_from_config
+from spacy_llm.registry import fewshot_reader, file_reader  # noqa: F401
+from spacy_llm.tasks.lemma import LemmaTask  # noqa: F401
+from spacy_llm.util import assemble_from_config  # noqa: F401
 
-from ...tasks import make_lemma_task
+from ...tasks import make_lemma_task  # noqa: F401
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -33,7 +33,7 @@ def noop_config():
 
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinking.v1"
-    
+
     [components.llm.task.candidate_selector]
     @llm_misc = "spacy.CandidateSelectorPipeline.v1"
     nlp_path = /home/raphael/dev/spacy-projects/benchmarks/nel/training/mewsli_9/cg-default/model-best
@@ -59,12 +59,12 @@ def zeroshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinking.v1"
-    
+
     [components.llm.task.candidate_selector]
     @llm_misc = "spacy.CandidateSelectorPipeline.v1"
     nlp_path = /home/raphael/dev/spacy-projects/benchmarks/nel/training/mewsli_9/cg-default/model-best
     desc_path = /home/raphael/dev/wikid/output/en/descriptions.csv
-    
+
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
     config = {"temperature": 0}
@@ -177,7 +177,10 @@ def test_entity_linking_predict(cfg_string, request):
         Span(doc=doc, start=3, end=4, label="LOC"),  # Q100
         Span(doc=doc, start=7, end=9, label="ORG"),  # Q131371
     ]
-    res = nlp(doc)
+    doc = nlp(doc)
+    assert len(doc.ents) == 2
+    assert doc.ents[0].kb_id_ == "Q100"
+    assert doc.ents[1].kb_id_ == "Q131371"
 
 
 #

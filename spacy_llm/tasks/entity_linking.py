@@ -4,11 +4,9 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
-
 import jinja2
 import spacy
 from pydantic import BaseModel
-from spacy.kb import InMemoryLookupKB
 from spacy.language import Language
 from spacy.pipeline import EntityLinker
 from spacy.scorer import Scorer
@@ -84,7 +82,6 @@ class SpaCyPipelineCandidateLookup:
             )
 
         return self._descs[entity_id]
-
 
 
 @registry.llm_tasks("spacy.EntityLinking.v1")
@@ -169,11 +166,15 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         for doc in docs:
+            cands_ents_info, _ = self._fetch_entity_info(doc)
             yield _template.render(
                 text=EntityLinkingTask._highlight_ents_in_text(doc),
                 mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
                 mentions=[ent.text for ent in doc.ents],
-                entity_descriptions=self._fetch_entity_info(doc)[0],
+                entity_descriptions=[
+                    cands_ent_info[1] for cands_ent_info in cands_ents_info
+                ],
+                entity_ids=[cands_ent_info[0] for cands_ent_info in cands_ents_info],
                 examples=self._prompt_examples,
             )
 
@@ -181,21 +182,27 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         for doc, prompt_response in zip(docs, responses):
-            solutions = re.findall(r"<\d+>", prompt_response)
+            solutions = [
+                sol.replace("--- ", "").replace("<", "").replace(">", "")
+                for sol in re.findall(r"--- <.*>", prompt_response)
+            ]
             # Skip document if the numbers of entities and solutions don't line up.
             if len(solutions) != len(doc.ents):
-                continue
-
-
-            # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
-            # match.
-            if len(tokens) != len(parsed_response):
                 yield doc
 
-            # Assign lemmas.
-            for token, lemma_info in zip(tokens, parsed_response):
-                if len(lemma_info) > 0:
-                    token.lemma_ = lemma_info[1]
+            # Set ents anew by copying them and specifying the KB ID.
+            doc.ents = [
+                Span(
+                    doc=doc,
+                    start=ent.start,
+                    end=ent.end,
+                    label=ent.label,
+                    vector=ent.vector,
+                    vector_norm=ent.vector_norm,
+                    kb_id=solution,
+                )
+                for ent, solution in zip(doc.ents, solutions)
+            ]
 
             yield doc
 
@@ -228,55 +235,24 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
                 f"Not all entities in this document have their knowledge base IDs set ({n_set_kb_ids} out of "
                 f"{n_ents}). Ignoring example:\n{example.reference}"
             )
-            return
+            return None
 
         # Assemble example.
         mentions = [ent.text for ent in example.reference.ents]
         # Fetch candidates. If true entity not among candidates: fetch description separately and add manually.
-        entity_descriptions, solutions = self._fetch_entity_info(example.reference)
+        cands_ents_info, solutions = self._fetch_entity_info(example.reference)
         assert all([sol is not None for sol in solutions])
 
         return EntityLinkingExample(
             text=EntityLinkingTask._highlight_ents_in_text(example.reference),
             mention_str=", ".join([f"*{mention}*" for mention in mentions]),
             mentions=mentions,
-            entity_descriptions=entity_descriptions,
+            entity_descriptions=[
+                cands_ent_info[1] for cands_ent_info in cands_ents_info
+            ],
             solutions=solutions,
             reasons=[""] * len(mentions),
         )
-
-    def _fetch_entity_info(
-        self, doc: Doc
-    ) -> Tuple[List[List[Tuple[str, str]]], List[str]]:
-        """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
-        doc (Doc): Doc to fetch entity descriptions and solution numbers for. If entities' KB IDs are not set,
-            corresponding solution number will be None.
-        RETURNS (Tuple[List[List[Tuple[str, str]]], List[str]]): For each mention in doc: list of candidates
-            with ID and description, list of correct entity IDs.
-        """
-        cands_per_ent = self._candidate_selector(doc.ents)
-        entity_descriptions: List[List[str]] = []
-        solutions: List[Optional[int]] = []
-
-        for ent, cands in zip(doc.ents, cands_per_ent):
-            cand_ent_ids = list(cands.keys())
-            ent_descs: List[str] = [cands[ent_id] for ent_id in cand_ent_ids]
-
-            # In this case there is no guarantee that the correct entity description will be included.
-            if ent.kb_id == 0:
-                solutions.append(None)
-            # Correct entity not in suggested candidates: fetch description explicitly.
-            elif ent.kb_id not in cands:
-                ent_descs.append(
-                    self._candidate_selector.get_entity_description(ent.kb_id)
-                )
-                solutions.append(len(ent_descs) - 1)
-            else:
-                solutions.append(cand_ent_ids.index(ent.kb_id))
-
-            entity_descriptions.append(ent_descs)
-
-        return entity_descriptions, solutions
 
     @staticmethod
     def _highlight_ents_in_text(doc: Doc) -> str:
@@ -293,3 +269,35 @@ class EntityLinkingTask(SerializableTask[EntityLinkingExample]):
             )
 
         return text
+
+    def _fetch_entity_info(
+        self, doc: Doc
+    ) -> Tuple[List[Tuple[List[str], List[str]]], List[Optional[str]]]:
+        """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
+        doc (Doc): Doc to fetch entity descriptions and solution numbers for. If entities' KB IDs are not set,
+            corresponding solution number will be None.
+        RETURNS (Tuple[List[Tuple[List[str], List[str]]], List[str]]): For each mention in doc: list of candidates
+            with ID and description, list of correct entity IDs.
+        """
+        cands_per_ent = self._candidate_selector(doc.ents)
+        cand_entity_info: List[Tuple[List[str], List[str]]] = []
+        correct_ent_ids: List[Optional[str]] = []
+
+        for ent, cands in zip(doc.ents, cands_per_ent):
+            cand_ent_ids = list(cands.keys())
+            cand_ent_descs: List[str] = [cands[ent_id] for ent_id in cand_ent_ids]
+
+            # No KB ID known: In this case there is no guarantee that the correct entity description will be included.
+            if ent.kb_id == 0:
+                correct_ent_ids.append(None)
+            # Correct entity not in suggested candidates: fetch description explicitly.
+            elif ent.kb_id not in cands:
+                cand_ent_descs.append(
+                    self._candidate_selector.get_entity_description(ent.kb_id)
+                )
+                cand_ent_ids.append(ent.kb_id)
+            correct_ent_ids.append(ent.kb_id)
+
+            cand_entity_info.append((cand_ent_ids, cand_ent_descs))
+
+        return cand_entity_info, correct_ent_ids

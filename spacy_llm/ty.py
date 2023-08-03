@@ -133,7 +133,6 @@ class Cache(Protocol):
 
 @runtime_checkable
 class CandidateSelector(Protocol):
-<<<<<<< HEAD
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Dict[str, str]]:
         """Return list of Candidates with their descriptios for given mention and context.
         mention (Iterable[Span]): Entity mention.
@@ -143,18 +142,6 @@ class CandidateSelector(Protocol):
     def get_entity_description(self, entity_ids: Iterable[Any]) -> str:
         """Retrieve entity description.
         entity_id (Iterable[Any]): Entity IDs.
-=======
-    def __call__(self, mention: Span, context: Optional[Doc]) -> Dict[str, str]:
-        """Return list of Candidates with their descriptios for given mention and context.
-        mention (Span): Entity mention.
-        context (Optional[Doc]): Context to allow for context-supported candidate retrieval.
-        RETURNS (Dict[str, str]): Entity ID -> description.
-        """
-
-    def get_entity_description(self, entity_id: Any) -> str:
-        """Retrieve entity description.
-        entity_id (Any): Entity ID.
->>>>>>> a224efcba3376b23fc748c92c54b90f405ea8291
         RETURNS (str): Description for specified entity ID.
         """
 
