@@ -8,7 +8,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ..registry import registry
-from ..ty import ExamplesConfigType
+from ..ty import ExamplesConfigType, TaskResponseParser
 from .templates import read_template
 from .util import SerializableTask
 
@@ -44,16 +44,21 @@ class LemmaTask(SerializableTask[LemmaExample]):
     def __init__(
         self,
         template: str = _DEFAULT_LEMMA_TEMPLATE_V1,
+        response_parser: Optional[TaskResponseParser] = None,
         examples: Optional[List[LemmaExample]] = None,
     ):
         """Default lemmatization task.
 
         template (str): Prompt template passed to the model.
+        response_parser (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         """
         self._template = template
+        self._response_parser = (
+            response_parser if response_parser else self.parse_responses
+        )
         self._prompt_examples = examples or []
 
     def initialize(
@@ -73,6 +78,10 @@ class LemmaTask(SerializableTask[LemmaExample]):
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(self._create_prompt_example(eg))
+
+    @property
+    def response_parser(self) -> TaskResponseParser:
+        return self._response_parser
 
     @property
     def prompt_template(self) -> str:

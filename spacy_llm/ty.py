@@ -16,6 +16,7 @@ _Prompt = Any
 _Response = Any
 
 PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
+TaskResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
@@ -68,12 +69,18 @@ class Scorable(Protocol):
 @runtime_checkable
 class LLMTask(Protocol):
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_Prompt]:
-        ...
+        """Generate prompts from docs.
+        docs (Iterable[Doc]): Docs to generate prompts from.
+        RETURNS (Iterable[_Prompt]): Iterable with one prompt per doc.
+        """
 
-    def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[_Response]
-    ) -> Iterable[Doc]:
-        ...
+    @property
+    def response_parser(self) -> TaskResponseParser:
+        """
+        Returns Callable able to parse LLM responses for this task.
+        RETURNS (Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]): Callable able to parse LLM responses
+            for this task.
+        """
 
 
 @runtime_checkable
