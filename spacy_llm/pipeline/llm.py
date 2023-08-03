@@ -204,7 +204,7 @@ class LLMWrapper(Pipe):
                 logger.debug("LLM response for doc: %s\n%s", doc.text, response)
 
             modified_docs = iter(
-                self._task.parse_responses(noncached_doc_batch, responses_iters[0])
+                self._task.response_parser(noncached_doc_batch, responses_iters[0])
             )
 
         final_docs = []
