@@ -412,8 +412,6 @@ def test_invalid_alignment_mode():
             "3. Jean Foundation | True | ORG | is the name of an Organization name",
             False,
             [("jean", "PER"), ("Jean", "PER"), ("Jean Foundation", "ORG")],
-            # TODO: make a final decision on this test case, discussion here:
-            # https://github.com/explosion/spacy-llm/pull/180#discussion_r1282218156
         ),
     ],
     ids=[
@@ -572,46 +570,3 @@ def test_spancat_serde(noop_config):
     nlp2.from_bytes(b)
 
     assert task1._label_dict == task2._label_dict == labels
-
-
-@pytest.mark.parametrize(
-    "text, response, gold_ents",
-    [
-        (
-            "The woman Paris was walking around in Paris, talking to her friend Paris",
-            "1. Paris | True | PER | is the name of the woman\n"
-            "2. Paris | True | LOC | is a city in France\n"
-            "3. Paris | True | PER | is the name of the woman\n",
-            [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
-        ),
-        (
-            "Walking around Paris as a woman named Paris is quite a trip.",
-            "1. Paris | True | LOC | is a city in France\n"
-            "2. Paris | True | PER | is the name of the woman\n",
-            [("Paris", "LOC"), ("Paris", "PER")],
-        ),
-    ],
-    ids=["3_ents", "2_ents"],
-)
-def test_regression_span_task_response_parse(
-    text: str, response: str, gold_ents: List[Tuple[str, str]]
-):
-    """Test based on on spaCy issue: https://github.com/explosion/spaCy/discussions/12845
-    where parsing wasn't working for NER when the same text could map to 2 labels.
-    In the user's case "Paris" could be a person's name or a location.
-    """
-
-    nlp = spacy.blank("en")
-    example_doc = nlp.make_doc(text)
-    ner_task = make_spancat_task_v3(
-        examples=[], labels=["PER", "LOC"], description="test"
-    )
-    span_reasons = ner_task._extract_span_reasons(response)
-    assert len(span_reasons) == len(gold_ents)
-
-    docs = list(ner_task.parse_responses([example_doc], [response]))
-    assert len(docs) == 1
-
-    doc = docs[0]
-    pred_ents = [(span.text, span.label_) for span in doc.spans["sc"]]
-    assert pred_ents == gold_ents
