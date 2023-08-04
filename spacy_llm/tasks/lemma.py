@@ -20,6 +20,35 @@ class LemmaExample(BaseModel):
     lemmas: List[Dict[str, str]]
 
 
+def parse_responses_v1(docs: Iterable[Doc], responses: Iterable[str]) -> Iterable[Doc]:
+    for doc, prompt_response in zip(docs, responses):
+        parsed_response = [
+            [pr_part.strip() for pr_part in pr.split(":")]
+            for pr in prompt_response.replace("Lemmatized text:", "")
+            .replace("'''", "")
+            .strip()
+            .split("\n")
+        ]
+        tokens = [token for token in doc]
+
+        # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
+        # match.
+        if len(tokens) != len(parsed_response):
+            yield doc
+
+        # Assign lemmas.
+        for token, lemma_info in zip(tokens, parsed_response):
+            if len(lemma_info) > 0:
+                token.lemma_ = lemma_info[1]
+
+        yield doc
+
+
+@registry.llm_misc("spacy.LemmaParser.v1")
+def make_lemma_parser():
+    return parse_responses_v1
+
+
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = _DEFAULT_LEMMA_TEMPLATE_V1,
@@ -61,7 +90,7 @@ class LemmaTask(SerializableTask[LemmaExample]):
         """
         self._template = template
         self._parse_responses = (
-            parse_responses if parse_responses else self._parse_responses_default
+            parse_responses if parse_responses else parse_responses_v1
         )
         self._prompt_examples = examples or []
 
@@ -101,31 +130,6 @@ class LemmaTask(SerializableTask[LemmaExample]):
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
         return self._parse_responses(docs, responses)
-
-    def _parse_responses_default(
-        self, docs: Iterable[Doc], responses: Iterable[str]
-    ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, responses):
-            parsed_response = [
-                [pr_part.strip() for pr_part in pr.split(":")]
-                for pr in prompt_response.replace("Lemmatized text:", "")
-                .replace("'''", "")
-                .strip()
-                .split("\n")
-            ]
-            tokens = [token for token in doc]
-
-            # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
-            # match.
-            if len(tokens) != len(parsed_response):
-                yield doc
-
-            # Assign lemmas.
-            for token, lemma_info in zip(tokens, parsed_response):
-                if len(lemma_info) > 0:
-                    token.lemma_ = lemma_info[1]
-
-            yield doc
 
     def scorer(
         self,
