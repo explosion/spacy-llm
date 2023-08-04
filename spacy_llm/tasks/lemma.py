@@ -69,7 +69,9 @@ def make_lemma_task(
     )
 
     return LemmaTask(
-        template=template, parse_responses=parse_responses, examples=lemma_examples
+        template=template,
+        parse_responses=parse_responses if parse_responses else parse_responses_v1,
+        examples=lemma_examples,
     )
 
 
@@ -89,9 +91,8 @@ class LemmaTask(SerializableTask[LemmaExample]):
             passed, then zero-shot learning will be used.
         """
         self._template = template
-        self._parse_responses = (
-            parse_responses if parse_responses else parse_responses_v1
-        )
+        assert parse_responses is not None
+        self._parse_responses = parse_responses
         self._prompt_examples = examples or []
 
     def initialize(
