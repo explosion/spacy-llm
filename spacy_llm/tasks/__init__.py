@@ -1,7 +1,6 @@
 from spacy import Language
 
 from ..pipeline.llm import make_llm
-from ..registry import registry
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task, make_ner_task_v2
 from .noop import NoopTask, make_noop_task
@@ -12,7 +11,15 @@ from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
 
 # Register llm_TASK factories with NoOp models.
-for task_handle in registry.llm_tasks.get_all():
+for task_handle in (
+    "spacy.NER.v2",
+    "spacy.NoOp.v1",
+    "spacy.REL.v1",
+    "spacy.Sentiment.v1",
+    "spacy.SpanCat.v2",
+    "spacy.Summarization.v1",
+    "spacy.TextCat.v3",
+):
     Language.factory(
         name=f"llm_{task_handle.split('.')[1].lower()}",
         default_config={
