@@ -17,7 +17,7 @@ import spacy_llm
 from spacy_llm.models.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from spacy_llm.tasks import make_noop_task
+from spacy_llm.tasks import _LATEST_TASKS, make_noop_task
 from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
@@ -294,7 +294,7 @@ def test_pipe_labels():
 
 def test_llm_task_factories():
     """Test whether llm_TASK factories terminate successfully."""
-    for task_handle in registry.llm_tasks.get_all():
+    for task_handle in _LATEST_TASKS:
         cfg_string = f"""
         [nlp]
         lang = "en"

@@ -10,8 +10,7 @@ from .spancat import SpanCatTask, make_spancat_task, make_spancat_task_v2
 from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
 
-# Register llm_TASK factories with NoOp models.
-for task_handle in (
+_LATEST_TASKS = (
     "spacy.NER.v2",
     "spacy.NoOp.v1",
     "spacy.REL.v1",
@@ -19,7 +18,10 @@ for task_handle in (
     "spacy.SpanCat.v2",
     "spacy.Summarization.v1",
     "spacy.TextCat.v3",
-):
+)
+
+# Register llm_TASK factories with NoOp models.
+for task_handle in _LATEST_TASKS:
     Language.factory(
         name=f"llm_{task_handle.split('.')[1].lower()}",
         default_config={
