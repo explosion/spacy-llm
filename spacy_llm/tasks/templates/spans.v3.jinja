@@ -6,6 +6,9 @@ The entities you extract can overlap with each other.
 {# whitespace #}
 {%- endif -%}
 {# whitespace #}
+Entities must have one of the following labels: {{ ', '.join(labels) }}
+If a span is not an entity label it ==NONE==
+{# whitespace #}
 {{ description }}
 {# whitespace #}
 {%- if label_definitions -%}

@@ -13,7 +13,7 @@ from ..util import split_labels
 from .span import SpanExample, SpanReason, SpanTask
 from .templates import read_template
 
-_DEFAULT_NER_TEMPLATE_V3 = read_template("ner.v3")
+_DEFAULT_NER_TEMPLATE_V3 = read_template("spans.v3")
 
 
 @registry.llm_tasks("spacy.NER.v3")
