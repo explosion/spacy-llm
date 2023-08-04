@@ -47,10 +47,6 @@ def make_spancat_task_v3(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     span_examples = [SpanExample(**eg) for eg in raw_examples]
-    if not description:
-        description = (
-            f"Entities must have one of these labels: {', '.join(labels_list)}."
-        )
 
     return SpanCatTask(
         labels=labels_list,
@@ -69,8 +65,8 @@ class SpanCatTask(SpanTask):
         self,
         labels: List[str],
         template: str,
-        description: str,
         prompt_examples: List[SpanExample],
+        description: Optional[str] = None,
         label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
         normalizer: Optional[Callable[[str], str]] = None,
@@ -81,9 +77,9 @@ class SpanCatTask(SpanTask):
         super().__init__(
             labels=labels,
             template=template,
+            prompt_examples=prompt_examples,
             description=description,
             label_definitions=label_definitions,
-            prompt_examples=prompt_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,

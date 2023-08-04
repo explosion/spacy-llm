@@ -460,7 +460,9 @@ You are an expert Named Entity Recognition (NER) system.
 Your task is to accept Text as input and extract named entities.
 The entities you extract can overlap with each other.
 
-Entities must have one of these labels: PER, ORG, LOC, DESTINATION.
+Entities must have one of the following labels: DESTINATION, LOC, ORG, PER.
+If a span is not an entity label it: `==NONE==`.
+
 Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 
 Paragraph: Jack and Jill went up the hill.

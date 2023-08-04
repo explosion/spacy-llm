@@ -76,8 +76,8 @@ class SpanTask(SerializableTask[SpanExample]):
         self,
         labels: List[str],
         template: str,
-        description: str,
         prompt_examples: List[SpanExample],
+        description: Optional[str] = None,
         label_definitions: Optional[Dict[str, str]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
@@ -89,8 +89,8 @@ class SpanTask(SerializableTask[SpanExample]):
             self._normalizer(label): label for label in sorted(set(labels))
         }
         self._template = template
-        self._description = description
         self._prompt_examples = prompt_examples
+        self._description = description
         self._label_definitions = label_definitions
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode

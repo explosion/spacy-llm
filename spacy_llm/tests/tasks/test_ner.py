@@ -479,8 +479,9 @@ def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_fil
         == """
 You are an expert Named Entity Recognition (NER) system.
 Your task is to accept Text as input and extract named entities.
+Entities must have one of the following labels: LOC, ORG, PER.
+If a span is not an entity label it: `==NONE==`.
 
-Entities must have one of these labels: PER, ORG, LOC.
 Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 
 Paragraph: Jack and Jill went up the hill.
@@ -525,8 +526,9 @@ def test_jinja_template_rendering_with_label_definitions(
         == """
 You are an expert Named Entity Recognition (NER) system.
 Your task is to accept Text as input and extract named entities.
+Entities must have one of the following labels: LOC, ORG, PER.
+If a span is not an entity label it: `==NONE==`.
 
-Entities must have one of these labels: PER, ORG, LOC.
 Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
 Assume these definitions are written by an expert and follow them closely.
 PER: Person definition

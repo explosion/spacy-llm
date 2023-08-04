@@ -47,10 +47,6 @@ def make_ner_task_v3(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     span_examples = [SpanExample(**eg) for eg in raw_examples]
-    if not description:
-        description = (
-            f"Entities must have one of these labels: {', '.join(labels_list)}."
-        )
 
     return NERTask(
         labels=labels_list,
@@ -69,8 +65,8 @@ class NERTask(SpanTask):
         self,
         labels: List[str],
         template: str,
-        description: str,
         prompt_examples: List[SpanExample],
+        description: Optional[str] = None,
         label_definitions: Optional[Dict[str, str]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
@@ -79,8 +75,8 @@ class NERTask(SpanTask):
         super(NERTask, self).__init__(
             labels=labels,
             template=template,
-            description=description,
             prompt_examples=prompt_examples,
+            description=description,
             label_definitions=label_definitions,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
