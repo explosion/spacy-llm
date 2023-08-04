@@ -290,3 +290,20 @@ def test_pipe_labels():
         nlp.to_disk(tmpdir / "tst.nlp")
         nlp = spacy.load(tmpdir / "tst.nlp")
         assert nlp.pipe_labels["llm"] == ["COMPLIMENT", "INSULT"]
+
+
+def test_llm_task_factories():
+    """Test whether llm_TASK factories terminate successfully."""
+    for task_handle in registry.llm_tasks.get_all():
+        cfg_string = f"""
+        [nlp]
+        lang = "en"
+        pipeline = ["llm"]
+
+        [components]
+
+        [components.llm]
+        factory = "llm_{task_handle.split('.')[1].lower()}"
+        """
+        config = Config().from_str(cfg_string)
+        assemble_from_config(config)
