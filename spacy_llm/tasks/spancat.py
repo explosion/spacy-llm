@@ -70,7 +70,7 @@ class SpanCatTask(SpanTask):
         labels: List[str],
         template: str,
         description: str,
-        prompt_examples: Optional[List[SpanExample]] = None,
+        prompt_examples: List[SpanExample],
         label_definitions: Optional[Dict[str, str]] = None,
         spans_key: str = "sc",
         normalizer: Optional[Callable[[str], str]] = None,

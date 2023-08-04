@@ -77,8 +77,8 @@ class SpanTask(SerializableTask[SpanExample]):
         labels: List[str],
         template: str,
         description: str,
+        prompt_examples: List[SpanExample],
         label_definitions: Optional[Dict[str, str]] = None,
-        prompt_examples: Optional[List[SpanExample]] = None,
         normalizer: Optional[Callable[[str], str]] = None,
         alignment_mode: Literal["strict", "contract", "expand"] = "contract",
         case_sensitive_matching: bool = False,
@@ -90,8 +90,8 @@ class SpanTask(SerializableTask[SpanExample]):
         }
         self._template = template
         self._description = description
+        self._prompt_examples = prompt_examples
         self._label_definitions = label_definitions
-        self._prompt_examples = prompt_examples or []
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching

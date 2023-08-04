@@ -17,7 +17,7 @@ from spacy_llm.compat import Literal
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
-from spacy_llm.tasks.ner import _DEFAULT_NER_TEMPLATE_V3, NERTask, make_ner_task_v3
+from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.span import SpanReason
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
@@ -839,9 +839,7 @@ def test_regression_span_task_response_parse(
 
     nlp = spacy.blank("en")
     example_doc = nlp.make_doc(text)
-    ner_task = NERTask(
-        ["PER", "LOC"], template=_DEFAULT_NER_TEMPLATE_V3, description="test"
-    )
+    ner_task = make_ner_task_v3(examples=[], labels=["PER", "LOC"])
     span_reasons = ner_task._extract_span_reasons(response)
     assert len(span_reasons) == len(gold_ents)
 
