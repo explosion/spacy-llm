@@ -66,7 +66,7 @@ class SpaCyPipelineCandidateSelector:
         mentions (Iterable[Span]): Mentions to look up entity candidates for.
         RETURNS (Iterable[Dict[str, str]]): Dicts of entity ID -> description for all candidates, per mention.
         """
-        all_cands = self._entity_linker.get_candidates_batch(self._kb, mentions)
+        all_cands = self._kb.get_candidates_batch(mentions)
         for cands in all_cands:
             assert isinstance(cands, list)
             cands.sort(key=lambda x: x.prior_prob, reverse=True)
