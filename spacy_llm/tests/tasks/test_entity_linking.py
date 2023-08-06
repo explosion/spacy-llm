@@ -25,7 +25,7 @@ EXAMPLES_DIR = Path(__file__).parent / "examples"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-@functools.lru_cache
+@functools.lru_cache()
 def _build_el_pipeline(nlp_path: Path, desc_path: Path) -> Language:
     """Builds and persists pipeline with untrained EL component and initialized toy knowledge base.
     nlp_path (Path): Path to store pipeline under.
