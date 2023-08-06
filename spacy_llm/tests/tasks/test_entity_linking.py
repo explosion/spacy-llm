@@ -126,7 +126,7 @@ def _build_el_pipeline(nlp_path: Path, desc_path: Path) -> Language:
 
     # Write descriptions to file.
     with open(desc_path, "w") as csvfile:
-        csv_writer = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL)
+        csv_writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL, delimiter=";")
         for qid, ent_desc in entities.items():
             csv_writer.writerow([qid, ent_desc["desc"]])
 

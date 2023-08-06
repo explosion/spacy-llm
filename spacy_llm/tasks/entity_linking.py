@@ -58,7 +58,10 @@ class SpaCyPipelineCandidateSelector:
         self._entity_linker: EntityLinker = self._nlp.get_pipe("entity_linker")
         self._kb = self._entity_linker.kb
         with open(desc_path) as csvfile:
-            self._descs = {row[0]: row[1] for row in csv.reader(csvfile)}
+            self._descs = {
+                row[0]: row[1]
+                for row in csv.reader(csvfile, quoting=csv.QUOTE_ALL, delimiter=";")
+            }
         self._top_n = top_n
 
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Dict[str, str]]:
