@@ -518,19 +518,19 @@ SOLUTION:
     )
 
 
-def test_external_template_actually_loads():
+def test_external_template_actually_loads(tmp_path):
     template_path = str(TEMPLATES_DIR / "entity_linking.jinja2")
     template = file_reader(template_path)
     text = "Alice and Bob went to the supermarket"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(text)
 
+    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinking_task(
         template=template,
         examples=None,
         candidate_selector=SpaCyPipelineCandidateSelector(
-            nlp_path="/home/raphael/dev/spacy-projects/benchmarks/nel/training/mewsli_9/cg-default/model-best",
-            desc_path="/home/raphael/dev/wikid/output/en/descriptions.csv",
+            nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
         ),
     )
 
