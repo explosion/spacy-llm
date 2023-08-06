@@ -62,9 +62,9 @@ class SpaCyPipelineCandidateSelector:
             for row in csv.reader(csvfile, quoting=csv.QUOTE_ALL, delimiter=";"):
                 try:
                     self._descs[row[0]] = row[1]
-                except IndexError as ex:
+                except IndexError as ex:  # noqa: F841
                     print(row)  # noqa: T201
-                    raise ex
+                    continue
             # self._descs = {
             #     row[0]: row[1]
             #     for row in csv.reader(csvfile, quoting=csv.QUOTE_ALL, delimiter=";")
