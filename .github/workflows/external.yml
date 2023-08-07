@@ -3,6 +3,8 @@ name: External tests
 on:
   schedule:
     - cron: "0 0 * * *"
+  issue_comment:
+    types: [created]
   workflow_dispatch:
 
 env:
@@ -15,9 +17,23 @@ env:
 jobs:
   run:
     runs-on: ubuntu-latest
+    if: "github.repository_owner == 'explosion' && (contains(github.event.comment.body, 'please test external') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')"
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Check user for team affiliation
+        uses: tspascoal/get-user-teams-membership@v2
+        id: teamAffiliation
+        with:
+          GITHUB_TOKEN: ${{ secrets.ORG_READ_PAT }}
+          username: ${{ github.actor }}
+          team: explosion/spacy
+      - name: Stop workflow if user is no member
+        if: ${{ steps.teamAffiliation.outputs.isTeamMember == false }}
+        run: |
+          echo "You have no rights to trigger this job."
+          exit 1
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
