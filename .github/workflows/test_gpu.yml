@@ -9,7 +9,7 @@ on:
 
 jobs:
   run:
-    if: "(github.repository_owner == 'explosion' && (contains(github.event.comment.body, 'please test gpu') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'))"
+    if: "github.repository_owner == 'explosion' && (contains(github.event.comment.body, 'please test gpu') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')"
     runs-on: ubuntu-latest
 
     steps:
