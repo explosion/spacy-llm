@@ -20,7 +20,7 @@ export OPENAI_API_ORG="org-..."
 Then, you can run the pipeline on a sample text via:
 
 ```sh
-python run_pipeline.py [TEXT] [PATH TO CONFIG]
+python run_pipeline.py [TEXT] [PATH TO CONFIG] [PATH TO FILE WITH EXAMPLES]
 ```
 
 For example:
