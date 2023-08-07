@@ -3,12 +3,15 @@ name: GPU tests
 on:
   schedule:
     - cron: "0 0 * * *"
+  issue_comment:
+    types: [created]
   workflow_dispatch:
 
 jobs:
   run:
-    if: github.repository_owner == 'explosion'
+    if: "(github.repository_owner == 'explosion' && (contains(github.event.comment.body, 'please test gpu') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'))"
     runs-on: ubuntu-latest
+
     steps:
       - name: Trigger buildkite build
         uses: buildkite/trigger-pipeline-action@v1.2.0
