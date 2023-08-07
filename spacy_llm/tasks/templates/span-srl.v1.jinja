@@ -19,6 +19,38 @@ Predicate: <string corresponding to the current Predicate>
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
+{%- if examples -%}
+{# whitespace #}
+Below are a few similar examples (only use these as a guide):
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+Example Text:
+'''
+{{ example.text }}
+'''
+{# whitespace #}
+Step 1: Extract the Predicates in '''Example Text''':
+{# whitespace #}
+Predicates: {{ example.predicates|map(attribute='text')|join(', ') }}
+{# whitespace #}
+Step 2: For each Predicate, extract the Sematic Roles in '''Example Text''':
+{# whitespace #}
+{%- for predicate, relations in example.relations -%}
+Predicate: {{predicate.text}}
+{# whitespace #}
+{%- for relation in relations -%}
+{{relation.label}}: {{relation.role.text}}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
 Here is the text that needs labeling:
 {# whitespace #}
 Text:

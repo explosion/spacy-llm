@@ -30,8 +30,16 @@ python run_pipeline.py \
     "Laura bought an apartment last month in Berlin." \
     ./zeroshot.cfg
 ```
+or, for few-shot:
+```sh
+python run_pipeline.py \
+    "Laura bought an apartment last month in Berlin." \
+    ./fewshot.cfg \
+    ./examples.jsonl
+```
+
 LLM-response:
-```shell
+```sh
 LLM response for doc: Laura bought an apartment last month in Boston.
 
 Step 1: Extract the Predicates for the Text
@@ -47,7 +55,7 @@ ARG-M-TMP: last month
 ARG-M-LOC: in Boston
 ```
 std output:
-```shell
+```sh
 Text: Laura bought an apartment last month in Boston.
 SRL Output:
 Predicates: ['bought']

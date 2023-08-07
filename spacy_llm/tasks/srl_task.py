@@ -1,9 +1,10 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union, Any
 
+import jinja2
 import re
+import warnings
 
 from collections import defaultdict
-import jinja2
 from pydantic import BaseModel, ValidationError
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -216,6 +217,54 @@ class SRLTask(SpanTask[SRLExample]):
         self._verbose = verbose
         self._check_extensions()
 
+    def _check_label_consistency(self) -> List[SRLExample]:
+        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
+        RETURNS (List[SRLExample]): List of SpanExamples with valid labels.
+        """
+        assert self._prompt_examples
+        srl_examples = [SRLExample(**eg.dict()) for eg in self._prompt_examples]
+        example_labels = {
+            self._normalizer(r.label): r.label
+            for example in srl_examples
+            for p, rs in example.relations
+            for r in rs
+        }
+        unspecified_labels = {
+            example_labels[key]
+            for key in (set(example_labels.keys()) - set(self._label_dict.keys()))
+        }
+        if not set(example_labels.keys()) <= set(self._label_dict.keys()):
+            warnings.warn(
+                f"Examples contain labels that are not specified in the task configuration. The latter contains the "
+                f"following labels: {sorted(list(set(self._label_dict.values())))}. Labels in examples missing from "
+                f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
+                f"and example labels are consistent."
+            )
+
+        # Return examples without non-declared roles. the roles within a predicate that have undeclared role labels
+        # are discarded.
+        return [
+            example
+            for example in [
+                SRLExample(
+                    text=example.text,
+                    predicates=example.predicates,
+                    relations=[
+                        (
+                            p,
+                            [
+                                r
+                                for r in rs
+                                if self._normalizer(r.label) in self._label_dict
+                            ],
+                        )
+                        for p, rs in example.relations
+                    ],
+                )
+                for example in srl_examples
+            ]
+        ]
+
     @classmethod
     def _check_extensions(cls):
         """Add `predicates` extension if need be.
@@ -229,7 +278,7 @@ class SRLTask(SpanTask[SRLExample]):
 
     def initialize(
         self,
-        get_examples: Callable[[], Iterable["Example"]],
+        get_examples: Callable[[], Iterable["SRLExample"]],
         nlp: Language,
         labels: List[str] = [],
     ) -> None:
@@ -278,6 +327,7 @@ class SRLTask(SpanTask[SRLExample]):
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
                 predicates=predicates,
+                examples=self._prompt_examples,
             )
 
             yield prompt

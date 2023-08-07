@@ -29,12 +29,11 @@ def zeroshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.SRL.v1"
-    labels = ARG-0,ARG-1,ARG-2,ARG-M-LOC,ARG-M-TMP
+    labels = ARG-0,ARG-1,ARG-M-TMP,ARG-M-LOC
     
     [components.llm.task.label_definitions]
     ARG-0 = "Agent"
     ARG-1 = "Patient or Theme"
-    ARG-2 = "ARG-2"
     ARG-M-TMP = "Temporal Modifier"
     ARG-M-LOC = "Location Modifier"
 
@@ -44,8 +43,42 @@ def zeroshot_cfg_string():
 
 
 @pytest.fixture
+def fewshot_cfg_string():
+    return f"""
+    [paths]
+    examples = null
+
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.SRL.v1"
+    labels = ARG-0,ARG-1,ARG-M-TMP,ARG-M-LOC
+
+    [components.llm.task.label_definitions]
+    ARG-0 = "Agent"
+    ARG-1 = "Patient or Theme"
+    ARG-M-TMP = "Temporal Modifier"
+    ARG-M-LOC = "Location Modifier"
+    
+    [components.llm.task.examples]
+    @misc = "spacy.FewShotReader.v1"
+    path = {str((Path(__file__).parent / "examples" / "span_srl.jsonl"))}
+
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
+    """
+
+
+@pytest.fixture
 def task():
-    text = "We love this sentence in Berlin right now ."
+    text = "We love this sentence right now in Berlin"
     predicate = {"text": "love", "start_char": 3, "end_char": 7}
     srl_example = SRLExample(
         **{
@@ -68,17 +101,17 @@ def task():
                             },
                         },
                         {
-                            "label": "ARG-M-LOC",
+                            "label": "ARG-M-TMP",
                             "role": {
-                                "text": "in Berlin",
+                                "text": "right now",
                                 "start_char": 22,
                                 "end_char": 31,
                             },
                         },
                         {
-                            "label": "ARG-M-TMP",
+                            "label": "ARG-M-LOC",
                             "role": {
-                                "text": "right now",
+                                "text": "in Berlin",
                                 "start_char": 32,
                                 "end_char": 41,
                             },
@@ -106,7 +139,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
     task = pipe.task
     labels = orig_config["components"]["llm"]["task"]["labels"]
-    labels = split_labels(labels)
+    labels = sorted(split_labels(labels))
     assert isinstance(task, Labeled)
     assert task.labels == tuple(labels)
     assert set(pipe.labels) == set(task.labels)
@@ -114,7 +147,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string"])
+@pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_rel_predict(task, cfg_string, request):
     """Use OpenAI to get REL results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
