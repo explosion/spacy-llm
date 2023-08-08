@@ -30,7 +30,7 @@ def zeroshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.SRL.v1"
     labels = ARG-0,ARG-1,ARG-M-TMP,ARG-M-LOC
-    
+
     [components.llm.task.label_definitions]
     ARG-0 = "Agent"
     ARG-1 = "Patient or Theme"
@@ -66,7 +66,7 @@ def fewshot_cfg_string():
     ARG-1 = "Patient or Theme"
     ARG-M-TMP = "Temporal Modifier"
     ARG-M-LOC = "Location Modifier"
-    
+
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "span_srl.jsonl"))}
