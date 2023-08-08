@@ -1,4 +1,3 @@
-import warnings
 from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
@@ -9,7 +8,6 @@ from spacy.training import Example
 from spacy.util import filter_spans
 
 from ...compat import Literal
-from ...errors import Warnings
 from ...registry import registry
 from ...ty import ExamplesConfigType
 from ...util import split_labels
@@ -47,12 +45,8 @@ def make_ner_task(
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
     """
-    warnings.warn(
-        Warnings.LLMW001.format(legacy_task="spacy.NER.v1", new_task="spacy.NER.v3"),
-        DeprecationWarning,
-    )
-
     labels_list = split_labels(labels)
+
     span_examples = (
         [SpanExample(**eg) for eg in examples()] if callable(examples) else examples
     )
@@ -97,10 +91,6 @@ def make_ner_task_v2(
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
     """
-    warnings.warn(
-        Warnings.LLMW001.format(legacy_task="spacy.NER.v2", new_task="spacy.NER.v3"),
-        DeprecationWarning,
-    )
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     span_examples = [SpanExample(**eg) for eg in raw_examples] if raw_examples else None

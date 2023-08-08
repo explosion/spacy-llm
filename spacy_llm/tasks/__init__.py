@@ -1,7 +1,3 @@
-from .legacy.ner import make_ner_task as make_ner_task_v1
-from .legacy.ner import make_ner_task_v2
-from .legacy.spancat import make_spancat_task as make_spancat_task_v1
-from .legacy.spancat import make_spancat_task_v2
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task_v3
 from .noop import NoopTask, make_noop_task
@@ -13,14 +9,10 @@ from .textcat import TextCatTask, make_textcat_task
 
 __all__ = [
     "make_lemma_task",
-    "make_ner_task_v1",
-    "make_ner_task_v2",
     "make_ner_task_v3",
     "make_noop_task",
     "make_rel_task",
     "make_sentiment_task",
-    "make_spancat_task_v1",
-    "make_spancat_task_v2",
     "make_spancat_task_v3",
     "make_summarization_task",
     "make_textcat_task",

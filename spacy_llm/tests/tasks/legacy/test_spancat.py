@@ -10,9 +10,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
-from spacy_llm.tasks.legacy import SpanCatTask
-from spacy_llm.tasks.legacy import make_spancat_task as make_spancat_task_v1
-from spacy_llm.tasks.legacy import make_spancat_task_v2
+from spacy_llm.tasks.legacy import SpanCatTask, make_spancat_task_v2
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -78,7 +76,6 @@ def fewshot_cfg_string():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string", "zeroshot_cfg_string"])
 def test_spancat_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
@@ -100,7 +97,6 @@ def test_spancat_config(cfg_string, request):
 
 
 @pytest.mark.external
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_spancat_predict(cfg_string, request):
     """Use OpenAI to get zero-shot NER results.
@@ -117,7 +113,6 @@ def test_spancat_predict(cfg_string, request):
 
 
 @pytest.mark.external
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_spancat_io(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
@@ -171,7 +166,6 @@ def test_ensure_offsets_correspond_to_substrings(
     assert result_strings == found_substrings
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "text,response,gold_spans",
     [
@@ -212,7 +206,6 @@ def test_spancat_zero_shot_task(text, response, gold_spans):
     assert pred_spans == gold_spans
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "response,normalizer,gold_spans",
     [
@@ -272,7 +265,6 @@ def test_spancat_labels(response, normalizer, gold_spans):
     assert pred_spans == gold_spans
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "response,alignment_mode,gold_spans",
     [
@@ -322,14 +314,12 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
     assert pred_spans == gold_spans
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
         make_spancat_task_v2(labels=labels, alignment_mode="invalid")
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "response,case_sensitive,single_match,gold_spans",
     [
@@ -375,7 +365,6 @@ def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
     assert pred_spans == gold_spans
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_jinja_template_rendering_without_examples():
     """Test if jinja template renders as we expected
 
@@ -411,7 +400,6 @@ Alice and Bob went to the supermarket
     )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "examples_path",
     [
@@ -480,7 +468,6 @@ Alice and Bob went to the supermarket
     )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_example_not_following_basemodel():
     wrong_example = [
         {
@@ -497,7 +484,6 @@ def test_example_not_following_basemodel():
         make_spancat_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.fixture
 def noop_config():
     return """
@@ -524,7 +510,6 @@ def noop_config():
     """
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_spancat_scoring(noop_config, n_detections):
     config = Config().from_str(noop_config)
@@ -548,7 +533,6 @@ def test_spancat_scoring(noop_config, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_spancat_init(noop_config, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
@@ -595,7 +579,6 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_spancat_serde(noop_config):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
@@ -618,11 +601,3 @@ def test_spancat_serde(noop_config):
     nlp2.from_bytes(b)
 
     assert task1._label_dict == task2._label_dict == labels
-
-
-def test_deprecation_warning():
-    labels = "PER,ORG,LOC"
-    with pytest.warns(DeprecationWarning):
-        make_spancat_task_v1(labels=labels)
-    with pytest.warns(DeprecationWarning):
-        make_spancat_task_v2(labels=labels)

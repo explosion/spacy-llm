@@ -13,9 +13,7 @@ from spacy.util import make_tempdir
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
-from spacy_llm.tasks.legacy.ner import NERTask
-from spacy_llm.tasks.legacy.ner import make_ner_task as make_ner_task_v1
-from spacy_llm.tasks.legacy.ner import make_ner_task_v2
+from spacy_llm.tasks.legacy.ner import NERTask, make_ner_task_v2
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -171,7 +169,6 @@ def ext_template_cfg_string():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "cfg_string",
     [
@@ -211,7 +208,6 @@ def test_ner_config(cfg_string, request):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "cfg_string",
     [
@@ -240,7 +236,6 @@ def test_ner_predict(cfg_string, request):
 
 
 @pytest.mark.external
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "cfg_string",
     [
@@ -303,7 +298,6 @@ def test_ensure_offsets_correspond_to_substrings(
     assert result_strings == found_substrings
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "text,response,gold_ents",
     [
@@ -340,7 +334,6 @@ def test_ner_zero_shot_task(text, response, gold_ents):
     assert pred_ents == gold_ents
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "response,normalizer,gold_ents",
     [
@@ -400,7 +393,6 @@ def test_ner_labels(response, normalizer, gold_ents):
     assert pred_ents == gold_ents
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "response,alignment_mode,gold_ents",
     [
@@ -450,14 +442,12 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
     assert pred_ents == gold_ents
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
         make_ner_task_v2(labels=labels, alignment_mode="invalid")  # type: ignore
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "response,case_sensitive,single_match,gold_ents",
     [
@@ -503,7 +493,6 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
     assert pred_ents == gold_ents
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_jinja_template_rendering_without_examples():
     """Test if jinja template renders as we expected
 
@@ -538,7 +527,6 @@ Alice and Bob went to the supermarket
     )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "examples_path",
     [
@@ -606,7 +594,6 @@ Alice and Bob went to the supermarket
     )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_jinja_template_rendering_with_label_definitions():
     """Test if jinja2 template renders as expected
 
@@ -653,7 +640,6 @@ Alice and Bob went to the supermarket
     )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_example_not_following_basemodel():
     wrong_example = [
         {
@@ -670,7 +656,6 @@ def test_example_not_following_basemodel():
             make_ner_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "ner.jinja2")
     template = file_reader(template_path)
@@ -719,7 +704,6 @@ def noop_config():
     """
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_ner_scoring(noop_config, n_detections):
     config = Config().from_str(noop_config)
@@ -743,7 +727,6 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_ner_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
@@ -790,7 +773,6 @@ def test_ner_init(noop_config, n_prompt_examples: int):
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_ner_serde(noop_config):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
@@ -815,7 +797,6 @@ def test_ner_serde(noop_config):
     assert task1._label_dict == task2._label_dict == labels
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_ner_to_disk(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
@@ -849,7 +830,6 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     assert task1._label_dict == task2._label_dict == labels
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_label_inconsistency():
     """Test whether inconsistency between specified labels and labels in examples is detected."""
     cfg = f"""
@@ -900,11 +880,3 @@ def test_label_inconsistency():
         "LOCATION": ["hill"],
         "PERSON": ["Jack", "Jill"],
     }
-
-
-def test_deprecation_warning():
-    labels = "PER,ORG,LOC"
-    with pytest.warns(DeprecationWarning):
-        make_ner_task_v1(labels=labels)
-    with pytest.warns(DeprecationWarning):
-        make_ner_task_v2(labels=labels)
