@@ -21,6 +21,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: LouisBrunner/checks-action@v1.6.1
+        if: always()
+        with:
+          token: ${{ secrets.ORG_READ_PAT }}
+          name: Run normal and external tests
+          conclusion: ${{ job.status }}
+          output: |
+            {"summary":"${{ steps.test.outputs.summary }}"}
 
       - name: Check user for team affiliation
         uses: tspascoal/get-user-teams-membership@v2
@@ -74,6 +82,7 @@ jobs:
       - name: Run usage tests
         shell: bash
         run: python -m pytest --pyargs usage_examples -x
+
 #      - name: Report Status
 #        if: always()
 #        uses: ravsamhq/notify-slack-action@v1
