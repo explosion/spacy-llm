@@ -6,6 +6,8 @@ on:
   issue_comment:
     types: [created]
   workflow_dispatch:
+  pull_request:
+    types: [ labeled, opened, synchronize, reopened ]
 
 env:
   MODULE_NAME: "spacy_llm"
@@ -17,7 +19,7 @@ env:
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: "github.repository_owner == 'explosion' && (contains(github.event.comment.body, 'please test external') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')"
+    if: "github.repository_owner == 'explosion' && (contains(github.event.pull_request.labels.*.name, 'Test external') || contains(github.event.comment.body, 'please test external') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')"
 
     steps:
       - uses: actions/checkout@v3
