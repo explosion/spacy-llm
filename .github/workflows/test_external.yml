@@ -24,7 +24,7 @@ jobs:
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
         with:
-          token: ${{ secrets.ORG_READ_PAT }}
+          token: ${{ secrets.CHECK_PAT }}
           name: Run normal and external tests
           conclusion: ${{ job.status }}
           output: |
