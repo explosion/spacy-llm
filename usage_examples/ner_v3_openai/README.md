@@ -2,7 +2,7 @@
 
 
 This example shows how you can use a model from OpenAI for Named Entity Recognition (NER).
-The NER prompt is based on the the [PromptNER](https://arxiv.org/abs/2305.15444) paper and
+The NER prompt is based on the [PromptNER](https://arxiv.org/abs/2305.15444) paper and
 utilizes Chain-of-Thought reasoning to extract named entities. It requires at least 1 example
 and does not work with zeroshot settings.
 
