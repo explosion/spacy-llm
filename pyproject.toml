@@ -20,7 +20,6 @@ filterwarnings = [
     "ignore:^.*You are trying to use a chat model. This way of initializing it is no longer supported. Instead, please use.*:UserWarning",
     "ignore:^.*Xformers is not installed correctly.*:",
     "ignore:^.*The 'warn' method is deprecated, use 'warning' instead.*:DeprecationWarning",
-    "ignore::pydantic.warnings.PydanticDeprecatedSince20"
 ]
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API",
