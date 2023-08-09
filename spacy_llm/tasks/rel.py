@@ -1,7 +1,13 @@
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import jinja2
-from pydantic import BaseModel, Field, ValidationError, validator
+
+try:
+    from pydantic.v1 import validator
+except ImportError:
+    from pydantic import field_validator as validator
+
+from pydantic import BaseModel, Field, ValidationError
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
