@@ -5,7 +5,7 @@ import jinja2
 try:
     from pydantic.v1 import validator
 except ImportError:
-    from pydantic import field_validator as validator
+    from pydantic import validator
 
 from pydantic import BaseModel, Field, ValidationError
 from spacy.language import Language
