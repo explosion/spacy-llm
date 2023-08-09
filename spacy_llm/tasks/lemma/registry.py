@@ -11,11 +11,6 @@ def make_lemma_parser() -> TaskResponseParser:
     return parse_responses_v1
 
 
-@registry.llm_misc("spacy.LemmaFewshotExample.v1")
-def make_lemma_fewshot_example() -> TaskResponseParser:
-    return parse_responses_v1
-
-
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,

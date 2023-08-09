@@ -23,6 +23,7 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
 
         template (str): Prompt template passed to the model.
         parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+        fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
