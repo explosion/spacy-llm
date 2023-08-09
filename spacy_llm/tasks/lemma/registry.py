@@ -1,6 +1,4 @@
-from typing import Optional
-
-from black.parsing import Type
+from typing import Optional, Type
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
@@ -35,9 +33,8 @@ def make_lemma_task(
         passed, then zero-shot learning will be used.
     """
     raw_examples = examples() if callable(examples) else examples
-    fewshot_example_type = (
-        fewshot_example_type if fewshot_example_type else LemmaExample
-    )
+    if fewshot_example_type is None:
+        fewshot_example_type = LemmaExample
     lemma_examples = (
         [fewshot_example_type(**eg) for eg in raw_examples] if raw_examples else None
     )
