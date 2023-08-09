@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 import jinja2
 from spacy.language import Language
@@ -6,20 +6,20 @@ from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import FewshotExampleType, TaskResponseParser
 from ..templates import read_template
-from ..util import ExampleType, SerializableTask
+from ..util import SerializableTask
 
 DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
 
 
-class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
+class LemmaTask(SerializableTask[FewshotExampleType]):
     def __init__(
         self,
         template: str = DEFAULT_LEMMA_TEMPLATE_V1,
         parse_responses: Optional[TaskResponseParser] = None,
-        fewshot_example_type: Optional[Type[FewshotExample]] = None,
-        examples: Optional[List[ExampleType]] = None,
+        fewshot_example_type: Optional[Type[FewshotExampleType]] = None,
+        examples: Optional[List[FewshotExampleType]] = None,
     ):
         """Default lemmatization task.
 
@@ -91,6 +91,6 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
         return ["_template"]
 
     @property
-    def _Example(self) -> Type[FewshotExample]:
+    def _Example(self) -> Type[FewshotExampleType]:
         assert self._fewshot_example_type is not None
         return self._fewshot_example_type

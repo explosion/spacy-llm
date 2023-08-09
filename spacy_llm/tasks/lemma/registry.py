@@ -1,7 +1,7 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExampleType, TaskResponseParser
 from .examples import LemmaExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
@@ -16,7 +16,7 @@ def make_lemma_parser() -> TaskResponseParser:
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
     parse_responses: Optional[TaskResponseParser] = None,
-    fewshot_example_type: Optional[Type[FewshotExample]] = None,
+    fewshot_example_type: Optional[Type[FewshotExampleType]] = None,
     examples: ExamplesConfigType = None,
 ):
     """Lemma.v1 task factory.
@@ -29,15 +29,15 @@ def make_lemma_task(
         passed, then zero-shot learning will be used.
     """
     raw_examples = examples() if callable(examples) else examples
-    if fewshot_example_type is None:
-        fewshot_example_type = LemmaExample
+    parse_responses = parse_responses if parse_responses else parse_responses_v1
+    example_type = fewshot_example_type or LemmaExample
     lemma_examples = (
-        [fewshot_example_type(**eg) for eg in raw_examples] if raw_examples else None
+        [example_type(**eg) for eg in raw_examples] if raw_examples else None
     )
 
     return LemmaTask(
         template=template,
-        parse_responses=parse_responses if parse_responses else parse_responses_v1,
+        parse_responses=parse_responses,
         fewshot_example_type=fewshot_example_type,
         examples=lemma_examples,
     )

@@ -11,7 +11,7 @@ from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import Protocol, runtime_checkable
+from .compat import Protocol, Self, runtime_checkable
 from .models import langchain
 
 _Prompt = Any
@@ -60,14 +60,15 @@ class Serializable(Protocol):
 
 
 class FewshotExample(abc.ABC, BaseModel):
-    """Fewshot example class. See https://stackoverflow.com/a/46064289 for typing of factory function."""
+    """Fewshot example class."""
 
     @classmethod
     @abc.abstractmethod
-    def generate(cls: Type[FewshotExampleType], example: Example) -> FewshotExampleType:
+    def generate(cls, example: Example) -> Self:
         """Create a fewshot example from a spaCy example.
         example (Example): spaCy example.
         """
+        ...
 
 
 @runtime_checkable
@@ -87,6 +88,7 @@ class LLMTask(Protocol):
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[_Prompt]): Iterable with one prompt per doc.
         """
+        ...
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[_Response]
@@ -97,6 +99,7 @@ class LLMTask(Protocol):
         respones ([Iterable[_Response]]): LLM responses.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
+        ...
 
 
 @runtime_checkable
