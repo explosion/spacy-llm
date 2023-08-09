@@ -31,10 +31,12 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
             passed, then zero-shot learning will be used.
         """
         self._template = template
-        assert parse_responses is not None
         self._parse_responses = parse_responses
         self._prompt_examples = examples or []
         self._fewshot_example_type = fewshot_example_type
+
+        assert callable(self._parse_responses)
+        assert self._fewshot_example_type is not None
 
     def initialize(
         self,
@@ -72,6 +74,7 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
+        assert callable(self._parse_responses)
         return self._parse_responses(docs, responses)
 
     def scorer(
@@ -89,5 +92,5 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
 
     @property
     def _Example(self) -> Type[FewshotExample]:
-        assert self._fewshot_example_type
+        assert self._fewshot_example_type is not None
         return self._fewshot_example_type
