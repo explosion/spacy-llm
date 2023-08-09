@@ -2,8 +2,9 @@ from typing import Optional, Type
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
-from .task import LemmaTask
-from .util import DEFAULT_LEMMA_TEMPLATE_V1, LemmaExample, parse_responses_v1
+from .examples import LemmaExample
+from .parser import parse_responses_v1
+from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 
 
 @registry.llm_misc("spacy.LemmaParser.v1")

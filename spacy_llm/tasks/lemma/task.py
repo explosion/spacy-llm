@@ -7,8 +7,10 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...ty import FewshotExample, TaskResponseParser
+from ..templates import read_template
 from ..util import ExampleType, SerializableTask
-from .util import DEFAULT_LEMMA_TEMPLATE_V1
+
+DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
 
 
 class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
