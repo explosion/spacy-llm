@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Type
 
 import jinja2
 from spacy.language import Language
@@ -6,17 +6,18 @@ from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import TaskResponseParser
-from ..util import SerializableTask
-from .util import DEFAULT_LEMMA_TEMPLATE_V1, LemmaExample
+from ...ty import FewshotExample, TaskResponseParser
+from ..util import ExampleType, SerializableTask
+from .util import DEFAULT_LEMMA_TEMPLATE_V1
 
 
-class LemmaTask(SerializableTask[LemmaExample]):
+class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
     def __init__(
         self,
         template: str = DEFAULT_LEMMA_TEMPLATE_V1,
         parse_responses: Optional[TaskResponseParser] = None,
-        examples: Optional[List[LemmaExample]] = None,
+        fewshot_example_type: Optional[Type[FewshotExample]] = None,
+        examples: Optional[List[ExampleType]] = None,
     ):
         """Default lemmatization task.
 
@@ -30,6 +31,7 @@ class LemmaTask(SerializableTask[LemmaExample]):
         assert parse_responses is not None
         self._parse_responses = parse_responses
         self._prompt_examples = examples or []
+        self._fewshot_example_type = fewshot_example_type
 
     def initialize(
         self,
@@ -47,7 +49,8 @@ class LemmaTask(SerializableTask[LemmaExample]):
         """
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(self._create_prompt_example(eg))
+                assert self._fewshot_example_type
+                self._prompt_examples.append(self._fewshot_example_type.generate(eg))
 
     @property
     def prompt_template(self) -> str:
@@ -82,10 +85,6 @@ class LemmaTask(SerializableTask[LemmaExample]):
         return ["_template"]
 
     @property
-    def _Example(self) -> Type[LemmaExample]:
-        return LemmaExample
-
-    def _create_prompt_example(self, example: Example) -> LemmaExample:
-        """Create a lemma prompt example from a spaCy example."""
-        lemma_dict = [{t.text: t.lemma_} for t in example.reference]
-        return LemmaExample(text=example.reference.text, lemmas=lemma_dict)
+    def _Example(self) -> Type[FewshotExample]:
+        assert self._fewshot_example_type
+        return self._fewshot_example_type

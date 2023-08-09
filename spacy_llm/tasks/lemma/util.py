@@ -1,16 +1,22 @@
 from typing import Dict, Iterable, List
 
-from pydantic import BaseModel
 from spacy.tokens import Doc
+from spacy.training import Example
 
+from ...ty import FewshotExample
 from ..templates import read_template
 
 DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
 
 
-class LemmaExample(BaseModel):
+class LemmaExample(FewshotExample):
     text: str
     lemmas: List[Dict[str, str]]
+
+    @classmethod
+    def generate(cls, example: Example) -> "LemmaExample":
+        lemma_dict = [{t.text: t.lemma_} for t in example.reference]
+        return LemmaExample(text=example.reference.text, lemmas=lemma_dict)
 
 
 def parse_responses_v1(docs: Iterable[Doc], responses: Iterable[str]) -> Iterable[Doc]:

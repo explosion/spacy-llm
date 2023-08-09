@@ -1,3 +1,4 @@
+import abc
 import inspect
 import typing
 import warnings
@@ -5,6 +6,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 from typing import cast
 
+from pydantic import BaseModel
 from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
@@ -14,6 +16,7 @@ from .models import langchain
 
 _Prompt = Any
 _Response = Any
+FewshotExampleType = typing.TypeVar("FewshotExampleType", bound="FewshotExample")
 
 PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
 TaskResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
@@ -54,6 +57,17 @@ class Serializable(Protocol):
         exclude: Tuple[str] = cast(Tuple[str], tuple()),
     ):
         ...
+
+
+class FewshotExample(abc.ABC, BaseModel):
+    """Fewshot example class. See https://stackoverflow.com/a/46064289 for typing of factory function."""
+
+    @classmethod
+    @abc.abstractmethod
+    def generate(cls: Type[FewshotExampleType], example: Example) -> FewshotExampleType:
+        """Create a fewshot example from a spaCy example.
+        example (Example): spaCy example.
+        """
 
 
 @runtime_checkable
