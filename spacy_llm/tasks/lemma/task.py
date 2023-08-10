@@ -67,7 +67,19 @@ class LemmaTask(SerializableTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        return self._parse_responses(docs, responses)
+        for doc, parsed_response in zip(docs, self._parse_responses(responses)):
+            tokens = [token for token in doc]
+            # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
+            # match.
+            if len(tokens) != len(parsed_response):
+                yield doc
+
+            # Assign lemmas.
+            for token, lemma_info in zip(tokens, parsed_response):
+                if len(lemma_info) > 0:
+                    token.lemma_ = lemma_info[1]
+
+            yield doc
 
     def scorer(
         self,

@@ -1,63 +1,40 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 import jinja2
-from pydantic import BaseModel
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ..registry import registry
-from ..ty import ExamplesConfigType
-from .templates import read_template
-from .util import SerializableTask
+from ...ty import FewshotExample, TaskResponseParserType
+from ..templates import read_template
+from ..util import SerializableTask
+from .examples import SentimentExample
 
-_DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
-
-
-class SentimentExample(BaseModel):
-    text: str
-    score: float
-
-
-@registry.llm_tasks("spacy.Sentiment.v1")
-def make_sentiment_task(
-    template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
-    examples: ExamplesConfigType = None,
-    field: str = "sentiment",
-):
-    """Sentiment.v1 task factory.
-
-    template (str): Prompt template passed to the model.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
-    field (str): The name of the doc extension in which to store the summary.
-    """
-    raw_examples = examples() if callable(examples) else examples
-    sentiment_examples = (
-        [SentimentExample(**eg) for eg in raw_examples] if raw_examples else None
-    )
-
-    return SentimentTask(template=template, examples=sentiment_examples, field=field)
+DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
 
 
 class SentimentTask(SerializableTask):
     def __init__(
         self,
-        template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
+        template: str,
+        parse_responses: TaskResponseParserType,
+        fewshot_example_type: Type[FewshotExample],
+        field: str,
         examples: Optional[List[SentimentExample]] = None,
-        field: str = "sentiment",
     ):
         """Sentiment analysis task.
 
         template (str): Prompt template passed to the model.
+        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        field (str): The name of the doc extension in which to store the sentiment score.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
-        field (str): The name of the doc extension in which to store the summary.
         """
-        super().__init__(SentimentExample)
+        super().__init__(fewshot_example_type)
         self._template = template
+        self._parse_responses = parse_responses
         self._examples = examples
         self._prompt_examples = examples or []
         self._field = field
@@ -88,10 +65,7 @@ class SentimentTask(SerializableTask):
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(
-                    SentimentExample(
-                        text=eg.reference.text,
-                        score=getattr(eg.reference._, self._field),
-                    )
+                    self._fewshot_example_type.generate(eg, field=self._field)
                 )
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
@@ -109,15 +83,9 @@ class SentimentTask(SerializableTask):
     ) -> Iterable[Doc]:
         self._check_doc_extension()
 
-        for doc, prompt_response in zip(docs, responses):
+        for doc, sentiment_score in zip(docs, self._parse_responses(responses)):
             try:
-                setattr(
-                    doc._,
-                    self._field,
-                    float(
-                        "".join(prompt_response.replace("Answer:", "").strip().split())
-                    ),
-                )
+                setattr(doc._, self._field, sentiment_score)
             except ValueError:
                 setattr(doc._, self._field, None)
 

@@ -10,6 +10,6 @@ class LemmaExample(FewshotExample):
     lemmas: List[Dict[str, str]]
 
     @classmethod
-    def generate(cls, example: Example) -> "LemmaExample":
+    def generate(cls, example: Example, **kwargs) -> "LemmaExample":
         lemma_dict = [{t.text: t.lemma_} for t in example.reference]
         return LemmaExample(text=example.reference.text, lemmas=lemma_dict)

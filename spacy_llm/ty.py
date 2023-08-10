@@ -16,10 +16,11 @@ from .models import langchain
 
 _PromptType = Any
 _ResponseType = Any
+_ParsedResponseType = Any
 
 PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
-TaskResponseParserType = Callable[
-    [Iterable[Doc], Iterable[_ResponseType]], Iterable[Doc]
+TaskResponseParserType = Union[
+    Callable[[Iterable[_ResponseType]], Iterable[_ParsedResponseType]]
 ]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
@@ -63,7 +64,7 @@ class Serializable(Protocol):
 class FewshotExample(abc.ABC, BaseModel):
     @classmethod
     @abc.abstractmethod
-    def generate(cls, example: Example) -> Self:
+    def generate(cls, example: Example, **kwargs) -> Self:
         """Create a fewshot example from a spaCy example.
         example (Example): spaCy example.
         """
