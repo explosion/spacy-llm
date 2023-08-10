@@ -24,17 +24,12 @@ class RelationItem(BaseModel):
 
 
 class EntityItem(BaseModel):
-    # No idea why this is necessary.
-    class Config:
-        arbitrary_types_allowed = True
-
     start_char: int
     end_char: int
     label: str
 
 
 class RELExample(FewshotExample):
-    # No idea why this is necessary.
     class Config:
         arbitrary_types_allowed = True
 
