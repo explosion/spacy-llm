@@ -15,7 +15,7 @@ from ..ty import ExamplesConfigType
 from ..util import split_labels
 from .templates import read_template
 
-_DEFAULT_TEXTCAT_TEMPLATE_V1 = read_template("textcat")
+_DEFAULT_TEXTCAT_TEMPLATE_V1 = read_template("textcat.v1")
 _DEFAULT_TEXTCAT_TEMPLATE_V2 = read_template("textcat.v2")
 _DEFAULT_TEXTCAT_TEMPLATE_V3 = read_template("textcat.v3")
 

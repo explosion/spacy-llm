@@ -10,7 +10,7 @@ from ...ty import FewshotExample, TaskResponseParser
 from ..templates import read_template
 from ..util import ExampleType, SerializableTask
 
-DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
+DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma.v1")
 
 
 class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):

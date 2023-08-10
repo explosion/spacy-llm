@@ -61,7 +61,7 @@ def _preannotate(doc: Union[Doc, RELExample]) -> str:
     return text
 
 
-_DEFAULT_REL_TEMPLATE = read_template("rel")
+_DEFAULT_REL_TEMPLATE = read_template("rel.v1")
 
 
 @registry.llm_tasks("spacy.REL.v1")

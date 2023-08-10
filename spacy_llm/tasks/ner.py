@@ -14,7 +14,7 @@ from ..util import split_labels
 from .span import SpanExample, SpanTask
 from .templates import read_template
 
-_DEFAULT_NER_TEMPLATE_V1 = read_template("ner")
+_DEFAULT_NER_TEMPLATE_V1 = read_template("ner.v1")
 _DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
 
 

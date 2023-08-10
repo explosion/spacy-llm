@@ -12,7 +12,7 @@ from .templates import read_template
 from .util import SerializableTask
 from .util.serialization import ExampleType
 
-_DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment")
+_DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
 
 
 class SentimentExample(BaseModel):

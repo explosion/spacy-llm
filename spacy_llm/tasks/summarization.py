@@ -13,7 +13,7 @@ from .templates import read_template
 from .util import SerializableTask
 from .util.serialization import ExampleType
 
-_DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization")
+_DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 
 
 class SummarizationExample(BaseModel):

@@ -13,7 +13,7 @@ from ..util import split_labels
 from .span import SpanExample, SpanTask
 from .templates import read_template
 
-_DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat")
+_DEFAULT_SPANCAT_TEMPLATE_V1 = read_template("spancat.v1")
 _DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
 
 
