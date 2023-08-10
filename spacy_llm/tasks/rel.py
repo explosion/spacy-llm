@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import jinja2
 
@@ -104,7 +104,7 @@ def make_rel_task(
     )
 
 
-class RELTask(SerializableTask[RELExample]):
+class RELTask(SerializableTask):
     def __init__(
         self,
         labels: List[str] = [],
@@ -129,6 +129,7 @@ class RELTask(SerializableTask[RELExample]):
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
+        super().__init__(RELExample)
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
@@ -244,10 +245,6 @@ class RELTask(SerializableTask[RELExample]):
             "_label_definitions",
             "_verbose",
         ]
-
-    @property
-    def _Example(self) -> Type[RELExample]:
-        return RELExample
 
     def _create_prompt_example(self, example: Example) -> RELExample:
         """Create a REL prompt example from a spaCy example."""

@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import jinja2
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class SpanExample(BaseModel):
     entities: Dict[str, List[str]]
 
 
-class SpanTask(SerializableTask[SpanExample]):
+class SpanTask(SerializableTask):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
@@ -32,6 +32,7 @@ class SpanTask(SerializableTask[SpanExample]):
         case_sensitive_matching: bool = False,
         single_match: bool = False,
     ):
+        super().__init__(SpanExample)
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
@@ -177,7 +178,3 @@ class SpanTask(SerializableTask[SpanExample]):
             "_case_sensitive_matching",
             "_single_match",
         ]
-
-    @property
-    def _Example(self) -> Type[SpanExample]:
-        return SpanExample

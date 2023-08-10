@@ -1,4 +1,4 @@
 from .parsing import find_substrings
-from .serialization import ExampleType, SerializableTask
+from .serialization import SerializableTask
 
-__all__ = ["ExampleType", "find_substrings", "SerializableTask"]
+__all__ = ["find_substrings", "SerializableTask"]

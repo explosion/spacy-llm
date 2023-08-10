@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import jinja2
 from pydantic import BaseModel
@@ -190,7 +190,7 @@ def make_textcat_task_v3(
     )
 
 
-class TextCatTask(SerializableTask[TextCatExample]):
+class TextCatTask(SerializableTask):
     def __init__(
         self,
         labels: List[str] = [],
@@ -231,6 +231,7 @@ class TextCatTask(SerializableTask[TextCatExample]):
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
         """
+        super().__init__(TextCatExample)
         self._template = template
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
@@ -377,10 +378,6 @@ class TextCatTask(SerializableTask[TextCatExample]):
             "_allow_none",
             "_verbose",
         ]
-
-    @property
-    def _Example(self) -> Type[TextCatExample]:
-        return TextCatExample
 
     def _create_prompt_example(self, example: Example) -> TextCatExample:
         """Create a textcat prompt example from a spaCy example."""

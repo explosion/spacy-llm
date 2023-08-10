@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 import jinja2
 from spacy.language import Language
@@ -8,31 +8,29 @@ from spacy.training import Example
 
 from ...ty import FewshotExample, TaskResponseParserType
 from ..templates import read_template
-from ..util import ExampleType, SerializableTask
+from ..util import SerializableTask
 
 DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma.v1")
 
 
-class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
+class LemmaTask(SerializableTask):
     def __init__(
         self,
         parse_responses: TaskResponseParserType,
         fewshot_example_type: Type[FewshotExample],
         template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-        examples: Optional[List[ExampleType]] = None,
+        examples: Optional[List[FewshotExample]] = None,
     ):
         """Default lemmatization task.
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
-        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
+        super().__init__(fewshot_example_type)
         self._template = template
         self._parse_responses = parse_responses
         self._prompt_examples = examples or []
-        self._fewshot_example_type = fewshot_example_type
 
     def initialize(
         self,
@@ -85,5 +83,5 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
         return ["_template"]
 
     @property
-    def _Example(self) -> Type[FewshotExample]:
+    def _example_type(self) -> Type[FewshotExample]:
         return self._fewshot_example_type

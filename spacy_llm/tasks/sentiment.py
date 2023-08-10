@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import jinja2
 from pydantic import BaseModel
@@ -10,7 +10,6 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
-from .util.serialization import ExampleType
 
 _DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
 
@@ -42,7 +41,7 @@ def make_sentiment_task(
     return SentimentTask(template=template, examples=sentiment_examples, field=field)
 
 
-class SentimentTask(SerializableTask[SentimentExample]):
+class SentimentTask(SerializableTask):
     def __init__(
         self,
         template: str = _DEFAULT_SENTIMENT_TEMPLATE_V1,
@@ -57,6 +56,7 @@ class SentimentTask(SerializableTask[SentimentExample]):
             passed, then zero-shot learning will be used.
         field (str): The name of the doc extension in which to store the summary.
         """
+        super().__init__(SentimentExample)
         self._template = template
         self._examples = examples
         self._prompt_examples = examples or []
@@ -136,7 +136,3 @@ class SentimentTask(SerializableTask[SentimentExample]):
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
-
-    @property
-    def _Example(self) -> Type[ExampleType]:
-        return SentimentExample

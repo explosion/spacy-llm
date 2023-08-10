@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, Callable, Iterable, List, Optional, Type
+from typing import Any, Callable, Iterable, List, Optional
 
 import jinja2
 from pydantic import BaseModel
@@ -11,7 +11,6 @@ from ..registry import registry
 from ..ty import ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
-from .util.serialization import ExampleType
 
 _DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 
@@ -47,7 +46,7 @@ def make_summarization_task(
     )
 
 
-class SummarizationTask(SerializableTask[SummarizationExample]):
+class SummarizationTask(SerializableTask):
     def __init__(
         self,
         template: str = _DEFAULT_SUMMARIZATION_TEMPLATE_V1,
@@ -64,6 +63,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         max_n_words (int): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
         """
+        super().__init__(SummarizationExample)
         self._template = template
         self._examples = examples
         self._max_n_words = max_n_words
@@ -140,7 +140,3 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
-
-    @property
-    def _Example(self) -> Type[ExampleType]:
-        return SummarizationExample

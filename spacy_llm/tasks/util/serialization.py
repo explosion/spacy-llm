@@ -1,29 +1,25 @@
 import abc
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, cast
+from typing import Any, Dict, List, Tuple, Type, cast
 
 import srsly
-from pydantic import BaseModel
 from spacy import util
 
-ExampleType = TypeVar("ExampleType", bound=BaseModel)
+from spacy_llm.ty import FewshotExample
 
 
-class SerializableTask(abc.ABC, Generic[ExampleType]):
+class SerializableTask(abc.ABC):
     """A task that can be serialized and deserialized."""
 
-    _prompt_examples: List[ExampleType]
+    _prompt_examples: List[FewshotExample]
+
+    def __init__(self, fewshot_example_type: Type[FewshotExample]):
+        self._fewshot_example_type = fewshot_example_type
 
     @property
     @abc.abstractmethod
     def _cfg_keys(self) -> List[str]:
         """A list of configuration attributes to serialize."""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def _Example(self) -> Type[ExampleType]:
-        """The example type."""
         pass
 
     def get_cfg(self) -> Dict[str, Any]:
@@ -49,7 +45,9 @@ class SerializableTask(abc.ABC, Generic[ExampleType]):
 
         examples (List[Dict[str, Any]]): serialized examples.
         """
-        self._prompt_examples = [self._Example.parse_obj(eg) for eg in examples]
+        self._prompt_examples = [
+            self._fewshot_example_type.parse_obj(eg) for eg in examples
+        ]
 
     def to_bytes(
         self,
