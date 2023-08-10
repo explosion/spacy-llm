@@ -33,6 +33,9 @@ class EntityItem(BaseModel):
 
 
 class RELExample(FewshotExample):
+    # No idea why this is necessary.
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     text: str
     ents: List[EntityItem]
     relations: List[RelationItem]
