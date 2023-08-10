@@ -12,7 +12,7 @@ from ..util import SerializableTask
 from . import RELExample
 from .examples import RelationItem
 
-DEFAULT_REL_TEMPLATE = read_template("rel.v1")
+DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
 TaskResponseParserType = Callable[[Iterable[Any], Iterable[Doc], bool], Iterable[Any]]
 
 
@@ -92,7 +92,7 @@ class RELTask(SerializableTask):
         for i, ent in enumerate(doc.ents):
             end = ent.end_char
             before, after = text[: end + offset], text[end + offset :]
-            annotation = f"[ENT{i}:{ent.label_}]"
+            annotation = f"[ENT{i}:{ent.label}]"
             offset += len(annotation)
             text = f"{before}{annotation}{after}"
 

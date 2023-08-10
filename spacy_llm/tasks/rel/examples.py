@@ -6,9 +6,9 @@ from ...compat import Self
 from ...ty import FewshotExample
 
 try:
-    from pydantic.v1 import BaseModel, Field, validator
+    from pydantic.v1 import BaseModel, validator
 except ImportError:
-    from pydantic import BaseModel, Field, validator
+    from pydantic import BaseModel, validator
 
 
 class RelationItem(BaseModel):
@@ -26,7 +26,7 @@ class RelationItem(BaseModel):
 class EntityItem(BaseModel):
     start_char: int
     end_char: int
-    label_: str = Field(alias="label")
+    label: str
 
 
 class RELExample(FewshotExample):
