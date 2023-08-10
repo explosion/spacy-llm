@@ -9,10 +9,11 @@ from spacy.training import Example
 from spacy.util import get_lang_class
 
 from spacy_llm.pipeline import LLMWrapper
-from spacy_llm.tasks.rel import _DEFAULT_REL_TEMPLATE, RelationItem, RELTask
+from spacy_llm.tasks.rel import DEFAULT_REL_TEMPLATE, RelationItem, RELTask
 from spacy_llm.ty import LabeledProtocol, LLMTaskProtocol
 from spacy_llm.util import assemble_from_config, split_labels
 
+from ...tasks import make_rel_task
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -237,15 +238,30 @@ def test_incorrect_indexing():
     """Tests whether incorrect indexing is handled properly (i. e. when the LLM response indices non-existent
     entities).
     """
-    task = RELTask(labels=["LivesIn", "WorksIn"], template=_DEFAULT_REL_TEMPLATE)
+    task = make_rel_task(
+        labels=["LivesIn", "WorksIn"],
+        template=DEFAULT_REL_TEMPLATE,
+    )
 
     doc = Doc(get_lang_class("en")().vocab, words=["This", "is", "a", "test"])
     doc.ents = [Span(doc, 0, 1, label="TEST")]
     assert (
-        len(task._format_response('{"dep": 0, "dest": 1, "relation": "LivesIn"}', doc))
+        len(
+            list(
+                task._parse_responses(
+                    ['{"dep": 0, "dest": 1, "relation": "LivesIn"}'], [doc], False
+                )
+            )[0]
+        )
         == 0
     )
     assert (
-        len(task._format_response('{"dep": 0, "dest": 0, "relation": "LivesIn"}', doc))
+        len(
+            list(
+                task._parse_responses(
+                    ['{"dep": 0, "dest": 0, "relation": "LivesIn"}'], [doc], False
+                )
+            )[0]
+        )
         == 1
     )

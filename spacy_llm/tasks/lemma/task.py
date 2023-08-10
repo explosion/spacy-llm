@@ -18,8 +18,8 @@ class LemmaTask(SerializableTask):
         self,
         parse_responses: TaskResponseParserType,
         fewshot_example_type: Type[FewshotExample],
-        template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-        examples: Optional[List[FewshotExample]] = None,
+        template: str,
+        examples: Optional[List[FewshotExample]],
     ):
         """Default lemmatization task.
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.

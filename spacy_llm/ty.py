@@ -19,8 +19,9 @@ _ResponseType = Any
 _ParsedResponseType = Any
 
 PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
-TaskResponseParserType = Union[
-    Callable[[Iterable[_ResponseType]], Iterable[_ParsedResponseType]]
+# Better way to type arbitrary arguments? Change to Protocol?
+TaskResponseParserType = Callable[
+    [Iterable[_ResponseType]], Iterable[_ParsedResponseType]
 ]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None

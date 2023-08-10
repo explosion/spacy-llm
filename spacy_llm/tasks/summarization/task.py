@@ -21,7 +21,7 @@ class SummarizationTask(SerializableTask):
         template: str,
         max_n_words: Optional[int],
         field: str,
-        examples: Optional[List[FewshotExample]] = None,
+        examples: Optional[List[FewshotExample]],
     ):
         """Default summarization task.
 

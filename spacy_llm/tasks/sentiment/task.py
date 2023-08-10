@@ -20,7 +20,7 @@ class SentimentTask(SerializableTask):
         parse_responses: TaskResponseParserType,
         fewshot_example_type: Type[FewshotExample],
         field: str,
-        examples: Optional[List[SentimentExample]] = None,
+        examples: Optional[List[SentimentExample]],
     ):
         """Sentiment analysis task.
 
