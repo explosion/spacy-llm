@@ -6,9 +6,9 @@ from ...compat import Self
 from ...ty import FewshotExample
 
 try:
-    from pydantic.v1 import BaseModel, ConfigDict, validator
+    from pydantic.v1 import BaseModel, validator
 except ImportError:
-    from pydantic import BaseModel, ConfigDict, validator
+    from pydantic import BaseModel, validator
 
 
 class RelationItem(BaseModel):
@@ -25,7 +25,8 @@ class RelationItem(BaseModel):
 
 class EntityItem(BaseModel):
     # No idea why this is necessary.
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    class Config:
+        arbitrary_types_allowed = True
 
     start_char: int
     end_char: int
@@ -34,7 +35,8 @@ class EntityItem(BaseModel):
 
 class RELExample(FewshotExample):
     # No idea why this is necessary.
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    class Config:
+        arbitrary_types_allowed = True
 
     text: str
     ents: List[EntityItem]
