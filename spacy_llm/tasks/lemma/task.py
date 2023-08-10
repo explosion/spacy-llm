@@ -84,7 +84,7 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
         """Scores lemmatization accuracy on provided examples.
         examples (Iterable[Example]): Examples to determine score against.
         """
-        return Scorer.score_token_attr(examples, "pos")
+        return Scorer.score_token_attr(examples, "lemma")
 
     @property
     def _cfg_keys(self) -> List[str]:
