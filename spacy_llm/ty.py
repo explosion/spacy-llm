@@ -11,12 +11,11 @@ from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import Protocol, runtime_checkable
+from .compat import Protocol, Self, runtime_checkable
 from .models import langchain
 
 _PromptType = Any
 _ResponseType = Any
-_FewshotExampleT = typing.TypeVar("_FewshotExampleT", bound="FewshotExample")
 
 PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
 TaskResponseParserType = Callable[
@@ -62,11 +61,9 @@ class Serializable(Protocol):
 
 
 class FewshotExample(abc.ABC, BaseModel):
-    """Fewshot example class. See https://stackoverflow.com/a/46064289 for typing of factory function."""
-
     @classmethod
     @abc.abstractmethod
-    def generate(cls: Type[_FewshotExampleT], example: Example) -> _FewshotExampleT:
+    def generate(cls, example: Example) -> Self:
         """Create a fewshot example from a spaCy example.
         example (Example): spaCy example.
         """
