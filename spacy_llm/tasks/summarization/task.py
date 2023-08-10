@@ -1,70 +1,40 @@
 import warnings
-from typing import Any, Callable, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List, Optional, Type
 
 import jinja2
-from pydantic import BaseModel
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ..registry import registry
-from ..ty import ExamplesConfigType
-from .templates import read_template
-from .util import SerializableTask
+from ...ty import FewshotExample, TaskResponseParserType
+from ..templates import read_template
+from ..util import SerializableTask
 
-_DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
-
-
-class SummarizationExample(BaseModel):
-    text: str
-    summary: str
-
-
-@registry.llm_tasks("spacy.Summarization.v1")
-def make_summarization_task(
-    template: str = _DEFAULT_SUMMARIZATION_TEMPLATE_V1,
-    examples: ExamplesConfigType = None,
-    max_n_words: Optional[int] = None,
-    field: str = "summary",
-):
-    """Summarization.v1 task factory.
-
-    template (str): Prompt template passed to the model.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
-    max_n_words (int): Max. number of words to use in summary.
-    field (str): The name of the doc extension in which to store the summary.
-    """
-    raw_examples = examples() if callable(examples) else examples
-    span_examples = (
-        [SummarizationExample(**eg) for eg in raw_examples] if raw_examples else None
-    )
-
-    return SummarizationTask(
-        template=template, examples=span_examples, max_n_words=max_n_words, field=field
-    )
+DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 
 
 class SummarizationTask(SerializableTask):
     def __init__(
         self,
-        template: str = _DEFAULT_SUMMARIZATION_TEMPLATE_V1,
-        examples: Optional[List[SummarizationExample]] = None,
-        max_n_words: Optional[int] = None,
-        field: str = "summary",
+        parse_responses: TaskResponseParserType,
+        fewshot_example_type: Type[FewshotExample],
+        template: str,
+        max_n_words: Optional[int],
+        field: str,
+        examples: Optional[List[FewshotExample]] = None,
     ):
         """Default summarization task.
 
         template (str): Prompt template passed to the model.
-        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
-        max_n_words (int): Max. number of words to use in summary.
+        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
-        super().__init__(SummarizationExample)
+        super().__init__(fewshot_example_type)
         self._template = template
+        self._parse_responses = parse_responses
         self._examples = examples
         self._max_n_words = max_n_words
         self._field = field
@@ -90,10 +60,7 @@ class SummarizationTask(SerializableTask):
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(
-                    SummarizationExample(
-                        text=eg.reference.text,
-                        summary=getattr(eg.reference._, self._field),
-                    )
+                    self._fewshot_example_type.generate(eg, field=self._field)
                 )
 
     def _check_prompt_example_summary_len(self) -> None:
@@ -133,8 +100,8 @@ class SummarizationTask(SerializableTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, responses):
-            setattr(doc._, self._field, prompt_response.replace("'''", "").strip())
+        for doc, summary in zip(docs, self._parse_responses(responses)):
+            setattr(doc._, self._field, summary)
             yield doc
 
     @property

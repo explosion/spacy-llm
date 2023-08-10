@@ -1,16 +1,16 @@
+from pydantic import BaseModel
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample
 
 
-class SentimentExample(FewshotExample):
+class SummarizationExample(BaseModel):
     text: str
-    score: float
+    summary: str
 
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Self:
         return cls(
             text=example.reference.text,
-            score=getattr(example.reference._, kwargs["field"]),
+            summary=getattr(example.reference._, kwargs["field"]),
         )
