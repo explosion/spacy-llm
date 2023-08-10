@@ -6,7 +6,7 @@ from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import FewshotExample, TaskResponseParserType
 from ..templates import read_template
 from ..util import ExampleType, SerializableTask
 
@@ -16,7 +16,7 @@ DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma.v1")
 class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
     def __init__(
         self,
-        parse_responses: TaskResponseParser,
+        parse_responses: TaskResponseParserType,
         fewshot_example_type: Type[FewshotExample],
         template: str = DEFAULT_LEMMA_TEMPLATE_V1,
         examples: Optional[List[ExampleType]] = None,

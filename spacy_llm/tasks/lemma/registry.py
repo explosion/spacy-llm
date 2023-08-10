@@ -1,21 +1,21 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserType
 from .examples import LemmaExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 
 
 @registry.llm_misc("spacy.LemmaParser.v1")
-def make_lemma_parser() -> TaskResponseParser:
+def make_lemma_parser() -> TaskResponseParserType:
     return parse_responses_v1
 
 
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParser] = None,
+    parse_responses: Optional[TaskResponseParserType] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
 ):

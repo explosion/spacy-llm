@@ -15,8 +15,8 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
-from ..ty import validate_type_consistency
+from ..ty import CacheProtocol, LabeledProtocol, LLMTaskProtocol, PromptExecutorType
+from ..ty import ScorableProtocol, Serializable, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -51,9 +51,9 @@ class CacheConfigType(TypedDict):
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[LLMTask],
-    model: PromptExecutor,
-    cache: Cache,
+    task: Optional[LLMTaskProtocol],
+    model: PromptExecutorType,
+    cache: CacheProtocol,
     save_io: bool,
     validate_types: bool,
 ) -> "LLMWrapper":
@@ -95,9 +95,9 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         vocab: Vocab,
-        task: LLMTask,
-        model: PromptExecutor,
-        cache: Cache,
+        task: LLMTaskProtocol,
+        model: PromptExecutorType,
+        cache: CacheProtocol,
         save_io: bool,
     ) -> None:
         """
@@ -128,12 +128,12 @@ class LLMWrapper(Pipe):
     @property
     def labels(self) -> Tuple[str, ...]:
         labels: Tuple[str, ...] = tuple()
-        if isinstance(self._task, Labeled):
+        if isinstance(self._task, LabeledProtocol):
             labels = self._task.labels
         return labels
 
     @property
-    def task(self) -> LLMTask:
+    def task(self) -> LLMTaskProtocol:
         return self._task
 
     def __call__(self, doc: Doc) -> Doc:
@@ -156,7 +156,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if isinstance(self._task, Scorable):
+        if isinstance(self._task, ScorableProtocol):
             return self._task.scorer(examples)
         return {}
 

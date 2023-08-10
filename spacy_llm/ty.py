@@ -14,12 +14,14 @@ from spacy.vocab import Vocab
 from .compat import Protocol, runtime_checkable
 from .models import langchain
 
-_Prompt = Any
-_Response = Any
-FewshotExampleType = typing.TypeVar("FewshotExampleType", bound="FewshotExample")
+_PromptType = Any
+_ResponseType = Any
+_FewshotExampleT = typing.TypeVar("_FewshotExampleT", bound="FewshotExample")
 
-PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
-TaskResponseParser = Callable[[Iterable[Doc], Iterable[_Response]], Iterable[Doc]]
+PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
+TaskResponseParserType = Callable[
+    [Iterable[Doc], Iterable[_ResponseType]], Iterable[Doc]
+]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
@@ -64,14 +66,14 @@ class FewshotExample(abc.ABC, BaseModel):
 
     @classmethod
     @abc.abstractmethod
-    def generate(cls: Type[FewshotExampleType], example: Example) -> FewshotExampleType:
+    def generate(cls: Type[_FewshotExampleT], example: Example) -> _FewshotExampleT:
         """Create a fewshot example from a spaCy example.
         example (Example): spaCy example.
         """
 
 
 @runtime_checkable
-class Scorable(Protocol):
+class ScorableProtocol(Protocol):
     def scorer(
         self,
         examples: Iterable[Example],
@@ -81,15 +83,15 @@ class Scorable(Protocol):
 
 
 @runtime_checkable
-class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_Prompt]:
+class LLMTaskProtocol(Protocol):
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[_Prompt]): Iterable with one prompt per doc.
         """
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[_Response]
+        self, docs: Iterable[Doc], responses: Iterable[_ResponseType]
     ) -> Iterable[Doc]:
         """
         Parses LLM responses.
@@ -100,24 +102,24 @@ class LLMTask(Protocol):
 
 
 @runtime_checkable
-class PromptTemplateProvider(Protocol):
+class PromptTemplateProviderProtocol(Protocol):
     @property
     def prompt_template(self) -> str:
         ...
 
 
 @runtime_checkable
-class Labeled(Protocol):
+class LabeledProtocol(Protocol):
     @property
     def labels(self) -> Tuple[str, ...]:
         ...
 
 
 @runtime_checkable
-class Cache(Protocol):
+class CacheProtocol(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
+    def initialize(self, vocab: Vocab, task: LLMTaskProtocol) -> None:
         """
         Initialize cache with data not available at construction time.
         vocab (Vocab): Vocab object.
@@ -177,7 +179,7 @@ def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
     )
 
 
-def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
+def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
     """Extract call signature from model object.
     model (PromptExecutor): Model object to extract call signature from.
     RETURNS (Dict[str, Any]): Type per argument name.
@@ -213,13 +215,13 @@ def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_type_consistency(task: LLMTask, model: PromptExecutor) -> None:
+def validate_type_consistency(task: LLMTaskProtocol, model: PromptExecutorType) -> None:
     """Check whether the types of the task and model signatures match.
     task (LLMTask): Specified task.
     backend (PromptExecutor): Specified model.
     """
     # Raises an error or prints a warning if something looks wrong/odd.
-    if not isinstance(task, LLMTask):
+    if not isinstance(task, LLMTaskProtocol):
         raise ValueError(
             f"A task needs to be of type 'LLMTask' but found {type(task)} instead"
         )
