@@ -16,16 +16,15 @@ DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma")
 class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
     def __init__(
         self,
+        parse_responses: TaskResponseParser,
+        fewshot_example_type: Type[FewshotExample],
         template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-        parse_responses: Optional[TaskResponseParser] = None,
-        fewshot_example_type: Optional[Type[FewshotExample]] = None,
         examples: Optional[List[ExampleType]] = None,
     ):
         """Default lemmatization task.
-
+        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
-        parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
-        fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
         examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
@@ -34,9 +33,6 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
         self._parse_responses = parse_responses
         self._prompt_examples = examples or []
         self._fewshot_example_type = fewshot_example_type
-
-        assert callable(self._parse_responses)
-        assert self._fewshot_example_type is not None
 
     def initialize(
         self,
@@ -54,7 +50,6 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
         """
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                assert self._fewshot_example_type
                 self._prompt_examples.append(self._fewshot_example_type.generate(eg))
 
     @property
@@ -74,7 +69,6 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        assert callable(self._parse_responses)
         return self._parse_responses(docs, responses)
 
     def scorer(
@@ -92,5 +86,4 @@ class LemmaTask(SerializableTask[ExampleType], Generic[ExampleType]):
 
     @property
     def _Example(self) -> Type[FewshotExample]:
-        assert self._fewshot_example_type is not None
         return self._fewshot_example_type
