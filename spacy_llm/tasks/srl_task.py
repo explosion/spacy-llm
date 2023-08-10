@@ -51,6 +51,9 @@ class SRLExample(BaseModel):
     predicates: List[PredicateItem]
     relations: List[Tuple[PredicateItem, List[RoleItem]]]
 
+    def __hash__(self):
+        return hash((self.text,) + tuple(self.predicates))
+
     def __str__(self):
         return f"""Predicates: {', '.join([p.text for p in self.predicates])}
 Relations: {str([(p.text, [(r.label, r.role.text) for r in rs]) for p, rs in self.relations])}"""
