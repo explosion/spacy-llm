@@ -1,7 +1,7 @@
 from typing import Iterable
 
 
-def parse_responses_v1(responses: Iterable[str]) -> Iterable[str]:
+def parse_responses_v1(responses: Iterable[str], **kwargs) -> Iterable[str]:
     """Parses LLM responses for spacy.Summarization.v1.
     responses (Iterable[str]): LLM responses.
     field (str): Field to store responses in.

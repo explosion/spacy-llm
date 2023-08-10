@@ -19,17 +19,21 @@ _ResponseType = Any
 _ParsedResponseType = Any
 
 PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
-# Better way to type arbitrary arguments? Change to Protocol?
-TaskResponseParserType = Callable[
-    [Iterable[_ResponseType]], Iterable[_ParsedResponseType]
-]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
 
 
 @runtime_checkable
-class Serializable(Protocol):
+class TaskResponseParserProtocol(Protocol):
+    def __call__(
+        self, responses: Iterable[_ResponseType], **kwargs
+    ) -> Iterable[_ParsedResponseType]:
+        ...
+
+
+@runtime_checkable
+class SerializableProtocol(Protocol):
     def to_bytes(
         self,
         *,

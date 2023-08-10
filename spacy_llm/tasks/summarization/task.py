@@ -6,7 +6,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, TaskResponseParserType
+from ...ty import FewshotExample, TaskResponseParserProtocol
 from ..templates import read_template
 from ..util import SerializableTask
 
@@ -16,7 +16,7 @@ DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 class SummarizationTask(SerializableTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserType,
+        parse_responses: TaskResponseParserProtocol,
         fewshot_example_type: Type[FewshotExample],
         template: str,
         max_n_words: Optional[int],

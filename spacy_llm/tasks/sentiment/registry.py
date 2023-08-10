@@ -1,7 +1,7 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserType
+from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
 from .examples import SentimentExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
@@ -10,7 +10,7 @@ from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
 @registry.llm_tasks("spacy.Sentiment.v1")
 def make_sentiment_task(
     template: str = DEFAULT_SENTIMENT_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParserType] = None,
+    parse_responses: Optional[TaskResponseParserProtocol] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
     field: str = "sentiment",

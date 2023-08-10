@@ -1,7 +1,7 @@
 from typing import Iterable, Optional
 
 
-def parse_responses_v1(responses: Iterable[str]) -> Iterable[Optional[float]]:
+def parse_responses_v1(responses: Iterable[str], **kwargs) -> Iterable[Optional[float]]:
     """Parses LLM responses for spacy.Sentiment.v1.
     responses (Iterable[str]): LLM responses.
     field (str): Field to store responses in.

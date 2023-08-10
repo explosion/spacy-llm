@@ -1,19 +1,15 @@
+import typing
 import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
-from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 
-from ..compat import Literal
-from ..registry import lowercase_normalizer
-from .util.parsing import find_substrings
-from .util.serialization import SerializableTask
-
-
-class SpanExample(BaseModel):
-    text: str
-    entities: Dict[str, List[str]]
+from ...compat import Literal
+from ...registry import lowercase_normalizer
+from ...ty import TaskResponseParserProtocol
+from ..util.serialization import SerializableTask
+from .examples import SpanExample
 
 
 class SpanTask(SerializableTask):
@@ -21,18 +17,23 @@ class SpanTask(SerializableTask):
 
     def __init__(
         self,
+        parse_responses: TaskResponseParserProtocol,
+        fewshot_example_type: Type[SpanExample],
         labels: List[str],
         template: str,
-        label_definitions: Optional[Dict[str, str]] = {},
-        prompt_examples: Optional[List[SpanExample]] = None,
-        normalizer: Optional[Callable[[str], str]] = None,
-        alignment_mode: Literal[
-            "strict", "contract", "expand"  # noqa: F821
-        ] = "contract",
-        case_sensitive_matching: bool = False,
-        single_match: bool = False,
+        label_definitions: Optional[Dict[str, str]],
+        prompt_examples: Optional[List[SpanExample]],
+        normalizer: Optional[Callable[[str], str]],
+        alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
+        case_sensitive_matching: bool,
+        single_match: bool,
     ):
-        super().__init__(SpanExample)
+        super().__init__(fewshot_example_type)
+
+        self._fewshot_example_type = typing.cast(
+            Type[SpanExample], self._fewshot_example_type
+        )
+        self._parse_responses = parse_responses
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
@@ -46,13 +47,14 @@ class SpanTask(SerializableTask):
         self._single_match = single_match
 
         if self._prompt_examples:
-            self._prompt_examples = self._check_label_consistency()
+            self._prompt_examples: List[SpanExample] = self._check_label_consistency()
 
     def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
         RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """
         assert self._prompt_examples
+
         example_labels = {
             self._normalizer(key): key
             for example in self._prompt_examples
@@ -74,7 +76,7 @@ class SpanTask(SerializableTask):
         return [
             example
             for example in [
-                SpanExample(
+                self._fewshot_example_type(
                     text=example.text,
                     entities={
                         label: entities
@@ -107,23 +109,6 @@ class SpanTask(SerializableTask):
             )
             yield prompt
 
-    def _format_response(self, response: str) -> Iterable[Tuple[str, Iterable[str]]]:
-        """Parse raw string response into a structured format"""
-        output = []
-        assert self._normalizer is not None
-        for line in response.strip().split("\n"):
-            # Check if the formatting we want exists
-            # <entity label>: ent1, ent2
-            if line and ":" in line:
-                label, phrases = line.split(":", 1)
-                norm_label = self._normalizer(label)
-                if norm_label in self._label_dict:
-                    # Get the phrases / spans for each entity
-                    if phrases.strip():
-                        _phrases = [p.strip() for p in phrases.strip().split(",")]
-                        output.append((self._label_dict[norm_label], _phrases))
-        return output
-
     @staticmethod
     def _validate_alignment(alignment_mode: str):
         """Raises error if specified alignment_mode is not supported.
@@ -147,24 +132,18 @@ class SpanTask(SerializableTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, prompt_response in zip(docs, responses):
-            spans = []
-            for label, phrases in self._format_response(prompt_response):
-                # For each phrase, find the substrings in the text
-                # and create a Span
-                offsets = find_substrings(
-                    doc.text,
-                    phrases,
-                    case_sensitive=self._case_sensitive_matching,
-                    single_match=self._single_match,
-                )
-                for start, end in offsets:
-                    span = doc.char_span(
-                        start, end, alignment_mode=self._alignment_mode, label=label
-                    )
-                    if span is not None:
-                        spans.append(span)
-
+        for doc, spans in zip(
+            docs,
+            self._parse_responses(
+                responses,
+                docs=docs,
+                case_sensitive_matching=self._case_sensitive_matching,
+                single_match=self._single_match,
+                alignment_mode=self._alignment_mode,
+                normalizer=self._normalizer,
+                label_dict=self._label_dict,
+            ),
+        ):
             self.assign_spans(doc, spans)
             yield doc
 

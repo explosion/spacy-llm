@@ -1,21 +1,21 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserType
+from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
 from .examples import LemmaExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 
 
 @registry.llm_misc("spacy.LemmaParser.v1")
-def make_lemma_parser() -> TaskResponseParserType:
+def make_lemma_parser() -> TaskResponseParserProtocol:
     return parse_responses_v1
 
 
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParserType] = None,
+    parse_responses: Optional[TaskResponseParserProtocol] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
 ):
@@ -29,6 +29,7 @@ def make_lemma_task(
         passed, then zero-shot learning will be used.
     """
     raw_examples = examples() if callable(examples) else examples
+    parse_responses = parse_responses or parse_responses_v1
     example_type = fewshot_example_type or LemmaExample
     lemma_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
@@ -36,7 +37,7 @@ def make_lemma_task(
 
     return LemmaTask(
         template=template,
-        parse_responses=parse_responses or parse_responses_v1,
+        parse_responses=parse_responses,
         fewshot_example_type=example_type,
         examples=lemma_examples,
     )
