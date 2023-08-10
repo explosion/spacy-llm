@@ -28,6 +28,10 @@ class EntityItem(BaseModel):
     end_char: int
     label: str
 
+    # No idea why this is necessary.
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class RELExample(FewshotExample):
     text: str

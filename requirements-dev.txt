@@ -17,4 +17,4 @@ einops>=0.4
 
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
-pydantic<2.0
+pydantic
