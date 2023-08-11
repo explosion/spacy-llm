@@ -29,7 +29,6 @@ def make_lemma_task(
         passed, then zero-shot learning will be used.
     """
     raw_examples = examples() if callable(examples) else examples
-    parse_responses = parse_responses or parse_responses_v1
     example_type = fewshot_example_type or LemmaExample
     lemma_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
@@ -37,7 +36,7 @@ def make_lemma_task(
 
     return LemmaTask(
         template=template,
-        parse_responses=parse_responses,
+        parse_responses=parse_responses or parse_responses_v1,
         fewshot_example_type=example_type,
         examples=lemma_examples,
     )
