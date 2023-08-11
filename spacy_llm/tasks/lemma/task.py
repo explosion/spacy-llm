@@ -93,7 +93,3 @@ class LemmaTask(SerializableTask):
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
-
-    @property
-    def _example_type(self) -> Type[FewshotExample]:
-        return self._fewshot_example_type
