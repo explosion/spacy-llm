@@ -293,7 +293,7 @@ def test_pipe_labels():
 
 
 def test_llm_task_factories():
-    """Test whether llm_TASK factories terminate successfully."""
+    """Test whether llm_TASK factories run successfully."""
     for task_handle in _LATEST_TASKS:
         cfg_string = f"""
         [nlp]

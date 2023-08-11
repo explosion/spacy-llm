@@ -12,7 +12,6 @@ from .textcat import TextCatTask, make_textcat_task
 
 _LATEST_TASKS = (
     "spacy.NER.v2",
-    "spacy.NoOp.v1",
     "spacy.REL.v1",
     "spacy.Sentiment.v1",
     "spacy.SpanCat.v2",
