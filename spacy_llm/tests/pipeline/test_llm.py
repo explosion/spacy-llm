@@ -307,3 +307,33 @@ def test_llm_task_factories():
         """
         config = Config().from_str(cfg_string)
         assemble_from_config(config)
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_llm_task_factories_ner():
+    """Test whether llm_ner behaves as expected."""
+    cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm_ner"
+
+    [components.llm.task]
+    labels = PER,ORG,LOC
+
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
+    """
+    config = Config().from_str(cfg_string)
+    nlp = assemble_from_config(config)
+    text = "Marc and Bob both live in Ireland."
+    doc = nlp(text)
+
+    assert len(doc.ents) > 0
+    for ent in doc.ents:
+        assert ent.label_ in ["PER", "ORG", "LOC"]
