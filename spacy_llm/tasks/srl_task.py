@@ -222,7 +222,7 @@ class SRLTask(SpanTask[SRLExample]):
 
     def _check_label_consistency(self) -> List[SRLExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
-        RETURNS (List[SRLExample]): List of SpanExamples with valid labels.
+        RETURNS (List[SRLExample]): List of SRLExamples with valid labels.
         """
         assert self._prompt_examples
         srl_examples = [SRLExample(**eg.dict()) for eg in self._prompt_examples]
@@ -325,12 +325,18 @@ class SRLTask(SpanTask[SRLExample]):
             if len(doc._.predicates):
                 predicates = ", ".join([p["text"] for p in doc._.predicates])
 
+            doc_examples = self._prompt_examples
+
+            # check if there are doc-tailored examples
+            if doc.has_extension("egs") and doc._.egs is not None and len(doc._.egs):
+                doc_examples = doc._.egs
+
             prompt = _template.render(
                 text=doc.text,
                 labels=list(self._label_dict.values()),
                 label_definitions=self._label_definitions,
                 predicates=predicates,
-                examples=self._prompt_examples,
+                examples=doc_examples,
             )
 
             yield prompt
