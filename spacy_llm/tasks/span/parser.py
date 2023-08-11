@@ -32,7 +32,7 @@ def _format_response(
     return output
 
 
-def parse_responses_v1_v2(responses: Iterable[str], **kwargs) -> Iterable[Span]:
+def parse_responses(responses: Iterable[str], **kwargs) -> Iterable[Span]:
     """Parses LLM responses for Span tasks.
     responses (Iterable[str]): LLM responses.
     kwargs ([Dict[str, Any]): Additional, mandatory arguments:
