@@ -755,7 +755,7 @@ def test_ner_init(noop_config, n_prompt_examples: int):
     task: NERTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._prompt_examples
+    assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
         "n_prompt_examples": n_prompt_examples
@@ -764,12 +764,12 @@ def test_ner_init(noop_config, n_prompt_examples: int):
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
     if n_prompt_examples >= 0:
-        assert len(task._prompt_examples) == n_prompt_examples
+        assert len(task._fewshot_examples) == n_prompt_examples
     else:
-        assert len(task._prompt_examples) == len(examples)
+        assert len(task._fewshot_examples) == len(examples)
 
     if n_prompt_examples > 0:
-        for eg in task._prompt_examples:
+        for eg in task._fewshot_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
@@ -865,7 +865,7 @@ def test_label_inconsistency():
     ):
         nlp = assemble_from_config(config)
 
-    prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
+    prompt_examples = nlp.get_pipe("llm")._task._fewshot_examples
     assert len(prompt_examples) == 2
     assert prompt_examples[0].text == "Jack and Jill went up the hill."
     assert prompt_examples[0].entities == {

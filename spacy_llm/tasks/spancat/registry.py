@@ -2,10 +2,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from ...compat import Literal
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, ExamplesConfigType, FewshotExample
+from ...ty import TaskResponseParserProtocol
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from .examples import SpanCatExample
+from .scorer import score
 from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2, SpanCatTask
 
 
@@ -20,6 +22,7 @@ def make_spancat_task(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
     spans_key: str = "sc",
+    scorer: Optional[CallableScorableProtocol] = None,
 ):
     """SpanCat.v1 task factory.
 
@@ -37,6 +40,7 @@ def make_spancat_task(
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
     spans_key (str): Key of the `Doc.spans` dict to save under.
+    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
     example_type = fewshot_example_type or SpanCatExample
@@ -49,13 +53,14 @@ def make_spancat_task(
         parse_responses=parse_responses or parse_span_responses,
         fewshot_example_type=example_type,
         template=DEFAULT_SPANCAT_TEMPLATE_V1,
-        prompt_examples=span_examples,
+        examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
         single_match=single_match,
         label_definitions=None,
         spans_key=spans_key,
+        scorer=scorer or score,
     )
 
 
@@ -72,6 +77,7 @@ def make_spancat_task_v2(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
     spans_key: str = "sc",
+    scorer: Optional[CallableScorableProtocol] = None,
 ):
     """SpanCat.v2 task factory.
 
@@ -94,6 +100,7 @@ def make_spancat_task_v2(
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
     spans_key (str): Key of the `Doc.spans` dict to save under.
+    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -108,10 +115,11 @@ def make_spancat_task_v2(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        prompt_examples=span_examples,
+        examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
         single_match=single_match,
         spans_key=spans_key,
+        scorer=scorer or score,
     )

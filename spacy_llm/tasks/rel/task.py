@@ -1,30 +1,27 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
-import jinja2
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...registry import lowercase_normalizer
-from ...ty import FewshotExample
+from ...ty import FewshotExample, TaskResponseParserProtocol
+from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
-from ..util import SerializableTask
 from . import RELExample
 from .examples import RelationItem
 
 DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
-TaskResponseParserType = Callable[[Iterable[Any], Iterable[Doc], bool], Iterable[Any]]
 
 
-class RELTask(SerializableTask):
+class RELTask(BuiltinTaskWithLabels):
     def __init__(
         self,
-        parse_responses: TaskResponseParserType,
+        parse_responses: TaskResponseParserProtocol,
         fewshot_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
@@ -39,49 +36,31 @@ class RELTask(SerializableTask):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        prompt_examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
-        super().__init__(fewshot_example_type)
-        self._parse_responses = parse_responses
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
-        self._template = template
-        self._label_definitions = label_definitions
-        self._prompt_examples = prompt_examples or []
+        super().__init__(
+            parse_responses=parse_responses,
+            fewshot_example_type=fewshot_example_type,
+            template=template,
+            examples=examples,
+            labels=labels,
+            label_definitions=label_definitions,
+            normalizer=normalizer,
+        )
         self._verbose = verbose
+        self._field = "rel"
 
-    @classmethod
-    def _check_rel_extension(cls):
-        """Add `rel` extension if need be."""
-        if not Doc.has_extension("rel"):
-            Doc.set_extension("rel", default=[])
-
-    @property
-    def labels(self) -> Tuple[str, ...]:
-        return tuple(self._label_dict.values())
-
-    @property
-    def prompt_template(self) -> str:
-        return self._template
-
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        environment = jinja2.Environment()
-        _template = environment.from_string(self._template)
-        for doc in docs:
-            prompt = _template.render(
-                text=RELTask._preannotate(doc),
-                labels=list(self._label_dict.values()),
-                label_definitions=self._label_definitions,
-                examples=self._prompt_examples,
-                preannotate=RELTask._preannotate,
-            )
-            yield prompt
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+        return super().generate_prompts(
+            docs=[
+                Doc(doc.vocab, words=RELTask._preannotate(doc).split()) for doc in docs
+            ],
+            labels=list(self._label_dict.values()),
+            label_definitions=self._label_definitions,
+            preannotate=RELTask._preannotate,
+        )
 
     @staticmethod
     def _preannotate(doc: Union[Doc, RELExample]) -> str:
@@ -101,10 +80,10 @@ class RELTask(SerializableTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        self._check_rel_extension()
+        self._check_extension(self._field)
 
         for doc, rel_items in zip(
-            docs, self._parse_responses(responses, docs, self._verbose)
+            docs, self._parse_responses(responses, docs=docs, verbose=self._verbose)
         ):
             doc._.rel = rel_items
             yield doc
@@ -116,41 +95,13 @@ class RELTask(SerializableTask):
         labels: List[str] = [],
         n_prompt_examples: int = 0,
     ) -> None:
-        """Initialize the SpanCat task, by auto-discovering labels.
-
-        Labels can be set through, by order of precedence:
-
-        - the `[initialize]` section of the pipeline configuration
-        - the `labels` argument supplied to the task factory
-        - the labels found in the examples
-
-        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
-            for initialization.
-        nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
-        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
-            0 by default. Takes all examples if set to -1.
-        """
-        self._check_rel_extension()
-
-        if not labels:
-            labels = list(self._label_dict.values())
-        infer_labels = not labels
-
-        if infer_labels:
-            labels = []
-
-        for eg in get_examples():
-            if infer_labels:
-                rels: List[RelationItem] = eg.reference._.rel
-                for rel in rels:
-                    labels.append(rel.relation)
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(self._fewshot_example_type.generate(eg))
-
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
+        self._check_extension(self._field)
+        super()._initialize(
+            get_examples=get_examples,
+            nlp=nlp,
+            labels=labels,
+            n_prompt_examples=n_prompt_examples,
+        )
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -160,3 +111,7 @@ class RELTask(SerializableTask):
             "_label_definitions",
             "_verbose",
         ]
+
+    def _extract_labels_from_example(self, example: Example) -> List[str]:
+        rels: List[RelationItem] = example.reference._.rel
+        return [rel.relation for rel in rels]

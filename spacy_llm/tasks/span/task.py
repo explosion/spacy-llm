@@ -1,18 +1,17 @@
+import abc
 import typing
 import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Callable, Dict, Iterable, List, Optional, Type
 
-import jinja2
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal
-from ...registry import lowercase_normalizer
 from ...ty import TaskResponseParserProtocol
-from ..util.serialization import SerializableTask
+from ..builtin_task import BuiltinTaskWithLabels
 from .examples import SpanExample
 
 
-class SpanTask(SerializableTask):
+class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     """Base class for Span-related tasks, eg NER and SpanCat."""
 
     def __init__(
@@ -28,36 +27,36 @@ class SpanTask(SerializableTask):
         case_sensitive_matching: bool,
         single_match: bool,
     ):
-        super().__init__(fewshot_example_type)
+        super().__init__(
+            parse_responses=parse_responses,
+            fewshot_example_type=fewshot_example_type,
+            template=template,
+            examples=prompt_examples,
+            labels=labels,
+            label_definitions=label_definitions,
+            normalizer=normalizer,
+        )
 
         self._fewshot_example_type = typing.cast(
             Type[SpanExample], self._fewshot_example_type
         )
-        self._parse_responses = parse_responses
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
-        self._template = template
-        self._label_definitions = label_definitions
-        self._prompt_examples = prompt_examples or []
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
-        if self._prompt_examples:
-            self._prompt_examples: List[SpanExample] = self._check_label_consistency()
+        if self._fewshot_examples:
+            self._fewshot_examples: List[SpanExample] = self._check_label_consistency()
 
     def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
         RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """
-        assert self._prompt_examples
+        assert self._fewshot_examples
 
         example_labels = {
             self._normalizer(key): key
-            for example in self._prompt_examples
+            for example in self._fewshot_examples
             for key in example.entities
         }
         unspecified_labels = {
@@ -84,30 +83,22 @@ class SpanTask(SerializableTask):
                         if self._normalizer(label) in self._label_dict
                     },
                 )
-                for example in self._prompt_examples
+                for example in self._fewshot_examples
             ]
             if len(example.entities)
         ]
 
     @property
-    def labels(self) -> Tuple[str, ...]:
-        return tuple(self._label_dict.values())
-
-    @property
     def prompt_template(self) -> str:
         return self._template
 
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        environment = jinja2.Environment()
-        _template = environment.from_string(self._template)
-        for doc in docs:
-            prompt = _template.render(
-                text=doc.text,
-                labels=list(self._label_dict.values()),
-                label_definitions=self._label_definitions,
-                examples=self._prompt_examples,
-            )
-            yield prompt
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+        return super().generate_prompts(
+            docs=docs,
+            labels=list(self._label_dict.values()),
+            label_definitions=self._label_definitions,
+            **kwargs,
+        )
 
     @staticmethod
     def _validate_alignment(alignment_mode: str):
