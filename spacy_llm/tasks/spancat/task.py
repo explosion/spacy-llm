@@ -1,12 +1,11 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
-from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal
-from ...ty import TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, TaskResponseParserProtocol
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
 
@@ -23,11 +22,12 @@ class SpanCatTask(SpanTask):
         template: str,
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
-        prompt_examples: Optional[List[SpanExample]],
+        examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
         single_match: bool,
+        scorer: CallableScorableProtocol,
     ):
         """Default SpanCat task.
 
@@ -41,14 +41,13 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
+        scorer (BuiltinScorableProtocol): Scorer function.
         """
         super(SpanCatTask, self).__init__(
             parse_responses=parse_responses,
@@ -56,13 +55,14 @@ class SpanCatTask(SpanTask):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            prompt_examples=prompt_examples,
+            prompt_examples=examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
         self._spans_key = spans_key
+        self._scorer = scorer
 
     def assign_spans(
         self,
@@ -72,15 +72,8 @@ class SpanCatTask(SpanTask):
         """Assign spans to the document."""
         doc.spans[self._spans_key] = sorted(spans)  # type: ignore [type-var]
 
-    def scorer(
-        self,
-        examples: Iterable[Example],
-    ) -> Dict[str, Any]:
-        return spancat_score(
-            examples,
-            spans_key=self._spans_key,
-            allow_overlap=True,
-        )
+    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        return self._scorer(examples, spans_key=self._spans_key, allow_overlap=True)
 
     def initialize(
         self,
@@ -88,39 +81,14 @@ class SpanCatTask(SpanTask):
         nlp: Language,
         labels: List[str] = [],
         n_prompt_examples: int = 0,
-        **kwargs: Any,
     ) -> None:
-        """Initialize the SpanCat task, by auto-discovering labels.
-
-        Labels can be set through, by order of precedence:
-
-        - the `[initialize]` section of the pipeline configuration
-        - the `labels` argument supplied to the task factory
-        - the labels found in the examples
-
-        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
-            for initialization.
-        nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
-        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
-            0 by default. Takes all examples if set to -1.
-        """
-        if not labels:
-            labels = list(self._label_dict.values())
-        infer_labels = not labels
-
-        for eg in get_examples():
-            if infer_labels:
-                for span in eg.reference.spans.get(self._spans_key, []):
-                    labels.append(span.label_)
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._fewshot_example_type.generate(eg, spans_key=self._spans_key)
-                )
-
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
+        super()._initialize(
+            get_examples=get_examples,
+            nlp=nlp,
+            labels=labels,
+            n_prompt_examples=n_prompt_examples,
+            spans_key=self._spans_key,
+        )
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -132,4 +100,9 @@ class SpanCatTask(SpanTask):
             "_alignment_mode",
             "_case_sensitive_matching",
             "_single_match",
+        ]
+
+    def _extract_labels_from_example(self, example: Example) -> List[str]:
+        return [
+            span.label_ for span in example.reference.spans.get(self._spans_key, [])
         ]

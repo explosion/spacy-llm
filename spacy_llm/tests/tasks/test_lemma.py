@@ -368,7 +368,7 @@ def test_lemma_init(noop_config, n_prompt_examples: int):
     _, llm = nlp.pipeline[0]
     task: LemmaTask = llm._task
 
-    assert not task._prompt_examples
+    assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
         "n_prompt_examples": n_prompt_examples
@@ -376,6 +376,6 @@ def test_lemma_init(noop_config, n_prompt_examples: int):
     nlp.initialize(lambda: examples)
 
     if n_prompt_examples >= 0:
-        assert len(task._prompt_examples) == n_prompt_examples
+        assert len(task._fewshot_examples) == n_prompt_examples
     else:
-        assert len(task._prompt_examples) == len(examples)
+        assert len(task._fewshot_examples) == len(examples)

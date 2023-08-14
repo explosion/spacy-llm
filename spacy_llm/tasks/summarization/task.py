@@ -1,19 +1,18 @@
 import warnings
-from typing import Any, Callable, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
-import jinja2
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...ty import FewshotExample, TaskResponseParserProtocol
+from ..builtin_task import BuiltinTask
 from ..templates import read_template
-from ..util import SerializableTask
 
 DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 
 
-class SummarizationTask(SerializableTask):
+class SummarizationTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol,
@@ -32,14 +31,16 @@ class SummarizationTask(SerializableTask):
         field (str): The name of the doc extension in which to store the summary.
         examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
-        super().__init__(fewshot_example_type)
-        self._template = template
-        self._parse_responses = parse_responses
-        self._examples = examples
+        super().__init__(
+            parse_responses=parse_responses,
+            fewshot_example_type=fewshot_example_type,
+            template=template,
+            examples=examples,
+        )
         self._max_n_words = max_n_words
         self._field = field
-        self._prompt_examples = examples or []
         self._check_example_summaries = True
+
         if not Doc.has_extension(field):
             Doc.set_extension(field, default=None)
 
@@ -48,27 +49,19 @@ class SummarizationTask(SerializableTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         n_prompt_examples: int = 0,
-        **kwargs: Any,
     ) -> None:
-        """Initializes prompt examples from Doc examples.
-        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
-            for initialization.
-        nlp (Language): Language instance.
-        n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
-            0 by default. Takes all examples if set to -1.
-        """
-        for eg in get_examples():
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._fewshot_example_type.generate(eg, field=self._field)
-                )
+        super()._initialize(
+            get_examples=get_examples,
+            nlp=nlp,
+            n_prompt_examples=n_prompt_examples,
+        )
 
     def _check_prompt_example_summary_len(self) -> None:
         """Checks whether summaries of prompt examples are of expected lengths. Warns if they aren't."""
         if self._max_n_words is None:
             return
 
-        for pr_ex in self._prompt_examples:
+        for pr_ex in self._fewshot_examples:
             len_summary = len(pr_ex.summary.split())
             len_text = len(pr_ex.text.split())
             if len_summary >= len_text * 1.2:
@@ -84,18 +77,12 @@ class SummarizationTask(SerializableTask):
                     f"LLM will likely produce responses that are too long."
                 )
 
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
         if self._check_example_summaries:
             self._check_prompt_example_summary_len()
             self._check_example_summaries = False
 
-        environment = jinja2.Environment()
-        _template = environment.from_string(self._template)
-        for doc in docs:
-            prompt = _template.render(
-                text=doc.text, examples=self._examples, max_n_words=self._max_n_words
-            )
-            yield prompt
+        return super().generate_prompts(docs=docs, max_n_words=self._max_n_words)
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
@@ -107,3 +94,10 @@ class SummarizationTask(SerializableTask):
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
+
+    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        """Scores performance on provided examples.
+        examples (Iterable[Example]): Examples to determine score against.
+        """
+        # todo how to score summaries? return dummy value?
+        raise NotImplementedError

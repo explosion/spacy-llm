@@ -1,10 +1,12 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, ExamplesConfigType, FewshotExample
+from ...ty import TaskResponseParserProtocol
 from ...util import split_labels
 from .examples import TextCatExample
 from .parser import parse_responses_v1_v2_v3
+from .scorer import score
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V1, DEFAULT_TEXTCAT_TEMPLATE_V2
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V3, TextCatTask
 
@@ -19,6 +21,7 @@ def make_textcat_task(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
+    scorer: Optional[CallableScorableProtocol] = None,
 ) -> "TextCatTask":
     """TextCat.v1 task factory.
 
@@ -47,6 +50,7 @@ def make_textcat_task(
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
     verbose (bool): If True, show extra information.
+    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -59,12 +63,13 @@ def make_textcat_task(
         fewshot_example_type=example_type,
         labels=labels_list,
         template=DEFAULT_TEXTCAT_TEMPLATE_V1,
-        prompt_examples=textcat_examples,
+        examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
         verbose=verbose,
         label_definitions=None,
+        scorer=scorer or score,
     )
 
 
@@ -79,6 +84,7 @@ def make_textcat_task_v2(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
+    scorer: Optional[CallableScorableProtocol] = None,
 ) -> "TextCatTask":
     """TextCat.v2 task factory.
 
@@ -109,6 +115,7 @@ def make_textcat_task_v2(
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
     verbose (bool): If True, show extra information.
+    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -122,12 +129,13 @@ def make_textcat_task_v2(
         fewshot_example_type=example_type,
         labels=labels_list,
         template=template,
-        prompt_examples=textcat_examples,
+        examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
         verbose=verbose,
         label_definitions=None,
+        scorer=scorer or score,
     )
 
 
@@ -143,6 +151,7 @@ def make_textcat_task_v3(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
+    scorer: Optional[CallableScorableProtocol] = None,
 ) -> "TextCatTask":
     """TextCat.v3 task factory.
 
@@ -175,6 +184,7 @@ def make_textcat_task_v3(
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
     verbose (bool): If True, show extra information.
+    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
 
     labels_list = split_labels(labels)
@@ -190,9 +200,10 @@ def make_textcat_task_v3(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        prompt_examples=textcat_examples,
+        examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
         verbose=verbose,
+        scorer=scorer or score,
     )

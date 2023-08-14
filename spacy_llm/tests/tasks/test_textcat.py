@@ -767,7 +767,7 @@ def test_textcat_init(
     else:
         target = set()
     assert set(task._label_dict.values()) == target
-    assert not task._prompt_examples
+    assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
         "n_prompt_examples": n_prompt_examples
@@ -781,9 +781,9 @@ def test_textcat_init(
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
     if n_prompt_examples >= 0:
-        assert len(task._prompt_examples) == n_prompt_examples
+        assert len(task._fewshot_examples) == n_prompt_examples
     else:
-        assert len(task._prompt_examples) == len(INSULTS)
+        assert len(task._fewshot_examples) == len(INSULTS)
 
 
 def test_textcat_serde(noop_config, tmp_path: Path):
