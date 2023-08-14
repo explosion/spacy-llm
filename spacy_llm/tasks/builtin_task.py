@@ -13,7 +13,7 @@ from spacy_llm.ty import FewshotExample, TaskResponseParserProtocol
 
 
 class BuiltinTask(abc.ABC):
-    """Abstract base task implementing interfaces and/or functionality expected from all built-in task:
+    """Abstract base task implementing interfaces and/or functionality expected from all built-in tasks:
         - working prompt template strings
         - swappable response parsers
         - swappable prompt example type
