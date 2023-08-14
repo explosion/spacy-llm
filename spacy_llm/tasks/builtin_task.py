@@ -8,8 +8,8 @@ from spacy import Language, util
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from spacy_llm.registry import lowercase_normalizer
-from spacy_llm.ty import FewshotExample, TaskResponseParserProtocol
+from ..registry import lowercase_normalizer
+from ..ty import FewshotExample, TaskResponseParserProtocol
 
 
 class BuiltinTask(abc.ABC):
