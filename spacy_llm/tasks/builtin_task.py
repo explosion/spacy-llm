@@ -249,7 +249,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         labels (List[str]): List of labels to pass to the template.
-            Leave empty to populate it at initialization time (only if examples are provided).
+            Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
