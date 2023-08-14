@@ -29,7 +29,6 @@ def make_ner_task(
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
-    template (str): Prompt template passed to the model.
     label_definitions (Optional[Dict[str, str]]): Map of label -> description
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
