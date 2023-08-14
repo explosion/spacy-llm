@@ -20,15 +20,13 @@ class BuiltinTask(abc.ABC):
         - integration of fewshot example into the fully rendered prompt
         - initializable (in line with other spaCy components)
         - (de-)serialization
-        - todo swappable scorer
+        - swappable scorer
 
     On the relation of BuiltinTask to LLMTaskProtocol: the latter specifies the minimal contract a task implementation
     has to fulfill, whereas a BuiltinTask requires (and offers) functionality beyond that. The rationale behind that is
     that built-in tasks should provide as smooth a usage experience as possible while still making it as easy as possible
     for users to write their own, custom tasks.
     """
-
-    _fewshot_examples: List[FewshotExample]
 
     def __init__(
         self,
@@ -201,12 +199,6 @@ class BuiltinTask(abc.ABC):
 
         util.from_disk(path, deserialize, exclude)
         return self
-
-    @abc.abstractmethod
-    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
-        """Scores performance on provided examples.
-        examples (Iterable[Example]): Examples to determine score against.
-        """
 
     @property
     def prompt_template(self) -> str:

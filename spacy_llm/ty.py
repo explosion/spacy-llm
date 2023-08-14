@@ -77,12 +77,28 @@ class FewshotExample(abc.ABC, BaseModel):
 
 @runtime_checkable
 class ScorableProtocol(Protocol):
+    """Differs from ScorableCallableProtocol in that it describes an object with a scorer() function, i. e. a scorable
+    as checked for by the LLMWrapper component.
+    """
+
     def scorer(
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         """Scores performance on examples."""
-        ...
+
+
+@runtime_checkable
+class CallableScorableProtocol(Protocol):
+    """Differs from ScorableProtocol in that it describes a Callable with a call signature matching the scorer()
+    function + kwargs, i. e. a scorable as passed via the configuration.
+    """
+
+    def __call__(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+        """Score performance on examples.
+        examples (Iterable[Example]): Examples to score.
+        RETURNS (Dict[str, Any]): Dict with metric name -> score.
+        """
 
 
 @runtime_checkable

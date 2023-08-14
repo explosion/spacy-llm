@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -21,7 +21,7 @@ class RELTask(BuiltinTaskWithLabels):
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
@@ -36,9 +36,7 @@ class RELTask(BuiltinTaskWithLabels):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        prompt_examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
@@ -46,7 +44,7 @@ class RELTask(BuiltinTaskWithLabels):
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=prompt_examples,
+            examples=examples,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,
@@ -113,10 +111,6 @@ class RELTask(BuiltinTaskWithLabels):
             "_label_definitions",
             "_verbose",
         ]
-
-    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
-        # todo how to score REL?
-        raise NotImplementedError
 
     def _extract_labels_from_example(self, example: Example) -> List[str]:
         rels: List[RelationItem] = example.reference._.rel

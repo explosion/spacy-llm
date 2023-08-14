@@ -1,9 +1,11 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, ExamplesConfigType, FewshotExample
+from ...ty import TaskResponseParserProtocol
 from .examples import LemmaExample
 from .parser import parse_responses_v1
+from .scorer import score
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 
 
@@ -12,12 +14,18 @@ def make_lemma_parser() -> TaskResponseParserProtocol:
     return parse_responses_v1
 
 
+@registry.llm_misc("spacy.LemmaScorer.v1")
+def make_lemma_scorer() -> CallableScorableProtocol:
+    return score
+
+
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
     parse_responses: Optional[TaskResponseParserProtocol] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
+    scorer: Optional[CallableScorableProtocol] = None,
 ):
     """Lemma.v1 task factory.
 
@@ -27,6 +35,7 @@ def make_lemma_task(
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
+    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = fewshot_example_type or LemmaExample
@@ -39,4 +48,5 @@ def make_lemma_task(
         parse_responses=parse_responses or parse_responses_v1,
         fewshot_example_type=example_type,
         examples=lemma_examples,
+        scorer=scorer or score,
     )

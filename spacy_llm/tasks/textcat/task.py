@@ -1,13 +1,12 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
-from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
 from ...registry import lowercase_normalizer
-from ...ty import FewshotExample, TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 
@@ -24,11 +23,12 @@ class TextCatTask(BuiltinTaskWithLabels):
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
         verbose: bool,
+        scorer: CallableScorableProtocol,
     ):
         """Default TextCat task.
 
@@ -52,20 +52,19 @@ class TextCatTask(BuiltinTaskWithLabels):
         template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
-        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
+        scorer (BuiltinScorableProtocol): Scorer function.
         """
         super().__init__(
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=prompt_examples,
+            examples=examples,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,
@@ -80,6 +79,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         self._exclusive_classes = exclusive_classes
         self._allow_none = allow_none
         self._verbose = verbose
+        self._scorer = scorer
 
         if self._use_binary and not self._exclusive_classes:
             msg.warn(
@@ -118,7 +118,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
-        return Scorer.score_cats(
+        return self._scorer(
             examples,
             attr="cats",
             labels=self._label_dict.values(),

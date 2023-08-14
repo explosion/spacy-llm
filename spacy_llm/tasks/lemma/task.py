@@ -1,10 +1,10 @@
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy import Language
-from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 
+from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -12,6 +12,30 @@ DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma.v1")
 
 
 class LemmaTask(BuiltinTask):
+    def __init__(
+        self,
+        parse_responses: TaskResponseParserProtocol,
+        fewshot_example_type: Type[FewshotExample],
+        examples: Optional[List[FewshotExample]],
+        template: str,
+        scorer: CallableScorableProtocol,
+    ):
+        """Default lemmatization task.
+
+        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        template (str): Prompt template passed to the model.
+        scorer (BuiltinScorableProtocol): Scorer function.
+        """
+        super().__init__(
+            parse_responses=parse_responses,
+            fewshot_example_type=fewshot_example_type,
+            template=template,
+            examples=examples,
+        )
+        self._scorer = scorer
+
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
@@ -39,11 +63,8 @@ class LemmaTask(BuiltinTask):
             get_examples=get_examples, nlp=nlp, n_prompt_examples=n_prompt_examples
         )
 
-    def scorer(
-        self,
-        examples: Iterable[Example],
-    ) -> Dict[str, Any]:
-        return Scorer.score_token_attr(examples, "lemma")
+    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        return self._scorer(examples)
 
     @property
     def _cfg_keys(self) -> List[str]:

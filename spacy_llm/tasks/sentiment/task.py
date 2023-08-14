@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type
+from typing import Callable, Iterable, List, Optional, Type
 
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -27,9 +27,7 @@ class SentimentTask(BuiltinTask):
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         field (str): The name of the doc extension in which to store the sentiment score.
-        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
         super().__init__(
             parse_responses=parse_responses,
@@ -78,16 +76,6 @@ class SentimentTask(BuiltinTask):
                 setattr(doc._, self._field, None)
 
             yield doc
-
-    def scorer(
-        self,
-        examples: Iterable[Example],
-    ) -> Dict[str, Any]:
-        """Scores lemmatization accuracy on provided examples.
-        examples (Iterable[Example]): Examples to determine score against.
-        """
-        # todo
-        raise NotImplementedError
 
     @property
     def _cfg_keys(self) -> List[str]:

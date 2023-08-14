@@ -50,7 +50,7 @@ def make_rel_task(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        prompt_examples=rel_examples,
+        examples=rel_examples,
         normalizer=normalizer,
         verbose=verbose,
     )

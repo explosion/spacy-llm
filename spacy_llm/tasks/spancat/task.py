@@ -1,12 +1,11 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
-from spacy.pipeline.spancat import spancat_score
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal
-from ...ty import TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, TaskResponseParserProtocol
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
 
@@ -23,11 +22,12 @@ class SpanCatTask(SpanTask):
         template: str,
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
-        prompt_examples: Optional[List[SpanExample]],
+        examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
         single_match: bool,
+        scorer: CallableScorableProtocol,
     ):
         """Default SpanCat task.
 
@@ -41,14 +41,13 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
+        scorer (BuiltinScorableProtocol): Scorer function.
         """
         super(SpanCatTask, self).__init__(
             parse_responses=parse_responses,
@@ -56,13 +55,14 @@ class SpanCatTask(SpanTask):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            prompt_examples=prompt_examples,
+            prompt_examples=examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
         self._spans_key = spans_key
+        self._scorer = scorer
 
     def assign_spans(
         self,
@@ -72,15 +72,8 @@ class SpanCatTask(SpanTask):
         """Assign spans to the document."""
         doc.spans[self._spans_key] = sorted(spans)  # type: ignore [type-var]
 
-    def scorer(
-        self,
-        examples: Iterable[Example],
-    ) -> Dict[str, Any]:
-        return spancat_score(
-            examples,
-            spans_key=self._spans_key,
-            allow_overlap=True,
-        )
+    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        return self._scorer(examples, spans_key=self._spans_key, allow_overlap=True)
 
     def initialize(
         self,

@@ -1,13 +1,12 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
-from spacy.scorer import get_ner_prf
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import filter_spans
 
 from ...compat import Literal
-from ...ty import TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, TaskResponseParserProtocol
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
 
@@ -28,6 +27,7 @@ class NERTask(SpanTask):
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
         single_match: bool,
+        scorer: CallableScorableProtocol,
     ):
         """Default NER task.
 
@@ -40,14 +40,13 @@ class NERTask(SpanTask):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive: Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
+        scorer (BuiltinScorableProtocol): Scorer function.
         """
         super().__init__(
             labels=labels,
@@ -61,6 +60,7 @@ class NERTask(SpanTask):
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
         )
+        self._scorer = scorer
 
     def initialize(
         self,
@@ -84,11 +84,8 @@ class NERTask(SpanTask):
         """Assign spans to the document."""
         doc.set_ents(filter_spans(spans))
 
-    def scorer(
-        self,
-        examples: Iterable[Example],
-    ) -> Dict[str, Any]:
-        return get_ner_prf(examples)
+    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        return self._scorer(examples)
 
     def _extract_labels_from_example(self, example: Example) -> List[str]:
         return [ent.label_ for ent in example.reference.ents]
