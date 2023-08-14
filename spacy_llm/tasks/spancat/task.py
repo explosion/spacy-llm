@@ -88,39 +88,14 @@ class SpanCatTask(SpanTask):
         nlp: Language,
         labels: List[str] = [],
         n_prompt_examples: int = 0,
-        **kwargs: Any,
     ) -> None:
-        """Initialize the SpanCat task, by auto-discovering labels.
-
-        Labels can be set through, by order of precedence:
-
-        - the `[initialize]` section of the pipeline configuration
-        - the `labels` argument supplied to the task factory
-        - the labels found in the examples
-
-        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
-            for initialization.
-        nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
-        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
-            0 by default. Takes all examples if set to -1.
-        """
-        if not labels:
-            labels = list(self._label_dict.values())
-        infer_labels = not labels
-
-        for eg in get_examples():
-            if infer_labels:
-                for span in eg.reference.spans.get(self._spans_key, []):
-                    labels.append(span.label_)
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._fewshot_example_type.generate(eg, spans_key=self._spans_key)
-                )
-
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
+        super()._initialize(
+            get_examples=get_examples,
+            nlp=nlp,
+            labels=labels,
+            n_prompt_examples=n_prompt_examples,
+            spans_key=self._spans_key,
+        )
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -132,4 +107,9 @@ class SpanCatTask(SpanTask):
             "_alignment_mode",
             "_case_sensitive_matching",
             "_single_match",
+        ]
+
+    def _extract_labels_from_example(self, example: Example) -> List[str]:
+        return [
+            span.label_ for span in example.reference.spans.get(self._spans_key, [])
         ]

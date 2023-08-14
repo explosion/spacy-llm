@@ -68,40 +68,13 @@ class NERTask(SpanTask):
         nlp: Language,
         labels: List[str] = [],
         n_prompt_examples: int = 0,
-        **kwargs: Any,
     ) -> None:
-        """Initialize the NER task, by auto-discovering labels.
-
-        Labels can be set through, by order of precedence:
-
-        - the `[initialize]` section of the pipeline configuration
-        - the `labels` argument supplied to the task factory
-        - the labels found in the examples
-
-        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
-            for initialization.
-        nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
-        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
-            0 by default. Takes all examples if set to -1.
-        """
-        if not labels:
-            labels = list(self._label_dict.values())
-        infer_labels = not labels
-
-        if infer_labels:
-            labels = []
-
-        for eg in get_examples():
-            if infer_labels:
-                for ent in eg.reference.ents:
-                    labels.append(ent.label_)
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(self._fewshot_example_type.generate(eg))
-
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
+        super()._initialize(
+            get_examples=get_examples,
+            nlp=nlp,
+            labels=labels,
+            n_prompt_examples=n_prompt_examples,
+        )
 
     def assign_spans(
         self,
@@ -116,3 +89,6 @@ class NERTask(SpanTask):
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         return get_ner_prf(examples)
+
+    def _extract_labels_from_example(self, example: Example) -> List[str]:
+        return [ent.label_ for ent in example.reference.ents]

@@ -1,19 +1,18 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
-import jinja2
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...ty import FewshotExample, TaskResponseParserProtocol
+from ..builtin_task import BuiltinTask
 from ..templates import read_template
-from ..util import SerializableTask
 from .examples import SentimentExample
 
 DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
 
 
-class SentimentTask(SerializableTask):
+class SentimentTask(BuiltinTask):
     def __init__(
         self,
         template: str,
@@ -32,11 +31,12 @@ class SentimentTask(SerializableTask):
             reads a file containing task examples for few-shot learning. If None is
             passed, then zero-shot learning will be used.
         """
-        super().__init__(fewshot_example_type)
-        self._template = template
-        self._parse_responses = parse_responses
-        self._examples = examples
-        self._prompt_examples = examples or []
+        super().__init__(
+            parse_responses=parse_responses,
+            fewshot_example_type=fewshot_example_type,
+            template=template,
+            examples=examples,
+        )
         self._field = field
         self._check_doc_extension()
 
@@ -50,33 +50,21 @@ class SentimentTask(SerializableTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         n_prompt_examples: int = 0,
-        **kwargs: Any,
     ) -> None:
         """Initialize sentiment task.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
         n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
         """
         self._check_doc_extension()
+        super()._initialize(
+            get_examples=get_examples, nlp=nlp, n_prompt_examples=n_prompt_examples
+        )
 
-        for eg in get_examples():
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._fewshot_example_type.generate(eg, field=self._field)
-                )
-
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        environment = jinja2.Environment()
-        _template = environment.from_string(self._template)
-        for doc in docs:
-            prompt = _template.render(
-                text=doc.text,
-                examples=self._examples,
-            )
-            yield prompt
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+        return super().generate_prompts(docs=docs)
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
@@ -99,7 +87,7 @@ class SentimentTask(SerializableTask):
         examples (Iterable[Example]): Examples to determine score against.
         """
         # todo
-        return {"sentiment_diff": 0}
+        raise NotImplementedError
 
     @property
     def _cfg_keys(self) -> List[str]:

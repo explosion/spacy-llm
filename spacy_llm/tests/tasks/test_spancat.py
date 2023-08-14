@@ -561,7 +561,7 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
     task: SpanCatTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._prompt_examples
+    assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
         "n_prompt_examples": n_prompt_examples
@@ -571,12 +571,12 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
     if n_prompt_examples >= 0:
-        assert len(task._prompt_examples) == n_prompt_examples
+        assert len(task._fewshot_examples) == n_prompt_examples
     else:
-        assert len(task._prompt_examples) == len(examples)
+        assert len(task._fewshot_examples) == len(examples)
 
     if n_prompt_examples > 0:
-        for eg in task._prompt_examples:
+        for eg in task._fewshot_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 

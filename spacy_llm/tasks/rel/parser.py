@@ -1,6 +1,5 @@
 from typing import Iterable, List
 
-from spacy.tokens import Doc
 from wasabi import msg
 
 from spacy_llm.tasks.rel.examples import RelationItem
@@ -12,15 +11,13 @@ except ImportError:
 
 
 def parse_responses_v1(
-    responses: Iterable[str], docs: Iterable[Doc], verbose: bool
+    responses: Iterable[str], **kwargs
 ) -> Iterable[List[RelationItem]]:
     """Parses LLM responses for spacy.REL.v1.
     responses (Iterable[str]): LLM responses.
-    doc (Iterable[Doc]): Corresponding docs.
-    verbose (bool): Controls the verbosity of the task.
     RETURNS (Iterable[List[RelationItem]]): List of RelationItem instances per doc/response.
     """
-    for response, doc in zip(responses, docs):
+    for response, doc in zip(responses, kwargs["docs"]):
         relations: List[RelationItem] = []
         for line in response.strip().split("\n"):
             try:
@@ -33,7 +30,7 @@ def parse_responses_v1(
                 msg.warn(
                     "Validation issue",
                     line,
-                    show=verbose,
+                    show=kwargs["verbose"],
                 )
 
         yield relations
