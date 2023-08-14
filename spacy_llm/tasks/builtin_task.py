@@ -24,7 +24,7 @@ class BuiltinTask(abc.ABC):
 
     On the relation of BuiltinTask to LLMTaskProtocol: the latter specifies the minimal contract a task implementation
     has to fulfill, whereas a BuiltinTask requires (and offers) functionality beyond that. The rationale behind that is
-    that built-in tasks should provide a smooth a usage experience as possible while still making it as easy as possible
+    that built-in tasks should provide as smooth a usage experience as possible while still making it as easy as possible
     for users to write their own, custom tasks.
     """
 
