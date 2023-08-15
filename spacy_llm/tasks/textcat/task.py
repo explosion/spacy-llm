@@ -1,16 +1,13 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
-import jinja2
 from spacy.language import Language
-from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
-from spacy_llm.tasks.util.serialization import SerializableTask
-
 from ...registry import lowercase_normalizer
-from ...ty import FewshotExample, TaskResponseParserProtocol
+from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
+from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 
 DEFAULT_TEXTCAT_TEMPLATE_V1 = read_template("textcat.v1")
@@ -18,7 +15,7 @@ DEFAULT_TEXTCAT_TEMPLATE_V2 = read_template("textcat.v2")
 DEFAULT_TEXTCAT_TEMPLATE_V3 = read_template("textcat.v3")
 
 
-class TextCatTask(SerializableTask):
+class TextCatTask(BuiltinTaskWithLabels):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol,
@@ -26,11 +23,12 @@ class TextCatTask(SerializableTask):
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
         verbose: bool,
+        scorer: CallableScorableProtocol,
     ):
         """Default TextCat task.
 
@@ -54,29 +52,34 @@ class TextCatTask(SerializableTask):
         template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
-        prompt_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
+        scorer (BuiltinScorableProtocol): Scorer function.
         """
-        super().__init__(fewshot_example_type)
-        self._template = template
-        self._parse_responses = parse_responses
+        super().__init__(
+            parse_responses=parse_responses,
+            fewshot_example_type=fewshot_example_type,
+            template=template,
+            examples=examples,
+            labels=labels,
+            label_definitions=label_definitions,
+            normalizer=normalizer,
+        )
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))
         }
         self._label_definitions = label_definitions
-        self._prompt_examples = prompt_examples or []
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
         self._allow_none = allow_none
         self._verbose = verbose
+        self._scorer = scorer
 
         if self._use_binary and not self._exclusive_classes:
             msg.warn(
@@ -85,27 +88,14 @@ class TextCatTask(SerializableTask):
             )
             self._exclusive_classes = True
 
-    @property
-    def labels(self) -> Tuple[str, ...]:
-        return tuple(self._label_dict.values())
-
-    @property
-    def prompt_template(self) -> str:
-        return self._template
-
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
-        environment = jinja2.Environment()
-        _template = environment.from_string(self._template)
-        for doc in docs:
-            prompt = _template.render(
-                text=doc.text,
-                labels=list(self._label_dict.values()),
-                label_definitions=self._label_definitions,
-                examples=self._prompt_examples,
-                exclusive_classes=self._exclusive_classes,
-                allow_none=self._allow_none,
-            )
-            yield prompt
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+        return super().generate_prompts(
+            docs=docs,
+            labels=list(self._label_dict.values()),
+            label_definitions=self._label_definitions,
+            exclusive_classes=self._exclusive_classes,
+            allow_none=self._allow_none,
+        )
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
@@ -128,7 +118,7 @@ class TextCatTask(SerializableTask):
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
-        return Scorer.score_cats(
+        return self._scorer(
             examples,
             attr="cats",
             labels=self._label_dict.values(),
@@ -141,44 +131,15 @@ class TextCatTask(SerializableTask):
         nlp: Language,
         labels: List[str] = [],
         n_prompt_examples: int = 0,
-        **kwargs: Any,
     ) -> None:
-        """Initialize the TextCat task, by auto-discovering labels.
-
-        Labels can be set through, by order of precedence:
-
-        - the `[initialize]` section of the pipeline configuration
-        - the `labels` argument supplied to the task factory
-        - the labels found in the examples
-
-        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
-            for initialization.
-        nlp (Language): Language instance.
-        labels (List[str]): Optional list of labels.
-        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
-            0 by default. Takes all examples if set to -1.
-        """
-        if not labels:
-            labels = list(self._label_dict.values())
-        infer_labels = not labels
-
-        if infer_labels:
-            labels = []
-
-        for eg in get_examples():
-            if infer_labels:
-                for cat in eg.reference.cats.keys():
-                    labels.append(cat)
-            if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._fewshot_example_type.generate(
-                        eg, use_binary=self._use_binary, label_dict=self._label_dict
-                    )
-                )
-
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
+        super()._initialize(
+            get_examples=get_examples,
+            nlp=nlp,
+            labels=labels,
+            n_prompt_examples=n_prompt_examples,
+            use_binary=self._use_binary,
+            label_dict=self._label_dict,
+        )
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -191,3 +152,6 @@ class TextCatTask(SerializableTask):
             "_allow_none",
             "_verbose",
         ]
+
+    def _extract_labels_from_example(self, example: Example) -> List[str]:
+        return list(example.reference.cats.keys())

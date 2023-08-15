@@ -69,20 +69,36 @@ class FewshotExample(abc.ABC, BaseModel):
 
 @runtime_checkable
 class ScorableProtocol(Protocol):
+    """Differs from ScorableCallableProtocol in that it describes an object with a scorer() function, i. e. a scorable
+    as checked for by the LLMWrapper component.
+    """
+
     def scorer(
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         """Scores performance on examples."""
-        ...
+
+
+@runtime_checkable
+class CallableScorableProtocol(Protocol):
+    """Differs from ScorableProtocol in that it describes a Callable with a call signature matching the scorer()
+    function + kwargs, i. e. a scorable as passed via the configuration.
+    """
+
+    def __call__(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+        """Score performance on examples.
+        examples (Iterable[Example]): Examples to score.
+        RETURNS (Dict[str, Any]): Dict with metric name -> score.
+        """
 
 
 @runtime_checkable
 class LLMTaskProtocol(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
-        RETURNS (Iterable[_Prompt]): Iterable with one prompt per doc.
+        RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
         """
 
     def parse_responses(
@@ -91,14 +107,12 @@ class LLMTaskProtocol(Protocol):
         """
         Parses LLM responses.
         docs (Iterable[Doc]): Docs to map responses into.
-        respones ([Iterable[_Response]]): LLM responses.
+        respones ([Iterable[_ResponseType]]): LLM responses.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
 
 
 _Task_contra = TypeVar("_Task_contra", bound=LLMTaskProtocol, contravariant=True)
-
-# TaskResponseParserType = Callable[[Type[T], Iterable[Doc], Iterable[Any]], Iterable[Any]]
 
 
 class TaskResponseParserProtocol(Protocol[_Task_contra]):

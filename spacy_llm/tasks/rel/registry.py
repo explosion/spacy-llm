@@ -1,18 +1,18 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample
+from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
 from ...util import split_labels
 from .examples import RELExample
 from .parser import parse_responses_v1
-from .task import DEFAULT_REL_TEMPLATE, RELTask, TaskResponseParserType
+from .task import DEFAULT_REL_TEMPLATE, RELTask
 
 
 @registry.llm_tasks("spacy.REL.v1")
 def make_rel_task(
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_REL_TEMPLATE,
-    parse_responses: Optional[TaskResponseParserType] = None,
+    parse_responses: Optional[TaskResponseParserProtocol] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -50,7 +50,7 @@ def make_rel_task(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        prompt_examples=rel_examples,
+        examples=rel_examples,
         normalizer=normalizer,
         verbose=verbose,
     )
