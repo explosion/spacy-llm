@@ -5,7 +5,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 import jinja2
 from spacy.tokens import Doc, Span
 
-from ...compat import Literal
+from ...compat import Literal, Self
 from ...registry import lowercase_normalizer
 from ...ty import TaskResponseParserProtocol
 from ..util.serialization import SerializableTask
@@ -17,7 +17,7 @@ class SpanTask(SerializableTask):
 
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[SpanExample],
         labels: List[str],
         template: str,
@@ -135,13 +135,9 @@ class SpanTask(SerializableTask):
         for doc, spans in zip(
             docs,
             self._parse_responses(
+                self,
+                docs,
                 responses,
-                docs=docs,
-                case_sensitive_matching=self._case_sensitive_matching,
-                single_match=self._single_match,
-                alignment_mode=self._alignment_mode,
-                normalizer=self._normalizer,
-                label_dict=self._label_dict,
             ),
         ):
             self.assign_spans(doc, spans)

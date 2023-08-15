@@ -1,8 +1,9 @@
-from typing import Callable, Dict, Iterable, Tuple
+from typing import Callable, Dict, Iterable, List, Tuple
 
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 
 from ...tasks.util import find_substrings
+from .task import SpanTask
 
 
 def _format_response(
@@ -32,7 +33,11 @@ def _format_response(
     return output
 
 
-def parse_responses(responses: Iterable[str], **kwargs) -> Iterable[Span]:
+def parse_responses(
+    task: SpanTask,
+    docs: Iterable[Doc],
+    responses: Iterable[str],
+) -> Iterable[List[Span]]:
     """Parses LLM responses for Span tasks.
     responses (Iterable[str]): LLM responses.
     kwargs ([Dict[str, Any]): Additional, mandatory arguments:
@@ -44,22 +49,22 @@ def parse_responses(responses: Iterable[str], **kwargs) -> Iterable[Span]:
         label_dict (Dict[str, str]): Mapping of normalized to non-normalized labels.
     RETURNS (Iterable[Span]): Parsed spans per doc/response.
     """
-    for doc, prompt_response in zip(kwargs["docs"], responses):
+    for doc, prompt_response in zip(docs, responses):
         spans = []
         for label, phrases in _format_response(
-            prompt_response, kwargs["normalizer"], kwargs["label_dict"]
+            prompt_response, task._normalizer, task._label_dict
         ):
             # For each phrase, find the substrings in the text
             # and create a Span
             offsets = find_substrings(
                 doc.text,
                 phrases,
-                case_sensitive=kwargs["case_sensitive_matching"],
-                single_match=kwargs["single_match"],
+                case_sensitive=task._case_sensitive_matching,
+                single_match=task._single_match,
             )
             for start, end in offsets:
                 span = doc.char_span(
-                    start, end, alignment_mode=kwargs["alignment_mode"], label=label
+                    start, end, alignment_mode=task._alignment_mode, label=label
                 )
                 if span is not None:
                     spans.append(span)

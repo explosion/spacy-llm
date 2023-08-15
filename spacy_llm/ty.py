@@ -3,8 +3,8 @@ import inspect
 import typing
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
-from typing import cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Union, cast
 
 from pydantic import BaseModel
 from spacy.tokens import Doc
@@ -22,14 +22,6 @@ PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
-
-
-@runtime_checkable
-class TaskResponseParserProtocol(Protocol):
-    def __call__(
-        self, responses: Iterable[_ResponseType], **kwargs
-    ) -> Iterable[_ParsedResponseType]:
-        ...
 
 
 @runtime_checkable
@@ -102,6 +94,18 @@ class LLMTaskProtocol(Protocol):
         respones ([Iterable[_Response]]): LLM responses.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
+
+
+_Task_contra = TypeVar("_Task_contra", bound=LLMTaskProtocol, contravariant=True)
+
+# TaskResponseParserType = Callable[[Type[T], Iterable[Doc], Iterable[Any]], Iterable[Any]]
+
+
+class TaskResponseParserProtocol(Protocol[_Task_contra]):
+    def __call__(
+        self, task: _Task_contra, docs: Iterable[Doc], responses: Iterable[Any]
+    ) -> Iterable[Any]:
+        ...
 
 
 @runtime_checkable

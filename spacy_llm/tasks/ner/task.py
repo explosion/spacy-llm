@@ -6,7 +6,7 @@ from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import filter_spans
 
-from ...compat import Literal
+from ...compat import Literal, Self
 from ...ty import TaskResponseParserProtocol
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
@@ -20,7 +20,7 @@ class NERTask(SpanTask):
         self,
         labels: List[str],
         template: str,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[SpanTask],
         fewshot_example_type: Type[SpanExample],
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[SpanExample]],
