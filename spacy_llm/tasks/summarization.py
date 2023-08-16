@@ -125,7 +125,9 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
-                text=doc.text, examples=self._prompt_examples, max_n_words=self._max_n_words
+                text=doc.text,
+                examples=self._prompt_examples,
+                max_n_words=self._max_n_words,
             )
             yield prompt
 
