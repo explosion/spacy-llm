@@ -166,7 +166,10 @@ def make_srl_task(
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
-    alignment_mode (Literal["strict", "contract", "expand"]): "strict", "contract" or "expand".
+    alignment_mode (Literal["strict", "contract", "expand"]): How character indices snap to token boundaries.
+        Options: "strict" (no snapping), "contract" (span of all tokens completely within the character span),
+        "expand" (span of all tokens at least partially covered by the character span).
+        Defaults to "strict".
     case_sensitive_matching: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
@@ -377,6 +380,48 @@ class SRLTask(SpanTask[SRLExample]):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
+        """
+        Parse LLM response by extracting predicate-arguments blocks from the generate response.
+        For example,
+        LLM response for doc: "A sentence with multiple predicates (p1, p2)"
+
+        Step 1: Extract the Predicates for the Text
+        Predicates: p1, p2
+
+        Step 2: For each Predicate, extract the Semantic Roles in 'Text'
+        Text: A sentence with multiple predicates (p1, p2)
+        Predicate: p1
+        ARG-0: a0_1
+        ARG-1: a1_1
+        ARG-M-TMP: a_t_1
+        ARG-M-LOC: a_l_1
+
+        Predicate: p2
+        ARG-0: a0_2
+        ARG-1: a1_2
+        ARG-M-TMP: a_t_2
+
+        So the steps in the parsing are to first find the text boundaries for the information
+        of each predicate. This is done by identifying the lines "Predicate: p1" and "Predicate: p2",
+        which gives us the text for each predicate as follows:
+
+        Predicate: p1
+        ARG-0: a0_1
+        ARG-1: a1_1
+        ARG-M-TMP: a_t_1
+        ARG-M-LOC: a_l_1
+
+            and,
+
+        Predicate: p2
+        ARG-0: a0_2
+        ARG-1: a1_2
+        ARG-M-TMP: a_t_2
+
+        Once we separate these out, then it is a matter of parsing line by line to extract the predicate
+        and its args for each predicate block
+
+        """
         for doc, prompt_response in zip(docs, responses):
             predicates = []
             relations = []
