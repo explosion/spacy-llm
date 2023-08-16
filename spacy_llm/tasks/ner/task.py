@@ -43,7 +43,7 @@ class NERTask(SpanTask):
         examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
-        case_sensitive: Whether to search without case sensitivity.
+        case_sensitive_matching (bool): Whether to search without case sensitivity.
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         scorer (BuiltinScorableProtocol): Scorer function.

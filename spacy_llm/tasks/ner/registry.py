@@ -91,7 +91,7 @@ def make_ner_task_v2(
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
-    case_sensitive: Whether to search without case sensitivity.
+    case_sensitive_matching (bool): Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
     scorer (Optional[BuiltinScorableProtocol]): Scorer function.
