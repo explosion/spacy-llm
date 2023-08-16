@@ -66,7 +66,7 @@ def fewshot_cfg_string():
     labels = "Recipe"
     exclusive_classes = true
 
-    [components.llm.task.fewshot_examples]
+    [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str(EXAMPLES_DIR / "textcat.yml")}
 
@@ -195,7 +195,7 @@ def test_textcat_config(task, cfg_string, request):
     }
 
     if cfg_string == "fewshot_cfg_string":
-        overrides["components.llm.task.fewshot_examples.path"] = examples
+        overrides["components.llm.task.examples.path"] = examples
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string, overrides=overrides)
@@ -239,7 +239,7 @@ def test_textcat_predict(task, cfg_string, request):
     }
 
     if cfg_string == "fewshot_cfg_string":
-        overrides["components.llm.task.fewshot_examples.path"] = examples
+        overrides["components.llm.task.examples.path"] = examples
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string, overrides=overrides)
@@ -271,7 +271,7 @@ def test_textcat_io(task, cfg_string, request):
     }
 
     if cfg_string == "fewshot_cfg_string":
-        overrides["components.llm.task.fewshot_examples.path"] = examples
+        overrides["components.llm.task.examples.path"] = examples
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string, overrides=overrides)
@@ -377,7 +377,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     fewshot_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        fewshot_examples=fewshot_examples,
+        examples=fewshot_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -443,7 +443,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     fewshot_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        fewshot_examples=fewshot_examples,
+        examples=fewshot_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -510,7 +510,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     fewshot_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        fewshot_examples=fewshot_examples,
+        examples=fewshot_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -579,7 +579,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         with pytest.raises(ValueError):
             make_textcat_task_v3(
                 labels=labels,
-                fewshot_examples=fewshot_reader(tmp_path),
+                examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
             )
 

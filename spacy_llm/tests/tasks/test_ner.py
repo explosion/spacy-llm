@@ -96,7 +96,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.NER.v1"
     labels = PER,ORG,LOC
 
-    [components.llm.task.fewshot_examples]
+    [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
@@ -125,7 +125,7 @@ def fewshot_cfg_string_v2():
     @llm_tasks = "spacy.NER.v2"
     labels = ["PER", "ORG", "LOC"]
 
-    [components.llm.task.fewshot_examples]
+    [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
@@ -503,7 +503,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = make_ner_task_v2(labels=labels, fewshot_examples=None)
+    llm_ner = make_ner_task_v2(labels=labels, examples=None)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -546,7 +546,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     fewshot_examples = fewshot_reader(examples_path)
-    llm_ner = make_ner_task_v2(labels=labels, fewshot_examples=fewshot_examples)
+    llm_ner = make_ner_task_v2(labels=labels, examples=fewshot_examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -653,9 +653,7 @@ def test_example_not_following_basemodel():
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValueError):
-            make_ner_task_v2(
-                labels="PER,ORG,LOC", fewshot_examples=fewshot_reader(tmp_path)
-            )
+            make_ner_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
 
 
 def test_external_template_actually_loads():
@@ -848,7 +846,7 @@ def test_label_inconsistency():
     @llm_tasks = "spacy.NER.v2"
     labels = ["PERSON", "LOCATION"]
 
-    [components.llm.task.fewshot_examples]
+    [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
 

@@ -12,22 +12,20 @@ def make_sentiment_task(
     template: str = DEFAULT_SENTIMENT_TEMPLATE_V1,
     parse_responses: Optional[TaskResponseParserProtocol[SentimentTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
-    fewshot_examples: ExamplesConfigType = None,
+    examples: ExamplesConfigType = None,
     field: str = "sentiment",
 ):
     """Sentiment.v1 task factory.
 
     template (str): Prompt template passed to the model.
-    parse_responses (Optional[TaskResponseParserProtocol[SentimentTask]]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SentimentTask]]): Callable for parsing LLM responses for this
+        task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
-    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+        few-shot learning. If None is passed, then zero-shot learning will be used.
     field (str): The name of the doc extension in which to store the summary.
     """
-    raw_examples = (
-        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
-    )
+    raw_examples = examples() if callable(examples) else examples
     example_type = fewshot_example_type or SentimentExample
     sentiment_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None

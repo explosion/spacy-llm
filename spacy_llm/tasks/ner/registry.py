@@ -29,9 +29,8 @@ def make_ner_task(
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
-    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+        few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive_matching: Whether to search without case sensitivity.
@@ -67,7 +66,7 @@ def make_ner_task_v2(
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_NER_TEMPLATE_V2,
     label_definitions: Optional[Dict[str, str]] = None,
-    fewshot_examples: ExamplesConfigType = None,
+    examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
@@ -86,9 +85,8 @@ def make_ner_task_v2(
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
         full examples, although both can be provided.
-    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+        few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -97,9 +95,7 @@ def make_ner_task_v2(
     scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
-    raw_examples = (
-        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
-    )
+    raw_examples = examples() if callable(examples) else examples
     example_type = fewshot_example_type or NERExample
     span_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None

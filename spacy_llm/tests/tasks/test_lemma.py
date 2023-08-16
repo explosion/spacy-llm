@@ -77,7 +77,7 @@ def fewshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.Lemma.v1"
 
-    [components.llm.task.fewshot_examples]
+    [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "lemma.yml"))}
 
@@ -201,7 +201,7 @@ def test_jinja_template_rendering_without_examples():
     text = "Alice and Bob went to the supermarket"
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(fewshot_examples=None)
+    lemma_task = make_lemma_task(examples=None)
     prompt = list(lemma_task.generate_prompts([doc]))[0]
 
     assert (
@@ -244,7 +244,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     text = "Alice and Bob went to the supermarket."
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(fewshot_examples=fewshot_reader(examples_path))
+    lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
     prompt = list(lemma_task.generate_prompts([doc]))[0]
 
     assert (

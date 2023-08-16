@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type
+from typing import Callable, Iterable, List, Optional, Type
 
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -95,13 +95,6 @@ class SummarizationTask(BuiltinTask):
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
-
-    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
-        """Scores performance on provided examples.
-        examples (Iterable[Example]): Examples to determine score against.
-        """
-        # todo how to score summaries? return dummy value?
-        raise NotImplementedError
 
     @property
     def field(self) -> str:

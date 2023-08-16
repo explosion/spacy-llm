@@ -12,7 +12,7 @@ def make_summarization_task(
     template: str = DEFAULT_SUMMARIZATION_TEMPLATE_V1,
     parse_responses: Optional[TaskResponseParserProtocol[SummarizationTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
-    fewshot_examples: ExamplesConfigType = None,
+    examples: ExamplesConfigType = None,
     max_n_words: Optional[int] = None,
     field: str = "summary",
 ):
@@ -22,15 +22,12 @@ def make_summarization_task(
     parse_responses (Optional[TaskResponseParserProtocol[SummarizationTask]]): Callable for parsing LLM responses for
         this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
-    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
-        reads a file containing task examples for few-shot learning. If None is
-        passed, then zero-shot learning will be used.
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+        few-shot learning. If None is passed, then zero-shot learning will be used.
     max_n_words (int): Max. number of words to use in summary.
     field (str): The name of the doc extension in which to store the summary.
     """
-    raw_examples = (
-        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
-    )
+    raw_examples = examples() if callable(examples) else examples
     example_type = fewshot_example_type or SummarizationExample
     span_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None

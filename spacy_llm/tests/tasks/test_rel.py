@@ -67,7 +67,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.REL.v1"
     labels = ["LivesIn", "Visits"]
 
-    [components.llm.task.fewshot_examples]
+    [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str(EXAMPLES_DIR / "rel.jsonl")}
 
