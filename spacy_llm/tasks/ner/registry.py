@@ -46,10 +46,10 @@ def make_ner_task(
 
     return NERTask(
         parse_responses=parse_responses or parse_span_responses,
-        fewshot_example_type=example_type,
+        prompt_example_type=example_type,
         labels=labels_list,
         template=DEFAULT_NER_TEMPLATE_V1,
-        fewshot_examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -103,11 +103,11 @@ def make_ner_task_v2(
 
     return NERTask(
         parse_responses=parse_responses or parse_span_responses,
-        fewshot_example_type=example_type,
+        prompt_example_type=example_type,
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        fewshot_examples=span_examples,
+        prompt_examples=span_examples,
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,

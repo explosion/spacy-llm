@@ -374,10 +374,10 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    fewshot_examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=fewshot_examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -440,10 +440,10 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    fewshot_examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=fewshot_examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -507,10 +507,10 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    fewshot_examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=fewshot_examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -734,12 +734,12 @@ def noop_config():
     """
 
 
-@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 @pytest.mark.parametrize("init_from_config", [True, False])
 def test_textcat_init(
     noop_config,
     init_from_config: bool,
-    n_fewshot_examples: bool,
+    n_prompt_examples: bool,
 ):
     config = Config().from_str(noop_config)
     if init_from_config:
@@ -767,10 +767,10 @@ def test_textcat_init(
     else:
         target = set()
     assert set(task._label_dict.values()) == target
-    assert not task._fewshot_examples
+    assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_fewshot_examples": n_fewshot_examples
+        "n_prompt_examples": n_prompt_examples
     }
 
     nlp.initialize(lambda: examples)
@@ -780,10 +780,10 @@ def test_textcat_init(
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
-    if n_fewshot_examples >= 0:
-        assert len(task._fewshot_examples) == n_fewshot_examples
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
     else:
-        assert len(task._fewshot_examples) == len(INSULTS)
+        assert len(task._prompt_examples) == len(INSULTS)
 
 
 def test_textcat_serde(noop_config, tmp_path: Path):

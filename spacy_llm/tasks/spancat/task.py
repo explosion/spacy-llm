@@ -17,12 +17,12 @@ class SpanCatTask(SpanTask):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol[Self],
-        fewshot_example_type: Type[SpanExample],
+        prompt_example_type: Type[SpanExample],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
-        fewshot_examples: Optional[List[SpanExample]],
+        prompt_examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -41,7 +41,7 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -51,11 +51,11 @@ class SpanCatTask(SpanTask):
         """
         super(SpanCatTask, self).__init__(
             parse_responses=parse_responses,
-            fewshot_example_type=fewshot_example_type,
+            prompt_example_type=prompt_example_type,
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            fewshot_examples=fewshot_examples,
+            prompt_examples=prompt_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -80,13 +80,13 @@ class SpanCatTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        n_fewshot_examples: int = 0,
+        n_prompt_examples: int = 0,
     ) -> None:
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
             labels=labels,
-            n_fewshot_examples=n_fewshot_examples,
+            n_prompt_examples=n_prompt_examples,
             spans_key=self._spans_key,
         )
 

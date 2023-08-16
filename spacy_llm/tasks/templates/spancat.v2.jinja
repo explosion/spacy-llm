@@ -23,11 +23,11 @@ Assume these definitions are written by an expert and follow them closely.
 {%- endif -%}
 {# whitespace #}
 {# whitespace #}
-{%- if fewshot_examples -%}
+{%- if prompt_examples -%}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
-{%- for example in fewshot_examples -%}
+{%- for example in prompt_examples -%}
 Text:
 '''
 {{ example.text }}

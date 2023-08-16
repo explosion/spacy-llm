@@ -17,11 +17,11 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol[Self],
-        fewshot_example_type: Type[SpanExample],
+        prompt_example_type: Type[SpanExample],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        fewshot_examples: Optional[List[SpanExample]],
+        prompt_examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
         case_sensitive_matching: bool,
@@ -29,34 +29,34 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     ):
         super().__init__(
             parse_responses=parse_responses,
-            fewshot_example_type=fewshot_example_type,
+            prompt_example_type=prompt_example_type,
             template=template,
-            fewshot_examples=fewshot_examples,
+            prompt_examples=prompt_examples,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,
         )
 
-        self._fewshot_example_type = typing.cast(
-            Type[SpanExample], self._fewshot_example_type
+        self._prompt_example_type = typing.cast(
+            Type[SpanExample], self._prompt_example_type
         )
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
         self._single_match = single_match
 
-        if self._fewshot_examples:
-            self._fewshot_examples: List[SpanExample] = self._check_label_consistency()
+        if self._prompt_examples:
+            self._prompt_examples: List[SpanExample] = self._check_label_consistency()
 
     def _check_label_consistency(self) -> List[SpanExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
         RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
         """
-        assert self._fewshot_examples
+        assert self._prompt_examples
 
         example_labels = {
             self._normalizer(key): key
-            for example in self._fewshot_examples
+            for example in self._prompt_examples
             for key in example.entities
         }
         unspecified_labels = {
@@ -75,7 +75,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         return [
             example
             for example in [
-                self._fewshot_example_type(
+                self._prompt_example_type(
                     text=example.text,
                     entities={
                         label: entities
@@ -83,7 +83,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
                         if self._normalizer(label) in self._label_dict
                     },
                 )
-                for example in self._fewshot_examples
+                for example in self._prompt_examples
             ]
             if len(example.entities)
         ]

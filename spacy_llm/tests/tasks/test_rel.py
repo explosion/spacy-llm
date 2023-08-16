@@ -151,8 +151,8 @@ def test_rel_predict(task, cfg_string, request):
     assert doc._.rel
 
 
-@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
-def test_rel_init(noop_config, n_fewshot_examples: int):
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_rel_init(noop_config, n_prompt_examples: int):
     RELTask._check_extension("rel")
 
     config = Config().from_str(noop_config)
@@ -182,19 +182,19 @@ def test_rel_init(noop_config, n_fewshot_examples: int):
     task: RELTask = llm._task  # type: ignore[annotation-unchecked]
 
     assert set(task._label_dict.values()) == set()
-    assert not task._fewshot_examples
+    assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_fewshot_examples": n_fewshot_examples
+        "n_prompt_examples": n_prompt_examples
     }
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"LivesIn", "Visits"}
 
-    if n_fewshot_examples >= 0:
-        assert len(task._fewshot_examples) == n_fewshot_examples
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
     else:
-        assert len(task._fewshot_examples) == len(examples)
+        assert len(task._prompt_examples) == len(examples)
 
 
 def test_rel_serde(noop_config, tmp_path: Path):

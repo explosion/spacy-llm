@@ -60,10 +60,10 @@ def make_textcat_task(
     )
     return TextCatTask(
         parse_responses=parse_responses or parse_responses_v1_v2_v3,
-        fewshot_example_type=example_type,
+        prompt_example_type=example_type,
         labels=labels_list,
         template=DEFAULT_TEXTCAT_TEMPLATE_V1,
-        fewshot_examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -126,10 +126,10 @@ def make_textcat_task_v2(
 
     return TextCatTask(
         parse_responses=parse_responses or parse_responses_v1_v2_v3,
-        fewshot_example_type=example_type,
+        prompt_example_type=example_type,
         labels=labels_list,
         template=template,
-        fewshot_examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -196,11 +196,11 @@ def make_textcat_task_v3(
 
     return TextCatTask(
         parse_responses=parse_responses or parse_responses_v1_v2_v3,
-        fewshot_example_type=example_type,
+        prompt_example_type=example_type,
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        fewshot_examples=textcat_examples,
+        prompt_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,

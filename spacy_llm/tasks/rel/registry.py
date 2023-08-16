@@ -45,11 +45,11 @@ def make_rel_task(
 
     return RELTask(
         parse_responses=parse_responses or parse_responses_v1,
-        fewshot_example_type=example_type,
+        prompt_example_type=example_type,
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        fewshot_examples=rel_examples,
+        prompt_examples=rel_examples,
         normalizer=normalizer,
         verbose=verbose,
     )

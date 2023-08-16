@@ -19,11 +19,11 @@ class TextCatTask(BuiltinTaskWithLabels):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol[Self],
-        fewshot_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        fewshot_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
@@ -52,7 +52,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
-        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
@@ -62,9 +62,9 @@ class TextCatTask(BuiltinTaskWithLabels):
         """
         super().__init__(
             parse_responses=parse_responses,
-            fewshot_example_type=fewshot_example_type,
+            prompt_example_type=prompt_example_type,
             template=template,
-            fewshot_examples=fewshot_examples,
+            prompt_examples=prompt_examples,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,
@@ -115,13 +115,13 @@ class TextCatTask(BuiltinTaskWithLabels):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        n_fewshot_examples: int = 0,
+        n_prompt_examples: int = 0,
     ) -> None:
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
             labels=labels,
-            n_fewshot_examples=n_fewshot_examples,
+            n_prompt_examples=n_prompt_examples,
             use_binary=self._use_binary,
             label_dict=self._label_dict,
         )

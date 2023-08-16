@@ -419,8 +419,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    fewshot_examples = fewshot_reader(examples_path)
-    llm_spancat = make_spancat_task_v2(labels=labels, examples=fewshot_examples)
+    prompt_examples = fewshot_reader(examples_path)
+    llm_spancat = make_spancat_task_v2(labels=labels, examples=prompt_examples)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
@@ -534,8 +534,8 @@ def test_spancat_scoring(noop_config, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
-def test_spancat_init(noop_config, n_fewshot_examples: bool):
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_spancat_init(noop_config, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
@@ -561,22 +561,22 @@ def test_spancat_init(noop_config, n_fewshot_examples: bool):
     task: SpanCatTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._fewshot_examples
+    assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_fewshot_examples": n_fewshot_examples
+        "n_prompt_examples": n_prompt_examples
     }
 
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    if n_fewshot_examples >= 0:
-        assert len(task._fewshot_examples) == n_fewshot_examples
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
     else:
-        assert len(task._fewshot_examples) == len(examples)
+        assert len(task._prompt_examples) == len(examples)
 
-    if n_fewshot_examples > 0:
-        for eg in task._fewshot_examples:
+    if n_prompt_examples > 0:
+        for eg in task._prompt_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 

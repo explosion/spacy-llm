@@ -34,7 +34,7 @@ def make_sentiment_task(
     return SentimentTask(
         template=template,
         parse_responses=parse_responses or parse_responses_v1,
-        fewshot_example_type=example_type,
-        fewshot_examples=sentiment_examples,
+        prompt_example_type=example_type,
+        prompt_examples=sentiment_examples,
         field=field,
     )

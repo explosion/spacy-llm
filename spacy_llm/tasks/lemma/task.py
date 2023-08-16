@@ -16,8 +16,8 @@ class LemmaTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol[Self],
-        fewshot_example_type: Type[FewshotExample],
-        fewshot_examples: Optional[List[FewshotExample]],
+        prompt_example_type: Type[FewshotExample],
+        prompt_examples: Optional[List[FewshotExample]],
         template: str,
         scorer: CallableScorableProtocol,
     ):
@@ -25,15 +25,15 @@ class LemmaTask(BuiltinTask):
 
         parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
-        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
         scorer (BuiltinScorableProtocol): Scorer function.
         """
         super().__init__(
             parse_responses=parse_responses,
-            fewshot_example_type=fewshot_example_type,
+            prompt_example_type=prompt_example_type,
             template=template,
-            fewshot_examples=fewshot_examples,
+            prompt_examples=prompt_examples,
         )
         self._scorer = scorer
 
@@ -58,10 +58,10 @@ class LemmaTask(BuiltinTask):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        n_fewshot_examples: int = 0,
+        n_prompt_examples: int = 0,
     ) -> None:
         super()._initialize(
-            get_examples=get_examples, nlp=nlp, n_fewshot_examples=n_fewshot_examples
+            get_examples=get_examples, nlp=nlp, n_prompt_examples=n_prompt_examples
         )
 
     def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:

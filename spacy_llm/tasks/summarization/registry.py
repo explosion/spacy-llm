@@ -36,8 +36,8 @@ def make_summarization_task(
     return SummarizationTask(
         template=template,
         parse_responses=parse_responses or parse_responses_v1,
-        fewshot_example_type=example_type,
-        fewshot_examples=span_examples,
+        prompt_example_type=example_type,
+        prompt_examples=span_examples,
         max_n_words=max_n_words,
         field=field,
     )

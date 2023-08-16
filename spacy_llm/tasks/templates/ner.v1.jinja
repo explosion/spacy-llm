@@ -5,12 +5,12 @@ From the text below, extract the following entities in the following format:
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
-{%- if fewshot_examples -%}
+{%- if prompt_examples -%}
 {# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
-{%- for example in fewshot_examples -%}
+{%- for example in prompt_examples -%}
 {# whitespace #}
 Text:
 '''

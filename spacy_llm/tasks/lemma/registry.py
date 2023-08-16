@@ -45,7 +45,7 @@ def make_lemma_task(
     return LemmaTask(
         template=template,
         parse_responses=parse_responses or parse_responses_v1,
-        fewshot_example_type=example_type,
-        fewshot_examples=lemma_examples,
+        prompt_example_type=example_type,
+        prompt_examples=lemma_examples,
         scorer=scorer or score,
     )

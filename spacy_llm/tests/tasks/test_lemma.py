@@ -347,8 +347,8 @@ Here is the text: {text}
     )
 
 
-@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
-def test_lemma_init(noop_config, n_fewshot_examples: int):
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_lemma_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -368,14 +368,14 @@ def test_lemma_init(noop_config, n_fewshot_examples: int):
     _, llm = nlp.pipeline[0]
     task: LemmaTask = llm._task
 
-    assert not task._fewshot_examples
+    assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_fewshot_examples": n_fewshot_examples
+        "n_prompt_examples": n_prompt_examples
     }
     nlp.initialize(lambda: examples)
 
-    if n_fewshot_examples >= 0:
-        assert len(task._fewshot_examples) == n_fewshot_examples
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
     else:
-        assert len(task._fewshot_examples) == len(examples)
+        assert len(task._prompt_examples) == len(examples)

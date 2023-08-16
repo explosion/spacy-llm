@@ -545,8 +545,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    fewshot_examples = fewshot_reader(examples_path)
-    llm_ner = make_ner_task_v2(labels=labels, examples=fewshot_examples)
+    prompt_examples = fewshot_reader(examples_path)
+    llm_ner = make_ner_task_v2(labels=labels, examples=prompt_examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -727,8 +727,8 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
-def test_ner_init(noop_config, n_fewshot_examples: int):
+@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+def test_ner_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -755,21 +755,21 @@ def test_ner_init(noop_config, n_fewshot_examples: int):
     task: NERTask = llm._task
 
     assert set(task._label_dict.values()) == set()
-    assert not task._fewshot_examples
+    assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_fewshot_examples": n_fewshot_examples
+        "n_prompt_examples": n_prompt_examples
     }
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    if n_fewshot_examples >= 0:
-        assert len(task._fewshot_examples) == n_fewshot_examples
+    if n_prompt_examples >= 0:
+        assert len(task._prompt_examples) == n_prompt_examples
     else:
-        assert len(task._fewshot_examples) == len(examples)
+        assert len(task._prompt_examples) == len(examples)
 
-    if n_fewshot_examples > 0:
-        for eg in task._fewshot_examples:
+    if n_prompt_examples > 0:
+        for eg in task._prompt_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
 
@@ -865,18 +865,18 @@ def test_label_inconsistency():
     ):
         nlp = assemble_from_config(config)
 
-    fewshot_examples = nlp.get_pipe("llm")._task._fewshot_examples
-    assert len(fewshot_examples) == 2
-    assert fewshot_examples[0].text == "Jack and Jill went up the hill."
-    assert fewshot_examples[0].entities == {
+    prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
+    assert len(prompt_examples) == 2
+    assert prompt_examples[0].text == "Jack and Jill went up the hill."
+    assert prompt_examples[0].entities == {
         "LOCATION": ["hill"],
         "PERSON": ["Jack", "Jill"],
     }
     assert (
-        fewshot_examples[1].text
+        prompt_examples[1].text
         == "Jack and Jill went up the hill and spaCy is a great tool."
     )
-    assert fewshot_examples[1].entities == {
+    assert prompt_examples[1].entities == {
         "LOCATION": ["hill"],
         "PERSON": ["Jack", "Jill"],
     }

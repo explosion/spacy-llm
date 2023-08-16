@@ -17,11 +17,11 @@ class SummarizationTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParserProtocol[Self],
-        fewshot_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample],
         template: str,
         max_n_words: Optional[int],
         field: str,
-        fewshot_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample]],
     ):
         """Default summarization task.
 
@@ -30,13 +30,13 @@ class SummarizationTask(BuiltinTask):
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
-        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
         super().__init__(
             parse_responses=parse_responses,
-            fewshot_example_type=fewshot_example_type,
+            prompt_example_type=prompt_example_type,
             template=template,
-            fewshot_examples=fewshot_examples,
+            prompt_examples=prompt_examples,
         )
         self._max_n_words = max_n_words
         self._field = field
@@ -49,12 +49,12 @@ class SummarizationTask(BuiltinTask):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        n_fewshot_examples: int = 0,
+        n_prompt_examples: int = 0,
     ) -> None:
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
-            n_fewshot_examples=n_fewshot_examples,
+            n_prompt_examples=n_prompt_examples,
         )
 
     def _check_prompt_example_summary_len(self) -> None:
@@ -62,7 +62,7 @@ class SummarizationTask(BuiltinTask):
         if self._max_n_words is None:
             return
 
-        for pr_ex in self._fewshot_examples:
+        for pr_ex in self._prompt_examples:
             len_summary = len(pr_ex.summary.split())
             len_text = len(pr_ex.text.split())
             if len_summary >= len_text * 1.2:
