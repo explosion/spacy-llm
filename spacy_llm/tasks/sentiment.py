@@ -58,7 +58,6 @@ class SentimentTask(SerializableTask[SentimentExample]):
         field (str): The name of the doc extension in which to store the summary.
         """
         self._template = template
-        self._examples = examples
         self._prompt_examples = examples or []
         self._field = field
         self._check_doc_extension()
@@ -100,7 +99,7 @@ class SentimentTask(SerializableTask[SentimentExample]):
         for doc in docs:
             prompt = _template.render(
                 text=doc.text,
-                examples=self._examples,
+                examples=self._prompt_examples,
             )
             yield prompt
 

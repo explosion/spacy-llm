@@ -65,7 +65,6 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         field (str): The name of the doc extension in which to store the summary.
         """
         self._template = template
-        self._examples = examples
         self._max_n_words = max_n_words
         self._field = field
         self._prompt_examples = examples or []
@@ -126,7 +125,7 @@ class SummarizationTask(SerializableTask[SummarizationExample]):
         _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
-                text=doc.text, examples=self._examples, max_n_words=self._max_n_words
+                text=doc.text, examples=self._prompt_examples, max_n_words=self._max_n_words
             )
             yield prompt
 
