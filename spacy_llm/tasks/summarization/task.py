@@ -5,6 +5,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
+from ...compat import Self
 from ...ty import FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
@@ -15,7 +16,7 @@ DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 class SummarizationTask(BuiltinTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[FewshotExample],
         template: str,
         max_n_words: Optional[int],
@@ -25,7 +26,7 @@ class SummarizationTask(BuiltinTask):
         """Default summarization task.
 
         template (str): Prompt template passed to the model.
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
@@ -87,7 +88,7 @@ class SummarizationTask(BuiltinTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, summary in zip(docs, self._parse_responses(responses)):
+        for doc, summary in zip(docs, self._parse_responses(self, docs, responses)):
             setattr(doc._, self._field, summary)
             yield doc
 
@@ -101,3 +102,11 @@ class SummarizationTask(BuiltinTask):
         """
         # todo how to score summaries? return dummy value?
         raise NotImplementedError
+
+    @property
+    def field(self) -> str:
+        return self._field
+
+    @property
+    def max_n_words(self) -> Optional[int]:
+        return self._max_n_words

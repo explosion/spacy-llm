@@ -6,7 +6,6 @@ from typing import Callable, Dict, Iterable, List, Optional, Type
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal, Self
-from ...registry import lowercase_normalizer
 from ...ty import TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
 from .examples import SpanExample
@@ -124,14 +123,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, spans in zip(
-            docs,
-            self._parse_responses(
-                self,
-                docs,
-                responses,
-            ),
-        ):
+        for doc, spans in zip(docs, self._parse_responses(self, docs, responses)):
             self.assign_spans(doc, spans)
             yield doc
 
@@ -145,3 +137,15 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             "_case_sensitive_matching",
             "_single_match",
         ]
+
+    @property
+    def alignment_mode(self) -> Literal["strict", "contract", "expand"]:  # noqa: F821
+        return self._alignment_mode
+
+    @property
+    def case_sensitive_matching(self) -> bool:
+        return self._case_sensitive_matching
+
+    @property
+    def single_match(self):
+        return self._single_match

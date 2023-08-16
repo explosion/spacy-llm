@@ -10,7 +10,7 @@ from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 
 
 @registry.llm_misc("spacy.LemmaParser.v1")
-def make_lemma_parser() -> TaskResponseParserProtocol:
+def make_lemma_parser() -> TaskResponseParserProtocol[LemmaTask]:
     return parse_responses_v1
 
 
@@ -22,7 +22,7 @@ def make_lemma_scorer() -> CallableScorableProtocol:
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[LemmaTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
     scorer: Optional[CallableScorableProtocol] = None,

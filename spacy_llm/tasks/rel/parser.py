@@ -1,8 +1,10 @@
 from typing import Iterable, List
 
+from spacy.tokens import Doc
 from wasabi import msg
 
-from spacy_llm.tasks.rel.examples import RelationItem
+from .examples import RelationItem
+from .task import RELTask
 
 try:
     from pydantic.v1 import ValidationError
@@ -11,13 +13,15 @@ except ImportError:
 
 
 def parse_responses_v1(
-    responses: Iterable[str], **kwargs
+    task: RELTask, docs: Iterable[Doc], responses: Iterable[str]
 ) -> Iterable[List[RelationItem]]:
     """Parses LLM responses for spacy.REL.v1.
+    task (RELTask): Task instance.
+    docs (Iterable[Doc]): Corresponding Doc instances.
     responses (Iterable[str]): LLM responses.
     RETURNS (Iterable[List[RelationItem]]): List of RelationItem instances per doc/response.
     """
-    for response, doc in zip(responses, kwargs["docs"]):
+    for response, doc in zip(responses, docs):
         relations: List[RelationItem] = []
         for line in response.strip().split("\n"):
             try:
@@ -30,7 +34,7 @@ def parse_responses_v1(
                 msg.warn(
                     "Validation issue",
                     line,
-                    show=kwargs["verbose"],
+                    show=task.verbose,
                 )
 
         yield relations

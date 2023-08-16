@@ -10,7 +10,7 @@ from .task import DEFAULT_SUMMARIZATION_TEMPLATE_V1, SummarizationTask
 @registry.llm_tasks("spacy.Summarization.v1")
 def make_summarization_task(
     template: str = DEFAULT_SUMMARIZATION_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[SummarizationTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
     max_n_words: Optional[int] = None,
@@ -19,7 +19,8 @@ def make_summarization_task(
     """Summarization.v1 task factory.
 
     template (str): Prompt template passed to the model.
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SummarizationTask]]): Callable for parsing LLM responses for
+        this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is

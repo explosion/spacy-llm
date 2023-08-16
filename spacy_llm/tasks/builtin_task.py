@@ -313,3 +313,15 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     @property
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
+
+    @property
+    def normalizer(self) -> Callable[[str], str]:
+        return self._normalizer
+
+    @property
+    def label_dict(self) -> Dict[str, str]:
+        return self._label_dict
+
+    @property
+    def label_definitions(self) -> Optional[Dict[str, str]]:
+        return self._label_definitions

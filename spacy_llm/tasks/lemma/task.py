@@ -4,6 +4,7 @@ from spacy import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
+from ...compat import Self
 from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
@@ -14,7 +15,7 @@ DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma.v1")
 class LemmaTask(BuiltinTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[FewshotExample],
         examples: Optional[List[FewshotExample]],
         template: str,
@@ -22,7 +23,7 @@ class LemmaTask(BuiltinTask):
     ):
         """Default lemmatization task.
 
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
@@ -39,7 +40,7 @@ class LemmaTask(BuiltinTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, lemmas in zip(docs, self._parse_responses(responses)):
+        for doc, lemmas in zip(docs, self._parse_responses(self, docs, responses)):
             tokens = [token for token in doc]
             # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
             # match.

@@ -12,7 +12,7 @@ from .task import DEFAULT_REL_TEMPLATE, RELTask
 def make_rel_task(
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_REL_TEMPLATE,
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[RELTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
@@ -27,7 +27,7 @@ def make_rel_task(
         either an actual list or a comma-separated string.
         Leave empty to populate it at initialization time (only if examples are provided).
     template (str): Prompt template passed to the model.
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[RELTask]]): Callable for parsing LLM responses for this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     label_definitions (Optional[Dict[str, str]]): Map of label -> description
         of the label to help the language model output the entities wanted.

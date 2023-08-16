@@ -10,7 +10,7 @@ from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
 @registry.llm_tasks("spacy.Sentiment.v1")
 def make_sentiment_task(
     template: str = DEFAULT_SENTIMENT_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[SentimentTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
     field: str = "sentiment",
@@ -18,7 +18,7 @@ def make_sentiment_task(
     """Sentiment.v1 task factory.
 
     template (str): Prompt template passed to the model.
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SentimentTask]]): Callable for parsing LLM responses for this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is

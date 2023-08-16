@@ -1,8 +1,16 @@
 from typing import Iterable
 
+from spacy.tokens import Doc
 
-def parse_responses_v1(responses: Iterable[str], **kwargs) -> Iterable[str]:
+from .task import SummarizationTask
+
+
+def parse_responses_v1(
+    task: SummarizationTask, docs: Iterable[Doc], responses: Iterable[str]
+) -> Iterable[str]:
     """Parses LLM responses for spacy.Summarization.v1.
+    task (SummarizationTask): Task instance.
+    docs (Iterable[Doc]): Corresponding Doc instances.
     responses (Iterable[str]): LLM responses.
     field (str): Field to store responses in.
     RETURNS (Iterable[str]): Summary per doc/response.

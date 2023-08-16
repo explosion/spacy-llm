@@ -19,7 +19,7 @@ class NERTask(SpanTask):
         self,
         labels: List[str],
         template: str,
-        parse_responses: TaskResponseParserProtocol[SpanTask],
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[SpanExample],
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[SpanExample]],
@@ -34,7 +34,7 @@ class NERTask(SpanTask):
         labels (List[str]): List of labels to pass to the template.
             Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParserProtocol[SpanTask]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
             of the label to help the language model output the entities wanted.

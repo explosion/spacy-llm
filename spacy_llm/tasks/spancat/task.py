@@ -4,7 +4,7 @@ from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.training import Example
 
-from ...compat import Literal
+from ...compat import Literal, Self
 from ...ty import CallableScorableProtocol, TaskResponseParserProtocol
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
@@ -16,7 +16,7 @@ DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
 class SpanCatTask(SpanTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[SpanExample],
         labels: List[str],
         template: str,
@@ -106,3 +106,7 @@ class SpanCatTask(SpanTask):
         return [
             span.label_ for span in example.reference.spans.get(self._spans_key, [])
         ]
+
+    @property
+    def spans_key(self) -> str:
+        return self._spans_key

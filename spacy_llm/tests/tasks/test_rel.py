@@ -241,6 +241,7 @@ def test_incorrect_indexing():
     task = make_rel_task(
         labels=["LivesIn", "WorksIn"],
         template=DEFAULT_REL_TEMPLATE,
+        verbose=False,
     )
 
     doc = Doc(get_lang_class("en")().vocab, words=["This", "is", "a", "test"])
@@ -249,23 +250,19 @@ def test_incorrect_indexing():
         len(
             list(
                 task._parse_responses(
-                    ['{"dep": 0, "dest": 1, "relation": "LivesIn"}'],
-                    docs=[doc],
-                    verbose=False,
+                    task, [doc], ['{"dep": 0, "dest": 0, "relation": "LivesIn"}']
                 )
             )[0]
         )
-        == 0
+        == 1
     )
     assert (
         len(
             list(
                 task._parse_responses(
-                    ['{"dep": 0, "dest": 0, "relation": "LivesIn"}'],
-                    docs=[doc],
-                    verbose=False,
+                    task, [doc], ['{"dep": 0, "dest": 1, "relation": "LivesIn"}']
                 )
             )[0]
         )
-        == 1
+        == 0
     )

@@ -13,7 +13,7 @@ from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2, Span
 
 @registry.llm_tasks("spacy.SpanCat.v1")
 def make_spancat_task(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[SpanCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
@@ -26,7 +26,8 @@ def make_spancat_task(
 ):
     """SpanCat.v1 task factory.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SpanCatTask]]): Callable for parsing LLM responses for this
+        task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
@@ -66,7 +67,7 @@ def make_spancat_task(
 
 @registry.llm_tasks("spacy.SpanCat.v2")
 def make_spancat_task_v2(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[SpanCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_SPANCAT_TEMPLATE_V2,
@@ -81,7 +82,8 @@ def make_spancat_task_v2(
 ):
     """SpanCat.v2 task factory.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SpanCatTask]]): Callable for parsing LLM responses for this
+        task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[str, List[str]]): List of labels to pass to the template,
         either an actual list or a comma-separated string.

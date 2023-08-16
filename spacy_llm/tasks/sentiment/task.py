@@ -4,7 +4,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, TaskResponseParserProtocol
+from ...ty import FewshotExample, Self, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 from .examples import SentimentExample
@@ -16,7 +16,7 @@ class SentimentTask(BuiltinTask):
     def __init__(
         self,
         template: str,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[FewshotExample],
         field: str,
         examples: Optional[List[SentimentExample]],
@@ -24,7 +24,7 @@ class SentimentTask(BuiltinTask):
         """Sentiment analysis task.
 
         template (str): Prompt template passed to the model.
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         field (str): The name of the doc extension in which to store the sentiment score.
         examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
@@ -69,7 +69,9 @@ class SentimentTask(BuiltinTask):
     ) -> Iterable[Doc]:
         self._check_doc_extension()
 
-        for doc, sentiment_score in zip(docs, self._parse_responses(responses)):
+        for doc, sentiment_score in zip(
+            docs, self._parse_responses(self, docs, responses)
+        ):
             try:
                 setattr(doc._, self._field, sentiment_score)
             except ValueError:
@@ -80,3 +82,7 @@ class SentimentTask(BuiltinTask):
     @property
     def _cfg_keys(self) -> List[str]:
         return ["_template"]
+
+    @property
+    def field(self) -> str:
+        return self._field

@@ -34,19 +34,12 @@ def _format_response(
 
 
 def parse_responses(
-    task: SpanTask,
-    docs: Iterable[Doc],
-    responses: Iterable[str],
+    task: SpanTask, docs: Iterable[Doc], responses: Iterable[str]
 ) -> Iterable[List[Span]]:
     """Parses LLM responses for Span tasks.
+    task (SpanTask): Task instance.
+    docs (Iterable[Doc]): Corresponding Doc instances.
     responses (Iterable[str]): LLM responses.
-    kwargs ([Dict[str, Any]): Additional, mandatory arguments:
-        case_sensitive (bool): Whether to search without case sensitivity.
-        single_match (bool): If False, allow one substring to match multiple times in the text. If True, returns the first
-            hit.
-        alignment_mode (str): "strict", "contract" or "expand".
-        normalizer (Callable[[str], str]): normalizer function.
-        label_dict (Dict[str, str]): Mapping of normalized to non-normalized labels.
     RETURNS (Iterable[Span]): Parsed spans per doc/response.
     """
     for doc, prompt_response in zip(docs, responses):

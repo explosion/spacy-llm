@@ -4,6 +4,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
+from ...compat import Self
 from ...ty import FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
@@ -16,7 +17,7 @@ DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
 class RELTask(BuiltinTaskWithLabels):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,
@@ -27,7 +28,7 @@ class RELTask(BuiltinTaskWithLabels):
     ):
         """Default REL task. Populates a `Doc._.rel` custom attribute.
 
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to populate it at initialization time (only if examples are provided).
@@ -82,9 +83,7 @@ class RELTask(BuiltinTaskWithLabels):
     ) -> Iterable[Doc]:
         self._check_extension(self._field)
 
-        for doc, rel_items in zip(
-            docs, self._parse_responses(responses, docs=docs, verbose=self._verbose)
-        ):
+        for doc, rel_items in zip(docs, self._parse_responses(self, docs, responses)):
             doc._.rel = rel_items
             yield doc
 
@@ -115,3 +114,11 @@ class RELTask(BuiltinTaskWithLabels):
     def _extract_labels_from_example(self, example: Example) -> List[str]:
         rels: List[RelationItem] = example.reference._.rel
         return [rel.relation for rel in rels]
+
+    @property
+    def verbose(self) -> bool:
+        return self._verbose
+
+    @property
+    def field(self) -> str:
+        return self._field

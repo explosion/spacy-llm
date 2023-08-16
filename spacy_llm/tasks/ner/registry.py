@@ -13,7 +13,7 @@ from .task import DEFAULT_NER_TEMPLATE_V1, DEFAULT_NER_TEMPLATE_V2, NERTask, Spa
 
 @registry.llm_tasks("spacy.NER.v1")
 def make_ner_task(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[SpanTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
@@ -25,7 +25,7 @@ def make_ner_task(
 ):
     """NER.v1 task factory.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SpanTask]]): Callable for parsing LLM responses for this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
@@ -76,7 +76,7 @@ def make_ner_task_v2(
 ):
     """NER.v2 task factory.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[SpanTask]]): Callable for parsing LLM responses for this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[str, List[str]]): List of labels to pass to the template,
         either an actual list or a comma-separated string.

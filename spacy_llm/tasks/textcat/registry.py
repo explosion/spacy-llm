@@ -13,7 +13,7 @@ from .task import DEFAULT_TEXTCAT_TEMPLATE_V3, TextCatTask
 
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
     examples: ExamplesConfigType = None,
@@ -37,7 +37,8 @@ def make_textcat_task(
     Lastly, you can toggle between exclusive or no-exclusive text
     categorization by passing a flag to the `exclusive_classes` parameter.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[TextCatTask]]): Callable for parsing LLM responses for this
+        task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         This task assumes binary classification if a single label is provided.
@@ -75,7 +76,7 @@ def make_textcat_task(
 
 @registry.llm_tasks("spacy.TextCat.v2")
 def make_textcat_task_v2(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V2,
@@ -100,7 +101,8 @@ def make_textcat_task_v2(
     Lastly, you can toggle between exclusive or no-exclusive text
     categorization by passing a flag to the `exclusive_classes` parameter.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[TextCatTask]]): Callable for parsing LLM responses for this
+        task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[List[str], str]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
@@ -141,7 +143,7 @@ def make_textcat_task_v2(
 
 @registry.llm_tasks("spacy.TextCat.v3")
 def make_textcat_task_v3(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V3,
@@ -167,7 +169,8 @@ def make_textcat_task_v3(
     Lastly, you can toggle between exclusive or no-exclusive text
     categorization by passing a flag to the `exclusive_classes` parameter.
 
-    parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParserProtocol[TextCatTask]]): Callable for parsing LLM responses for this
+        task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[List[str], str]): List of labels to pass to the template,
         either an actual list or a comma-separated string.

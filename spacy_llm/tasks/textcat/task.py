@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from wasabi import msg
 
-from ...registry import lowercase_normalizer
+from ...compat import Self
 from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
@@ -18,7 +18,7 @@ DEFAULT_TEXTCAT_TEMPLATE_V3 = read_template("textcat.v3")
 class TextCatTask(BuiltinTaskWithLabels):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,
@@ -44,7 +44,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         Lastly, you can toggle between exclusive or no-exclusive text
         categorization by passing a flag to the `exclusive_classes` parameter.
 
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
@@ -69,11 +69,6 @@ class TextCatTask(BuiltinTaskWithLabels):
             label_definitions=label_definitions,
             normalizer=normalizer,
         )
-        self._normalizer = normalizer if normalizer else lowercase_normalizer()
-        self._label_dict = {
-            self._normalizer(label): label for label in sorted(set(labels))
-        }
-        self._label_definitions = label_definitions
         # Textcat configuration
         self._use_binary = True if len(self._label_dict) == 1 else False
         self._exclusive_classes = exclusive_classes
@@ -100,17 +95,7 @@ class TextCatTask(BuiltinTaskWithLabels):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, cats in zip(
-            docs,
-            self._parse_responses(
-                responses,
-                use_binary=self._use_binary,
-                label_dict=self._label_dict,
-                normalizer=self._normalizer,
-                exclusive_classes=self._exclusive_classes,
-                verbose=self._verbose,
-            ),
-        ):
+        for doc, cats in zip(docs, self._parse_responses(self, docs, responses)):
             doc.cats = cats
             yield doc
 
@@ -155,3 +140,19 @@ class TextCatTask(BuiltinTaskWithLabels):
 
     def _extract_labels_from_example(self, example: Example) -> List[str]:
         return list(example.reference.cats.keys())
+
+    @property
+    def use_binary(self) -> bool:
+        return self._use_binary
+
+    @property
+    def exclusive_classes(self) -> bool:
+        return self._exclusive_classes
+
+    @property
+    def allow_none(self) -> bool:
+        return self._allow_none
+
+    @property
+    def verbose(self) -> bool:
+        return self._verbose

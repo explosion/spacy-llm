@@ -112,12 +112,14 @@ class LLMTaskProtocol(Protocol):
         """
 
 
-_Task_contra = TypeVar("_Task_contra", bound=LLMTaskProtocol, contravariant=True)
+_TaskContraT = TypeVar("_TaskContraT", bound=LLMTaskProtocol, contravariant=True)
 
 
-class TaskResponseParserProtocol(Protocol[_Task_contra]):
+class TaskResponseParserProtocol(Protocol[_TaskContraT]):
+    """Generic protocol for parsing functions with specific tasks."""
+
     def __call__(
-        self, task: _Task_contra, docs: Iterable[Doc], responses: Iterable[Any]
+        self, task: _TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
     ) -> Iterable[Any]:
         ...
 
