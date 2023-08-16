@@ -16,7 +16,7 @@ def make_textcat_task(
     parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
-    examples: ExamplesConfigType = None,
+    fewshot_examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -43,7 +43,7 @@ def make_textcat_task(
     labels (str): Comma-separated list of labels to pass to the template.
         This task assumes binary classification if a single label is provided.
         Leave empty to populate it at initialization time (only if examples are provided).
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
@@ -54,7 +54,9 @@ def make_textcat_task(
     scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
-    raw_examples = examples() if callable(examples) else examples
+    raw_examples = (
+        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
+    )
     example_type = fewshot_example_type or TextCatExample
     textcat_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
@@ -64,7 +66,7 @@ def make_textcat_task(
         fewshot_example_type=example_type,
         labels=labels_list,
         template=DEFAULT_TEXTCAT_TEMPLATE_V1,
-        examples=textcat_examples,
+        fewshot_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -80,7 +82,7 @@ def make_textcat_task_v2(
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V2,
-    examples: ExamplesConfigType = None,
+    fewshot_examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -109,7 +111,7 @@ def make_textcat_task_v2(
         This task assumes binary classification if a single label is provided.
         Leave empty to populate it at initialization time (only if examples are provided).
     template (str): Prompt template passed to the model.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
@@ -120,7 +122,9 @@ def make_textcat_task_v2(
     scorer (Optional[BuiltinScorableProtocol]): Scorer function.
     """
     labels_list = split_labels(labels)
-    raw_examples = examples() if callable(examples) else examples
+    raw_examples = (
+        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
+    )
     example_type = fewshot_example_type or TextCatExample
     textcat_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
@@ -131,7 +135,7 @@ def make_textcat_task_v2(
         fewshot_example_type=example_type,
         labels=labels_list,
         template=template,
-        examples=textcat_examples,
+        fewshot_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -148,7 +152,7 @@ def make_textcat_task_v3(
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
-    examples: ExamplesConfigType = None,
+    fewshot_examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -179,7 +183,7 @@ def make_textcat_task_v3(
     template (str): Prompt template passed to the model.
     label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
         These descriptions are added to the prompt to help instruct the LLM on what to extract.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
+    fewshot_examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
@@ -191,7 +195,9 @@ def make_textcat_task_v3(
     """
 
     labels_list = split_labels(labels)
-    raw_examples = examples() if callable(examples) else examples
+    raw_examples = (
+        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
+    )
     example_type = fewshot_example_type or TextCatExample
     textcat_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
@@ -203,7 +209,7 @@ def make_textcat_task_v3(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=textcat_examples,
+        fewshot_examples=textcat_examples,
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,

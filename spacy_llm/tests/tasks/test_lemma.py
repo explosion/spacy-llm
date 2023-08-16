@@ -77,7 +77,7 @@ def fewshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.Lemma.v1"
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "lemma.yml"))}
 
@@ -201,7 +201,7 @@ def test_jinja_template_rendering_without_examples():
     text = "Alice and Bob went to the supermarket"
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(examples=None)
+    lemma_task = make_lemma_task(fewshot_examples=None)
     prompt = list(lemma_task.generate_prompts([doc]))[0]
 
     assert (
@@ -244,7 +244,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     text = "Alice and Bob went to the supermarket."
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
+    lemma_task = make_lemma_task(fewshot_examples=fewshot_reader(examples_path))
     prompt = list(lemma_task.generate_prompts([doc]))[0]
 
     assert (
@@ -347,8 +347,8 @@ Here is the text: {text}
     )
 
 
-@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_lemma_init(noop_config, n_prompt_examples: int):
+@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
+def test_lemma_init(noop_config, n_fewshot_examples: int):
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
@@ -371,11 +371,11 @@ def test_lemma_init(noop_config, n_prompt_examples: int):
     assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_prompt_examples": n_prompt_examples
+        "n_fewshot_examples": n_fewshot_examples
     }
     nlp.initialize(lambda: examples)
 
-    if n_prompt_examples >= 0:
-        assert len(task._fewshot_examples) == n_prompt_examples
+    if n_fewshot_examples >= 0:
+        assert len(task._fewshot_examples) == n_fewshot_examples
     else:
         assert len(task._fewshot_examples) == len(examples)

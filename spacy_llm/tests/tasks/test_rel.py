@@ -67,7 +67,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.REL.v1"
     labels = ["LivesIn", "Visits"]
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str(EXAMPLES_DIR / "rel.jsonl")}
 
@@ -151,8 +151,8 @@ def test_rel_predict(task, cfg_string, request):
     assert doc._.rel
 
 
-@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_rel_init(noop_config, n_prompt_examples: int):
+@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
+def test_rel_init(noop_config, n_fewshot_examples: int):
     RELTask._check_extension("rel")
 
     config = Config().from_str(noop_config)
@@ -185,14 +185,14 @@ def test_rel_init(noop_config, n_prompt_examples: int):
     assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_prompt_examples": n_prompt_examples
+        "n_fewshot_examples": n_fewshot_examples
     }
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"LivesIn", "Visits"}
 
-    if n_prompt_examples >= 0:
-        assert len(task._fewshot_examples) == n_prompt_examples
+    if n_fewshot_examples >= 0:
+        assert len(task._fewshot_examples) == n_fewshot_examples
     else:
         assert len(task._fewshot_examples) == len(examples)
 

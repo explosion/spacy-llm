@@ -22,7 +22,7 @@ class SpanCatTask(SpanTask):
         template: str,
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
-        examples: Optional[List[SpanExample]],
+        fewshot_examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -41,7 +41,7 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -55,7 +55,7 @@ class SpanCatTask(SpanTask):
             labels=labels,
             template=template,
             label_definitions=label_definitions,
-            prompt_examples=examples,
+            fewshot_examples=fewshot_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -80,13 +80,13 @@ class SpanCatTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
     ) -> None:
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
             labels=labels,
-            n_prompt_examples=n_prompt_examples,
+            n_fewshot_examples=n_fewshot_examples,
             spans_key=self._spans_key,
         )
 

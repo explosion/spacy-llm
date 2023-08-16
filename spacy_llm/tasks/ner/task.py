@@ -22,7 +22,7 @@ class NERTask(SpanTask):
         parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[SpanExample],
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[SpanExample]],
+        fewshot_examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -40,7 +40,7 @@ class NERTask(SpanTask):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -54,7 +54,7 @@ class NERTask(SpanTask):
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             label_definitions=label_definitions,
-            prompt_examples=prompt_examples,
+            fewshot_examples=fewshot_examples,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
@@ -67,13 +67,13 @@ class NERTask(SpanTask):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
     ) -> None:
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
             labels=labels,
-            n_prompt_examples=n_prompt_examples,
+            n_fewshot_examples=n_fewshot_examples,
         )
 
     def assign_spans(

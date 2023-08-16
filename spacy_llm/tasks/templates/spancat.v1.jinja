@@ -5,12 +5,12 @@ From the text below, extract the following (possibly overlapping) entities in th
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
-{%- if examples -%}
+{%- if fewshot_examples -%}
 {# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
-{%- for example in examples -%}
+{%- for example in fewshot_examples -%}
 {# whitespace #}
 Text:
 '''

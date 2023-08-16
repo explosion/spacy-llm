@@ -15,7 +15,7 @@ def make_rel_task(
     parse_responses: Optional[TaskResponseParserProtocol[RELTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     label_definitions: Optional[Dict[str, str]] = None,
-    examples: ExamplesConfigType = None,
+    fewshot_examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
     verbose: bool = False,
 ) -> "RELTask":
@@ -33,7 +33,7 @@ def make_rel_task(
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
         full examples, although both can be provided.
-    examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
+    fewshot_examples (Optional[Callable[[], List[RELExample]]]): Optional callable that
         reads a file containing task examples for few-shot learning. If None is
         passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
@@ -41,7 +41,9 @@ def make_rel_task(
     """
     labels_list = split_labels(labels)
     example_type = fewshot_example_type or RELExample
-    raw_examples = examples() if callable(examples) else examples
+    raw_examples = (
+        fewshot_examples() if callable(fewshot_examples) else fewshot_examples
+    )
     rel_examples = [example_type(**eg) for eg in raw_examples] if raw_examples else None
 
     return RELTask(
@@ -50,7 +52,7 @@ def make_rel_task(
         labels=labels_list,
         template=template,
         label_definitions=label_definitions,
-        examples=rel_examples,
+        fewshot_examples=rel_examples,
         normalizer=normalizer,
         verbose=verbose,
     )

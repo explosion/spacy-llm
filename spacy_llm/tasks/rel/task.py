@@ -22,7 +22,7 @@ class RELTask(BuiltinTaskWithLabels):
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        examples: Optional[List[FewshotExample]],
+        fewshot_examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
@@ -37,7 +37,7 @@ class RELTask(BuiltinTaskWithLabels):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
@@ -45,7 +45,7 @@ class RELTask(BuiltinTaskWithLabels):
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=examples,
+            fewshot_examples=fewshot_examples,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,
@@ -92,14 +92,14 @@ class RELTask(BuiltinTaskWithLabels):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
     ) -> None:
         self._check_extension(self._field)
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
             labels=labels,
-            n_prompt_examples=n_prompt_examples,
+            n_fewshot_examples=n_fewshot_examples,
         )
 
     @property

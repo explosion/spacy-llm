@@ -96,7 +96,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.NER.v1"
     labels = PER,ORG,LOC
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
@@ -125,7 +125,7 @@ def fewshot_cfg_string_v2():
     @llm_tasks = "spacy.NER.v2"
     labels = ["PER", "ORG", "LOC"]
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
@@ -503,7 +503,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_ner = make_ner_task_v2(labels=labels, examples=None)
+    llm_ner = make_ner_task_v2(labels=labels, fewshot_examples=None)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -545,8 +545,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(examples_path)
-    llm_ner = make_ner_task_v2(labels=labels, examples=examples)
+    fewshot_examples = fewshot_reader(examples_path)
+    llm_ner = make_ner_task_v2(labels=labels, fewshot_examples=fewshot_examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -653,7 +653,9 @@ def test_example_not_following_basemodel():
         srsly.write_yaml(tmp_path, wrong_example)
 
         with pytest.raises(ValueError):
-            make_ner_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+            make_ner_task_v2(
+                labels="PER,ORG,LOC", fewshot_examples=fewshot_reader(tmp_path)
+            )
 
 
 def test_external_template_actually_loads():
@@ -727,8 +729,8 @@ def test_ner_scoring(noop_config, n_detections):
     assert scores["ents_p"] == n_detections / 2
 
 
-@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_ner_init(noop_config, n_prompt_examples: int):
+@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
+def test_ner_init(noop_config, n_fewshot_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
@@ -758,17 +760,17 @@ def test_ner_init(noop_config, n_prompt_examples: int):
     assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_prompt_examples": n_prompt_examples
+        "n_fewshot_examples": n_fewshot_examples
     }
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    if n_prompt_examples >= 0:
-        assert len(task._fewshot_examples) == n_prompt_examples
+    if n_fewshot_examples >= 0:
+        assert len(task._fewshot_examples) == n_fewshot_examples
     else:
         assert len(task._fewshot_examples) == len(examples)
 
-    if n_prompt_examples > 0:
+    if n_fewshot_examples > 0:
         for eg in task._fewshot_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 
@@ -846,7 +848,7 @@ def test_label_inconsistency():
     @llm_tasks = "spacy.NER.v2"
     labels = ["PERSON", "LOCATION"]
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
 
@@ -865,18 +867,18 @@ def test_label_inconsistency():
     ):
         nlp = assemble_from_config(config)
 
-    prompt_examples = nlp.get_pipe("llm")._task._fewshot_examples
-    assert len(prompt_examples) == 2
-    assert prompt_examples[0].text == "Jack and Jill went up the hill."
-    assert prompt_examples[0].entities == {
+    fewshot_examples = nlp.get_pipe("llm")._task._fewshot_examples
+    assert len(fewshot_examples) == 2
+    assert fewshot_examples[0].text == "Jack and Jill went up the hill."
+    assert fewshot_examples[0].entities == {
         "LOCATION": ["hill"],
         "PERSON": ["Jack", "Jill"],
     }
     assert (
-        prompt_examples[1].text
+        fewshot_examples[1].text
         == "Jack and Jill went up the hill and spaCy is a great tool."
     )
-    assert prompt_examples[1].entities == {
+    assert fewshot_examples[1].entities == {
         "LOCATION": ["hill"],
         "PERSON": ["Jack", "Jill"],
     }

@@ -21,7 +21,7 @@ class SummarizationTask(BuiltinTask):
         template: str,
         max_n_words: Optional[int],
         field: str,
-        examples: Optional[List[FewshotExample]],
+        fewshot_examples: Optional[List[FewshotExample]],
     ):
         """Default summarization task.
 
@@ -30,13 +30,13 @@ class SummarizationTask(BuiltinTask):
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
-        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
         super().__init__(
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=examples,
+            fewshot_examples=fewshot_examples,
         )
         self._max_n_words = max_n_words
         self._field = field
@@ -49,12 +49,12 @@ class SummarizationTask(BuiltinTask):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
     ) -> None:
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
-            n_prompt_examples=n_prompt_examples,
+            n_fewshot_examples=n_fewshot_examples,
         )
 
     def _check_prompt_example_summary_len(self) -> None:

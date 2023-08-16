@@ -66,7 +66,7 @@ def fewshot_cfg_string():
     labels = "Recipe"
     exclusive_classes = true
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str(EXAMPLES_DIR / "textcat.yml")}
 
@@ -195,7 +195,7 @@ def test_textcat_config(task, cfg_string, request):
     }
 
     if cfg_string == "fewshot_cfg_string":
-        overrides["components.llm.task.examples.path"] = examples
+        overrides["components.llm.task.fewshot_examples.path"] = examples
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string, overrides=overrides)
@@ -239,7 +239,7 @@ def test_textcat_predict(task, cfg_string, request):
     }
 
     if cfg_string == "fewshot_cfg_string":
-        overrides["components.llm.task.examples.path"] = examples
+        overrides["components.llm.task.fewshot_examples.path"] = examples
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string, overrides=overrides)
@@ -271,7 +271,7 @@ def test_textcat_io(task, cfg_string, request):
     }
 
     if cfg_string == "fewshot_cfg_string":
-        overrides["components.llm.task.examples.path"] = examples
+        overrides["components.llm.task.fewshot_examples.path"] = examples
 
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string, overrides=overrides)
@@ -374,10 +374,10 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    fewshot_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        fewshot_examples=fewshot_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -440,10 +440,10 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    fewshot_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        fewshot_examples=fewshot_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -507,10 +507,10 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    fewshot_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        fewshot_examples=fewshot_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -579,7 +579,7 @@ def test_example_not_following_basemodel(wrong_example, labels, exclusive_classe
         with pytest.raises(ValueError):
             make_textcat_task_v3(
                 labels=labels,
-                examples=fewshot_reader(tmp_path),
+                fewshot_examples=fewshot_reader(tmp_path),
                 exclusive_classes=exclusive_classes,
             )
 
@@ -734,12 +734,12 @@ def noop_config():
     """
 
 
-@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
+@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
 @pytest.mark.parametrize("init_from_config", [True, False])
 def test_textcat_init(
     noop_config,
     init_from_config: bool,
-    n_prompt_examples: bool,
+    n_fewshot_examples: bool,
 ):
     config = Config().from_str(noop_config)
     if init_from_config:
@@ -770,7 +770,7 @@ def test_textcat_init(
     assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_prompt_examples": n_prompt_examples
+        "n_fewshot_examples": n_fewshot_examples
     }
 
     nlp.initialize(lambda: examples)
@@ -780,8 +780,8 @@ def test_textcat_init(
     else:
         target = {"Insult", "Compliment"}
     assert set(task._label_dict.values()) == target
-    if n_prompt_examples >= 0:
-        assert len(task._fewshot_examples) == n_prompt_examples
+    if n_fewshot_examples >= 0:
+        assert len(task._fewshot_examples) == n_fewshot_examples
     else:
         assert len(task._fewshot_examples) == len(INSULTS)
 

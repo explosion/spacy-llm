@@ -58,7 +58,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.Summarization.v1"
     max_n_words = 20
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "summarization.yml"))}
 
@@ -255,7 +255,7 @@ def test_jinja_template_rendering_without_examples(example_text):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(example_text)
 
-    llm_ner = make_summarization_task(examples=None, max_n_words=10)
+    llm_ner = make_summarization_task(fewshot_examples=None, max_n_words=10)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -288,8 +288,8 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(example_text)
 
-    examples = fewshot_reader(examples_path)
-    llm_ner = make_summarization_task(examples=examples, max_n_words=20)
+    fewshot_examples = fewshot_reader(examples_path)
+    llm_ner = make_summarization_task(fewshot_examples=fewshot_examples, max_n_words=20)
 
     with pytest.warns(
         UserWarning,

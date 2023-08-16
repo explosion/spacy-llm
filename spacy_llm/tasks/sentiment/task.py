@@ -19,7 +19,7 @@ class SentimentTask(BuiltinTask):
         parse_responses: TaskResponseParserProtocol[Self],
         fewshot_example_type: Type[FewshotExample],
         field: str,
-        examples: Optional[List[SentimentExample]],
+        fewshot_examples: Optional[List[SentimentExample]],
     ):
         """Sentiment analysis task.
 
@@ -27,13 +27,13 @@ class SentimentTask(BuiltinTask):
         parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         field (str): The name of the doc extension in which to store the sentiment score.
-        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
         super().__init__(
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=examples,
+            fewshot_examples=fewshot_examples,
         )
         self._field = field
         self._check_doc_extension()
@@ -47,18 +47,18 @@ class SentimentTask(BuiltinTask):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
     ) -> None:
         """Initialize sentiment task.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
+        n_fewshot_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
         """
         self._check_doc_extension()
         super()._initialize(
-            get_examples=get_examples, nlp=nlp, n_prompt_examples=n_prompt_examples
+            get_examples=get_examples, nlp=nlp, n_fewshot_examples=n_fewshot_examples
         )
 
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:

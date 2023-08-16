@@ -63,7 +63,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.SpanCat.v2"
     labels = ["PER", "ORG", "LOC"]
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
 
@@ -376,7 +376,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    llm_spancat = make_spancat_task_v2(labels=labels, examples=None)
+    llm_spancat = make_spancat_task_v2(labels=labels, fewshot_examples=None)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
@@ -419,8 +419,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(examples_path)
-    llm_spancat = make_spancat_task_v2(labels=labels, examples=examples)
+    fewshot_examples = fewshot_reader(examples_path)
+    llm_spancat = make_spancat_task_v2(labels=labels, fewshot_examples=fewshot_examples)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
@@ -482,7 +482,9 @@ def test_example_not_following_basemodel():
         srsly.write_yaml(tmp_path, wrong_example)
 
     with pytest.raises(ValueError):
-        make_spancat_task_v2(labels="PER,ORG,LOC", examples=fewshot_reader(tmp_path))
+        make_spancat_task_v2(
+            labels="PER,ORG,LOC", fewshot_examples=fewshot_reader(tmp_path)
+        )
 
 
 @pytest.fixture
@@ -534,8 +536,8 @@ def test_spancat_scoring(noop_config, n_detections):
     assert scores["spans_sc_p"] == n_detections / 2
 
 
-@pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_spancat_init(noop_config, n_prompt_examples: bool):
+@pytest.mark.parametrize("n_fewshot_examples", [-1, 0, 1, 2])
+def test_spancat_init(noop_config, n_fewshot_examples: bool):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
     nlp = assemble_from_config(config)
@@ -564,18 +566,18 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
     assert not task._fewshot_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_prompt_examples": n_prompt_examples
+        "n_fewshot_examples": n_fewshot_examples
     }
 
     nlp.initialize(lambda: examples)
 
     assert set(task._label_dict.values()) == {"PER", "LOC"}
-    if n_prompt_examples >= 0:
-        assert len(task._fewshot_examples) == n_prompt_examples
+    if n_fewshot_examples >= 0:
+        assert len(task._fewshot_examples) == n_fewshot_examples
     else:
         assert len(task._fewshot_examples) == len(examples)
 
-    if n_prompt_examples > 0:
+    if n_fewshot_examples > 0:
         for eg in task._fewshot_examples:
             assert set(eg.entities.keys()) == {"PER", "LOC"}
 

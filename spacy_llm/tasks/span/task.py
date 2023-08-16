@@ -21,7 +21,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[SpanExample]],
+        fewshot_examples: Optional[List[SpanExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
         case_sensitive_matching: bool,
@@ -31,7 +31,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=prompt_examples,
+            fewshot_examples=fewshot_examples,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,

@@ -52,7 +52,7 @@ def fewshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.Sentiment.v1"
 
-    [components.llm.task.examples]
+    [components.llm.task.fewshot_examples]
     @misc = "spacy.FewShotReader.v1"
     path = {str((Path(__file__).parent / "examples" / "sentiment.yml"))}
 
@@ -175,7 +175,7 @@ def test_jinja_template_rendering_without_examples():
     text = "They're indifferent."
     doc = nlp.make_doc(text)
 
-    sentiment_task = make_sentiment_task(examples=None)
+    sentiment_task = make_sentiment_task(fewshot_examples=None)
     prompt = list(sentiment_task.generate_prompts([doc]))[0]
 
     assert (
@@ -209,7 +209,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     text = "It was the happiest day of her life."
     doc = nlp.make_doc(text)
 
-    sentiment_task = make_sentiment_task(examples=fewshot_reader(examples_path))
+    sentiment_task = make_sentiment_task(fewshot_examples=fewshot_reader(examples_path))
     prompt = list(sentiment_task.generate_prompts([doc]))[0]
 
     assert (

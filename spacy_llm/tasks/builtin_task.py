@@ -33,16 +33,16 @@ class BuiltinTask(abc.ABC):
         parse_responses: TaskResponseParserProtocol,
         fewshot_example_type: Type[FewshotExample],
         template: str,
-        examples: Optional[List[FewshotExample]],
+        fewshot_examples: Optional[List[FewshotExample]],
     ):
         """Initializes task.
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
-        examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
         self._parse_responses = parse_responses
-        self._fewshot_examples = examples or []
+        self._fewshot_examples = fewshot_examples or []
         self._template = template
         self._fewshot_example_type = fewshot_example_type
 
@@ -55,7 +55,7 @@ class BuiltinTask(abc.ABC):
         _template = environment.from_string(self._template)
         for doc in docs:
             prompt = _template.render(
-                text=doc.text, examples=self._fewshot_examples, **kwargs
+                text=doc.text, fewshot_examples=self._fewshot_examples, **kwargs
             )
             yield prompt
 
@@ -74,18 +74,21 @@ class BuiltinTask(abc.ABC):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initializes prompt examples from Doc examples.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
+        n_fewshot_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
         """
         for eg in get_examples():
-            if n_prompt_examples < 0 or len(self._fewshot_examples) < n_prompt_examples:
+            if (
+                n_fewshot_examples < 0
+                or len(self._fewshot_examples) < n_fewshot_examples
+            ):
                 self._fewshot_examples.append(
                     self._fewshot_example_type.generate(eg, **kwargs)
                 )
@@ -103,12 +106,12 @@ class BuiltinTask(abc.ABC):
         for key, value in cfg.items():
             setattr(self, key, value)
 
-    def _get_prompt_examples(self) -> List[Dict[str, Any]]:
+    def _get_fewshot_examples(self) -> List[Dict[str, Any]]:
         """Serialize examples."""
         examples = [eg.dict() for eg in self._fewshot_examples]
         return examples
 
-    def _set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
+    def _set_fewshot_examples(self, examples: List[Dict[str, Any]]) -> None:
         """Deserialize examples from bytes.
 
         examples (List[Dict[str, Any]]): serialized examples.
@@ -129,7 +132,9 @@ class BuiltinTask(abc.ABC):
         """
         serialize = {
             "cfg": lambda: srsly.json_dumps(self.get_cfg()),
-            "prompt_examples": lambda: srsly.msgpack_dumps(self._get_prompt_examples()),
+            "fewshot_examples": lambda: srsly.msgpack_dumps(
+                self._get_fewshot_examples()
+            ),
         }
 
         return util.to_bytes(serialize, exclude)
@@ -149,7 +154,7 @@ class BuiltinTask(abc.ABC):
 
         deserialize = {
             "cfg": lambda b: self.set_cfg(srsly.json_loads(b)),
-            "prompt_examples": lambda b: self._set_prompt_examples(
+            "fewshot_examples": lambda b: self._set_fewshot_examples(
                 srsly.msgpack_loads(b)
             ),
         }
@@ -171,8 +176,8 @@ class BuiltinTask(abc.ABC):
 
         serialize = {
             "cfg": lambda p: srsly.write_json(p, self.get_cfg()),
-            "prompt_examples": lambda p: srsly.write_msgpack(
-                p, self._get_prompt_examples()
+            "fewshot_examples": lambda p: srsly.write_msgpack(
+                p, self._get_fewshot_examples()
             ),
         }
 
@@ -192,7 +197,7 @@ class BuiltinTask(abc.ABC):
 
         deserialize = {
             "cfg": lambda p: self.set_cfg(srsly.read_json(p)),
-            "prompt_examples": lambda p: self._set_prompt_examples(
+            "fewshot_examples": lambda p: self._set_fewshot_examples(
                 srsly.read_msgpack(p)
             ),
         }
@@ -227,7 +232,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         parse_responses: TaskResponseParserProtocol,
         fewshot_example_type: Type[FewshotExample],
         template: str,
-        examples: Optional[List[FewshotExample]],
+        fewshot_examples: Optional[List[FewshotExample]],
         labels: List[str],
         label_definitions: Optional[Dict[str, str]],
         normalizer: Optional[Callable[[str], str]],
@@ -237,9 +242,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
-        examples (Optional[Callable[[], Iterable[FewshotExample]]]): Optional callable that
-            reads a file containing task examples for few-shot learning. If None is
-            passed, then zero-shot learning will be used.
+        fewshot_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
@@ -252,7 +255,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             parse_responses=parse_responses,
             fewshot_example_type=fewshot_example_type,
             template=template,
-            examples=examples,
+            fewshot_examples=fewshot_examples,
         )
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {
@@ -265,7 +268,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
         labels: List[str] = [],
-        n_prompt_examples: int = 0,
+        n_fewshot_examples: int = 0,
         **kwargs,
     ) -> None:
         """Supports initialization of tasks with labels by auto-discovering labels and returning the derived few-shot
@@ -281,7 +284,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             for initialization.
         nlp (Language): Language instance.
         labels (List[str]): Optional list of labels.
-        n_prompt_examples (int): How many prompt examples to infer from the Example objects.
+        n_fewshot_examples (int): How many prompt examples to infer from the Example objects.
             0 by default. Takes all examples if set to -1.
         """
         if not labels:
@@ -294,7 +297,10 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         for eg in get_examples():
             if infer_labels:
                 labels.extend(self._extract_labels_from_example(eg))
-            if n_prompt_examples < 0 or len(self._fewshot_examples) < n_prompt_examples:
+            if (
+                n_fewshot_examples < 0
+                or len(self._fewshot_examples) < n_fewshot_examples
+            ):
                 self._fewshot_examples.append(
                     self._fewshot_example_type.generate(eg, **kwargs)
                 )
