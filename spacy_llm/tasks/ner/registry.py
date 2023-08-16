@@ -8,7 +8,7 @@ from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from .examples import NERExample
 from .scorer import score
-from .task import DEFAULT_NER_TEMPLATE_V1, DEFAULT_NER_TEMPLATE_V2, NERTask
+from .task import DEFAULT_NER_TEMPLATE_V1, DEFAULT_NER_TEMPLATE_V2, NERTask, SpanTask
 
 
 @registry.llm_tasks("spacy.NER.v1")
@@ -62,7 +62,7 @@ def make_ner_task(
 
 @registry.llm_tasks("spacy.NER.v2")
 def make_ner_task_v2(
-    parse_responses: Optional[TaskResponseParserProtocol] = None,
+    parse_responses: Optional[TaskResponseParserProtocol[SpanTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_NER_TEMPLATE_V2,
