@@ -28,7 +28,7 @@ class RELTask(BuiltinTaskWithLabels):
         """Default REL task. Populates a `Doc._.rel` custom attribute.
 
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.

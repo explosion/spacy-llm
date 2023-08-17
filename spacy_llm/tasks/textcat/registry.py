@@ -12,7 +12,7 @@ from .util import TextCatExample, score
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
     parse_responses: Optional[TaskResponseParser[TextCatTask]] = None,
-    fewshot_example_type: Optional[Type[FewshotExample]] = None,
+    prompt_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -37,7 +37,7 @@ def make_textcat_task(
 
     parse_responses (Optional[TaskResponseParser[TextCatTask]]): Callable for parsing LLM responses for this
         task.
-    fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
+    prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         This task assumes binary classification if a single label is provided.
         Leave empty to populate it at initialization time (only if examples are provided).
@@ -52,7 +52,7 @@ def make_textcat_task(
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
-    example_type = fewshot_example_type or TextCatExample
+    example_type = prompt_example_type or TextCatExample
     textcat_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
     )
@@ -74,7 +74,7 @@ def make_textcat_task(
 @registry.llm_tasks("spacy.TextCat.v2")
 def make_textcat_task_v2(
     parse_responses: Optional[TaskResponseParser[TextCatTask]] = None,
-    fewshot_example_type: Optional[Type[FewshotExample]] = None,
+    prompt_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V2,
     examples: ExamplesConfigType = None,
@@ -100,7 +100,7 @@ def make_textcat_task_v2(
 
     parse_responses (Optional[TaskResponseParser[TextCatTask]]): Callable for parsing LLM responses for this
         task.
-    fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
+    prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[List[str], str]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
         This task assumes binary classification if a single label is provided.
@@ -117,7 +117,7 @@ def make_textcat_task_v2(
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
-    example_type = fewshot_example_type or TextCatExample
+    example_type = prompt_example_type or TextCatExample
     textcat_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
     )
@@ -140,7 +140,7 @@ def make_textcat_task_v2(
 @registry.llm_tasks("spacy.TextCat.v3")
 def make_textcat_task_v3(
     parse_responses: Optional[TaskResponseParser[TextCatTask]] = None,
-    fewshot_example_type: Optional[Type[FewshotExample]] = None,
+    prompt_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
@@ -167,7 +167,7 @@ def make_textcat_task_v3(
 
     parse_responses (Optional[TaskResponseParser[TextCatTask]]): Callable for parsing LLM responses for this
         task.
-    fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
+    prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[List[str], str]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
         This task assumes binary classification if a single label is provided.
@@ -187,7 +187,7 @@ def make_textcat_task_v3(
 
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
-    example_type = fewshot_example_type or TextCatExample
+    example_type = prompt_example_type or TextCatExample
     textcat_examples = (
         [example_type(**eg) for eg in raw_examples] if raw_examples else None
     )

@@ -27,7 +27,7 @@ class SummarizationTask(BuiltinTask):
 
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.

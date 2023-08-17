@@ -36,7 +36,7 @@ class BuiltinTask(abc.ABC):
     ):
         """Initializes task.
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
-        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         """
@@ -108,9 +108,9 @@ class BuiltinTask(abc.ABC):
         return examples
 
     def _set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
-        """Deserialize examples from bytes.
+        """Set prompt examples.
 
-        examples (List[Dict[str, Any]]): serialized examples.
+        examples (List[Dict[str, Any]]): prompt examples.
         """
         self._prompt_examples = [
             self._prompt_example_type.parse_obj(eg) for eg in examples
@@ -235,7 +235,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         """Built-in task with labels.
 
         parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
-        fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         labels (List[str]): List of labels to pass to the template.

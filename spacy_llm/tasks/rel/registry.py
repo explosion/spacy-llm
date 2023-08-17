@@ -13,7 +13,7 @@ def make_rel_task(
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_REL_TEMPLATE,
     parse_responses: Optional[TaskResponseParser[RELTask]] = None,
-    fewshot_example_type: Optional[Type[FewshotExample]] = None,
+    prompt_example_type: Optional[Type[FewshotExample]] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -28,7 +28,7 @@ def make_rel_task(
         Leave empty to populate it at initialization time (only if examples are provided).
     template (str): Prompt template passed to the model.
     parse_responses (Optional[TaskResponseParser[RELTask]]): Callable for parsing LLM responses for this task.
-    fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
+    prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     label_definitions (Optional[Dict[str, str]]): Map of label -> description
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
@@ -39,7 +39,7 @@ def make_rel_task(
     verbose (bool): Controls the verbosity of the task.
     """
     labels_list = split_labels(labels)
-    example_type = fewshot_example_type or RELExample
+    example_type = prompt_example_type or RELExample
     raw_examples = examples() if callable(examples) else examples
     rel_examples = [example_type(**eg) for eg in raw_examples] if raw_examples else None
 
