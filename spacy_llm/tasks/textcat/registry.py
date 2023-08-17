@@ -1,14 +1,13 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import CallableScorableProtocol, ExamplesConfigType, FewshotExample
+from ...ty import ExamplesConfigType, FewshotExample, ScorerProtocol
 from ...ty import TaskResponseParserProtocol
 from ...util import split_labels
-from .examples import TextCatExample
 from .parser import parse_responses_v1_v2_v3
-from .scorer import score
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V1, DEFAULT_TEXTCAT_TEMPLATE_V2
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V3, TextCatTask
+from .util import TextCatExample, score
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
@@ -21,7 +20,7 @@ def make_textcat_task(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ) -> "TextCatTask":
     """TextCat.v1 task factory.
 
@@ -84,7 +83,7 @@ def make_textcat_task_v2(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ) -> "TextCatTask":
     """TextCat.v2 task factory.
 
@@ -151,7 +150,7 @@ def make_textcat_task_v3(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ) -> "TextCatTask":
     """TextCat.v3 task factory.
 

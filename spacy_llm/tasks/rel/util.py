@@ -1,14 +1,14 @@
 from typing import List
 
-from spacy.training import Example
-
-from ...compat import Self
-from ...ty import FewshotExample
-
 try:
     from pydantic.v1 import BaseModel, validator
 except ImportError:
     from pydantic import BaseModel, validator
+
+from spacy.training import Example
+
+from ...compat import Self
+from ...ty import FewshotExample
 
 
 class RelationItem(BaseModel):

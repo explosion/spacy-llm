@@ -7,7 +7,7 @@ from spacy.training import Example
 from ...ty import FewshotExample, Self, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
-from .examples import SentimentExample
+from .util import SentimentExample
 
 DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
 

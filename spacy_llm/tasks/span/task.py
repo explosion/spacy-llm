@@ -8,7 +8,7 @@ from spacy.tokens import Doc, Span
 from ...compat import Literal, Self
 from ...ty import TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
-from .examples import SpanExample
+from .util import SpanExample
 
 
 class SpanTask(BuiltinTaskWithLabels, abc.ABC):

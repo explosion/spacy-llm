@@ -2,13 +2,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from ...compat import Literal
 from ...registry import registry
-from ...ty import CallableScorableProtocol, ExamplesConfigType, FewshotExample
+from ...ty import ExamplesConfigType, FewshotExample, ScorerProtocol
 from ...ty import TaskResponseParserProtocol
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
-from .examples import SpanCatExample
-from .scorer import score
 from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2, SpanCatTask
+from .util import SpanCatExample, score
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
@@ -22,7 +21,7 @@ def make_spancat_task(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
     spans_key: str = "sc",
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ):
     """SpanCat.v1 task factory.
 
@@ -77,7 +76,7 @@ def make_spancat_task_v2(
     case_sensitive_matching: bool = False,
     single_match: bool = False,
     spans_key: str = "sc",
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ):
     """SpanCat.v2 task factory.
 

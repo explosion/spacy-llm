@@ -2,9 +2,9 @@ from typing import Optional, Type
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
-from .examples import SentimentExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
+from .util import SentimentExample
 
 
 @registry.llm_tasks("spacy.Sentiment.v1")

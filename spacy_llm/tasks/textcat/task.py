@@ -6,7 +6,7 @@ from spacy.training import Example
 from wasabi import msg
 
 from ...compat import Self
-from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
+from ...ty import FewshotExample, ScorerProtocol, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 
@@ -28,7 +28,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         exclusive_classes: bool,
         allow_none: bool,
         verbose: bool,
-        scorer: CallableScorableProtocol,
+        scorer: ScorerProtocol,
     ):
         """Default TextCat task.
 

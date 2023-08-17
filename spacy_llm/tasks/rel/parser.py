@@ -3,13 +3,13 @@ from typing import Iterable, List
 from spacy.tokens import Doc
 from wasabi import msg
 
-from .examples import RelationItem
-from .task import RELTask
-
 try:
     from pydantic.v1 import ValidationError
 except ImportError:
     from pydantic import ValidationError
+
+from .task import RELTask
+from .util import RelationItem
 
 
 def parse_responses_v1(

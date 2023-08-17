@@ -2,9 +2,9 @@ from typing import Optional, Type
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
-from .examples import SummarizationExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_SUMMARIZATION_TEMPLATE_V1, SummarizationTask
+from .util import SummarizationExample
 
 
 @registry.llm_tasks("spacy.Summarization.v1")

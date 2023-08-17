@@ -68,7 +68,7 @@ class FewshotExample(abc.ABC, BaseModel):
 
 
 @runtime_checkable
-class ScorableProtocol(Protocol):
+class ScorableTaskProtocol(Protocol):
     """Differs from ScorableCallableProtocol in that it describes an object with a scorer() function, i. e. a scorable
     as checked for by the LLMWrapper component.
     """
@@ -81,7 +81,7 @@ class ScorableProtocol(Protocol):
 
 
 @runtime_checkable
-class CallableScorableProtocol(Protocol):
+class ScorerProtocol(Protocol):
     """Differs from ScorableProtocol in that it describes a Callable with a call signature matching the scorer()
     function + kwargs, i. e. a scorable as passed via the configuration.
     """

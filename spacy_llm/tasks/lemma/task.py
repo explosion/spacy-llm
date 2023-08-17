@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import CallableScorableProtocol, FewshotExample, TaskResponseParserProtocol
+from ...ty import FewshotExample, ScorerProtocol, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -19,7 +19,7 @@ class LemmaTask(BuiltinTask):
         prompt_example_type: Type[FewshotExample],
         prompt_examples: Optional[List[FewshotExample]],
         template: str,
-        scorer: CallableScorableProtocol,
+        scorer: ScorerProtocol,
     ):
         """Default lemmatization task.
 

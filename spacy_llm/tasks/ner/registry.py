@@ -2,13 +2,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from ...compat import Literal
 from ...registry import registry
-from ...ty import CallableScorableProtocol, ExamplesConfigType, FewshotExample
+from ...ty import ExamplesConfigType, FewshotExample, ScorerProtocol
 from ...ty import TaskResponseParserProtocol
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
-from .examples import NERExample
-from .scorer import score
 from .task import DEFAULT_NER_TEMPLATE_V1, DEFAULT_NER_TEMPLATE_V2, NERTask, SpanTask
+from .util import NERExample, score
 
 
 @registry.llm_tasks("spacy.NER.v1")
@@ -21,7 +20,7 @@ def make_ner_task(
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ):
     """NER.v1 task factory.
 
@@ -71,7 +70,7 @@ def make_ner_task_v2(
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
-    scorer: Optional[CallableScorableProtocol] = None,
+    scorer: Optional[ScorerProtocol] = None,
 ):
     """NER.v2 task factory.
 

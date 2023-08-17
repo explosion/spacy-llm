@@ -16,7 +16,7 @@ from spacy.vocab import Vocab
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
 from ..ty import CacheProtocol, LabeledProtocol, LLMTaskProtocol, PromptExecutorType
-from ..ty import ScorableProtocol, SerializableProtocol, validate_type_consistency
+from ..ty import ScorableTaskProtocol, SerializableProtocol, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -156,7 +156,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if isinstance(self._task, ScorableProtocol):
+        if isinstance(self._task, ScorableTaskProtocol):
             return self._task.scorer(examples)
         return {}
 
