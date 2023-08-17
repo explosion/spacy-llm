@@ -15,7 +15,7 @@ from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
 from spacy_llm.tasks.ner import NERTask, make_ner_task_v2
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import LabeledProtocol, LLMTaskProtocol
+from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -195,12 +195,12 @@ def test_ner_config(cfg_string, request):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTaskProtocol)
+    assert isinstance(pipe.task, LLMTask)
 
     labels = orig_config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, LabeledProtocol)
+    assert isinstance(task, Labeled)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)

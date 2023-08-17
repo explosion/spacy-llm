@@ -6,7 +6,7 @@ from spacy.training import Example
 from wasabi import msg
 
 from ...compat import Self
-from ...ty import FewshotExample, ScorerProtocol, TaskResponseParserProtocol
+from ...ty import FewshotExample, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 
@@ -18,7 +18,7 @@ DEFAULT_TEXTCAT_TEMPLATE_V3 = read_template("textcat.v3")
 class TextCatTask(BuiltinTaskWithLabels):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,
@@ -28,7 +28,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         exclusive_classes: bool,
         allow_none: bool,
         verbose: bool,
-        scorer: ScorerProtocol,
+        scorer: Scorer,
     ):
         """Default TextCat task.
 

@@ -9,7 +9,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ..registry import lowercase_normalizer
-from ..ty import FewshotExample, TaskResponseParserProtocol
+from ..ty import FewshotExample, TaskResponseParser
 
 
 class BuiltinTask(abc.ABC):
@@ -29,7 +29,7 @@ class BuiltinTask(abc.ABC):
 
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParser,
         prompt_example_type: Type[FewshotExample],
         template: str,
         prompt_examples: Optional[List[FewshotExample]],
@@ -223,7 +223,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
 
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol,
+        parse_responses: TaskResponseParser,
         prompt_example_type: Type[FewshotExample],
         template: str,
         prompt_examples: Optional[List[FewshotExample]],

@@ -6,7 +6,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, TaskResponseParserProtocol
+from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -16,7 +16,7 @@ DEFAULT_SUMMARIZATION_TEMPLATE_V1 = read_template("summarization.v1")
 class SummarizationTask(BuiltinTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample],
         template: str,
         max_n_words: Optional[int],

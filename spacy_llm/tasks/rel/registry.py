@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParserProtocol
+from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
 from ...util import split_labels
 from .parser import parse_responses_v1
 from .task import DEFAULT_REL_TEMPLATE, RELTask
@@ -12,7 +12,7 @@ from .util import RELExample
 def make_rel_task(
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_REL_TEMPLATE,
-    parse_responses: Optional[TaskResponseParserProtocol[RELTask]] = None,
+    parse_responses: Optional[TaskResponseParser[RELTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,

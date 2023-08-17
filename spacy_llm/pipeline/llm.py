@@ -15,8 +15,8 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import CacheProtocol, LabeledProtocol, LLMTaskProtocol, PromptExecutorType
-from ..ty import ScorableTaskProtocol, SerializableProtocol, validate_type_consistency
+from ..ty import Cache, Labeled, LLMTask, PromptExecutorType, ScorableTask
+from ..ty import Serializable, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -51,9 +51,9 @@ class CacheConfigType(TypedDict):
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[LLMTaskProtocol],
+    task: Optional[LLMTask],
     model: PromptExecutorType,
-    cache: CacheProtocol,
+    cache: Cache,
     save_io: bool,
     validate_types: bool,
 ) -> "LLMWrapper":
@@ -95,9 +95,9 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         vocab: Vocab,
-        task: LLMTaskProtocol,
+        task: LLMTask,
         model: PromptExecutorType,
-        cache: CacheProtocol,
+        cache: Cache,
         save_io: bool,
     ) -> None:
         """
@@ -128,12 +128,12 @@ class LLMWrapper(Pipe):
     @property
     def labels(self) -> Tuple[str, ...]:
         labels: Tuple[str, ...] = tuple()
-        if isinstance(self._task, LabeledProtocol):
+        if isinstance(self._task, Labeled):
             labels = self._task.labels
         return labels
 
     @property
-    def task(self) -> LLMTaskProtocol:
+    def task(self) -> LLMTask:
         return self._task
 
     def __call__(self, doc: Doc) -> Doc:
@@ -156,7 +156,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if isinstance(self._task, ScorableTaskProtocol):
+        if isinstance(self._task, ScorableTask):
             return self._task.scorer(examples)
         return {}
 
@@ -244,9 +244,9 @@ class LLMWrapper(Pipe):
 
         serialize = {}
 
-        if isinstance(self._task, SerializableProtocol):
+        if isinstance(self._task, Serializable):
             serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._model, SerializableProtocol):
+        if isinstance(self._model, Serializable):
             serialize["model"] = lambda: self._model.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
 
         return util.to_bytes(serialize, exclude)
@@ -266,9 +266,9 @@ class LLMWrapper(Pipe):
 
         deserialize = {}
 
-        if isinstance(self._task, SerializableProtocol):
+        if isinstance(self._task, Serializable):
             deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._model, SerializableProtocol):
+        if isinstance(self._model, Serializable):
             deserialize["model"] = lambda b: self._model.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
 
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -284,9 +284,9 @@ class LLMWrapper(Pipe):
 
         serialize = {}
 
-        if isinstance(self._task, SerializableProtocol):
+        if isinstance(self._task, Serializable):
             serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._model, SerializableProtocol):
+        if isinstance(self._model, Serializable):
             serialize["model"] = lambda p: self._model.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
         util.to_disk(path, serialize, exclude)
@@ -302,9 +302,9 @@ class LLMWrapper(Pipe):
 
         serialize = {}
 
-        if isinstance(self._task, SerializableProtocol):
+        if isinstance(self._task, Serializable):
             serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
-        if isinstance(self._model, SerializableProtocol):
+        if isinstance(self._model, Serializable):
             serialize["model"] = lambda p: self._model.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
 
         util.from_disk(path, serialize, exclude)

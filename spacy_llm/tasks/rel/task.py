@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, TaskResponseParserProtocol
+from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 from .util import RelationItem, RELExample
@@ -16,7 +16,7 @@ DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
 class RELTask(BuiltinTaskWithLabels):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,

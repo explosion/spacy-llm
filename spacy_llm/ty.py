@@ -25,7 +25,7 @@ ExamplesConfigType = Union[
 
 
 @runtime_checkable
-class SerializableProtocol(Protocol):
+class Serializable(Protocol):
     def to_bytes(
         self,
         *,
@@ -68,7 +68,7 @@ class FewshotExample(abc.ABC, BaseModel):
 
 
 @runtime_checkable
-class ScorableTaskProtocol(Protocol):
+class ScorableTask(Protocol):
     """Differs from ScorableCallableProtocol in that it describes an object with a scorer() function, i. e. a scorable
     as checked for by the LLMWrapper component.
     """
@@ -81,7 +81,7 @@ class ScorableTaskProtocol(Protocol):
 
 
 @runtime_checkable
-class ScorerProtocol(Protocol):
+class Scorer(Protocol):
     """Differs from ScorableProtocol in that it describes a Callable with a call signature matching the scorer()
     function + kwargs, i. e. a scorable as passed via the configuration.
     """
@@ -94,7 +94,7 @@ class ScorerProtocol(Protocol):
 
 
 @runtime_checkable
-class LLMTaskProtocol(Protocol):
+class LLMTask(Protocol):
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
@@ -112,10 +112,10 @@ class LLMTaskProtocol(Protocol):
         """
 
 
-_TaskContraT = TypeVar("_TaskContraT", bound=LLMTaskProtocol, contravariant=True)
+_TaskContraT = TypeVar("_TaskContraT", bound=LLMTask, contravariant=True)
 
 
-class TaskResponseParserProtocol(Protocol[_TaskContraT]):
+class TaskResponseParser(Protocol[_TaskContraT]):
     """Generic protocol for parsing functions with specific tasks."""
 
     def __call__(
@@ -125,24 +125,24 @@ class TaskResponseParserProtocol(Protocol[_TaskContraT]):
 
 
 @runtime_checkable
-class PromptTemplateProviderProtocol(Protocol):
+class PromptTemplateProvider(Protocol):
     @property
     def prompt_template(self) -> str:
         ...
 
 
 @runtime_checkable
-class LabeledProtocol(Protocol):
+class Labeled(Protocol):
     @property
     def labels(self) -> Tuple[str, ...]:
         ...
 
 
 @runtime_checkable
-class CacheProtocol(Protocol):
+class Cache(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    def initialize(self, vocab: Vocab, task: LLMTaskProtocol) -> None:
+    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
         """
         Initialize cache with data not available at construction time.
         vocab (Vocab): Vocab object.
@@ -238,13 +238,13 @@ def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
     return signature
 
 
-def validate_type_consistency(task: LLMTaskProtocol, model: PromptExecutorType) -> None:
+def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
     """Check whether the types of the task and model signatures match.
     task (LLMTask): Specified task.
     backend (PromptExecutor): Specified model.
     """
     # Raises an error or prints a warning if something looks wrong/odd.
-    if not isinstance(task, LLMTaskProtocol):
+    if not isinstance(task, LLMTask):
         raise ValueError(
             f"A task needs to be of type 'LLMTask' but found {type(task)} instead"
         )

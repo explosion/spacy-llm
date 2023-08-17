@@ -1,30 +1,29 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, ScorerProtocol
-from ...ty import TaskResponseParserProtocol
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
 from .parser import parse_responses_v1
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 from .util import LemmaExample, score
 
 
 @registry.llm_misc("spacy.LemmaParser.v1")
-def make_lemma_parser() -> TaskResponseParserProtocol[LemmaTask]:
+def make_lemma_parser() -> TaskResponseParser[LemmaTask]:
     return parse_responses_v1
 
 
 @registry.llm_misc("spacy.LemmaScorer.v1")
-def make_lemma_scorer() -> ScorerProtocol:
+def make_lemma_scorer() -> Scorer:
     return score
 
 
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
-    parse_responses: Optional[TaskResponseParserProtocol[LemmaTask]] = None,
+    parse_responses: Optional[TaskResponseParser[LemmaTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
-    scorer: Optional[ScorerProtocol] = None,
+    scorer: Optional[Scorer] = None,
 ):
     """Lemma.v1 task factory.
 

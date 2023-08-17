@@ -1,8 +1,7 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, ScorerProtocol
-from ...ty import TaskResponseParserProtocol
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
 from ...util import split_labels
 from .parser import parse_responses_v1_v2_v3
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V1, DEFAULT_TEXTCAT_TEMPLATE_V2
@@ -12,7 +11,7 @@ from .util import TextCatExample, score
 
 @registry.llm_tasks("spacy.TextCat.v1")
 def make_textcat_task(
-    parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
+    parse_responses: Optional[TaskResponseParser[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
     examples: ExamplesConfigType = None,
@@ -20,7 +19,7 @@ def make_textcat_task(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-    scorer: Optional[ScorerProtocol] = None,
+    scorer: Optional[Scorer] = None,
 ) -> "TextCatTask":
     """TextCat.v1 task factory.
 
@@ -74,7 +73,7 @@ def make_textcat_task(
 
 @registry.llm_tasks("spacy.TextCat.v2")
 def make_textcat_task_v2(
-    parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
+    parse_responses: Optional[TaskResponseParser[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V2,
@@ -83,7 +82,7 @@ def make_textcat_task_v2(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-    scorer: Optional[ScorerProtocol] = None,
+    scorer: Optional[Scorer] = None,
 ) -> "TextCatTask":
     """TextCat.v2 task factory.
 
@@ -140,7 +139,7 @@ def make_textcat_task_v2(
 
 @registry.llm_tasks("spacy.TextCat.v3")
 def make_textcat_task_v3(
-    parse_responses: Optional[TaskResponseParserProtocol[TextCatTask]] = None,
+    parse_responses: Optional[TaskResponseParser[TextCatTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V3,
@@ -150,7 +149,7 @@ def make_textcat_task_v3(
     exclusive_classes: bool = False,
     allow_none: bool = True,
     verbose: bool = False,
-    scorer: Optional[ScorerProtocol] = None,
+    scorer: Optional[Scorer] = None,
 ) -> "TextCatTask":
     """TextCat.v3 task factory.
 

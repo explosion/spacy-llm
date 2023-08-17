@@ -5,7 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal, Self
-from ...ty import ScorerProtocol, TaskResponseParserProtocol
+from ...ty import Scorer, TaskResponseParser
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
 
@@ -16,7 +16,7 @@ DEFAULT_SPANCAT_TEMPLATE_V2 = read_template("spancat.v2")
 class SpanCatTask(SpanTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[SpanExample],
         labels: List[str],
         template: str,
@@ -27,7 +27,7 @@ class SpanCatTask(SpanTask):
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
         single_match: bool,
-        scorer: ScorerProtocol,
+        scorer: Scorer,
     ):
         """Default SpanCat task.
 

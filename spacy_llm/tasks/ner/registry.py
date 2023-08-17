@@ -2,8 +2,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from ...compat import Literal
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, ScorerProtocol
-from ...ty import TaskResponseParserProtocol
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from .task import DEFAULT_NER_TEMPLATE_V1, DEFAULT_NER_TEMPLATE_V2, NERTask, SpanTask
@@ -12,7 +11,7 @@ from .util import NERExample, score
 
 @registry.llm_tasks("spacy.NER.v1")
 def make_ner_task(
-    parse_responses: Optional[TaskResponseParserProtocol[SpanTask]] = None,
+    parse_responses: Optional[TaskResponseParser[SpanTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: str = "",
     examples: Optional[Callable[[], Iterable[Any]]] = None,
@@ -20,7 +19,7 @@ def make_ner_task(
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
-    scorer: Optional[ScorerProtocol] = None,
+    scorer: Optional[Scorer] = None,
 ):
     """NER.v1 task factory.
 
@@ -60,7 +59,7 @@ def make_ner_task(
 
 @registry.llm_tasks("spacy.NER.v2")
 def make_ner_task_v2(
-    parse_responses: Optional[TaskResponseParserProtocol[SpanTask]] = None,
+    parse_responses: Optional[TaskResponseParser[SpanTask]] = None,
     fewshot_example_type: Optional[Type[FewshotExample]] = None,
     labels: Union[List[str], str] = [],
     template: str = DEFAULT_NER_TEMPLATE_V2,
@@ -70,7 +69,7 @@ def make_ner_task_v2(
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
     single_match: bool = False,
-    scorer: Optional[ScorerProtocol] = None,
+    scorer: Optional[Scorer] = None,
 ):
     """NER.v2 task factory.
 

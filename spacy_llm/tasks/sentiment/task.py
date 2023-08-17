@@ -4,7 +4,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, Self, TaskResponseParserProtocol
+from ...ty import FewshotExample, Self, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 from .util import SentimentExample
@@ -16,7 +16,7 @@ class SentimentTask(BuiltinTask):
     def __init__(
         self,
         template: str,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample],
         field: str,
         prompt_examples: Optional[List[SentimentExample]],

@@ -6,7 +6,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Type
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal, Self
-from ...ty import TaskResponseParserProtocol
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from .util import SpanExample
 
@@ -16,7 +16,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
 
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[SpanExample],
         labels: List[str],
         template: str,

@@ -8,7 +8,7 @@ from spacy.tokens import Doc, DocBin
 from spacy.vocab import Vocab
 
 from .registry import registry
-from .ty import LLMTaskProtocol, PromptTemplateProviderProtocol
+from .ty import LLMTask, PromptTemplateProvider
 
 
 @registry.llm_misc("spacy.BatchCache.v1")
@@ -68,14 +68,14 @@ class BatchCache:
 
         self._init_cache_dir()
 
-    def initialize(self, vocab: Vocab, task: LLMTaskProtocol) -> None:
+    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
         """
         Initialize cache with data not available at construction time.
         vocab (Vocab): Vocab object.
         task (LLMTask): Task.
         """
         self._vocab = vocab
-        if isinstance(task, PromptTemplateProviderProtocol):
+        if isinstance(task, PromptTemplateProvider):
             self.prompt_template = task.prompt_template
         else:
             self.prompt_template = ""

@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, ScorerProtocol, TaskResponseParserProtocol
+from ...ty import FewshotExample, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -15,11 +15,11 @@ DEFAULT_LEMMA_TEMPLATE_V1 = read_template("lemma.v1")
 class LemmaTask(BuiltinTask):
     def __init__(
         self,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample],
         prompt_examples: Optional[List[FewshotExample]],
         template: str,
-        scorer: ScorerProtocol,
+        scorer: Scorer,
     ):
         """Default lemmatization task.
 

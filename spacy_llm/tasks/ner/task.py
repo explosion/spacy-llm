@@ -6,7 +6,7 @@ from spacy.training import Example
 from spacy.util import filter_spans
 
 from ...compat import Literal, Self
-from ...ty import ScorerProtocol, TaskResponseParserProtocol
+from ...ty import Scorer, TaskResponseParser
 from ..span import SpanExample, SpanTask
 from ..templates import read_template
 
@@ -19,7 +19,7 @@ class NERTask(SpanTask):
         self,
         labels: List[str],
         template: str,
-        parse_responses: TaskResponseParserProtocol[Self],
+        parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[SpanExample],
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[SpanExample]],
@@ -27,7 +27,7 @@ class NERTask(SpanTask):
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
         single_match: bool,
-        scorer: ScorerProtocol,
+        scorer: Scorer,
     ):
         """Default NER task.
 
