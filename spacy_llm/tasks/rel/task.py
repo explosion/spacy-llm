@@ -8,8 +8,7 @@ from ...compat import Self
 from ...ty import FewshotExample, TaskResponseParserProtocol
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
-from . import RELExample
-from .util import RelationItem
+from .util import RelationItem, RELExample
 
 DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
 
