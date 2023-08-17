@@ -16,19 +16,6 @@ jobs:
 
     steps:
 
-      - name: Check user for team affiliation
-        uses: tspascoal/get-user-teams-membership@v2
-        id: teamAffiliation
-        with:
-          GITHUB_TOKEN: ${{ secrets.ORG_READ_PAT }}
-          username: ${{ github.actor }}
-          team: explosion/spacy
-      - name: Stop workflow if user is no member
-        if: ${{ steps.teamAffiliation.outputs.isTeamMember == false }}
-        run: |
-          echo "You have no rights to trigger this job."
-          exit 1
-
       - name: Trigger buildkite build
         uses: buildkite/trigger-pipeline-action@v1.2.0
         env:
