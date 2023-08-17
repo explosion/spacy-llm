@@ -44,7 +44,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         Lastly, you can toggle between exclusive or no-exclusive text
         categorization by passing a flag to the `exclusive_classes` parameter.
 
-        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
@@ -58,7 +58,7 @@ class TextCatTask(BuiltinTaskWithLabels):
             label per class. This is automatically set when using binary classification.
         allow_none (bool): if True, there might be cases where no label is applicable.
         verbose (bool): If True, show extra information.
-        scorer (BuiltinScorableProtocol): Scorer function.
+        scorer (Scorer): Scorer function.
         """
         super().__init__(
             parse_responses=parse_responses,

@@ -24,7 +24,7 @@ class SentimentTask(BuiltinTask):
         """Sentiment analysis task.
 
         template (str): Prompt template passed to the model.
-        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         field (str): The name of the doc extension in which to store the sentiment score.
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.

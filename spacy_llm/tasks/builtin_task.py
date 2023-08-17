@@ -21,7 +21,7 @@ class BuiltinTask(abc.ABC):
         - initializable (in line with other spaCy components)
         - (de-)serialization
 
-    On the relation of BuiltinTask to LLMTaskProtocol: the latter specifies the minimal contract a task implementation
+    On the relation of BuiltinTask to LLMTask: the latter specifies the minimal contract a task implementation
     has to fulfill, whereas a BuiltinTask requires (and offers) functionality beyond that. The rationale behind that is
     that built-in tasks should provide as smooth a usage experience as possible while still making it as easy as possible
     for users to write their own, custom tasks.
@@ -35,7 +35,7 @@ class BuiltinTask(abc.ABC):
         prompt_examples: Optional[List[FewshotExample]],
     ):
         """Initializes task.
-        parse_responses (TaskResponseParserProtocol): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.

@@ -23,11 +23,11 @@ class LemmaTask(BuiltinTask):
     ):
         """Default lemmatization task.
 
-        parse_responses (TaskResponseParserProtocol[Self]): Callable for parsing LLM responses for this task.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         fewshot_example_type (Type[FewshotExample]): Type to use for fewshot examples.
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
-        scorer (BuiltinScorableProtocol): Scorer function.
+        scorer (Scorer): Scorer function.
         """
         super().__init__(
             parse_responses=parse_responses,

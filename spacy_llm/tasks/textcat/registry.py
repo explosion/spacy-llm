@@ -35,7 +35,7 @@ def make_textcat_task(
     Lastly, you can toggle between exclusive or no-exclusive text
     categorization by passing a flag to the `exclusive_classes` parameter.
 
-    parse_responses (Optional[TaskResponseParserProtocol[TextCatTask]]): Callable for parsing LLM responses for this
+    parse_responses (Optional[TaskResponseParser[TextCatTask]]): Callable for parsing LLM responses for this
         task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
@@ -48,7 +48,7 @@ def make_textcat_task(
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
     verbose (bool): If True, show extra information.
-    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
+    scorer (Optional[Scorer]): Scorer function.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -98,7 +98,7 @@ def make_textcat_task_v2(
     Lastly, you can toggle between exclusive or no-exclusive text
     categorization by passing a flag to the `exclusive_classes` parameter.
 
-    parse_responses (Optional[TaskResponseParserProtocol[TextCatTask]]): Callable for parsing LLM responses for this
+    parse_responses (Optional[TaskResponseParser[TextCatTask]]): Callable for parsing LLM responses for this
         task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[List[str], str]): List of labels to pass to the template,
@@ -113,7 +113,7 @@ def make_textcat_task_v2(
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
     verbose (bool): If True, show extra information.
-    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
+    scorer (Optional[Scorer]): Scorer function.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -165,7 +165,7 @@ def make_textcat_task_v3(
     Lastly, you can toggle between exclusive or no-exclusive text
     categorization by passing a flag to the `exclusive_classes` parameter.
 
-    parse_responses (Optional[TaskResponseParserProtocol[TextCatTask]]): Callable for parsing LLM responses for this
+    parse_responses (Optional[TaskResponseParser[TextCatTask]]): Callable for parsing LLM responses for this
         task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[List[str], str]): List of labels to pass to the template,
@@ -182,7 +182,7 @@ def make_textcat_task_v3(
         label per class. This is automatically set when using binary classification.
     allow_none (bool): if True, there might be cases where no label is applicable.
     verbose (bool): If True, show extra information.
-    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
+    scorer (Optional[Scorer]): Scorer function.
     """
 
     labels_list = split_labels(labels)

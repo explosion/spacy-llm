@@ -23,7 +23,7 @@ def make_ner_task(
 ):
     """NER.v1 task factory.
 
-    parse_responses (Optional[TaskResponseParserProtocol[SpanTask]]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParser[SpanTask]]): Callable for parsing LLM responses for this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
@@ -34,7 +34,7 @@ def make_ner_task(
     case_sensitive_matching: Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
-    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
+    scorer (Optional[Scorer]): Scorer function.
     """
     labels_list = split_labels(labels)
     example_type = fewshot_example_type or NERExample
@@ -73,7 +73,7 @@ def make_ner_task_v2(
 ):
     """NER.v2 task factory.
 
-    parse_responses (Optional[TaskResponseParserProtocol[SpanTask]]): Callable for parsing LLM responses for this task.
+    parse_responses (Optional[TaskResponseParser[SpanTask]]): Callable for parsing LLM responses for this task.
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (Union[str, List[str]]): List of labels to pass to the template,
         either an actual list or a comma-separated string.
@@ -90,7 +90,7 @@ def make_ner_task_v2(
     case_sensitive_matching (bool): Whether to search without case sensitivity.
     single_match (bool): If False, allow one substring to match multiple times in
         the text. If True, returns the first hit.
-    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
+    scorer (Optional[Scorer]): Scorer function.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples

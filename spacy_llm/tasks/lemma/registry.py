@@ -32,7 +32,7 @@ def make_lemma_task(
     fewshot_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
-    scorer (Optional[BuiltinScorableProtocol]): Scorer function.
+    scorer (Optional[Scorer]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = fewshot_example_type or LemmaExample
