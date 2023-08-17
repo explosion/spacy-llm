@@ -12,7 +12,6 @@ def parse_responses_v1(
     task (SummarizationTask): Task instance.
     docs (Iterable[Doc]): Corresponding Doc instances.
     responses (Iterable[str]): LLM responses.
-    field (str): Field to store responses in.
     RETURNS (Iterable[str]): Summary per doc/response.
     """
     for prompt_response in responses:

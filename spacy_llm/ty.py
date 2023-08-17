@@ -107,7 +107,7 @@ class LLMTask(Protocol):
         """
         Parses LLM responses.
         docs (Iterable[Doc]): Docs to map responses into.
-        respones ([Iterable[_ResponseType]]): LLM responses.
+        responses ([Iterable[_ResponseType]]): LLM responses.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
 

@@ -65,7 +65,7 @@ class BuiltinTask(abc.ABC):
         """
         Parses LLM responses.
         docs (Iterable[Doc]): Docs to map responses into.
-        respones ([Iterable[Any]]): LLM responses.
+        responses ([Iterable[Any]]): LLM responses.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
 
@@ -121,7 +121,7 @@ class BuiltinTask(abc.ABC):
         *,
         exclude: Tuple[str] = cast(Tuple[str], tuple()),
     ) -> bytes:
-        """Serialize the LLMWrapper to a bytestring.
+        """Serialize the BuiltinTask to a bytestring.
 
         exclude (Tuple): Names of properties to exclude from serialization.
         RETURNS (bytes): The serialized object.
@@ -139,11 +139,11 @@ class BuiltinTask(abc.ABC):
         *,
         exclude: Tuple[str] = cast(Tuple[str], tuple()),
     ) -> "BuiltinTask":
-        """Load the Task from a bytestring.
+        """Load the BuiltinTask from a bytestring.
 
         bytes_data (bytes): The data to load.
         exclude (Tuple[str]): Names of properties to exclude from deserialization.
-        RETURNS (SpanTask): Modified SpanTask instance.
+        RETURNS (BuiltinTask): Modified BuiltinTask instance.
         """
 
         deserialize = {
@@ -187,6 +187,7 @@ class BuiltinTask(abc.ABC):
 
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
+        RETURNS (BuiltinTask): The BuiltinTask instance.
         """
 
         deserialize = {

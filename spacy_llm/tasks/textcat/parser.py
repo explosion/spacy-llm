@@ -9,7 +9,7 @@ from .task import TextCatTask
 def parse_responses_v1_v2_v3(
     task: TextCatTask, docs: Iterable[Doc], responses: Iterable[str]
 ) -> Iterable[Dict[str, float]]:
-    """Parses LLM responses for spacy.TextCat.v1.
+    """Parses LLM responses for spacy.TextCat.v1, v2 and v3
     task (LemmaTask): Task instance.
     docs (Iterable[Doc]): Corresponding Doc instances.
     responses (Iterable[str]): LLM responses.
