@@ -4,11 +4,11 @@ You are an expert summarization system. Your task is to accept Text as input and
 The summary must not, under any circumstances, contain more than {{ max_n_words }} words.
 {%- endif -%}
 {# whitespace #}
-{%- if examples -%}
+{%- if prompt_examples -%}
 {# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
-{%- for example in examples -%}
+{%- for example in prompt_examples -%}
 {# whitespace #}
 Text:
 '''

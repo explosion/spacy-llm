@@ -1,16 +1,16 @@
-From the text below, extract the following (possibly overlapping) entities in the following format:
+From the text below, extract the following entities in the following format:
 {# whitespace #}
 {%- for label in labels -%}
 {{ label }}: <comma delimited list of strings>
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
-{%- if examples -%}
+{%- if prompt_examples -%}
 {# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
-{%- for example in examples -%}
+{%- for example in prompt_examples -%}
 {# whitespace #}
 Text:
 '''

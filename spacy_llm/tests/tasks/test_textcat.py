@@ -374,10 +374,10 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -440,10 +440,10 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -507,10 +507,10 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     nlp = spacy.blank("xx")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
