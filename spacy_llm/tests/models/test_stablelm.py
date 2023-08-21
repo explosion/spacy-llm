@@ -5,6 +5,8 @@ import spacy
 from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
+from ...compat import torch
+
 _PIPE_CFG = {
     "model": {
         "@llm_models": "spacy.StableLM.v1",
@@ -45,6 +47,7 @@ def test_init(name: str):
     cfg["model"]["name"] = name
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
+    torch.cuda.empty_cache()
 
 
 @pytest.mark.gpu
@@ -53,6 +56,7 @@ def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
+    torch.cuda.empty_cache()
 
 
 @pytest.mark.gpu
@@ -64,6 +68,7 @@ def test_init_with_set_config():
     cfg["model"]["config_run"] = {"temperature": 0.3}
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
+    torch.cuda.empty_cache()
 
 
 @pytest.mark.gpu

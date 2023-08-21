@@ -1,0 +1,44 @@
+You are an expert Named Entity Recognition (NER) system.
+Your task is to accept Text as input and extract named entities.
+{%- if allow_overlap -%}
+{# whitespace #}
+The entities you extract can overlap with each other.
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+Entities must have one of the following labels: {{ ', '.join(labels) }}.
+If a span is not an entity label it: `==NONE==`.
+{# whitespace #}
+{# whitespace #}
+{%- if description -%}
+{# whitespace #}
+{{ description }}
+{# whitespace #}
+{%- endif -%}
+{%- if label_definitions -%}
+Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endif -%}
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
+{# whitespace #}
+{# whitespace #}
+{%- for example in examples -%}
+Paragraph: {{ example.text }}
+Answer:
+{# whitespace #}
+{%- for span in example.spans -%}
+{{ loop.index }}. {{ span.to_str() }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+Paragraph: {{ text }}
+Answer:

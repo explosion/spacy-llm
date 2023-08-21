@@ -288,8 +288,8 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(example_text)
 
-    examples = fewshot_reader(examples_path)
-    llm_ner = make_summarization_task(examples=examples, max_n_words=20)
+    prompt_examples = fewshot_reader(examples_path)
+    llm_ner = make_summarization_task(examples=prompt_examples, max_n_words=20)
 
     with pytest.warns(
         UserWarning,

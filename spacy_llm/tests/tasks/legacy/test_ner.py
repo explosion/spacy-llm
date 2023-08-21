@@ -13,7 +13,7 @@ from spacy.util import make_tempdir
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
-from spacy_llm.tasks.legacy.ner import NERTask, make_ner_task_v2
+from spacy_llm.tasks.ner import NERTask, make_ner_task_v2
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -431,7 +431,7 @@ def test_ner_labels(response, normalizer, gold_ents):
 def test_ner_alignment(response, alignment_mode, gold_ents):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_ner = make_ner_task_v2(labels=labels, alignment_mode=alignment_mode)
+    llm_ner = make_ner_task_v2(labels=labels, alignment_mode=alignment_mode)  # type: ignore
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)

@@ -10,7 +10,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
-from spacy_llm.tasks.legacy import SpanCatTask, make_spancat_task_v2
+from spacy_llm.tasks.spancat import SpanCatTask, make_spancat_task_v2
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -303,7 +303,7 @@ def test_spancat_labels(response, normalizer, gold_spans):
 def test_spancat_alignment(response, alignment_mode, gold_spans):
     text = "Jean Jacques and Jaime went to the library."
     labels = "PER,ORG,LOC"
-    llm_spancat = make_spancat_task_v2(labels=labels, alignment_mode=alignment_mode)
+    llm_spancat = make_spancat_task_v2(labels=labels, alignment_mode=alignment_mode)  # type: ignore
     # Prepare doc
     nlp = spacy.blank("xx")
     doc_in = nlp.make_doc(text)
@@ -317,7 +317,7 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
 def test_invalid_alignment_mode():
     labels = "PER,ORG,LOC"
     with pytest.raises(ValueError, match="Unsupported alignment mode 'invalid"):
-        make_spancat_task_v2(labels=labels, alignment_mode="invalid")
+        make_spancat_task_v2(labels=labels, alignment_mode="invalid")  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -557,7 +557,7 @@ def test_spancat_init(noop_config, n_prompt_examples: bool):
         examples.append(Example(predicted, reference))
 
     _, llm = nlp.pipeline[0]
-    task: SpanCatTask = llm._task
+    task: SpanCatTask = llm._task  # type: ignore
 
     assert set(task._label_dict.values()) == set()
     assert not task._prompt_examples
@@ -588,8 +588,8 @@ def test_spancat_serde(noop_config):
 
     labels = {"loc": "LOC", "per": "PER"}
 
-    task1: SpanCatTask = nlp1.get_pipe("llm")._task
-    task2: SpanCatTask = nlp2.get_pipe("llm")._task
+    task1: SpanCatTask = nlp1.get_pipe("llm")._task  # type: ignore
+    task2: SpanCatTask = nlp2.get_pipe("llm")._task  # type: ignore
 
     # Artificially add labels to task1
     task1._label_dict = labels

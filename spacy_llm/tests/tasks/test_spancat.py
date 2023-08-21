@@ -437,9 +437,14 @@ def test_spancat_matching(response, case_sensitive, gold_spans):
 
 
 @pytest.mark.parametrize(
-    "examples_file", ["spancat.json", "spancat.yml", "spancat.jsonl"]
+    "examples_path",
+    [
+        str(EXAMPLES_DIR / "ner.json"),
+        str(EXAMPLES_DIR / "ner.yml"),
+        str(EXAMPLES_DIR / "ner.jsonl"),
+    ],
 )
-def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_file: str):
+def test_jinja_template_rendering_with_examples(examples_path: Path):
     """Test if jinja2 template renders as expected
 
     We apply the .strip() method for each prompt so that we don't have to deal
@@ -449,8 +454,8 @@ def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_fil
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(examples_dir / examples_file)
-    llm_spancat = make_spancat_task_v3(examples=examples, labels=labels)
+    examples = fewshot_reader(examples_path)
+    llm_spancat = make_spancat_task_v3(labels=labels, examples=examples)
     prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (

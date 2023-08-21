@@ -19,6 +19,7 @@ from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
 from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.span import SpanReason
+from spacy_llm.tasks.span.parser import _extract_span_reasons_cot
 from spacy_llm.tasks.util import find_substrings
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
@@ -54,7 +55,7 @@ def noop_config():
 
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
-    labels = PER,ORG,LOC
+    labels = PER,ORG,LOC,DESTINATION
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -86,7 +87,7 @@ def fewshot_cfg_string_v3_lds():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
     description = "This is a description"
-    labels = PER,ORG,LOC
+    labels = PER,ORG,LOC,DESTINATION
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -121,7 +122,7 @@ def fewshot_cfg_string_v3():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
     description = "This is a description"
-    labels = ["PER", "ORG", "LOC"]
+    labels = ["PER", "ORG", "LOC", "DESTINATION"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -152,7 +153,7 @@ def ext_template_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
     description = "This is a description"
-    labels = ["PER", "ORG", "LOC"]
+    labels = ["PER", "ORG", "LOC", "DESTINATION"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -471,7 +472,13 @@ def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_fil
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
-    llm_ner = make_ner_task_v3(examples=examples, labels=labels)
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Labels in examples missing from the task configuration: ['DESTINATION']"
+        ),
+    ):
+        llm_ner = make_ner_task_v3(examples=examples, labels=labels)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -510,15 +517,21 @@ def test_jinja_template_rendering_with_label_definitions(
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
-    llm_ner = make_ner_task_v3(
-        examples=examples,
-        labels=labels,
-        label_definitions={
-            "PER": "Person definition",
-            "ORG": "Organization definition",
-            "LOC": "Location definition",
-        },
-    )
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Labels in examples missing from the task configuration: ['DESTINATION']"
+        ),
+    ):
+        llm_ner = make_ner_task_v3(
+            examples=examples,
+            labels=labels,
+            label_definitions={
+                "PER": "Person definition",
+                "ORG": "Organization definition",
+                "LOC": "Location definition",
+            },
+        )
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -842,7 +855,7 @@ def test_regression_span_task_response_parse(
     nlp = spacy.blank("en")
     example_doc = nlp.make_doc(text)
     ner_task = make_ner_task_v3(examples=[], labels=["PER", "LOC"])
-    span_reasons = ner_task._extract_span_reasons(response)
+    span_reasons = _extract_span_reasons_cot(ner_task, response)
     assert len(span_reasons) == len(gold_ents)
 
     docs = list(ner_task.parse_responses([example_doc], [response]))

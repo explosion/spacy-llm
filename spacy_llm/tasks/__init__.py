@@ -1,3 +1,4 @@
+from .builtin_task import BuiltinTask
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task_v3
 from .noop import NoopTask, make_noop_task
@@ -16,6 +17,7 @@ __all__ = [
     "make_spancat_task_v3",
     "make_summarization_task",
     "make_textcat_task",
+    "BuiltinTask",
     "LemmaTask",
     "NERTask",
     "NoopTask",
