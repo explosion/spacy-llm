@@ -1,10 +1,10 @@
 import abc
 import typing
-from typing import Callable, Dict, Iterable, List, Optional, Protocol, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 from spacy.tokens import Doc, Span
 
-from ...compat import Literal, Self
+from ...compat import Literal, Protocol, Self
 from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from .examples import SpanCoTExample, SpanExample
