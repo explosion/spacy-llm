@@ -137,7 +137,7 @@ class EntityLinkerTask(BuiltinTask):
                         ),
                     )
                 )
-            correct_ent_ids.append(ent.kb_id)
+            correct_ent_ids.append(ent.kb_id_)
 
             cand_entity_info.append(cands_for_ent)
 
