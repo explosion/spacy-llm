@@ -26,7 +26,7 @@ class EntLinkExample(FewshotExample):
 
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Optional[Self]:
-        # Ensure that all entities have their knowledge base IDs set.
+        # Check whether all entities have their knowledge base IDs set.
         n_ents = len(example.reference.ents)
         n_set_kb_ids = sum([ent.kb_id != 0 for ent in example.reference.ents])
         if n_ents and n_ents != n_set_kb_ids:
