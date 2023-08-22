@@ -131,7 +131,7 @@ class EntityLinkerTask(BuiltinTask):
             elif ent.kb_id not in {cand.id for cand in cands_for_ent}:
                 cands_for_ent.append(
                     Entity(
-                        id=ent.kb_id,
+                        id=ent.kb_id_,
                         description=self._candidate_selector.get_entity_description(
                             ent.kb_id_
                         ),
