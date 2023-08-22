@@ -7,7 +7,7 @@ import numpy
 import pytest
 import spacy
 from confection import Config
-from spacy import Language, Vocab
+from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
 from spacy.tokens import Span
 from spacy.training import Example
@@ -25,7 +25,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 @functools.lru_cache()
-def _build_el_pipeline(nlp_path: Path, desc_path: Path) -> Language:
+def _build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     """Builds and persists pipeline with untrained EL component and initialized toy knowledge base.
     nlp_path (Path): Path to store pipeline under.
     descriptions_path (Path): Path to store descriptions file under.
@@ -246,7 +246,7 @@ def ext_template_cfg_string():
     """
 
 
-def _update_cand_selector_paths_in_config(config: Config, tmp_path: Path) -> Config:
+def update_cand_selector_paths_in_config(config: Config, tmp_path: Path) -> Config:
     """Updates paths for candidate selector in config and builds EL pipeline with KB with correspondig paths.
     config (Dict[str, Any]): Config to update.
     tmp_path (Path): Base directory for pipeline and descriptions file.
@@ -275,7 +275,7 @@ def _update_cand_selector_paths_in_config(config: Config, tmp_path: Path) -> Con
 )
 def test_entity_linker_config(cfg_string, request, tmp_path):
     cfg_string = request.getfixturevalue(cfg_string)
-    config = _update_cand_selector_paths_in_config(
+    config = update_cand_selector_paths_in_config(
         Config().from_str(cfg_string), tmp_path
     )
     nlp = spacy.util.load_model_from_config(config, auto_fill=True)
@@ -295,8 +295,8 @@ def test_entity_linker_config(cfg_string, request, tmp_path):
 @pytest.mark.parametrize(
     "cfg_string",
     [
-        # "zeroshot_cfg_string",
-        # "fewshot_cfg_string",
+        "zeroshot_cfg_string",
+        "fewshot_cfg_string",
         "ext_template_cfg_string",
     ],
 )
@@ -305,9 +305,7 @@ def test_entity_linker_predict(cfg_string, request, tmp_path):
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     cfg = request.getfixturevalue(cfg_string)
-    orig_config = _update_cand_selector_paths_in_config(
-        Config().from_str(cfg), tmp_path
-    )
+    orig_config = update_cand_selector_paths_in_config(Config().from_str(cfg), tmp_path)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     text = "Alice goes to Boston to see the Boston Celtics game."
     doc = nlp.make_doc(text)
@@ -332,9 +330,7 @@ def test_entity_linker_predict(cfg_string, request, tmp_path):
 )
 def test_el_io(cfg_string, request, tmp_path):
     cfg = request.getfixturevalue(cfg_string)
-    orig_config = _update_cand_selector_paths_in_config(
-        Config().from_str(cfg), tmp_path
-    )
+    orig_config = update_cand_selector_paths_in_config(Config().from_str(cfg), tmp_path)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
@@ -546,7 +542,7 @@ Here is the text: {text}
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
-    config = _update_cand_selector_paths_in_config(
+    config = update_cand_selector_paths_in_config(
         Config().from_str(noop_config), tmp_path
     )
     nlp = assemble_from_config(config)

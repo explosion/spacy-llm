@@ -24,6 +24,7 @@ from ...cache import BatchCache
 from ...registry.reader import fewshot_reader
 from ...util import assemble_from_config
 from ..compat import has_openai_key
+from ..tasks.test_entity_linking import update_cand_selector_paths_in_config
 
 
 @pytest.fixture
@@ -295,6 +296,10 @@ def test_pipe_labels():
 def test_llm_task_factories():
     """Test whether llm_TASK factories run successfully."""
     for task_handle in _LATEST_TASKS:
+        # Separate test for EntityLinker in test_llm_task_factories_el().
+        if task_handle == "spacy.EntityLinker.v1":
+            continue
+
         cfg_string = f"""
         [nlp]
         lang = "en"
@@ -307,6 +312,32 @@ def test_llm_task_factories():
         """
         config = Config().from_str(cfg_string)
         assemble_from_config(config)
+
+
+def test_llm_task_factories_el(tmp_path):
+    """Test whether llm_entity_linking factory run successfully. It's necessary to do this separately, as the EL task
+    requires a non-defaultable extra config setup and knowledge base."""
+    cfg = """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm_entitylinker"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.EntityLinker.v1"
+
+    [components.llm.task.candidate_selector]
+    @llm_misc = "spacy.CandidateSelectorPipeline.v1"
+    nlp_path = TO_REPLACE
+    desc_path = TO_REPLACE
+    """
+    assemble_from_config(
+        update_cand_selector_paths_in_config(Config().from_str(cfg), tmp_path)
+    )
 
 
 @pytest.mark.external

@@ -182,7 +182,7 @@ class Cache(Protocol):
 @runtime_checkable
 class CandidateSelector(Protocol):
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Dict[str, str]]:
-        """Return list of Candidates with their descriptios for given mention and context.
+        """Return list of Candidates with their descriptions for given mention and context.
         mention (Iterable[Span]): Entity mention.
         RETURNS (Dict[str, str]): Entity ID -> description.
         """
