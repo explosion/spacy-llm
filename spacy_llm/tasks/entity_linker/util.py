@@ -124,7 +124,7 @@ class SpaCyPipelineCandidateSelector:
 
     def get_entity_description(self, entity_id: str) -> str:
         if entity_id not in self._descs:
-            raise ValueError(
+            warnings.warn(
                 f"Entity with ID {entity_id} is not in provided descriptions file."
             )
 
