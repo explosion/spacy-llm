@@ -5,7 +5,7 @@ from spacy.tokens import Span
 
 from ...compat import Protocol
 
-UNAVAILABLE_ENTITY_DESC: str = ""
+UNAVAILABLE_ENTITY_DESC: str = "This entity doesn't have a description."
 
 
 class EntityCandidate(BaseModel):
