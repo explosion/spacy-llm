@@ -32,8 +32,12 @@ class EntLinkExample(FewshotExample):
         if n_ents and n_ents != n_set_kb_ids:
             warnings.warn(
                 f"Not all entities in this document have their knowledge base IDs set ({n_set_kb_ids} out of "
-                f"{n_ents}). Ignoring example:\n{example.reference}"
+                f"{n_ents}). Ignoring {n_set_kb_ids - n_ents} entities in example:\n{example.reference}"
             )
+        example.reference.ents = [
+            ent for ent in example.reference.ents if ent.kb_id != 0
+        ]
+        if len(example.reference.ents) == 0:
             return None
 
         # Assemble example.
