@@ -1,9 +1,9 @@
-from typing import Iterable, Optional, runtime_checkable
+from typing import Iterable, Optional
 
 from pydantic import BaseModel
 from spacy.tokens import Span
 
-from ...compat import Protocol
+from ...compat import Protocol, runtime_checkable
 
 UNAVAILABLE_ENTITY_DESC: str = "This entity doesn't have a description."
 
