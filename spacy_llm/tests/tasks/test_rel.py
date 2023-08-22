@@ -4,14 +4,16 @@ from pathlib import Path
 import pytest
 from confection import Config
 from pytest import FixtureRequest
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 from spacy.training import Example
+from spacy.util import get_lang_class
 
 from spacy_llm.pipeline import LLMWrapper
-from spacy_llm.tasks.rel import RelationItem, RELTask
+from spacy_llm.tasks.rel import DEFAULT_REL_TEMPLATE, RelationItem, RELTask
 from spacy_llm.ty import Labeled, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
+from ...tasks import make_rel_task
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -151,7 +153,7 @@ def test_rel_predict(task, cfg_string, request):
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_rel_init(noop_config, n_prompt_examples: int):
-    RELTask._check_rel_extension()
+    RELTask._check_extension("rel")
 
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
@@ -230,3 +232,37 @@ def test_rel_serde(noop_config, tmp_path: Path):
     nlp3.from_bytes(nlp1.to_bytes())
 
     assert task1._label_dict == task2._label_dict == task3._label_dict == labels
+
+
+def test_incorrect_indexing():
+    """Tests whether incorrect indexing is handled properly (i. e. when the LLM response indices non-existent
+    entities).
+    """
+    task = make_rel_task(
+        labels=["LivesIn", "WorksIn"],
+        template=DEFAULT_REL_TEMPLATE,
+        verbose=False,
+    )
+
+    doc = Doc(get_lang_class("en")().vocab, words=["This", "is", "a", "test"])
+    doc.ents = [Span(doc, 0, 1, label="TEST")]
+    assert (
+        len(
+            list(
+                task._parse_responses(
+                    task, [doc], ['{"dep": 0, "dest": 0, "relation": "LivesIn"}']
+                )
+            )[0]
+        )
+        == 1
+    )
+    assert (
+        len(
+            list(
+                task._parse_responses(
+                    task, [doc], ['{"dep": 0, "dest": 1, "relation": "LivesIn"}']
+                )
+            )[0]
+        )
+        == 0
+    )

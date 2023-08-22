@@ -545,8 +545,8 @@ def test_jinja_template_rendering_with_examples(examples_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
-    examples = fewshot_reader(examples_path)
-    llm_ner = make_ner_task_v2(labels=labels, examples=examples)
+    prompt_examples = fewshot_reader(examples_path)
+    llm_ner = make_ner_task_v2(labels=labels, examples=prompt_examples)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (

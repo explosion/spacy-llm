@@ -21,8 +21,16 @@ class Falcon(HuggingFace):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._device: Optional[str] = None
         super().__init__(name=name, config_init=config_init, config_run=config_run)
+
         assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)
-        self._config_run["eos_token_id"] = self._tokenizer.eos_token_id
+        self._config_run["pad_token_id"] = self._tokenizer.pad_token_id
+
+        # Instantiate GenerationConfig object from config dict.
+        self._hf_config_run = transformers.GenerationConfig.from_pretrained(
+            self._name, **self._config_run
+        )
+        # To avoid deprecation warning regarding usage of `max_length`.
+        self._hf_config_run.max_new_tokens = self._hf_config_run.max_length
 
     def init_model(self) -> Any:
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
@@ -39,7 +47,8 @@ class Falcon(HuggingFace):
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         return [
-            self._model(pr, **self._config_run)[0]["generated_text"] for pr in prompts
+            self._model(pr, generation_config=self._hf_config_run)[0]["generated_text"]
+            for pr in prompts
         ]
 
     @staticmethod
@@ -50,13 +59,7 @@ class Falcon(HuggingFace):
                 **default_cfg_init,
                 "trust_remote_code": True,
             },
-            {
-                **default_cfg_run,
-                "max_length": 200,
-                "do_sample": True,
-                "top_k": 10,
-                "num_return_sequences": 1,
-            },
+            default_cfg_run,
         )
 
 

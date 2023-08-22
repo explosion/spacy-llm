@@ -1,4 +1,5 @@
 import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized, Tuple
 
@@ -6,7 +7,6 @@ import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
 
-from ....compat import Literal
 from ..base import REST
 
 
@@ -24,26 +24,31 @@ class SystemPrompt(str, Enum):
 
 
 class Anthropic(REST):
-    MODEL_NAMES = {
-        "claude-1": Literal["claude-1", "claude-1-100k"],
-    }
-
     @property
     def credentials(self) -> Dict[str, str]:
         # Fetch and check the key, set up headers
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if api_key is None:
-            raise ValueError(
+            warnings.warn(
                 "Could not find the API key to access the Anthropic Claude API. Ensure you have an API key "
                 "set up via the Anthropic console (https://console.anthropic.com/), then make it available as "
                 "an environment variable 'ANTHROPIC_API_KEY."
             )
 
-        return {"X-API-Key": api_key}
+        return {"X-API-Key": api_key if api_key else ""}
 
     def _verify_auth(self) -> None:
         # Execute a dummy prompt. If the API setup is incorrect, we should fail at initialization time.
-        self(["test"])
+        try:
+            self(["test"])
+        except ValueError as err:
+            if "authentication_error" in str(err):
+                warnings.warn(
+                    "Authentication with provided API key failed. Please double-check you provided the correct "
+                    "credentials."
+                )
+            else:
+                raise err
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
@@ -105,6 +110,9 @@ class Anthropic(REST):
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:
         return (
+            # claude-2
+            "claude-2",
+            "claude-2-100k",
             # claude-1
             "claude-1",
             "claude-1-100k",

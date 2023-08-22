@@ -1,21 +1,24 @@
+import abc
 import inspect
 import typing
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
-from typing import cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Union, cast
 
+from pydantic import BaseModel
 from spacy.tokens import Doc, Span
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import Protocol, runtime_checkable
+from .compat import Protocol, Self, runtime_checkable
 from .models import langchain
 
-_Prompt = Any
-_Response = Any
+_PromptType = Any
+_ResponseType = Any
+_ParsedResponseType = Any
 
-PromptExecutor = Callable[[Iterable[_Prompt]], Iterable[_Response]]
+PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
@@ -55,24 +58,69 @@ class Serializable(Protocol):
         ...
 
 
+class FewshotExample(abc.ABC, BaseModel):
+    @classmethod
+    @abc.abstractmethod
+    def generate(cls, example: Example, **kwargs) -> Optional[Self]:
+        """Create a fewshot example from a spaCy example.
+        example (Example): spaCy example.
+        """
+
+
 @runtime_checkable
-class Scorable(Protocol):
+class ScorableTask(Protocol):
+    """Differs from Scorable in that it describes an object with a scorer() function, i. e. a scorable
+    as checked for by the LLMWrapper component.
+    """
+
     def scorer(
         self,
         examples: Iterable[Example],
     ) -> Dict[str, Any]:
         """Scores performance on examples."""
-        ...
+
+
+@runtime_checkable
+class Scorer(Protocol):
+    """Differs from ScorableTask in that it describes a Callable with a call signature matching the scorer()
+    function + kwargs, i. e. a scorable as passed via the configuration.
+    """
+
+    def __call__(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+        """Score performance on examples.
+        examples (Iterable[Example]): Examples to score.
+        RETURNS (Dict[str, Any]): Dict with metric name -> score.
+        """
 
 
 @runtime_checkable
 class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_Prompt]:
-        ...
+    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
+        """Generate prompts from docs.
+        docs (Iterable[Doc]): Docs to generate prompts from.
+        RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
+        """
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[_Response]
+        self, docs: Iterable[Doc], responses: Iterable[_ResponseType]
     ) -> Iterable[Doc]:
+        """
+        Parses LLM responses.
+        docs (Iterable[Doc]): Docs to map responses into.
+        responses ([Iterable[_ResponseType]]): LLM responses.
+        RETURNS (Iterable[Doc]]): Updated docs.
+        """
+
+
+_TaskContraT = TypeVar("_TaskContraT", bound=LLMTask, contravariant=True)
+
+
+class TaskResponseParser(Protocol[_TaskContraT]):
+    """Generic protocol for parsing functions with specific tasks."""
+
+    def __call__(
+        self, task: _TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
+    ) -> Iterable[Any]:
         ...
 
 
@@ -169,7 +217,7 @@ def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
     )
 
 
-def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
+def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
     """Extract call signature from model object.
     model (PromptExecutor): Model object to extract call signature from.
     RETURNS (Dict[str, Any]): Type per argument name.
@@ -205,7 +253,7 @@ def _extract_model_call_signature(model: PromptExecutor) -> Dict[str, Any]:
     return signature
 
 
-def validate_type_consistency(task: LLMTask, model: PromptExecutor) -> None:
+def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
     """Check whether the types of the task and model signatures match.
     task (LLMTask): Specified task.
     backend (PromptExecutor): Specified model.

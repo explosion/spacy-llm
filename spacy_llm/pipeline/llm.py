@@ -15,8 +15,8 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
-from ..ty import validate_type_consistency
+from ..ty import Cache, Labeled, LLMTask, PromptExecutorType, ScorableTask
+from ..ty import Serializable, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -52,7 +52,7 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
-    model: PromptExecutor,
+    model: PromptExecutorType,
     cache: Cache,
     save_io: bool,
     validate_types: bool,
@@ -96,7 +96,7 @@ class LLMWrapper(Pipe):
         *,
         vocab: Vocab,
         task: LLMTask,
-        model: PromptExecutor,
+        model: PromptExecutorType,
         cache: Cache,
         save_io: bool,
     ) -> None:
@@ -156,7 +156,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if isinstance(self._task, Scorable):
+        if isinstance(self._task, ScorableTask):
             return self._task.scorer(examples)
         return {}
 
