@@ -53,7 +53,7 @@ def make_entitylinker_task(
     )
 
 
-@registry.llm_misc("spacy.CandidateSelectorPipeline.v1")
+@registry.llm_misc("spacy.CandidateSelector.v1")
 def make_candidat_selector_pipeline(
     nlp_path: Union[Path, str],
     desc_path: Union[Path, str],

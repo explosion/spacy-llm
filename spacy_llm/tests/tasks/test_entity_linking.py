@@ -147,7 +147,7 @@ def noop_config():
     @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelectorPipeline.v1"
+    @llm_misc = "spacy.CandidateSelector.v1"
     nlp_path = TO_REPLACE
     desc_path = TO_REPLACE
 
@@ -173,7 +173,7 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelectorPipeline.v1"
+    @llm_misc = "spacy.CandidateSelector.v1"
     nlp_path = TO_REPLACE
     desc_path = TO_REPLACE
 
@@ -200,7 +200,7 @@ def fewshot_cfg_string():
     @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelectorPipeline.v1"
+    @llm_misc = "spacy.CandidateSelector.v1"
     nlp_path = TO_REPLACE
     desc_path = TO_REPLACE
 
@@ -232,7 +232,7 @@ def ext_template_cfg_string():
     @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelectorPipeline.v1"
+    @llm_misc = "spacy.CandidateSelector.v1"
     nlp_path = TO_REPLACE
     desc_path = TO_REPLACE
 
