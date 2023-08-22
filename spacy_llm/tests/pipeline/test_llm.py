@@ -17,7 +17,7 @@ import spacy_llm
 from spacy_llm.models.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
-from spacy_llm.tasks import make_noop_task
+from spacy_llm.tasks import _LATEST_TASKS, make_noop_task
 from spacy_llm.tasks.noop import _NOOP_PROMPT
 
 from ...cache import BatchCache
@@ -290,3 +290,50 @@ def test_pipe_labels():
         nlp.to_disk(tmpdir / "tst.nlp")
         nlp = spacy.load(tmpdir / "tst.nlp")
         assert nlp.pipe_labels["llm"] == ["COMPLIMENT", "INSULT"]
+
+
+def test_llm_task_factories():
+    """Test whether llm_TASK factories run successfully."""
+    for task_handle in _LATEST_TASKS:
+        cfg_string = f"""
+        [nlp]
+        lang = "en"
+        pipeline = ["llm"]
+
+        [components]
+
+        [components.llm]
+        factory = "llm_{task_handle.split('.')[1].lower()}"
+        """
+        config = Config().from_str(cfg_string)
+        assemble_from_config(config)
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_llm_task_factories_ner():
+    """Test whether llm_ner behaves as expected."""
+    cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm_ner"
+
+    [components.llm.task]
+    labels = PER,ORG,LOC
+
+    [components.llm.model]
+    @llm_models = "spacy.GPT-3-5.v1"
+    """
+    config = Config().from_str(cfg_string)
+    nlp = assemble_from_config(config)
+    text = "Marc and Bob both live in Ireland."
+    doc = nlp(text)
+
+    assert len(doc.ents) > 0
+    for ent in doc.ents:
+        assert ent.label_ in ["PER", "ORG", "LOC"]
