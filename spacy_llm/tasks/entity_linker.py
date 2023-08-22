@@ -18,7 +18,7 @@ from ..ty import CandidateSelector, ExamplesConfigType
 from .templates import read_template
 from .util import SerializableTask
 
-_DEFAULT_EL_TEMPLATE_V1 = read_template("entity_linking")
+_DEFAULT_EL_TEMPLATE_V1 = read_template("entity_linker")
 
 
 class EntityLinkingExample(BaseModel):
@@ -89,8 +89,8 @@ class SpaCyPipelineCandidateSelector:
         return self._descs[entity_id]
 
 
-@registry.llm_tasks("spacy.EntityLinking.v1")
-def make_entitylinking_task(
+@registry.llm_tasks("spacy.EntityLinker.v1")
+def make_entitylinker_task(
     candidate_selector: CandidateSelector,
     template: str = _DEFAULT_EL_TEMPLATE_V1,
     examples: ExamplesConfigType = None,

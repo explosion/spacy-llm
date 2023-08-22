@@ -14,9 +14,9 @@ from spacy.training import Example
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.tasks.entity_linking import EntityLinkingTask
-from spacy_llm.tasks.entity_linking import SpaCyPipelineCandidateSelector
-from spacy_llm.tasks.entity_linking import make_entitylinking_task
+from spacy_llm.tasks.entity_linker import EntityLinkingTask
+from spacy_llm.tasks.entity_linker import SpaCyPipelineCandidateSelector
+from spacy_llm.tasks.entity_linker import make_entitylinker_task
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -145,7 +145,7 @@ def noop_config():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.EntityLinking.v1"
+    @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
     @llm_misc = "spacy.CandidateSelectorPipeline.v1"
@@ -171,7 +171,7 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.EntityLinking.v1"
+    @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
     @llm_misc = "spacy.CandidateSelectorPipeline.v1"
@@ -198,7 +198,7 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.EntityLinking.v1"
+    @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
     @llm_misc = "spacy.CandidateSelectorPipeline.v1"
@@ -207,7 +207,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "entity_linking.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "entity_linker.yml"))}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -230,7 +230,7 @@ def ext_template_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.EntityLinking.v1"
+    @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.task.candidate_selector]
     @llm_misc = "spacy.CandidateSelectorPipeline.v1"
@@ -239,7 +239,7 @@ def ext_template_cfg_string():
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "entity_linking.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "entity_linker.jinja2"))}
 
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
@@ -274,7 +274,7 @@ def _update_cand_selector_paths_in_config(config: Config, tmp_path: Path) -> Con
         "ext_template_cfg_string",
     ],
 )
-def test_entity_linking_config(cfg_string, request, tmp_path):
+def test_entity_linker_config(cfg_string, request, tmp_path):
     cfg_string = request.getfixturevalue(cfg_string)
     config = _update_cand_selector_paths_in_config(
         Config().from_str(cfg_string), tmp_path
@@ -301,7 +301,7 @@ def test_entity_linking_config(cfg_string, request, tmp_path):
         "ext_template_cfg_string",
     ],
 )
-def test_entity_linking_predict(cfg_string, request, tmp_path):
+def test_entity_linker_predict(cfg_string, request, tmp_path):
     """Use OpenAI to get zero-shot LEMMA results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
@@ -372,7 +372,7 @@ def test_jinja_template_rendering_without_examples(tmp_path):
     ]
 
     _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    el_task = make_entitylinking_task(
+    el_task = make_entitylinker_task(
         examples=None,
         candidate_selector=SpaCyPipelineCandidateSelector(
             nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
@@ -417,9 +417,9 @@ SOLUTION:
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "entity_linking.json"),
-        str(EXAMPLES_DIR / "entity_linking.yml"),
-        str(EXAMPLES_DIR / "entity_linking.jsonl"),
+        str(EXAMPLES_DIR / "entity_linker.json"),
+        str(EXAMPLES_DIR / "entity_linker.yml"),
+        str(EXAMPLES_DIR / "entity_linker.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
@@ -437,7 +437,7 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
     ]
 
     _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    el_task = make_entitylinking_task(
+    el_task = make_entitylinker_task(
         examples=fewshot_reader(examples_path),
         candidate_selector=SpaCyPipelineCandidateSelector(
             nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
@@ -519,14 +519,14 @@ SOLUTION:
 
 
 def test_external_template_actually_loads(tmp_path):
-    template_path = str(TEMPLATES_DIR / "entity_linking.jinja2")
+    template_path = str(TEMPLATES_DIR / "entity_linker.jinja2")
     template = file_reader(template_path)
     text = "Alice and Bob went to the supermarket"
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(text)
 
     _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    el_task = make_entitylinking_task(
+    el_task = make_entitylinker_task(
         template=template,
         examples=None,
         candidate_selector=SpaCyPipelineCandidateSelector(
