@@ -12,7 +12,7 @@ from spacy.training import Example
 from ...compat import Self
 from ...ty import FewshotExample
 from .task import EntityLinkerTask
-from .ty import EntityCandidate
+from .ty import UNAVAILABLE_ENTITY_DESC, EntityCandidate
 
 
 class EntLinkExample(FewshotExample):
@@ -141,4 +141,4 @@ class SpaCyPipelineCandidateSelector:
                 f"Entity with ID {entity_id} is not in provided descriptions file."
             )
 
-        return self._descs.get(entity_id, "")
+        return self._descs.get(entity_id, UNAVAILABLE_ENTITY_DESC)

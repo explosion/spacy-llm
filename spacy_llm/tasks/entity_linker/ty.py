@@ -5,6 +5,8 @@ from spacy.tokens import Span
 
 from ...compat import Protocol
 
+UNAVAILABLE_ENTITY_DESC: str = ""
+
 
 class EntityCandidate(BaseModel):
     """Represents one entity candidate."""
@@ -16,8 +18,6 @@ class EntityCandidate(BaseModel):
 
 @runtime_checkable
 class CandidateSelector(Protocol):
-    UNAVAILABLE_ENTITY_DESC: str = ""
-
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[EntityCandidate]]:
         """Return list of Candidates with their descriptions for given mention and context.
         mentions (Iterable[Span]): Entity mentions.
