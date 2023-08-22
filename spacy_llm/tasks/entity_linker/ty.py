@@ -1,7 +1,9 @@
-from typing import Iterable, Optional, Protocol, runtime_checkable
+from typing import Iterable, Optional, runtime_checkable
 
 from pydantic import BaseModel
 from spacy.tokens import Span
+
+from ...compat import Protocol
 
 
 class EntityCandidate(BaseModel):
