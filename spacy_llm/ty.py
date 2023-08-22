@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, T
 from typing import Union, cast
 
 from pydantic import BaseModel
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
@@ -176,21 +176,6 @@ class Cache(Protocol):
         """Loads doc from cache. If doc is not in cache, None is returned.
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
-        """
-
-
-@runtime_checkable
-class CandidateSelector(Protocol):
-    def __call__(self, mentions: Iterable[Span]) -> Iterable[Dict[str, str]]:
-        """Return list of Candidates with their descriptions for given mention and context.
-        mention (Iterable[Span]): Entity mention.
-        RETURNS (Dict[str, str]): Entity ID -> description.
-        """
-
-    def get_entity_description(self, entity_id: str) -> str:
-        """Retrieve entity description.
-        entity_id (str): Entity ID.
-        RETURNS (str): Description for specified entity ID.
         """
 
 

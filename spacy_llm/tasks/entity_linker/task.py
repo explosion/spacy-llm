@@ -6,9 +6,10 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import CandidateSelector, FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
+from .ty import CandidateSelector, EntityCandidate
 
 DEFAULT_EL_TEMPLATE_V1 = read_template("entity_linker.v1")
 
@@ -59,15 +60,18 @@ class EntityLinkerTask(BuiltinTask):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         for doc in docs:
-            cands_ents_info, _ = self._fetch_entity_info(doc)
+            cands_ents, _ = self._fetch_entity_info(doc)
             yield _template.render(
                 text=EntityLinkerTask.highlight_ents_in_text(doc).text,
                 mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
                 mentions=[ent.text for ent in doc.ents],
                 entity_descriptions=[
-                    cands_ent_info[1] for cands_ent_info in cands_ents_info
+                    [cand_ent.description for cand_ent in cands_ent]
+                    for cands_ent in cands_ents
                 ],
-                entity_ids=[cands_ent_info[0] for cands_ent_info in cands_ents_info],
+                entity_ids=[
+                    [cand_ent.id for cand_ent in cands_ent] for cands_ent in cands_ents
+                ],
                 prompt_examples=self._prompt_examples,
             )
 
@@ -106,32 +110,37 @@ class EntityLinkerTask(BuiltinTask):
 
     def _fetch_entity_info(
         self, doc: Doc
-    ) -> Tuple[List[Tuple[List[str], List[str]]], List[Optional[str]]]:
+    ) -> Tuple[List[List[EntityCandidate]], List[Optional[str]]]:
         """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
         doc (Doc): Doc to fetch entity descriptions and solution numbers for. If entities' KB IDs are not set,
             corresponding solution number will be None.
-        RETURNS (Tuple[List[Tuple[List[str], List[str]]], List[str]]): For each mention in doc: list of candidates
-            with ID and description, list of correct entity IDs.
+        Tuple[List[List[EntityCandidate]], List[Optional[str]]]: For each mention in doc: list of entity candidates,
+            list of correct entity IDs.
         """
-        cands_per_ent = self._candidate_selector(doc.ents)
-        cand_entity_info: List[Tuple[List[str], List[str]]] = []
+        cands_per_ent: Iterable[Iterable[EntityCandidate]] = self._candidate_selector(
+            doc.ents
+        )
+        cand_entity_info: List[List[EntityCandidate]] = []
         correct_ent_ids: List[Optional[str]] = []
 
         for ent, cands in zip(doc.ents, cands_per_ent):
-            cand_ent_ids = list(cands.keys())
-            cand_ent_descs: List[str] = [cands[ent_id] for ent_id in cand_ent_ids]
+            cands_for_ent: List[EntityCandidate] = list(cands)
 
             # No KB ID known: In this case there is no guarantee that the correct entity description will be included.
             if ent.kb_id == 0:
                 correct_ent_ids.append(None)
             # Correct entity not in suggested candidates: fetch description explicitly.
-            elif ent.kb_id not in cands:
-                cand_ent_descs.append(
-                    self._candidate_selector.get_entity_description(ent.kb_id_)
+            elif ent.kb_id not in {cand.id for cand in cands_for_ent}:
+                cands_for_ent.append(
+                    EntityCandidate(
+                        id=ent.kb_id,
+                        description=self._candidate_selector.get_entity_description(
+                            ent.kb_id_
+                        ),
+                    )
                 )
-                cand_ent_ids.append(ent.kb_id)
             correct_ent_ids.append(ent.kb_id)
 
-            cand_entity_info.append((cand_ent_ids, cand_ent_descs))
+            cand_entity_info.append(cands_for_ent)
 
         return cand_entity_info, correct_ent_ids

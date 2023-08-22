@@ -12,6 +12,7 @@ from spacy.training import Example
 from ...compat import Self
 from ...ty import FewshotExample
 from .task import EntityLinkerTask
+from .ty import EntityCandidate
 
 
 class EntLinkExample(FewshotExample):
@@ -38,7 +39,7 @@ class EntLinkExample(FewshotExample):
         # Assemble example.
         mentions = [ent.text for ent in example.reference.ents]
         # Fetch candidates. If true entity not among candidates: fetch description separately and add manually.
-        cands_ents_info, solutions = kwargs["fetch_entity_info"](example.reference)
+        cands_ents, solutions = kwargs["fetch_entity_info"](example.reference)
         # If we are to use available docs as examples, they have to have KB IDs set and hence available solutions.
         assert all([sol is not None for sol in solutions])
 
@@ -47,9 +48,12 @@ class EntLinkExample(FewshotExample):
             mentions_str=", ".join([f"*{mention}*" for mention in mentions]),
             mentions=mentions,
             entity_descriptions=[
-                cands_ent_info[1] for cands_ent_info in cands_ents_info
+                [cand_ent.description for cand_ent in cands_ent]
+                for cands_ent in cands_ents
             ],
-            entity_ids=[cands_ent_info[0] for cands_ent_info in cands_ents_info],
+            entity_ids=[
+                [cand_ent.id for cand_ent in cands_ent] for cands_ent in cands_ents
+            ],
             solutions=solutions,
             reasons=[""] * len(mentions),
         )
@@ -100,10 +104,10 @@ class SpaCyPipelineCandidateSelector:
                 )
         self._top_n = top_n
 
-    def __call__(self, mentions: Iterable[Span]) -> Iterable[Dict[str, str]]:
+    def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[EntityCandidate]]:
         """Retrieves top n candidates using spaCy's entity linker's .get_candidates_batch().
         mentions (Iterable[Span]): Mentions to look up entity candidates for.
-        RETURNS (Iterable[Dict[str, str]]): Dicts of entity ID -> description for all candidates, per mention.
+        RETURNS (Iterable[Iterable[Entity]]): Top n entity candidates per mention.
         """
         all_cands = self._kb.get_candidates_batch(mentions)
         for cands in all_cands:
@@ -111,7 +115,10 @@ class SpaCyPipelineCandidateSelector:
             cands.sort(key=lambda x: x.prior_prob, reverse=True)
 
         return [
-            {cand.entity_: self._descs[cand.entity_] for cand in cands[: self._top_n]}
+            [
+                EntityCandidate(id=cand.entity_, description=self._descs[cand.entity_])
+                for cand in cands[: self._top_n]
+            ]
             for cands in all_cands
         ]
 
