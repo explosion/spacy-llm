@@ -120,16 +120,25 @@ class SpaCyPipelineCandidateSelector:
 
         return [
             [
-                EntityCandidate(id=cand.entity_, description=self._descs[cand.entity_])
+                EntityCandidate(
+                    id=cand.entity_,
+                    description=self.get_entity_description(cand.entity_),
+                )
                 for cand in cands[: self._top_n]
             ]
             for cands in all_cands
         ]
 
     def get_entity_description(self, entity_id: str) -> str:
+        """Returns entity description for entity ID. If none found, a warning is emitted and
+            spacy_llm.tasks.enttiy_linker.ty.UNAVAILABLE_ENTITY_DESC is returned.
+        entity_id (str): Entity whose ID should be looked up.
+        RETURNS (str): Entity description for entity with specfied ID. If no description found, returned string equals
+            spacy_llm.tasks.enttiy_linker.ty.UNAVAILABLE_ENTITY_DESC.
+        """
         if entity_id not in self._descs:
             warnings.warn(
                 f"Entity with ID {entity_id} is not in provided descriptions file."
             )
 
-        return self._descs[entity_id]
+        return self._descs.get(entity_id, "")
