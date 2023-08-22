@@ -12,7 +12,7 @@ from spacy.training import Example
 from ...compat import Self
 from ...ty import FewshotExample
 from .task import EntityLinkerTask
-from .ty import UNAVAILABLE_ENTITY_DESC, EntityCandidate
+from .ty import UNAVAILABLE_ENTITY_DESC, Entity
 
 
 class EntLinkExample(FewshotExample):
@@ -108,7 +108,7 @@ class SpaCyPipelineCandidateSelector:
                 )
         self._top_n = top_n
 
-    def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[EntityCandidate]]:
+    def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[Entity]]:
         """Retrieves top n candidates using spaCy's entity linker's .get_candidates_batch().
         mentions (Iterable[Span]): Mentions to look up entity candidates for.
         RETURNS (Iterable[Iterable[Entity]]): Top n entity candidates per mention.
@@ -120,7 +120,7 @@ class SpaCyPipelineCandidateSelector:
 
         return [
             [
-                EntityCandidate(
+                Entity(
                     id=cand.entity_,
                     description=self.get_entity_description(cand.entity_),
                 )

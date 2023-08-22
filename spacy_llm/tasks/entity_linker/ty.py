@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable
 
 from pydantic import BaseModel
 from spacy.tokens import Span
@@ -8,17 +8,16 @@ from ...compat import Protocol, runtime_checkable
 UNAVAILABLE_ENTITY_DESC: str = "This entity doesn't have a description."
 
 
-class EntityCandidate(BaseModel):
-    """Represents one entity candidate."""
+class Entity(BaseModel):
+    """Represents one entity."""
 
     id: str
     description: str
-    mention: Optional[str]
 
 
 @runtime_checkable
 class CandidateSelector(Protocol):
-    def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[EntityCandidate]]:
+    def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[Entity]]:
         """Return list of Candidates with their descriptions for given mention and context.
         mentions (Iterable[Span]): Entity mentions.
         RETURNS (Iterable[Iterable[Entity]]): Top n entity candidates per mention.

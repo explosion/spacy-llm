@@ -9,7 +9,7 @@ from ...compat import Self
 from ...ty import FewshotExample, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
-from .ty import CandidateSelector, EntityCandidate
+from .ty import CandidateSelector, Entity
 
 DEFAULT_EL_TEMPLATE_V1 = read_template("entity_linker.v1")
 
@@ -110,21 +110,19 @@ class EntityLinkerTask(BuiltinTask):
 
     def _fetch_entity_info(
         self, doc: Doc
-    ) -> Tuple[List[List[EntityCandidate]], List[Optional[str]]]:
+    ) -> Tuple[List[List[Entity]], List[Optional[str]]]:
         """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
         doc (Doc): Doc to fetch entity descriptions and solution numbers for. If entities' KB IDs are not set,
             corresponding solution number will be None.
         Tuple[List[List[EntityCandidate]], List[Optional[str]]]: For each mention in doc: list of entity candidates,
             list of correct entity IDs.
         """
-        cands_per_ent: Iterable[Iterable[EntityCandidate]] = self._candidate_selector(
-            doc.ents
-        )
-        cand_entity_info: List[List[EntityCandidate]] = []
+        cands_per_ent: Iterable[Iterable[Entity]] = self._candidate_selector(doc.ents)
+        cand_entity_info: List[List[Entity]] = []
         correct_ent_ids: List[Optional[str]] = []
 
         for ent, cands in zip(doc.ents, cands_per_ent):
-            cands_for_ent: List[EntityCandidate] = list(cands)
+            cands_for_ent: List[Entity] = list(cands)
 
             # No KB ID known: In this case there is no guarantee that the correct entity description will be included.
             if ent.kb_id == 0:
@@ -132,7 +130,7 @@ class EntityLinkerTask(BuiltinTask):
             # Correct entity not in suggested candidates: fetch description explicitly.
             elif ent.kb_id not in {cand.id for cand in cands_for_ent}:
                 cands_for_ent.append(
-                    EntityCandidate(
+                    Entity(
                         id=ent.kb_id,
                         description=self._candidate_selector.get_entity_description(
                             ent.kb_id_
