@@ -25,7 +25,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 @functools.lru_cache()
-def _build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
+def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     """Builds and persists pipeline with untrained EL component and initialized toy knowledge base.
     nlp_path (Path): Path to store pipeline under.
     descriptions_path (Path): Path to store descriptions file under.
@@ -297,7 +297,7 @@ def test_entity_linker_config(cfg_string, request, tmp_path):
             "paths.el_desc": str(tmp_path / "desc.csv"),
         },
     )
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
@@ -332,7 +332,7 @@ def test_entity_linker_predict(cfg_string, request, tmp_path):
             "paths.el_desc": str(tmp_path / "desc.csv"),
         },
     )
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     nlp.initialize(lambda: [])
 
@@ -366,7 +366,7 @@ def test_el_io(cfg_string, request, tmp_path):
             "paths.el_desc": str(tmp_path / "desc.csv"),
         },
     )
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     nlp.initialize(lambda: [])
 
@@ -405,7 +405,7 @@ def test_jinja_template_rendering_without_examples(tmp_path):
         Span(doc=doc, start=7, end=9, label="ORG"),
     ]
 
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=None)
     el_task._candidate_selector = SpaCyPipelineCandidateSelector(
         nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
@@ -470,7 +470,7 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
         Span(doc=doc, start=7, end=9, label="ORG"),
     ]
 
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=fewshot_reader(examples_path))
     el_task._candidate_selector = SpaCyPipelineCandidateSelector(
         nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
@@ -559,7 +559,7 @@ def test_external_template_actually_loads(tmp_path):
     nlp = spacy.blank("xx")
     doc = nlp.make_doc(text)
 
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(template=template, examples=None)
     el_task._candidate_selector = SpaCyPipelineCandidateSelector(
         nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
@@ -583,6 +583,7 @@ def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
             "paths.el_desc": str(tmp_path / "desc.csv"),
         },
     )
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = assemble_from_config(config)
 
     examples = []
@@ -619,7 +620,8 @@ def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
     assert not task._prompt_examples
 
     nlp.config["initialize"]["components"]["llm"] = {
-        "n_prompt_examples": n_prompt_examples
+        **nlp.config["initialize"]["components"]["llm"],
+        "n_prompt_examples": n_prompt_examples,
     }
     nlp.initialize(lambda: examples)
 

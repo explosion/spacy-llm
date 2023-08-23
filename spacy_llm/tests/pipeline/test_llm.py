@@ -24,7 +24,7 @@ from ...cache import BatchCache
 from ...registry.reader import fewshot_reader
 from ...util import assemble_from_config
 from ..compat import has_openai_key
-from ..tasks.test_entity_linking import update_cand_selector_paths_in_config
+from ..tasks.test_entity_linking import build_el_pipeline
 
 
 @pytest.fixture
@@ -318,6 +318,10 @@ def test_llm_task_factories_el(tmp_path):
     """Test whether llm_entity_linking factory run successfully. It's necessary to do this separately, as the EL task
     requires a non-defaultable extra config setup and knowledge base."""
     cfg = """
+    [paths]
+    el_nlp = null
+    el_desc = null
+
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -330,14 +334,24 @@ def test_llm_task_factories_el(tmp_path):
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinker.v1"
 
-    [components.llm.task.candidate_selector]
+    [initialize]
+    [initialize.components]
+    [initialize.components.llm]
+
+    [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    nlp_path = TO_REPLACE
-    desc_path = TO_REPLACE
+    nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
     """
-    assemble_from_config(
-        update_cand_selector_paths_in_config(Config().from_str(cfg), tmp_path)
+    config = Config().from_str(
+        cfg,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
     )
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    assemble_from_config(config)
 
 
 @pytest.mark.external
