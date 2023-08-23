@@ -436,6 +436,51 @@ def test_spancat_matching(response, case_sensitive, gold_spans):
     assert pred_spans == gold_spans
 
 
+def test_jinja_template_rendering_without_examples():
+    """Test if jinja2 template renders as expected
+
+    We apply the .strip() method for each prompt so that we don't have to deal
+    with annoying newlines and spaces at the edge of the text.
+    """
+    labels = "PER,ORG,LOC"
+    nlp = spacy.blank("xx")
+    doc = nlp.make_doc("Alice and Bob went to the supermarket")
+    llm_ner = make_spancat_task_v3(labels=labels)
+    prompt = list(llm_ner.generate_prompts([doc]))[0]
+
+    assert (
+        prompt.strip()
+        == """
+You are an expert Named Entity Recognition (NER) system.
+Your task is to accept Text as input and extract named entities.
+The entities you extract can overlap with each other.
+
+Entities must have one of the following labels: LOC, ORG, PER.
+If a span is not an entity label it: `==NONE==`.
+
+
+
+Here is an example of the output format for a paragraph using different labels than this task requires.
+Only use this output format but use the labels provided
+above instead of the ones defined in the example below.
+Do not output anything besides entities in this output format.
+Output entities in the order they occur in the input paragraph regardless of label.
+
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
+
+Paragraph: Sriracha sauce goes really well with hoisin stir fry, but you should add it after you use the wok.
+Answer:
+1. Sriracha sauce | True | INGREDIENT | is an ingredient to add to a stir fry
+2. really well | False | ==NONE== | is a description of how well sriracha sauce goes with hoisin stir fry
+3. hoisin stir fry | True | DISH | is a dish with stir fry vegetables and hoisin sauce
+4. wok | True | EQUIPMENT | is a piece of cooking equipment used to stir fry ingredients
+
+Paragraph: Alice and Bob went to the supermarket
+Answer:
+""".strip()
+    )
+
+
 @pytest.mark.parametrize(
     "examples_path",
     [
