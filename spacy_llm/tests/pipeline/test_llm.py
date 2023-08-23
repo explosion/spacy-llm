@@ -24,7 +24,7 @@ from ...cache import BatchCache
 from ...registry.reader import fewshot_reader
 from ...util import assemble_from_config
 from ..compat import has_openai_key
-from ..tasks.test_entity_linking import build_el_pipeline
+from ..tasks.test_entity_linker import build_el_pipeline
 
 
 @pytest.fixture
