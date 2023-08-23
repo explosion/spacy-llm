@@ -463,8 +463,8 @@ class SRLTask(SpanTask[SRLExample]):
                     p_start_char, p_end_char = pred_offsets[0]
                     pred_item = PredicateItem(
                         text=pred_str, start_char=p_start_char, end_char=p_end_char
-                    )
-                    predicates.append(pred_item.dict())
+                    ).dict()
+                    predicates.append(pred_item)
 
                     roles = []
 
