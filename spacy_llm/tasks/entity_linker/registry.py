@@ -7,13 +7,11 @@ from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
-from .ty import CandidateSelector
 from .util import EntLinkExample, SpaCyPipelineCandidateSelector, score
 
 
 @registry.llm_tasks("spacy.EntityLinker.v1")
 def make_entitylinker_task(
-    candidate_selector: CandidateSelector,
     template: str = DEFAULT_EL_TEMPLATE_V1,
     parse_responses: Optional[TaskResponseParser[EntityLinkerTask]] = None,
     prompt_example_type: Optional[Type[FewshotExample]] = None,
@@ -27,8 +25,6 @@ def make_entitylinker_task(
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for few-shot learning.
         If None is passed, then zero-shot learning will be used.
-    candidate_selector (CandidateSelector): Factory for a candidate selection callable
-        returning candidates for a given Span and context.
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = prompt_example_type or EntLinkExample
@@ -49,7 +45,6 @@ def make_entitylinker_task(
         prompt_example_type=example_type,
         prompt_examples=examples,
         scorer=scorer or score,
-        candidate_selector=candidate_selector,
     )
 
 

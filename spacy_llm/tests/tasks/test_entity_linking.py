@@ -133,6 +133,10 @@ def _build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
 @pytest.fixture
 def noop_config():
     return """
+    [paths]
+    el_nlp = null
+    el_desc = null
+
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -146,19 +150,27 @@ def noop_config():
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinker.v1"
 
-    [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelector.v1"
-    nlp_path = TO_REPLACE
-    desc_path = TO_REPLACE
-
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
+
+    [initialize]
+    [initialize.components]
+    [initialize.components.llm]
+
+    [initialize.components.llm.candidate_selector]
+    @llm_misc = "spacy.CandidateSelector.v1"
+    nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
     """
 
 
 @pytest.fixture
 def zeroshot_cfg_string():
     return """
+    [paths]
+    el_nlp = null
+    el_desc = null
+
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -172,20 +184,28 @@ def zeroshot_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinker.v1"
 
-    [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelector.v1"
-    nlp_path = TO_REPLACE
-    desc_path = TO_REPLACE
-
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
     config = {"temperature": 0}
+
+    [initialize]
+    [initialize.components]
+    [initialize.components.llm]
+
+    [initialize.components.llm.candidate_selector]
+    @llm_misc = "spacy.CandidateSelector.v1"
+    nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
     """
 
 
 @pytest.fixture
 def fewshot_cfg_string():
     return f"""
+    [paths]
+    el_nlp = null
+    el_desc = null
+
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -198,11 +218,6 @@ def fewshot_cfg_string():
 
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinker.v1"
-
-    [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelector.v1"
-    nlp_path = TO_REPLACE
-    desc_path = TO_REPLACE
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -211,6 +226,15 @@ def fewshot_cfg_string():
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
     config = {{"temperature": 0}}
+
+    [initialize]
+    [initialize.components]
+    [initialize.components.llm]
+
+    [initialize.components.llm.candidate_selector]
+    @llm_misc = "spacy.CandidateSelector.v1"
+    nlp_path = ${{paths.el_nlp}}
+    desc_path = ${{paths.el_desc}}
     """
 
 
@@ -219,6 +243,10 @@ def ext_template_cfg_string():
     """Simple zero-shot config with an external template"""
 
     return f"""
+    [paths]
+    el_nlp = null
+    el_desc = null
+
     [nlp]
     lang = "en"
     pipeline = ["llm"]
@@ -231,11 +259,6 @@ def ext_template_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinker.v1"
 
-    [components.llm.task.candidate_selector]
-    @llm_misc = "spacy.CandidateSelector.v1"
-    nlp_path = TO_REPLACE
-    desc_path = TO_REPLACE
-
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
     path = {str((Path(__file__).parent / "templates" / "entity_linker.jinja2"))}
@@ -243,24 +266,16 @@ def ext_template_cfg_string():
     [components.llm.model]
     @llm_models = "spacy.GPT-3-5.v1"
     config = {{"temperature": 0}}
+
+    [initialize]
+    [initialize.components]
+    [initialize.components.llm]
+
+    [initialize.components.llm.candidate_selector]
+    @llm_misc = "spacy.CandidateSelector.v1"
+    nlp_path = ${{paths.el_nlp}}
+    desc_path = ${{paths.el_desc}}
     """
-
-
-def update_cand_selector_paths_in_config(config: Config, tmp_path: Path) -> Config:
-    """Updates paths for candidate selector in config and builds EL pipeline with KB with correspondig paths.
-    config (Dict[str, Any]): Config to update.
-    tmp_path (Path): Base directory for pipeline and descriptions file.
-    RETURNS (Dict[str, Any]): Update config.
-    """
-    config["components"]["llm"]["task"]["candidate_selector"]["nlp_path"] = str(
-        tmp_path
-    )
-    config["components"]["llm"]["task"]["candidate_selector"]["desc_path"] = str(
-        tmp_path / "desc.csv"
-    )
-    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-
-    return config
 
 
 @pytest.mark.external
@@ -275,9 +290,14 @@ def update_cand_selector_paths_in_config(config: Config, tmp_path: Path) -> Conf
 )
 def test_entity_linker_config(cfg_string, request, tmp_path):
     cfg_string = request.getfixturevalue(cfg_string)
-    config = update_cand_selector_paths_in_config(
-        Config().from_str(cfg_string), tmp_path
+    config = Config().from_str(
+        cfg_string,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
     )
+    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
 
@@ -305,8 +325,17 @@ def test_entity_linker_predict(cfg_string, request, tmp_path):
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     cfg = request.getfixturevalue(cfg_string)
-    orig_config = update_cand_selector_paths_in_config(Config().from_str(cfg), tmp_path)
+    orig_config = Config().from_str(
+        cfg,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
+    )
+    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    nlp.initialize(lambda: [])
+
     text = "Alice goes to Boston to see the Boston Celtics game."
     doc = nlp.make_doc(text)
     doc.ents = [
@@ -330,14 +359,24 @@ def test_entity_linker_predict(cfg_string, request, tmp_path):
 )
 def test_el_io(cfg_string, request, tmp_path):
     cfg = request.getfixturevalue(cfg_string)
-    orig_config = update_cand_selector_paths_in_config(Config().from_str(cfg), tmp_path)
+    orig_config = Config().from_str(
+        cfg,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
+    )
+    _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    nlp.initialize(lambda: [])
+
     assert nlp.pipe_names == ["llm"]
     # ensure you can save a pipeline to disk and run it after loading
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
         nlp2 = spacy.load(tmpdir)
     assert nlp2.pipe_names == ["llm"]
+    nlp2.initialize(lambda: [])
 
     text = "Alice goes to Boston to see the Boston Celtics game."
     doc = nlp.make_doc(text)
@@ -367,16 +406,14 @@ def test_jinja_template_rendering_without_examples(tmp_path):
     ]
 
     _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    el_task = make_entitylinker_task(
-        examples=None,
-        candidate_selector=SpaCyPipelineCandidateSelector(
-            nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
-        ),
+    el_task = make_entitylinker_task(examples=None)
+    el_task._candidate_selector = SpaCyPipelineCandidateSelector(
+        nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
     )
     prompt = list(el_task.generate_prompts([doc]))[0]
 
     assert (
-        prompt.strip()
+        prompt.strip().replace(" \n", "\n")
         == """
 For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES.
 Each of the ENTITIES is prefixed by its ENTITY ID. Each of the MENTIONS in the TEXT is surrounded by *.
@@ -386,9 +423,9 @@ Make sure you make a choice for each of the MENTIONS. Prefix the solution for ea
 Output the chosen solution immediately after "--- ".
 For each MENTION, describe your reasoning process in a single sentence.
 
-TEXT: 
+TEXT:
 '''
-Alice goes to *Boston* to see the *Boston Celtics* game. 
+Alice goes to *Boston* to see the *Boston Celtics* game.
 '''
 MENTIONS: *Boston*, *Boston Celtics*
 ENTITIES:
@@ -405,7 +442,9 @@ ENTITIES:
     Q3466394. season of National Basketball Association team the Boston Celtics
     Q3642995. NBA basketball team season
 SOLUTION:
-""".strip()
+""".strip().replace(
+            " \n", "\n"
+        )
     )
 
 
@@ -432,11 +471,9 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
     ]
 
     _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    el_task = make_entitylinker_task(
-        examples=fewshot_reader(examples_path),
-        candidate_selector=SpaCyPipelineCandidateSelector(
-            nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
-        ),
+    el_task = make_entitylinker_task(examples=fewshot_reader(examples_path))
+    el_task._candidate_selector = SpaCyPipelineCandidateSelector(
+        nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
     )
     prompt = list(el_task.generate_prompts([doc]))[0]
 
@@ -457,7 +494,7 @@ TEXT:
 '''
 Alice goes to *New York* to see the *New York Knicks* game.
 '''
-MENTIONS: 
+MENTIONS:
 ENTITIES:
 - For *New York*:
     Q60. most populous city in the United States
@@ -466,14 +503,14 @@ ENTITIES:
     Q60. most populous city in the United States
     Q131364. National Basketball Association team in New York City
 SOLUTION:
---- <Q60> 
---- <Q131364> 
+--- <Q60>
+--- <Q131364>
 
 TEXT:
 '''
 *New York* is called the *Big Apple*. It also has *Apple* stores.
 '''
-MENTIONS: 
+MENTIONS:
 ENTITIES:
 - For *New York*:
     Q60. most populous city in the United States
@@ -490,7 +527,7 @@ SOLUTION:
 --- <Q312> The context of "stores" indicates that this is about the technology company Apple, who operates "Apple stores".
 
 
-End of examples.TEXT: 
+End of examples.TEXT:
 '''
 Alice goes to *Boston* to see the *Boston Celtics* game.
 '''
@@ -523,12 +560,9 @@ def test_external_template_actually_loads(tmp_path):
     doc = nlp.make_doc(text)
 
     _build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    el_task = make_entitylinker_task(
-        template=template,
-        examples=None,
-        candidate_selector=SpaCyPipelineCandidateSelector(
-            nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
-        ),
+    el_task = make_entitylinker_task(template=template, examples=None)
+    el_task._candidate_selector = SpaCyPipelineCandidateSelector(
+        nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
     )
 
     assert (
@@ -542,8 +576,12 @@ Here is the text: {text}
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
-    config = update_cand_selector_paths_in_config(
-        Config().from_str(noop_config), tmp_path
+    config = Config().from_str(
+        noop_config,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
     )
     nlp = assemble_from_config(config)
 

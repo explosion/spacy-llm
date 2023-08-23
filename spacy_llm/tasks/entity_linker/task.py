@@ -22,7 +22,6 @@ class EntityLinkerTask(BuiltinTask):
         prompt_examples: Optional[List[FewshotExample]],
         template: str,
         scorer: Scorer,
-        candidate_selector: CandidateSelector,
     ):
         """Default entity linking task.
 
@@ -41,20 +40,32 @@ class EntityLinkerTask(BuiltinTask):
             prompt_examples=prompt_examples,
         )
         self._scorer = scorer
-        self._candidate_selector = candidate_selector
+        self._candidate_selector: Optional[CandidateSelector] = None
 
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
+        candidate_selector: CandidateSelector,
         n_prompt_examples: int = 0,
     ) -> None:
+        """Initialize entity linking task.
+        get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
+            for initialization.
+        nlp (Language): Language instance.
+        candidate_selector (CandidateSelector): Factory for a candidate selection callable
+            returning candidates for a given Span and context.
+        n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
+            0 by default. Takes all examples if set to -1.
+
+        """
         super()._initialize(
             get_examples=get_examples,
             nlp=nlp,
             n_prompt_examples=n_prompt_examples,
             fetch_entity_info=self._fetch_entity_info,
         )
+        self._candidate_selector = candidate_selector
 
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
         environment = jinja2.Environment()
@@ -117,6 +128,12 @@ class EntityLinkerTask(BuiltinTask):
         Tuple[List[List[EntityCandidate]], List[Optional[str]]]: For each mention in doc: list of entity candidates,
             list of correct entity IDs.
         """
+        if not self._candidate_selector:
+            raise ValueError(
+                "Candidate selector hasn't been initialized. Pass the corresponding config to "
+                "[initialize.components.LLM_TASK_NAME.candidate_selector]."
+            )
+
         cands_per_ent: Iterable[Iterable[Entity]] = self._candidate_selector(doc.ents)
         cand_entity_info: List[List[Entity]] = []
         correct_ent_ids: List[Optional[str]] = []
