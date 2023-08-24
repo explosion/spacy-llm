@@ -1,9 +1,9 @@
 from typing import List
 
 try:
-    from pydantic.v1 import BaseModel, validator
+    from pydantic.v1 import BaseModel
 except ImportError:
-    from pydantic import BaseModel, validator
+    from pydantic import BaseModel
 
 from spacy.training import Example
 
@@ -16,11 +16,11 @@ class RelationItem(BaseModel):
     dest: int
     relation: str
 
-    @validator("dep", "dest", pre=True)
-    def clean_ent(cls, value):
-        if isinstance(value, str):
-            value = value.strip("ENT")
-        return value
+    # @validator("dep", "dest", pre=True)
+    # def clean_ent(cls, value):
+    #     if isinstance(value, str):
+    #         value = value.strip("ENT")
+    #     return value
 
 
 class EntityItem(BaseModel):
