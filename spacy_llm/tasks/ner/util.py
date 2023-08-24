@@ -1,12 +1,12 @@
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable
 
 from spacy.scorer import get_ner_prf
 from spacy.training import Example
 
 from ...compat import Self
 from ..span import SpanExample
-from ..span.examples import SpanCoTExample, SpanReason
+from ..span.examples import SpanCoTExample
 
 
 class NERExample(SpanExample):
@@ -22,20 +22,9 @@ class NERExample(SpanExample):
 class NERCoTExample(SpanCoTExample):
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Self:
-        span_reasons: List[SpanReason] = []
-        for ent in example.reference.ents:
-            span_reasons.append(
-                SpanReason(
-                    text=ent.text,
-                    is_entity=True,
-                    label=ent.label_,
-                    reason=f"is a {ent.label_}",
-                )
-            )
-
         return cls(
             text=example.reference.text,
-            spans=span_reasons,
+            spans=SpanCoTExample._extract_span_reasons(example, "ents"),
         )
 
 

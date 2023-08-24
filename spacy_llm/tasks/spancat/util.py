@@ -1,12 +1,12 @@
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable
 
 from spacy.pipeline.spancat import spancat_score
 from spacy.training import Example
 
 from ...compat import Self
 from ..span import SpanExample
-from ..span.examples import SpanCoTExample, SpanReason
+from ..span.examples import SpanCoTExample
 
 
 class SpanCatExample(SpanExample):
@@ -22,20 +22,9 @@ class SpanCatExample(SpanExample):
 class SpanCatCoTExample(SpanCoTExample):
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Self:
-        span_reasons: List[SpanReason] = []
-        for span in example.reference.spans[kwargs["spans_key"]]:
-            span_reasons.append(
-                SpanReason(
-                    text=span.text,
-                    is_entity=True,
-                    label=span.label_,
-                    reason=f"is a {span.label_}",
-                )
-            )
-
         return cls(
             text=example.reference.text,
-            spans=span_reasons,
+            spans=SpanCoTExample._extract_span_reasons(example, kwargs["spans_key"]),
         )
 
 
