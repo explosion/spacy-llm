@@ -48,7 +48,7 @@ class RELExample(FewshotExample):
             for ent in example.reference.ents
         ]
 
-        return cls.construct(
+        return cls(
             text=example.reference.text,
             ents=entities,
             relations=example.reference._.rel,
