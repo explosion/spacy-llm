@@ -228,13 +228,14 @@ def test_ner_config(config: Config):
     "text,gold_ents",
     [
         # simple
-        # (
-        #     "Marc and Bob both live in Ireland.",
-        #     [("Marc", "PER"), ("Bob", "PER"), ("Ireland", "LOC")],
-        # ),
+        (
+            "Marc and Bob both live in Ireland.",
+            [("Marc", "PER"), ("Bob", "PER"), ("Ireland", "LOC")],
+        ),
         # same entity names
         (
-            "Paris, who is a person, travelled to Paris, which is a city, to spend time with her friend Paris, who is a person.",
+            "Paris, who is a person, travelled to Paris, which is a city, to spend time with her friend Paris, who "
+            "is a person.",
             [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
         ),
     ],
