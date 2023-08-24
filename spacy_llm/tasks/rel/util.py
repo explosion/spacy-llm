@@ -1,9 +1,9 @@
 from typing import List
 
 try:
-    from pydantic.v1 import BaseModel
+    from pydantic.v1 import BaseModel, validator
 except ImportError:
-    from pydantic import BaseModel
+    from pydantic import BaseModel, validator
 
 from spacy.training import Example
 
@@ -16,11 +16,11 @@ class RelationItem(BaseModel):
     dest: int
     relation: str
 
-    # @validator("dep", "dest", pre=True)
-    # def clean_ent(cls, value):
-    #     if isinstance(value, str):
-    #         value = value.strip("ENT")
-    #     return value
+    @validator("dep", "dest", pre=True)
+    def clean_ent(cls, value):
+        if isinstance(value, str):
+            value = value.strip("ENT")
+        return value
 
 
 class EntityItem(BaseModel):
@@ -30,12 +30,12 @@ class EntityItem(BaseModel):
 
 
 class RELExample(FewshotExample):
-    class Config:
-        arbitrary_types_allowed = True
-
     text: str
     ents: List[EntityItem]
     relations: List[RelationItem]
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Self:
