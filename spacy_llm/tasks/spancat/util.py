@@ -24,7 +24,9 @@ class SpanCatCoTExample(SpanCoTExample):
     def generate(cls, example: Example, **kwargs) -> Self:
         return cls(
             text=example.reference.text,
-            spans=SpanCoTExample._extract_span_reasons(example, kwargs["spans_key"]),
+            spans=SpanCoTExample._extract_span_reasons(
+                example.reference.spans[kwargs["spans_key"]]
+            ),
         )
 
 

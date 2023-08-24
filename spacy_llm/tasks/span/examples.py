@@ -1,8 +1,8 @@
 import abc
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 from pydantic import BaseModel
-from spacy.training import Example
+from spacy.tokens import Span
 
 from ...ty import FewshotExample, Self
 
@@ -70,20 +70,19 @@ class SpanCoTExample(FewshotExample, abc.ABC):
     spans: List[SpanReason]
 
     @staticmethod
-    def _extract_span_reasons(example: Example, source_attr: str) -> List[SpanReason]:
-        """Extracts SpanReasons from Example.
-        example (Example): Example instance to extract from.
-        source_attr (str): Name of attribute in example to extract from.
+    def _extract_span_reasons(spans: Iterable[Span]) -> List[SpanReason]:
+        """Extracts SpanReasons from spans.
+        spans (Iterable[Span]): Spans to extract reasons from.
         RETURNS (List[SpanReason]): SpanReason instances extracted from example.
         """
         span_reasons: List[SpanReason] = []
-        for ent in getattr(example.reference, source_attr):
+        for span in spans:
             span_reasons.append(
                 SpanReason(
-                    text=ent.text,
+                    text=span.text,
                     is_entity=True,
-                    label=ent.label_,
-                    reason=f"is a {ent.label_}",
+                    label=span.label_,
+                    reason=f"is a {span.label_}",
                 )
             )
 

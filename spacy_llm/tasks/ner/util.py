@@ -24,7 +24,7 @@ class NERCoTExample(SpanCoTExample):
     def generate(cls, example: Example, **kwargs) -> Self:
         return cls(
             text=example.reference.text,
-            spans=SpanCoTExample._extract_span_reasons(example, "ents"),
+            spans=SpanCoTExample._extract_span_reasons(example.reference.ents),
         )
 
 
