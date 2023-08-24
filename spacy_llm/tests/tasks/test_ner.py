@@ -97,6 +97,7 @@ def fewshot_cfg_string_v3_lds():
     PER = "Any named individual in the text"
     ORG = "Any named organization in the text"
     LOC = "The name of any politically or geographically defined location"
+    DESTINATION = "The physical destination of a journey."
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -219,15 +220,57 @@ def test_ner_config(config: Config):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-def test_ner_predict(nlp: Language):
+@pytest.mark.parametrize(
+    "cfg_str",
+    ["fewshot_cfg_string_v3_lds", "fewshot_cfg_string_v3", "ext_template_cfg_string"],
+)
+@pytest.mark.parametrize(
+    "text,gold_ents",
+    [
+        # simple
+        # (
+        #     "Marc and Bob both live in Ireland.",
+        #     [("Marc", "PER"), ("Bob", "PER"), ("Ireland", "LOC")],
+        # ),
+        # same entity names
+        (
+            "Paris, who is a person, travelled to Paris, which is a city, to spend time with her friend Paris, who is a person.",
+            [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
+        ),
+    ],
+)
+def test_ner_predict(cfg_str, text, gold_ents, request):
     """Use OpenAI to get zero-shot NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
-    text = "Marc and Bob both live in Ireland."
+    config = Config().from_str(request.getfixturevalue(cfg_str))
+    is_paris_example = "Paris" in text
+
+    # Simplify Paris example by discarding unnecessary label.
+    if is_paris_example:
+        config["components"]["llm"]["task"]["labels"] = "PER,ORG,LOC"
+        if "label_definitions" in config["components"]["llm"]["task"]:
+            config["components"]["llm"]["task"]["label_definitions"].pop("DESTINATION")
+
+    with pytest.warns(
+        UserWarning,
+        match="Examples contain labels that are not specified in the task configuration",
+    ):
+        nlp = spacy.util.load_model_from_config(config, auto_fill=True)
     doc = nlp(text)
-    assert len(doc.ents) > 0
-    for ent in doc.ents:
-        assert ent.label_ in ["PER", "ORG", "LOC"]
+
+    # We don't expect the dummy template to return correct results.
+    if cfg_str == "ext_template_cfg_string":
+        return
+
+    assert len(doc.ents) == len(gold_ents)
+    # Fewshot prompting without label definitions fails to return the correct result for the Paris example.
+    if cfg_str == "fewshot_cfg_string_v3" and is_paris_example:
+        return
+
+    for pred_ent, gold_ent in zip(doc.ents, gold_ents):
+        assert pred_ent.text == gold_ent[0]
+        assert pred_ent.label_ in gold_ent[1].split("|")
 
 
 @pytest.mark.external
