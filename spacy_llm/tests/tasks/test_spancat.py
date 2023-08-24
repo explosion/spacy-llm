@@ -513,6 +513,7 @@ The entities you extract can overlap with each other.
 Entities must have one of the following labels: DESTINATION, LOC, ORG, PER.
 If a span is not an entity label it: `==NONE==`.
 
+
 Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
 
 Paragraph: Jack and Jill went up the hill.
