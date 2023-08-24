@@ -247,11 +247,10 @@ def test_ner_predict(cfg_str, text, gold_ents, request):
     config = Config().from_str(request.getfixturevalue(cfg_str))
     is_paris_example = "Paris" in text
 
-    # Simplify Paris example by discarding unnecessary label.
-    if is_paris_example:
-        config["components"]["llm"]["task"]["labels"] = "PER,ORG,LOC"
-        if "label_definitions" in config["components"]["llm"]["task"]:
-            config["components"]["llm"]["task"]["label_definitions"].pop("DESTINATION")
+    # Simplify by discarding unnecessary label (necessary to make Paris example work).
+    config["components"]["llm"]["task"]["labels"] = "PER,ORG,LOC"
+    if "label_definitions" in config["components"]["llm"]["task"]:
+        config["components"]["llm"]["task"]["label_definitions"].pop("DESTINATION")
 
     with pytest.warns(
         UserWarning,
