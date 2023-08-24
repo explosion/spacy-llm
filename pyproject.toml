@@ -22,7 +22,9 @@ filterwarnings = [
     "ignore:^.*The 'warn' method is deprecated, use 'warning' instead.*:DeprecationWarning",
     "ignore:^.*Support for class-based `config` is deprecated.*:",
     "ignore:^.*The `dict` method is deprecated; use `model_dump` instead.*",
-    "ignore:^.*The `parse_obj` method is deprecated; use `model_validate` instead.*"
+    "ignore:^.*The `parse_obj` method is deprecated; use `model_validate` instead.*",
+    "ignore:^.*`__get_validators__` is deprecated.*",
+    "ignore:^.*The `construct` method is deprecated.*"
 ]
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API",
