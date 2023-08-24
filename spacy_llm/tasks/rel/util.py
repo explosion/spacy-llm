@@ -48,10 +48,8 @@ class RELExample(FewshotExample):
             for ent in example.reference.ents
         ]
 
-        rel_example = RELExample(
+        return cls(
             text=example.reference.text,
             ents=entities,
             relations=example.reference._.rel,
         )
-
-        return rel_example
