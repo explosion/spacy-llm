@@ -7,7 +7,7 @@ from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
-from .util import EntLinkExample, SpaCyPipelineCandidateSelector, score
+from .util import ELExample, SpaCyPipelineCandidateSelector, score
 
 
 @registry.llm_tasks("spacy.EntityLinker.v1")
@@ -27,7 +27,7 @@ def make_entitylinker_task(
         If None is passed, then zero-shot learning will be used.
     """
     raw_examples = examples() if callable(examples) else examples
-    example_type = prompt_example_type or EntLinkExample
+    example_type = prompt_example_type or ELExample
     examples = [example_type(**eg) for eg in raw_examples] if raw_examples else None
     # Ensure there is a reason for every solution, even if it's empty. This makes templating easier.
     if examples:

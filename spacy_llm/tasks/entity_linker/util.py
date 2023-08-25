@@ -15,7 +15,7 @@ from .task import EntityLinkerTask
 from .ty import UNAVAILABLE_ENTITY_DESC, Entity
 
 
-class EntLinkExample(FewshotExample):
+class ELExample(FewshotExample):
     text: str
     mentions_str: str
     mentions: List[str]
@@ -47,7 +47,7 @@ class EntLinkExample(FewshotExample):
         # If we are to use available docs as examples, they have to have KB IDs set and hence available solutions.
         assert all([sol is not None for sol in solutions])
 
-        return EntLinkExample(
+        return ELExample(
             text=EntityLinkerTask.highlight_ents_in_text(example.reference).text,
             mentions_str=", ".join([f"*{mention}*" for mention in mentions]),
             mentions=mentions,
