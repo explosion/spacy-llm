@@ -71,7 +71,7 @@ class EntityLinkerTask(BuiltinTask):
         for doc in docs:
             cands_ents, _ = self._fetch_entity_info(doc)
             yield _template.render(
-                text=EntityLinkerTask.highlight_ents_in_text(doc).text,
+                text=EntityLinkerTask.highlight_ents_in_text(doc),
                 mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
                 mentions=[ent.text for ent in doc.ents],
                 entity_descriptions=[
@@ -98,10 +98,10 @@ class EntityLinkerTask(BuiltinTask):
         return ["_template"]
 
     @staticmethod
-    def highlight_ents_in_text(doc: Doc) -> Doc:
+    def highlight_ents_in_text(doc: Doc) -> str:
         """Highlights entities in doc text with **.
         doc (Doc): Doc whose entities are to be highlighted.
-        RETURNS (Doc): new Doc with highlighted entities in its text.
+        RETURNS (str): Text with highlighted entities.
         """
         text = doc.text
         for i, ent in enumerate(doc.ents):
@@ -111,8 +111,7 @@ class EntityLinkerTask(BuiltinTask):
                 + text[ent.end_char + i * 2 :]
             )
 
-        # Unclean tokenization doesn't matter here, as only the raw text is used downstream currently.
-        return Doc(doc.vocab, words=text.split())
+        return text
 
     def _fetch_entity_info(
         self, doc: Doc

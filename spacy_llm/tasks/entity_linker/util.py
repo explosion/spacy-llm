@@ -49,7 +49,7 @@ class ELExample(FewshotExample):
         assert all([sol is not None for sol in solutions])
 
         return ELExample(
-            text=EntityLinkerTask.highlight_ents_in_text(example.reference).text,
+            text=EntityLinkerTask.highlight_ents_in_text(example.reference),
             mentions=mentions,
             entity_descriptions=[
                 [ent.description for ent in ents] for ents in cands_ents
