@@ -11,23 +11,6 @@ from .. import rel_openai, textcat_openai
 _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
 
-@pytest.mark.external
-@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
-def test_textcat_openai(config_name: str):
-    """Test NER Dolly usage example.
-    config_name (str): Name of config file to use.
-    """
-    path = _USAGE_EXAMPLE_PATH / "textcat_openai"
-    textcat_openai.run_pipeline(
-        text="text",
-        config_path=path / config_name,
-        examples_path=None
-        if config_name == "zeroshot.cfg"
-        else path / "examples.jsonl",
-        verbose=False,
-    )
-
-
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 @pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
@@ -44,9 +27,27 @@ def test_ner_dolly(config_name: str):
     )
 
 
+@pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 @pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_textcat_dolly(config_name: str):
+    """Test NER Dolly usage example.
+    config_name (str): Name of config file to use.
+    """
+    path = _USAGE_EXAMPLE_PATH / "textcat_openai"
+    textcat_openai.run_pipeline(
+        text="text",
+        config_path=path / config_name,
+        examples_path=None
+        if config_name == "zeroshot.cfg"
+        else path / "examples.jsonl",
+        verbose=False,
+    )
+
+
+@pytest.mark.external
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
+def test_textcat_openai(config_name: str):
     """Test NER Dolly usage example.
     config_name (str): Name of config file to use.
     """
