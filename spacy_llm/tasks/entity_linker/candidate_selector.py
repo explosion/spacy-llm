@@ -7,7 +7,8 @@ import spacy
 from spacy.pipeline import EntityLinker
 from spacy.tokens import Span
 
-from .ty import UNAVAILABLE_ENTITY_DESC, Entity
+from .ty import Entity
+from .util import UNAVAILABLE_ENTITY_DESC
 
 
 class PipelineCandidateSelector:
@@ -70,10 +71,10 @@ class PipelineCandidateSelector:
 
     def get_entity_description(self, entity_id: str) -> str:
         """Returns entity description for entity ID. If none found, a warning is emitted and
-            spacy_llm.tasks.enttiy_linker.ty.UNAVAILABLE_ENTITY_DESC is returned.
+            spacy_llm.tasks.enttiy_linker.util.UNAVAILABLE_ENTITY_DESC is returned.
         entity_id (str): Entity whose ID should be looked up.
         RETURNS (str): Entity description for entity with specfied ID. If no description found, returned string equals
-            spacy_llm.tasks.enttiy_linker.ty.UNAVAILABLE_ENTITY_DESC.
+            spacy_llm.tasks.enttiy_linker.util.UNAVAILABLE_ENTITY_DESC.
         """
         if entity_id not in self._descs:
             warnings.warn(

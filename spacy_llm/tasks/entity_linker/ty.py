@@ -5,8 +5,6 @@ from spacy.tokens import Span
 
 from ...compat import Protocol, runtime_checkable
 
-UNAVAILABLE_ENTITY_DESC: str = "This entity doesn't have a description."
-
 
 class Entity(BaseModel):
     """Represents one entity."""
@@ -24,9 +22,9 @@ class CandidateSelector(Protocol):
         """
 
     def get_entity_description(self, entity_id: str) -> str:
-        """Returns entity description for entity ID. If none found, a warning is emitted and UNAVAILABLE_ENTITY_DESC is
-        returned.
+        """Returns entity description for entity ID. If none found, a warning is emitted and
+        spacy_llm.tasks.enttiy_linker.util.UNAVAILABLE_ENTITY_DES is returned.
         entity_id (str): Entity whose ID should be looked up.
         RETURNS (str): Entity description for entity with specfied ID. If no description found, returned string equals
-            UNAVAILABLE_ENTITY_DESC.
+            spacy_llm.tasks.enttiy_linker.util.UNAVAILABLE_ENTITY_DESC.
         """

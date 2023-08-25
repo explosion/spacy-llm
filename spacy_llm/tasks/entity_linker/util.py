@@ -9,6 +9,8 @@ from ...compat import Self
 from ...ty import FewshotExample
 from .task import EntityLinkerTask
 
+UNAVAILABLE_ENTITY_DESC: str = "This entity doesn't have a description."
+
 
 class ELExample(FewshotExample):
     text: str
