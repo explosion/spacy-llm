@@ -28,7 +28,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     """Builds and persists pipeline with untrained EL component and initialized toy knowledge base.
     nlp_path (Path): Path to store pipeline under.
-    descriptions_path (Path): Path to store descriptions file under.
+    desc_path (Path): Path to store descriptions file under.
     """
     nlp = spacy.load("en_core_web_md")
     nlp.add_pipe("entity_linker")
