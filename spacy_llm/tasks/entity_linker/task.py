@@ -75,12 +75,9 @@ class EntityLinkerTask(BuiltinTask):
                 mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
                 mentions=[ent.text for ent in doc.ents],
                 entity_descriptions=[
-                    [ent.description for ent in ents]
-                    for ents in cands_ents
+                    [ent.description for ent in ents] for ents in cands_ents
                 ],
-                entity_ids=[
-                    [ent.id for ent in ents] for ents in cands_ents
-                ],
+                entity_ids=[[ent.id for ent in ents] for ents in cands_ents],
                 prompt_examples=self._prompt_examples,
             )
 

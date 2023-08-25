@@ -15,7 +15,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, file_reader
 from spacy_llm.tasks.entity_linker import EntityLinkerTask, make_entitylinker_task
-from spacy_llm.tasks.entity_linker.util import SpaCyPipelineCandidateSelector
+from spacy_llm.tasks.entity_linker.util import PipelineCandidateSelector
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -407,7 +407,7 @@ def test_jinja_template_rendering_without_examples(tmp_path):
 
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=None)
-    el_task._candidate_selector = SpaCyPipelineCandidateSelector(
+    el_task._candidate_selector = PipelineCandidateSelector(
         nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
     )
     prompt = list(el_task.generate_prompts([doc]))[0]
@@ -472,7 +472,7 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
 
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=fewshot_reader(examples_path))
-    el_task._candidate_selector = SpaCyPipelineCandidateSelector(
+    el_task._candidate_selector = PipelineCandidateSelector(
         nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
     )
     prompt = list(el_task.generate_prompts([doc]))[0]
@@ -561,7 +561,7 @@ def test_external_template_actually_loads(tmp_path):
 
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(template=template, examples=None)
-    el_task._candidate_selector = SpaCyPipelineCandidateSelector(
+    el_task._candidate_selector = PipelineCandidateSelector(
         nlp_path=tmp_path, desc_path=tmp_path / "desc.csv"
     )
 
