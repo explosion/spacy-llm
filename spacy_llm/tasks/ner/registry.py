@@ -153,8 +153,6 @@ def make_ner_task_v3(
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive_matching (bool): Whether to search without case sensitivity.
-    single_match (bool): If False, allow one substring to match multiple times in
-        the text. If True, returns the first hit.
     scorer (Optional[Scorer]): Scorer function.
     """
     labels_list = split_labels(labels)
