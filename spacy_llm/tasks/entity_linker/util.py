@@ -17,12 +17,18 @@ from .ty import UNAVAILABLE_ENTITY_DESC, Entity
 
 class ELExample(FewshotExample):
     text: str
-    mentions_str: str
     mentions: List[str]
     entity_descriptions: List[List[str]]
     entity_ids: List[List[str]]
     solutions: List[str]
     reasons: Optional[List[str]]
+
+    @property
+    def mentions_str(self) -> str:
+        """Returns stringified version of all mentions.
+        RETURNS (str): Stringified version of all mentions.
+        """
+        return ", ".join([f"*{mention}*" for mention in self.mentions])
 
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Optional[Self]:
@@ -49,7 +55,6 @@ class ELExample(FewshotExample):
 
         return ELExample(
             text=EntityLinkerTask.highlight_ents_in_text(example.reference).text,
-            mentions_str=", ".join([f"*{mention}*" for mention in mentions]),
             mentions=mentions,
             entity_descriptions=[
                 [ent.description for ent in ents] for ents in cands_ents

@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 from typing import Optional, Type, Union
 
@@ -25,6 +26,7 @@ def make_entitylinker_task(
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for few-shot learning.
         If None is passed, then zero-shot learning will be used.
+    scorer (Optional[Scorer]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = prompt_example_type or ELExample
@@ -35,9 +37,12 @@ def make_entitylinker_task(
             if example.reasons is None:
                 example.reasons = [""] * len(example.solutions)
             elif len(example.reasons) < len(example.solutions):
-                example.reasons.extend(
-                    [""] * (len(example.solutions) - len(example.reasons))
+                warnings.warn(
+                    f"The number of reasons doesn't match the number of solutions ({len(example.reasons)} "
+                    f"vs. {len(example.solutions)}). There must be one reason per solution for an entity "
+                    f"linking example, or no reasons at all. Ignoring all specified reasons."
                 )
+                example.reasons = [""] * len(example.solutions)
 
     return EntityLinkerTask(
         template=template,
