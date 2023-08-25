@@ -52,7 +52,7 @@ class SpanCatTask(SpanTask):
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         scorer (Scorer): Scorer function.
-        description (str): todo
+        description (str): A description of what to recognize or not recognize as entities.
         check_label_consistency (SpanTaskLabelCheck): Callable to check label consistency.
         """
         super(SpanCatTask, self).__init__(

@@ -156,7 +156,7 @@ def make_spancat_task_v3(
         either an actual list or a comma-separated string.
         Leave empty to populate it at initialization time (only if examples are provided).
     template (str): Prompt template passed to the model.
-    description (str): todo
+    description (str): A description of what to recognize or not recognize as entities.
     label_definitions (Optional[Dict[str, str]]): Map of label -> description
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
