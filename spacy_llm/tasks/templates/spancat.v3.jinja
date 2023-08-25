@@ -1,10 +1,6 @@
 You are an expert Named Entity Recognition (NER) system.
 Your task is to accept Text as input and extract named entities.
-{%- if allow_overlap -%}
-{# whitespace #}
 The entities you extract can overlap with each other.
-{# whitespace #}
-{%- endif -%}
 {# whitespace #}
 Entities must have one of the following labels: {{ ', '.join(labels) }}.
 If a span is not an entity label it: `==NONE==`.
