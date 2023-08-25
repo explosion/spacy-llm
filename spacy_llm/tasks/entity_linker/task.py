@@ -113,6 +113,14 @@ class EntityLinkerTask(BuiltinTask):
 
         return text
 
+    def _require_candidate_selector(self) -> None:
+        """Raises an error if candidate selector is not available."""
+        if not self._candidate_selector:
+            raise ValueError(
+                "Candidate selector hasn't been initialized. Pass the corresponding config to "
+                "[initialize.components.LLM_TASK_NAME.candidate_selector]."
+            )
+
     def _fetch_entity_info(
         self, doc: Doc
     ) -> Tuple[List[List[Entity]], List[Optional[str]]]:
@@ -122,11 +130,8 @@ class EntityLinkerTask(BuiltinTask):
         Tuple[List[List[Entity]], List[Optional[str]]]: For each mention in doc: list of entity candidates,
             list of correct entity IDs.
         """
-        if not self._candidate_selector:
-            raise ValueError(
-                "Candidate selector hasn't been initialized. Pass the corresponding config to "
-                "[initialize.components.LLM_TASK_NAME.candidate_selector]."
-            )
+        self._require_candidate_selector()
+        assert self._candidate_selector
 
         cands_per_ent: Iterable[Iterable[Entity]] = self._candidate_selector(doc.ents)
         cand_entity_info: List[List[Entity]] = []
