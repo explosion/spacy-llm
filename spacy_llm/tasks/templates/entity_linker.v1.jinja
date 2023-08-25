@@ -28,9 +28,9 @@ ENTITIES:
 {%- endfor -%}
 {# whitespace #}
 SOLUTION:
-{%- for reason in example.reasons -%}
+{%- for solution in example.solutions -%}
 {# whitespace #}
---- <{{ example.solutions[loop.index0] }}> {{ reason }}
+--- <{{ solution }}> {{ example.reasons[loop.index0] }}
 {%- endfor -%}
 {# whitespace #}
 {# whitespace #}

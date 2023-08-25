@@ -6,9 +6,10 @@ from spacy.scorer import Scorer
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
+from .candidate_selector import PipelineCandidateSelector
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
-from .util import ELExample, PipelineCandidateSelector, score
+from .util import ELExample, score
 
 
 @registry.llm_tasks("spacy.EntityLinker.v1")
@@ -36,7 +37,7 @@ def make_entitylinker_task(
         for example in examples:
             if example.reasons is None:
                 example.reasons = [""] * len(example.solutions)
-            elif len(example.reasons) < len(example.solutions):
+            elif 0 < len(example.reasons) < len(example.solutions):
                 warnings.warn(
                     f"The number of reasons doesn't match the number of solutions ({len(example.reasons)} "
                     f"vs. {len(example.solutions)}). There must be one reason per solution for an entity "

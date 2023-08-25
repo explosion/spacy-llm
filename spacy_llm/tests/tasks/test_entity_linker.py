@@ -15,7 +15,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, file_reader
 from spacy_llm.tasks.entity_linker import EntityLinkerTask, make_entitylinker_task
-from spacy_llm.tasks.entity_linker.util import PipelineCandidateSelector
+from spacy_llm.tasks.entity_linker.candidate_selector import PipelineCandidateSelector
 from spacy_llm.util import assemble_from_config
 
 from ..compat import has_openai_key
@@ -524,7 +524,7 @@ ENTITIES:
 SOLUTION:
 --- <Q60> The mention of "Big Apple" in the same context clarifies that this is about the city New York.
 --- <Q14435> Big Apple is a well-known nickname of New York.
---- <Q312> The context of "stores" indicates that this is about the technology company Apple, who operates "Apple stores".
+--- <Q312> The context of "stores" indicates that this is about the technology company Apple, which operates "Apple stores".
 
 
 End of examples.TEXT:
