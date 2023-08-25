@@ -932,7 +932,7 @@ def test_label_inconsistency():
 def test_regression_span_task_response_parse(
     text: str, response: str, gold_ents: List[Tuple[str, str]]
 ):
-    """Test based on on spaCy issue: https://github.com/explosion/spaCy/discussions/12845
+    """Test based on spaCy issue: https://github.com/explosion/spaCy/discussions/12812
     where parsing wasn't working for NER when the same text could map to 2 labels.
     In the user's case "Paris" could be a person's name or a location.
     """
