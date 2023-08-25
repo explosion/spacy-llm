@@ -30,8 +30,6 @@ class EntityLinkerTask(BuiltinTask):
         prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
         scorer (Scorer): Scorer function.
-        candidate_selector (CandidateSelector): Factory for a candidate selection callable
-            returning candidates for a given Span and context.
         """
         super().__init__(
             parse_responses=parse_responses,
@@ -77,11 +75,11 @@ class EntityLinkerTask(BuiltinTask):
                 mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
                 mentions=[ent.text for ent in doc.ents],
                 entity_descriptions=[
-                    [cand_ent.description for cand_ent in cands_ent]
-                    for cands_ent in cands_ents
+                    [ent.description for ent in ents]
+                    for ents in cands_ents
                 ],
                 entity_ids=[
-                    [cand_ent.id for cand_ent in cands_ent] for cands_ent in cands_ents
+                    [ent.id for ent in ents] for ents in cands_ents
                 ],
                 prompt_examples=self._prompt_examples,
             )
@@ -106,7 +104,7 @@ class EntityLinkerTask(BuiltinTask):
     def highlight_ents_in_text(doc: Doc) -> Doc:
         """Highlights entities in doc text with **.
         doc (Doc): Doc whose entities are to be highlighted.
-        RETURNS (str): Doc text with highlighted entities.
+        RETURNS (Doc): new Doc with highlighted entities in its text.
         """
         text = doc.text
         for i, ent in enumerate(doc.ents):
@@ -125,7 +123,7 @@ class EntityLinkerTask(BuiltinTask):
         """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
         doc (Doc): Doc to fetch entity descriptions and solution numbers for. If entities' KB IDs are not set,
             corresponding solution number will be None.
-        Tuple[List[List[EntityCandidate]], List[Optional[str]]]: For each mention in doc: list of entity candidates,
+        Tuple[List[List[Entity]], List[Optional[str]]]: For each mention in doc: list of entity candidates,
             list of correct entity IDs.
         """
         if not self._candidate_selector:

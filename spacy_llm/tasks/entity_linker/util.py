@@ -52,11 +52,11 @@ class EntLinkExample(FewshotExample):
             mentions_str=", ".join([f"*{mention}*" for mention in mentions]),
             mentions=mentions,
             entity_descriptions=[
-                [cand_ent.description for cand_ent in cands_ent]
-                for cands_ent in cands_ents
+                [ent.description for ent in ents]
+                for ents in cands_ents
             ],
             entity_ids=[
-                [cand_ent.id for cand_ent in cands_ent] for cands_ent in cands_ents
+                [ent.id for ent in ents] for ents in cands_ents
             ],
             solutions=solutions,
             reasons=[""] * len(mentions),
