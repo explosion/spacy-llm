@@ -451,7 +451,7 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == """
-You are an expert Named Entity Recognition (NER) system.
+You are an expert Entity Recognition system.
 Your task is to accept Text as input and extract named entities.
 The entities you extract can overlap with each other.
 
@@ -506,7 +506,7 @@ def test_jinja_template_rendering_with_examples(examples_path: Path):
     assert (
         prompt.strip()
         == """
-You are an expert Named Entity Recognition (NER) system.
+You are an expert Entity Recognition system.
 Your task is to accept Text as input and extract named entities.
 The entities you extract can overlap with each other.
 
