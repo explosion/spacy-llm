@@ -6,12 +6,14 @@ from spacy.training import Example
 from spacy.util import filter_spans
 
 from ...compat import Literal, Self
-from ...ty import Scorer, TaskResponseParser
-from ..span import SpanExample, SpanTask
+from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ..span import SpanTask
+from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
 
 DEFAULT_NER_TEMPLATE_V1 = read_template("ner.v1")
 DEFAULT_NER_TEMPLATE_V2 = read_template("ner.v2")
+DEFAULT_NER_TEMPLATE_V3 = read_template("ner.v3")
 
 
 class NERTask(SpanTask):
@@ -20,14 +22,16 @@ class NERTask(SpanTask):
         labels: List[str],
         template: str,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[SpanExample],
+        prompt_example_type: Type[FewshotExample],
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[SpanExample]],
+        prompt_examples: Optional[List[FewshotExample]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
         single_match: bool,
         scorer: Scorer,
+        description: Optional[str],
+        check_label_consistency: SpanTaskLabelCheck[Self],
     ):
         """Default NER task.
 
@@ -47,6 +51,8 @@ class NERTask(SpanTask):
         single_match (bool): If False, allow one substring to match multiple times in
             the text. If True, returns the first hit.
         scorer (Scorer): Scorer function.
+        description (str): A description of what to recognize or not recognize as entities.
+        check_label_consistency (SpanTaskLabelCheck): Callable to check label consistency.
         """
         super().__init__(
             labels=labels,
@@ -59,6 +65,9 @@ class NERTask(SpanTask):
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,
             single_match=single_match,
+            description=description,
+            allow_overlap=False,
+            check_label_consistency=check_label_consistency,
         )
         self._scorer = scorer
 

@@ -199,7 +199,7 @@ def test_summarization_predict(cfg_string, example_text, request):
         )
 
 
-# @pytest.mark.external
+@pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize(
     "cfg_string_and_field",

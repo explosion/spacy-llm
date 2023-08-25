@@ -1,14 +1,24 @@
 import abc
 import typing
-import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Type
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 from spacy.tokens import Doc, Span
 
-from ...compat import Literal, Self
-from ...ty import TaskResponseParser
+from ...compat import Literal, Protocol, Self
+from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
-from .util import SpanExample
+from .examples import SpanCoTExample, SpanExample
+
+_SpanTaskContraT = typing.TypeVar(
+    "_SpanTaskContraT", bound="SpanTask", contravariant=True
+)
+
+
+class SpanTaskLabelCheck(Protocol[_SpanTaskContraT]):
+    """Generic protocol for checking label consistency of SpanTask."""
+
+    def __call__(self, task: _SpanTaskContraT) -> Iterable[FewshotExample]:
+        ...
 
 
 class SpanTask(BuiltinTaskWithLabels, abc.ABC):
@@ -17,15 +27,18 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[SpanExample],
+        prompt_example_type: Type[FewshotExample],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[SpanExample]],
+        prompt_examples: Optional[List[FewshotExample]],
+        description: Optional[str],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
         case_sensitive_matching: bool,
+        allow_overlap: bool,
         single_match: bool,
+        check_label_consistency: SpanTaskLabelCheck,
     ):
         super().__init__(
             parse_responses=parse_responses,
@@ -43,60 +56,22 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
+        self._allow_overlap = allow_overlap
         self._single_match = single_match
+        self._check_label_consistency = check_label_consistency
+        self._description = description
 
         if self._prompt_examples:
-            self._prompt_examples: List[SpanExample] = self._check_label_consistency()
-
-    def _check_label_consistency(self) -> List[SpanExample]:
-        """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
-        RETURNS (List[SpanExample]): List of SpanExamples with valid labels.
-        """
-        assert self._prompt_examples
-
-        example_labels = {
-            self._normalizer(key): key
-            for example in self._prompt_examples
-            for key in example.entities
-        }
-        unspecified_labels = {
-            example_labels[key]
-            for key in (set(example_labels.keys()) - set(self._label_dict.keys()))
-        }
-        if not set(example_labels.keys()) <= set(self._label_dict.keys()):
-            warnings.warn(
-                f"Examples contain labels that are not specified in the task configuration. The latter contains the "
-                f"following labels: {sorted(list(set(self._label_dict.values())))}. Labels in examples missing from "
-                f"the task configuration: {sorted(list(unspecified_labels))}. Please ensure your label specification "
-                f"and example labels are consistent."
-            )
-
-        # Return examples without non-declared labels. If an example only has undeclared labels, it is discarded.
-        return [
-            example
-            for example in [
-                self._prompt_example_type(
-                    text=example.text,
-                    entities={
-                        label: entities
-                        for label, entities in example.entities.items()
-                        if self._normalizer(label) in self._label_dict
-                    },
-                )
-                for example in self._prompt_examples
-            ]
-            if len(example.entities)
-        ]
-
-    @property
-    def prompt_template(self) -> str:
-        return self._template
+            self._prompt_examples = list(self._check_label_consistency(self))
 
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
         return super().generate_prompts(
             docs=docs,
+            description=self._description,
             labels=list(self._label_dict.values()),
             label_definitions=self._label_definitions,
+            examples=self._prompt_examples,
+            allow_overlap=self._allow_overlap,
             **kwargs,
         )
 
@@ -135,7 +110,6 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             "_label_definitions",
             "_alignment_mode",
             "_case_sensitive_matching",
-            "_single_match",
         ]
 
     @property
@@ -147,5 +121,17 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         return self._case_sensitive_matching
 
     @property
-    def single_match(self):
+    def allow_overlap(self) -> bool:
+        return self._allow_overlap
+
+    @property
+    def prompt_examples(self) -> Optional[Iterable[FewshotExample]]:
+        return self._prompt_examples
+
+    @property
+    def prompt_example_type(self) -> Union[Type[SpanExample], Type[SpanCoTExample]]:
+        return self._prompt_example_type
+
+    @property
+    def single_match(self) -> bool:
         return self._single_match
