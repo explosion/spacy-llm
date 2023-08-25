@@ -3,6 +3,7 @@ from typing import Callable, Dict, Iterable, List, Tuple
 from spacy.tokens import Doc, Span
 
 from ...tasks.util import find_substrings
+from .examples import SpanReason
 from .task import SpanTask
 
 
@@ -62,4 +63,108 @@ def parse_responses(
                 if span is not None:
                     spans.append(span)
 
+        yield spans
+
+
+def _extract_span_reasons_cot(task: SpanTask, response: str) -> List[SpanReason]:
+    """Parse raw string response into a list of SpanReasons.
+    task (SpanTask): Task to extract span reasons for.
+    response (str): Raw string response from the LLM.
+    RETURNS (List[SpanReason]): List of SpanReasons parsed from the response.
+    """
+    span_reasons = []
+    for line in response.strip().split("\n"):
+        try:
+            span_reason = SpanReason.from_str(line)
+        except ValueError:
+            continue
+        if not span_reason.is_entity:
+            continue
+        norm_label = task.normalizer(span_reason.label)
+        if norm_label not in task.label_dict:
+            continue
+        label = task.label_dict[norm_label]
+        span_reason.label = label
+        span_reasons.append(span_reason)
+    return span_reasons
+
+
+def _find_spans_cot(
+    task: SpanTask, doc: Doc, span_reasons: List[SpanReason]
+) -> List[Span]:
+    """Find a list of spaCy Spans from a list of SpanReasons
+    for a single spaCy Doc
+    task (SpanTask): Task to extract span reasons for.
+    doc (Doc): Input doc to parse spans for
+    span_reasons (List[SpanReason]): List of SpanReasons to find in doc
+    RETURNS (List[Span]): List of spaCy Spans found in doc
+    """
+    find_after = 0
+    spans = []
+    prev_span = None
+    n_span_reasons = len(span_reasons)
+    idx = 0
+    while idx < n_span_reasons:
+        span_reason = span_reasons[idx]
+
+        # For each phrase, find the SpanReason substring in the text
+        # and create a Span
+        offsets = find_substrings(
+            doc.text,
+            [span_reason.text],
+            case_sensitive=task.case_sensitive_matching,
+            single_match=True,
+            find_after=find_after,
+        )
+        if not offsets:
+            idx += 1
+            continue
+
+        # Must have exactly one match because single_match=True
+        assert len(offsets) == 1
+        start, end = offsets[0]
+
+        span = doc.char_span(
+            start,
+            end,
+            alignment_mode=task.alignment_mode,
+            label=span_reason.label,
+        )
+
+        if span is None:
+            # If we couldn't resolve a span, just skip to the next
+            # span_reason
+            idx += 1
+            continue
+
+        if span == prev_span:
+            # If the span is the same as the previous span,
+            # re-run this span_reason but look farther into the text
+            find_after = span.end_char
+            continue
+
+        spans.append(span)
+        find_after = span.start_char if task.allow_overlap else span.end_char
+        prev_span = span
+        idx += 1
+
+    return sorted(set(spans))
+
+
+def parse_responses_cot(
+    task: SpanTask, docs: Iterable[Doc], responses: Iterable[str]
+) -> Iterable[List[Span]]:
+    """Since we provide entities in a numbered list, we expect the LLM to
+    output entities in the order they occur in the text. This parse
+    function now incrementally finds substrings in the text and tracks the
+    last found span's start character to ensure we don't overwrite
+    previously found spans.
+    task (SpanTask): Task instance.
+    docs (Iterable[Doc]): Corresponding Doc instances.
+    responses (Iterable[str]): LLM responses.
+    RETURNS (Iterable[List[Span]]): Spans to assign per doc.
+    """
+    for doc, llm_response in zip(docs, responses):
+        span_reasons = _extract_span_reasons_cot(task, llm_response)
+        spans = _find_spans_cot(task, doc, span_reasons)
         yield spans

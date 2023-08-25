@@ -30,12 +30,12 @@ class EntityItem(BaseModel):
 
 
 class RELExample(FewshotExample):
-    class Config:
-        arbitrary_types_allowed = True
-
     text: str
     ents: List[EntityItem]
     relations: List[RelationItem]
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Optional[Self]:
@@ -48,10 +48,8 @@ class RELExample(FewshotExample):
             for ent in example.reference.ents
         ]
 
-        rel_example = RELExample(
+        return cls.construct(
             text=example.reference.text,
             ents=entities,
             relations=example.reference._.rel,
         )
-
-        return rel_example

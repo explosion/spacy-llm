@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Iterable, List, Tuple
 
 
 def _unique(items: Iterable[str]) -> Iterable[str]:
@@ -18,7 +18,8 @@ def find_substrings(
     *,
     case_sensitive: bool = False,
     single_match: bool = False,
-) -> Iterable[Tuple[int, int]]:
+    find_after: int = 0,
+) -> List[Tuple[int, int]]:
     """Given a list of substrings, find their character start and end positions
     in a text"""
 
@@ -30,7 +31,7 @@ def find_substrings(
     substrings = _unique(substrings)
     offsets = []
     for substring in substrings:
-        search_from = 0
+        search_from = find_after
         # Search until one hit is found. Continue only if single_match is False.
         while True:
             start = text.find(substring, search_from)

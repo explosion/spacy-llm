@@ -6,6 +6,7 @@ from spacy.training import Example
 
 from ...compat import Self
 from ..span import SpanExample
+from ..span.examples import SpanCoTExample
 
 
 class NERExample(SpanExample):
@@ -16,6 +17,15 @@ class NERExample(SpanExample):
             entities[ent.label_].append(ent.text)
 
         return cls(text=example.reference.text, entities=entities)
+
+
+class NERCoTExample(SpanCoTExample):
+    @classmethod
+    def generate(cls, example: Example, **kwargs) -> Self:
+        return cls(
+            text=example.reference.text,
+            spans=SpanCoTExample._extract_span_reasons(example.reference.ents),
+        )
 
 
 def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:

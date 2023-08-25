@@ -6,6 +6,7 @@ from spacy.training import Example
 
 from ...compat import Self
 from ..span import SpanExample
+from ..span.examples import SpanCoTExample
 
 
 class SpanCatExample(SpanExample):
@@ -16,6 +17,17 @@ class SpanCatExample(SpanExample):
             entities[span.label_].append(span.text)
 
         return cls(text=example.reference.text, entities=entities)
+
+
+class SpanCatCoTExample(SpanCoTExample):
+    @classmethod
+    def generate(cls, example: Example, **kwargs) -> Self:
+        return cls(
+            text=example.reference.text,
+            spans=SpanCoTExample._extract_span_reasons(
+                example.reference.spans[kwargs["spans_key"]]
+            ),
+        )
 
 
 def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
