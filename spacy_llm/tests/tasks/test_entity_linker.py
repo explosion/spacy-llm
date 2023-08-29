@@ -1,6 +1,7 @@
 # ruff: noqa: W291
 import csv
 import functools
+import json
 from pathlib import Path
 
 import numpy
@@ -36,44 +37,9 @@ def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
         vocab=nlp.vocab, entity_vector_length=nlp.vocab.vectors_length
     )
 
-    # Define entities (move to file?).
-    entities = {
-        "Q100": {
-            "name": "Boston",
-            "desc": "city in and state capital of Massachusetts, United States",
-        },
-        "Q131371": {
-            "name": "Boston Celtics",
-            "desc": "NBA team based in Boston; tied with most NBA Championships",
-        },
-        "Q204289": {"name": "Boston", "desc": "American rock band"},
-        "Q311975": {"name": "Boston", "desc": "town in Lincolnshire, England"},
-        "Q671475": {
-            "name": "Logan International Airport",
-            "desc": "airport in Boston, Massachusetts, United States",
-        },
-        "Q107723060": {
-            "name": "2021–22 Boston Celtics season",
-            "desc": "The 2021–22 Boston Celtics season was the 76th season of the franchise in the National Basketball"
-            " Association (NBA). Following the Celtics' first-round exit to the Brooklyn Nets in five games"
-            " from las",
-        },
-        "Q3643001": {"name": "Boston", "desc": "NBA basketball team season"},
-        "Q3466394": {
-            "name": "Boston",
-            "desc": "season of National Basketball Association team the Boston Celtics",
-        },
-        "Q3642995": {"name": "Boston", "desc": "NBA basketball team season"},
-        "Q60": {"name": "New York", "desc": "most populous city in the United States"},
-        "Q1384": {"name": "New York", "desc": "U.S. state"},
-        "Q131364": {
-            "name": "New York Knicks",
-            "desc": "National Basketball Association team in New York City",
-        },
-        "Q14435": {"name": "Big Apple", "desc": "nickname for New York City"},
-        "Q89": {"name": "Apple", "desc": "fruit of the apple tree"},
-        "Q312": {"name": "Apple", "desc": "American multinational technology company"},
-    }
+    # Define entities.
+    with open(Path(__file__).parent / "misc" / "el_test_entities.json", "r") as file:
+        entities = json.load(file)
     qids = list(entities.keys())
 
     # Set entities with dummy values for embeddings and frequencies.
