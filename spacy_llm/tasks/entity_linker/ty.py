@@ -1,4 +1,5 @@
-from typing import Iterable
+from pathlib import Path
+from typing import Callable, Dict, Iterable, Union
 
 from pydantic import BaseModel
 from spacy.tokens import Span
@@ -28,3 +29,6 @@ class CandidateSelector(Protocol):
         RETURNS (str): Entity description for entity with specfied ID. If no description found, returned string equals
             spacy_llm.tasks.enttiy_linker.util.UNAVAILABLE_ENTITY_DESC.
         """
+
+
+EntDescReader = Callable[[Union[Path, str]], Dict[str, str]]

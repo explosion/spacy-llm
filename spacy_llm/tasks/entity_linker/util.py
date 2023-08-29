@@ -1,5 +1,7 @@
+import csv
 import warnings
-from typing import Any, Dict, Iterable, List, Optional
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from spacy.pipeline import EntityLinker
 from spacy.scorer import Scorer
@@ -68,3 +70,25 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): Dict with metric name -> score.
     """
     return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL])
+
+
+def ent_desc_reader_csv(path: Union[Path, str]) -> Dict[str, str]:
+    """Instantiates entity description reader with two columns: ID and description.
+    path (Union[Path, str]): File path.
+    RETURNS (Dict[str, str]): Dict with ID -> description.
+    """
+    with open(path) as csvfile:
+        descs: Dict[str, str] = {}
+        for row in csv.reader(csvfile, quoting=csv.QUOTE_ALL, delimiter=";"):
+            if len(row) != 2:
+                continue
+            descs[row[0]] = row[1]
+
+        if len(descs) == 0:
+            raise ValueError(
+                "Format of CSV file with entity descriptions is wrong. CSV has to be formatted as "
+                "semicolon-delimited CSV with two columns. The first columns has to contain the entity"
+                " ID, the second the entity description."
+            )
+
+    return descs

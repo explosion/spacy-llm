@@ -1,13 +1,12 @@
-import csv
 import warnings
 from pathlib import Path
-from typing import Dict, Iterable, Union
+from typing import Iterable, Union
 
 import spacy
 from spacy.pipeline import EntityLinker
 from spacy.tokens import Span
 
-from .ty import Entity
+from .ty import EntDescReader, Entity
 from .util import UNAVAILABLE_ENTITY_DESC
 
 
@@ -20,6 +19,7 @@ class PipelineCandidateSelector:
         desc_path: Union[Path, str],
         el_component_name: str,
         top_n: int,
+        ent_desc_reader: EntDescReader,
     ):
         """
         Loads spaCy pipeline, knowledge base, entity descriptions.
@@ -29,6 +29,7 @@ class PipelineCandidateSelector:
           the entity ID in the stored knowledge base.
         el_component_name (str): EL component name.
         top_n (int): Top n candidates to include in prompt.
+        ent_desc_reader (EntDescReader): Entity description reader.
         """
         self._nlp = spacy.load(nlp_path)
         if el_component_name not in self._nlp.component_names:
@@ -37,19 +38,7 @@ class PipelineCandidateSelector:
             )
         self._entity_linker: EntityLinker = self._nlp.get_pipe(el_component_name)
         self._kb = self._entity_linker.kb
-        with open(desc_path) as csvfile:
-            self._descs: Dict[str, str] = {}
-            for row in csv.reader(csvfile, quoting=csv.QUOTE_ALL, delimiter=";"):
-                if len(row) != 2:
-                    continue
-                self._descs[row[0]] = row[1]
-
-            if len(self._descs) == 0:
-                raise ValueError(
-                    "Format of CSV file with entity descriptions is wrong. CSV has to be formatted as "
-                    "semicolon-delimited CSV with two columns. The first columns has to contain the entity"
-                    " ID, the second the entity description."
-                )
+        self._descs = ent_desc_reader(desc_path)
         self._top_n = top_n
 
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[Entity]]:
