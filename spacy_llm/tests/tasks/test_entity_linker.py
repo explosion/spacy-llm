@@ -629,3 +629,19 @@ def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
         assert len(task._prompt_examples) == n_prompt_examples
     else:
         assert len(task._prompt_examples) == len(examples)
+
+
+def test_ent_highlighting():
+    """Tests highlighting of entities in text."""
+    nlp = spacy.blank("xx")
+    text = "Alice goes to Boston to see the Boston Celtics game."
+    doc = nlp.make_doc(text)
+    doc.ents = [
+        Span(doc=doc, start=3, end=4, label="LOC"),
+        Span(doc=doc, start=7, end=9, label="ORG"),
+    ]
+
+    assert (
+        EntityLinkerTask.highlight_ents_in_text(doc)
+        == "Alice goes to *Boston* to see the *Boston Celtics* game."
+    )
