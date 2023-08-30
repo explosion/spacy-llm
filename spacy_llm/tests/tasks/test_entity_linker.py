@@ -38,7 +38,9 @@ def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     )
 
     # Define entities.
-    kb_data = dict(srsly.read_yaml(Path(__file__).parent / "misc" / "el_kb_data.yaml"))
+    kb_data = srsly.read_yaml(
+        Path(__file__).resolve().parent / "misc" / "el_kb_data.yaml"
+    )
     entities = kb_data["entities"]
     qids = list(entities.keys())
 
