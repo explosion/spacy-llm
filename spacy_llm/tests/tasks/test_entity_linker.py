@@ -1,12 +1,12 @@
 # ruff: noqa: W291
 import csv
 import functools
-import json
 from pathlib import Path
 
 import numpy
 import pytest
 import spacy
+import srsly
 from confection import Config
 from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
@@ -38,8 +38,8 @@ def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     )
 
     # Define entities.
-    with open(Path(__file__).parent / "misc" / "el_test_entities.json", "r") as file:
-        entities = json.load(file)
+    kb_data = dict(srsly.read_yaml(Path(__file__).parent / "misc" / "el_kb_data.yaml"))
+    entities = kb_data["entities"]
     qids = list(entities.keys())
 
     # Set entities with dummy values for embeddings and frequencies.
@@ -51,36 +51,8 @@ def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     )
 
     # Add aliases and dummy prior probabilities.
-    kb.add_alias(
-        alias="Boston",
-        entities=["Q100", "Q131371", "Q204289", "Q311975", "Q671475"],
-        probabilities=[0.5, 0.2, 0.12, 0.1, 0.08],
-    )
-    kb.add_alias(
-        alias="Boston Celtics",
-        entities=["Q131371", "Q107723060", "Q3643001", "Q3466394", "Q3642995"],
-        probabilities=[0.5, 0.2, 0.12, 0.1, 0.08],
-    )
-    kb.add_alias(
-        alias="New York",
-        entities=["Q60", "Q1384"],
-        probabilities=[0.6, 0.4],
-    )
-    kb.add_alias(
-        alias="New York Knicks",
-        entities=["Q60", "Q131364"],
-        probabilities=[0.6, 0.4],
-    )
-    kb.add_alias(
-        alias="Big Apple",
-        entities=["Q14435", "Q89"],
-        probabilities=[0.6, 0.4],
-    )
-    kb.add_alias(
-        alias="Apple",
-        entities=["Q89", "Q312"],
-        probabilities=[0.6, 0.4],
-    )
+    for alias_data in kb_data["aliases"]:
+        kb.add_alias(**alias_data)
 
     # Set KB in pipeline, persist.
     def load_kb(vocab: Vocab) -> InMemoryLookupKB:
