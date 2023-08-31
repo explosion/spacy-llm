@@ -7,13 +7,12 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.language import Language
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.compat import Literal
+from spacy_llm.compat import Literal, ValidationError
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer

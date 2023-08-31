@@ -48,3 +48,13 @@ try:
 except ImportError:
     accelerate = None
     has_accelerate = False
+
+
+from pydantic import VERSION
+
+PYDANTIC_V2 = VERSION.startswith("2.")
+
+if PYDANTIC_V2:
+    from pydantic.v1 import BaseModel, ValidationError, validator  # noqa: F401
+else:
+    from pydantic import BaseModel, ValidationError, validator  # noqa: F401
