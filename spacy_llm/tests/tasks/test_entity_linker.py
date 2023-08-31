@@ -362,6 +362,7 @@ This ID has to be surrounded by single <>, for example <1>.
 Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ".
 Output the chosen solution immediately after "--- ".
 For each MENTION, describe your reasoning process in a single sentence.
+If no candidate seems to be the right choice, respond with <NIL> instead of an ID.
 
 TEXT:
 '''
@@ -427,6 +428,7 @@ This ID has to be surrounded by single <>, for example <1>.
 Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ".
 Output the chosen solution immediately after "--- ".
 For each MENTION, describe your reasoning process in a single sentence.
+If no candidate seems to be the right choice, respond with <NIL> instead of an ID.
 
 Below are some examples (only use these as a guide):
 
