@@ -1,10 +1,9 @@
 from typing import Any, Dict, Iterable
 
-from pydantic import BaseModel
 from spacy.scorer import Scorer
 from spacy.training import Example
 
-from ...compat import Self
+from ...compat import BaseModel, Self
 
 
 class TextCatExample(BaseModel):

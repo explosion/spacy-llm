@@ -1,9 +1,9 @@
 import abc
 from typing import Dict, Iterable, List
 
-from pydantic import BaseModel
 from spacy.tokens import Span
 
+from ...compat import BaseModel
 from ...ty import FewshotExample, Self
 
 

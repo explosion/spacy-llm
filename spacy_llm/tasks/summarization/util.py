@@ -1,7 +1,6 @@
-from pydantic import BaseModel
 from spacy.training import Example
 
-from ...compat import Self
+from ...compat import BaseModel, Self
 
 
 class SummarizationExample(BaseModel):

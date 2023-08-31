@@ -3,11 +3,7 @@ from typing import Iterable, List
 from spacy.tokens import Doc
 from wasabi import msg
 
-try:
-    from pydantic.v1 import ValidationError
-except ImportError:
-    from pydantic import ValidationError
-
+from ...compat import ValidationError
 from .task import RELTask
 from .util import RelationItem
 
