@@ -51,6 +51,8 @@ class PipelineCandidateSelector:
             assert isinstance(cands, list)
             cands.sort(key=lambda x: x.prior_prob, reverse=True)
 
+        # todo if not candidates found: return NIL entity
+
         return [
             [
                 Entity(

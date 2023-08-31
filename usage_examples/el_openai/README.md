@@ -2,7 +2,10 @@
 
 This example shows how you can perform entity linking with LLMs.
 This requires detecting named entities (i. e. performing NER) beforehand. You can do do this using spaCY's `ner` 
-component or `spacy-llm`s NER task.
+component or `spacy-llm`s NER task. The default config in this example utilizes the pretrained NER component from 
+`en_core_web_md` for that.
+
+> ⚠️ Ensure `en_core_web_md` is installed (`spacy download en_core_web_md`) before running this example.
 
 Note that linking entities still requires a knowledge base. `spacy-llm` natively supports spaCy's knowledge base, but 
 this can be any arbitrary knowledge base as long as the required interface is implemented.
