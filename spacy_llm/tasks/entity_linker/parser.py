@@ -1,6 +1,7 @@
 import re
 from typing import Iterable, List
 
+from spacy.pipeline import EntityLinker
 from spacy.tokens import Doc, Span
 
 from .task import EntityLinkerTask
@@ -18,8 +19,8 @@ def parse_responses_v1(
 
     for doc, prompt_response in zip(docs, responses):
         solutions = [
-            sol.replace("--- ", "").replace("<", "").replace(">", "")
-            for sol in re.findall(r"--- <.*>", prompt_response)
+            sol.replace("::: ", "")[1:-1]
+            for sol in re.findall(r"::: <.*>", prompt_response)
         ]
         # Skip document if the numbers of entities and solutions don't line up.
         if len(solutions) != len(doc.ents):
@@ -34,7 +35,7 @@ def parse_responses_v1(
                 label=ent.label,
                 vector=ent.vector,
                 vector_norm=ent.vector_norm,
-                kb_id=solution,
+                kb_id=solution.replace("NIL", EntityLinker.NIL),
             )
             for ent, solution in zip(doc.ents, solutions)
         ]

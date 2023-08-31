@@ -1,11 +1,11 @@
 For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES.
 Each of the ENTITIES is prefixed by its ENTITY ID. Each of the MENTIONS in the TEXT is surrounded by *.
 For each of the MENTIONS appearing in the text, output the ID of the description fitting them best.
-This ID has to be surrounded by single <>, for example <1>.
-Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ".
-Output the chosen solution immediately after "--- ".
-For each MENTION, describe your reasoning process in a single sentence.
-If no candidate seems to be the right choice, respond with <NIL> instead of an ID.
+This ID has to be surrounded by single <>, for example <1>. Make sure you make a choice for each MENTION. If no
+candidate seems plausible, respond with <NIL> instead of an ENTITY ID.
+Output "REASONING:". Describe, step by step, which MENTION should be linked to which ENTITY ID.
+Output "SOLUTION:". After that, list the correct ENTITY ID (or NIL) per MENTION. Wrap the ENTITY ID in <>. Each ENTITY ID
+should be in a new line, prefixed by the corresponding MENTION and " ::: ".
 
 {# whitespace #}
 {%- if prompt_examples -%}
@@ -28,10 +28,30 @@ ENTITIES:
 {%- endfor -%}
 {%- endfor -%}
 {# whitespace #}
+REASONING:
+{%- if example.reasons|length -%}
+{# whitespace #}
+{# whitespace #}
+    {%- for reason in example.reasons -%}
+        {%- if reason|length -%}
+- {{ reason }}
+        {%- else -%}
+- The descriptions of the chosen entity {{ example.solutions[loop.index0] }} fit the presented mention *{{ example.mentions[loop.index0] }}* best.
+        {%- endif -%}
+{# whitespace #}
+{# whitespace #}
+    {%- endfor -%}
+{% else %}
+    {%- for reason in example.mentions -%}
+        {# whitespace #}
+- The descriptions of the chosen entity {{ example.solutions[loop.index0] }} fit the presented mention *{{ example.mentions[loop.index0] }}* best.
+    {%- endfor -%}
+{%- endif -%}
+{# whitespace #}
 SOLUTION:
 {%- for solution in example.solutions -%}
 {# whitespace #}
---- <{{ solution }}> {{ example.reasons[loop.index0] }}
+*{{ example.mentions[loop.index0] }}* ::: <{{ solution }}>
 {%- endfor -%}
 {# whitespace #}
 {# whitespace #}
@@ -56,4 +76,3 @@ ENTITIES:
 {%- endfor -%}
 {%- endfor -%}
 {# whitespace #}
-SOLUTION:

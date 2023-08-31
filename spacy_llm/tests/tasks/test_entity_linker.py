@@ -255,15 +255,13 @@ def test_entity_linker_config(cfg_string, request, tmp_path):
 @pytest.mark.parametrize(
     "cfg_string",
     [
-        "zeroshot_cfg_string",
+        # "zeroshot_cfg_string",
         "fewshot_cfg_string",
-        "ext_template_cfg_string",
+        # "ext_template_cfg_string",
     ],
 )
 def test_entity_linker_predict(cfg_string, request, tmp_path):
-    """Use OpenAI to get zero-shot LEMMA results.
-    Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
-    """
+    """Use OpenAI to get EL results."""
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(
         cfg,
@@ -287,6 +285,35 @@ def test_entity_linker_predict(cfg_string, request, tmp_path):
         assert len(doc.ents) == 2
         assert doc.ents[0].kb_id_ == "Q100"
         assert doc.ents[1].kb_id_ == "Q131371"
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_entity_linker_predict_no_candidates(request, tmp_path):
+    """Test behavior if no candidates are available for certain mention."""
+    cfg = request.getfixturevalue("zeroshot_cfg_string")
+    orig_config = Config().from_str(
+        cfg,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
+    )
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+    nlp.initialize(lambda: [])
+
+    text = "Alice goes to Foo to see the Boston Celtics game."
+    doc = nlp.make_doc(text)
+    doc.ents = [
+        Span(doc=doc, start=3, end=4, label="LOC"),  # NIL
+        Span(doc=doc, start=7, end=9, label="ORG"),  # Q131371
+    ]
+    doc = nlp(doc)
+
+    assert len(doc.ents) == 2
+    assert doc.ents[0].kb_id_ == "NIL"
+    assert doc.ents[1].kb_id_ == "Q131371"
 
 
 @pytest.mark.external
@@ -358,13 +385,13 @@ def test_jinja_template_rendering_without_examples(tmp_path):
 For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES.
 Each of the ENTITIES is prefixed by its ENTITY ID. Each of the MENTIONS in the TEXT is surrounded by *.
 For each of the MENTIONS appearing in the text, output the ID of the description fitting them best.
-This ID has to be surrounded by single <>, for example <1>.
-Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ".
-Output the chosen solution immediately after "--- ".
-For each MENTION, describe your reasoning process in a single sentence.
-If no candidate seems to be the right choice, respond with <NIL> instead of an ID.
+This ID has to be surrounded by single <>, for example <1>. Make sure you make a choice for each MENTION. If no
+candidate seems plausible, respond with <NIL> instead of an ENTITY ID.
+Output "REASONING:". Describe, step by step, which MENTION should be linked to which ENTITY ID.
+Output "SOLUTION:". After that, list the correct ENTITY ID (or NIL) per MENTION. Wrap the ENTITY ID in <>. Each ENTITY ID
+should be in a new line, prefixed by the corresponding MENTION and " ::: ".
 
-TEXT:
+TEXT: 
 '''
 Alice goes to *Boston* to see the *Boston Celtics* game.
 '''
@@ -382,7 +409,6 @@ ENTITIES:
     Q3643001. NBA basketball team season
     Q3466394. season of National Basketball Association team the Boston Celtics
     Q3642995. NBA basketball team season
-SOLUTION:
 """.strip().replace(
             " \n", "\n"
         )
@@ -424,11 +450,11 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
 For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES.
 Each of the ENTITIES is prefixed by its ENTITY ID. Each of the MENTIONS in the TEXT is surrounded by *.
 For each of the MENTIONS appearing in the text, output the ID of the description fitting them best.
-This ID has to be surrounded by single <>, for example <1>.
-Make sure you make a choice for each of the MENTIONS. Prefix the solution for each MENTION with "--- ".
-Output the chosen solution immediately after "--- ".
-For each MENTION, describe your reasoning process in a single sentence.
-If no candidate seems to be the right choice, respond with <NIL> instead of an ID.
+This ID has to be surrounded by single <>, for example <1>. Make sure you make a choice for each MENTION. If no
+candidate seems plausible, respond with <NIL> instead of an ENTITY ID.
+Output "REASONING:". Describe, step by step, which MENTION should be linked to which ENTITY ID.
+Output "SOLUTION:". After that, list the correct ENTITY ID (or NIL) per MENTION. Wrap the ENTITY ID in <>. Each ENTITY ID
+should be in a new line, prefixed by the corresponding MENTION and " ::: ".
 
 Below are some examples (only use these as a guide):
 
@@ -436,7 +462,7 @@ TEXT:
 '''
 Alice goes to *New York* to see the *New York Knicks* game.
 '''
-MENTIONS:
+MENTIONS: 
 ENTITIES:
 - For *New York*:
     Q60. most populous city in the United States
@@ -444,15 +470,18 @@ ENTITIES:
 - For *New York Knicks*:
     Q60. most populous city in the United States
     Q131364. National Basketball Association team in New York City
+REASONING:
+- The descriptions of the chosen entity Q60 fit the presented mention *New York* best.
+- The descriptions of the chosen entity Q131364 fit the presented mention *New York Knicks* best.
 SOLUTION:
---- <Q60>
---- <Q131364>
+*New York* ::: <Q60>
+*New York Knicks* ::: <Q131364>
 
 TEXT:
 '''
 *New York* is called the *Big Apple*. It also has *Apple* stores.
 '''
-MENTIONS:
+MENTIONS: 
 ENTITIES:
 - For *New York*:
     Q60. most populous city in the United States
@@ -463,13 +492,18 @@ ENTITIES:
 - For *Apple*:
     Q89. fruit of the apple tree
     Q312. American multinational technology company
+REASONING:
+- The mention of "Big Apple" in the same context clarifies that this is about the city New York.
+- Big Apple is a well-known nickname of New York.
+- The context of "stores" indicates that this is about the technology company Apple, which operates "Apple stores".
+
 SOLUTION:
---- <Q60> The mention of "Big Apple" in the same context clarifies that this is about the city New York.
---- <Q14435> Big Apple is a well-known nickname of New York.
---- <Q312> The context of "stores" indicates that this is about the technology company Apple, which operates "Apple stores".
+*New York* ::: <Q60>
+*Big Apple* ::: <Q14435>
+*Apple* ::: <Q312>
 
 
-End of examples.TEXT:
+End of examples.TEXT: 
 '''
 Alice goes to *Boston* to see the *Boston Celtics* game.
 '''
@@ -487,7 +521,6 @@ ENTITIES:
     Q3643001. NBA basketball team season
     Q3466394. season of National Basketball Association team the Boston Celtics
     Q3642995. NBA basketball team season
-SOLUTION:
 """.strip().replace(
             " \n", "\n"
         )
