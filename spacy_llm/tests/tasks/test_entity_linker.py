@@ -255,9 +255,9 @@ def test_entity_linker_config(cfg_string, request, tmp_path):
 @pytest.mark.parametrize(
     "cfg_string",
     [
-        # "zeroshot_cfg_string",
+        "zeroshot_cfg_string",
         "fewshot_cfg_string",
-        # "ext_template_cfg_string",
+        "ext_template_cfg_string",
     ],
 )
 def test_entity_linker_predict(cfg_string, request, tmp_path):
