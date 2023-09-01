@@ -922,8 +922,8 @@ def test_entity_with_comma(fewshot_cfg_string_v3_lds):
     ents = doc.ents
     assert len(ents) > 0
     found_louis = False
-    for ent in doc.ents:
+    for ent in ents:
         if ent.text in ["'Louis, the XVIIth'", "Louis, the XVIIth"]:
             found_louis = True
-            assert ents.label_ == "PER"
+            assert ent.label_ == "PER"
     assert found_louis
