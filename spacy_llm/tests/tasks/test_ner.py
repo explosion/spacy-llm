@@ -571,14 +571,14 @@ def test_jinja_template_rendering_with_label_definitions(
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
     llm_ner = make_ner_task_v3(
-            examples=examples,
-            labels=labels,
-            label_definitions={
-                "PER": "Person definition",
-                "ORG": "Organization definition",
-                "LOC": "Location definition",
-            },
-        )
+        examples=examples,
+        labels=labels,
+        label_definitions={
+            "PER": "Person definition",
+            "ORG": "Organization definition",
+            "LOC": "Location definition",
+        },
+    )
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
