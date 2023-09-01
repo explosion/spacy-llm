@@ -189,5 +189,5 @@ def make_spancat_task_v3(
         spans_key=spans_key,
         scorer=scorer or score,
         description=description,
-        check_label_consistency=check_label_consistency or check_labels_cot,
+        check_label_consistency=check_labels_cot,
     )
