@@ -162,7 +162,7 @@ def test_spancat_config(config: Config):
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_spancat_predict(nlp: Language):
-    """Use OpenAI to get zero-shot NER results.
+    """Use OpenAI to get zero-shot spancat results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     text = "Marc and Bob both live in Ireland."
@@ -445,8 +445,8 @@ def test_jinja_template_rendering_without_examples():
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
-    llm_ner = make_spancat_task_v3(labels=labels)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    llm_spancat = make_spancat_task_v3(labels=labels)
+    prompt = list(llm_spancat.generate_prompts([doc]))[0]
 
     assert (
         prompt.strip()
@@ -484,9 +484,9 @@ Answer:
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "ner.json"),
-        str(EXAMPLES_DIR / "ner.yml"),
-        str(EXAMPLES_DIR / "ner.jsonl"),
+        str(EXAMPLES_DIR / "spancat.json"),
+        str(EXAMPLES_DIR / "spancat.yml"),
+        str(EXAMPLES_DIR / "spancat.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path: Path):

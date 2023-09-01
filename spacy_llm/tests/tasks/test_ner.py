@@ -54,7 +54,7 @@ def noop_config():
 
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
-    labels = PER,ORG,LOC,DESTINATION
+    labels = PER,ORG,LOC
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -86,7 +86,7 @@ def fewshot_cfg_string_v3_lds():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
     description = "This is a description"
-    labels = PER,ORG,LOC,DESTINATION
+    labels = PER,ORG,LOC
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -96,7 +96,6 @@ def fewshot_cfg_string_v3_lds():
     PER = "Any named individual in the text"
     ORG = "Any named organization in the text"
     LOC = "The name of any politically or geographically defined location"
-    DESTINATION = "The physical destination of a journey."
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
