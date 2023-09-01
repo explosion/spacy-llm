@@ -20,7 +20,7 @@ from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.span import SpanReason
 from spacy_llm.tasks.span.parser import _extract_span_reasons_cot
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.ty import LabeledTask, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -211,7 +211,7 @@ def test_ner_config(config: Config):
     labels = config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, Labeled)
+    assert isinstance(task, LabeledTask)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)

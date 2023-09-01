@@ -13,7 +13,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import registry
 from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
-from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.ty import LabeledTask, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -208,7 +208,7 @@ def test_textcat_config(task, cfg_string, request):
 
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, Labeled)
+    assert isinstance(task, LabeledTask)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
