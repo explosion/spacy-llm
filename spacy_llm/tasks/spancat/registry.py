@@ -145,7 +145,6 @@ def make_spancat_task_v3(
     case_sensitive_matching: bool = False,
     spans_key: str = "sc",
     scorer: Optional[Scorer] = None,
-    check_label_consistency: Optional[SpanTaskLabelCheck[SpanCatTask]] = None,
 ):
     """SpanCat.v3 task factory for SpanCat with chain-of-thought prompting.
 
@@ -168,7 +167,6 @@ def make_spancat_task_v3(
     case_sensitive_matching (bool): Whether to search without case sensitivity.
     spans_key (str): Key of the `Doc.spans` dict to save under.
     scorer (Optional[Scorer]): Scorer function.
-    check_label_consistency (SpanTaskLabelCheck): Callable to check label consistency.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
