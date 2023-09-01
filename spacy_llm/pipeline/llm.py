@@ -132,6 +132,11 @@ class LLMWrapper(Pipe):
             labels = self._task.labels
         return labels
 
+    def add_label(self, label: str) -> int:
+        if not isinstance(self._task, LabeledTask):
+            raise ValueError("The task of this LLM component does not have labels.")
+        return self._task.add_label(label)
+
     @property
     def task(self) -> LLMTask:
         return self._task
