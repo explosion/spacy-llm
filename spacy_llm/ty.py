@@ -6,12 +6,11 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
 from typing import Union, cast
 
-from pydantic import BaseModel
 from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import Protocol, Self, runtime_checkable
+from .compat import BaseModel, Protocol, Self, runtime_checkable
 from .models import langchain
 
 _PromptType = Any

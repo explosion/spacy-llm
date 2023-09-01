@@ -1,13 +1,8 @@
 from typing import List, Optional
 
-try:
-    from pydantic.v1 import BaseModel, validator
-except ImportError:
-    from pydantic import BaseModel, validator
-
 from spacy.training import Example
 
-from ...compat import Self
+from ...compat import BaseModel, Self, validator
 from ...ty import FewshotExample
 
 
@@ -47,8 +42,7 @@ class RELExample(FewshotExample):
             )
             for ent in example.reference.ents
         ]
-
-        return cls.construct(
+        return cls(
             text=example.reference.text,
             ents=entities,
             relations=example.reference._.rel,

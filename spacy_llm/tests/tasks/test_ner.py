@@ -7,13 +7,12 @@ import pytest
 import spacy
 import srsly
 from confection import Config
-from pydantic import ValidationError
 from spacy.language import Language
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.compat import Literal
+from spacy_llm.compat import Literal, ValidationError
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import strip_normalizer
@@ -949,3 +948,20 @@ def test_regression_span_task_response_parse(
     doc = docs[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc.ents]
     assert pred_ents == gold_ents
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_entity_with_comma(fewshot_cfg_string_v3_lds):
+    config = Config().from_str(fewshot_cfg_string_v3_lds)
+    nlp = spacy.util.load_model_from_config(config, auto_fill=True)
+    text = "Somebody with the name 'Louis, the XVIIth', and Bob both live in Ireland."
+    doc = nlp(text)
+    ents = doc.ents
+    assert len(ents) == 3
+    assert ents[0].text == "'Louis, the XVIIth'" or "Louis, the XVIIth"
+    assert ents[0].label_ == "PER"
+    assert ents[1].text == "Bob"
+    assert ents[1].label_ == "PER"
+    assert ents[2].text == "Ireland"
+    assert ents[2].label_ == "LOC"
