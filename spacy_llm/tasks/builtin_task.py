@@ -318,6 +318,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         if label in self.labels:
             return 0
         self._label_dict[self._normalizer(label)] = label
+        return 1
 
     @property
     def normalizer(self) -> Callable[[str], str]:
