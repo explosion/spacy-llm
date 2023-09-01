@@ -914,17 +914,29 @@ def test_regression_span_task_response_parse(
     assert pred_ents == gold_ents
 
 
-@pytest.mark.external
-@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-def test_entity_with_comma(fewshot_cfg_string_v3_lds):
-    config = Config().from_str(fewshot_cfg_string_v3_lds)
-    nlp = spacy.util.load_model_from_config(config, auto_fill=True)
-    text = "Google, Inc. is a large organization"
-    doc = nlp(text)
-    ents = doc.ents
-    assert len(ents) > 0
-    found_google = False
-    for ent in ents:
-        if ent.text in ["Google, Inc.", "Google, Inc"]:
-            found_google = True
-    assert found_google
+@pytest.mark.parametrize(
+    "text, response, gold_ents",
+    [
+        (
+            "FooBar, Inc. is a large organization in the U.S.",
+            "1. FooBar, Inc. | True | ORG | is the name of an organization\n"
+            "2. U.S. | True | LOC | is a country\n",
+            [("FooBar, Inc.", "ORG"), ("U.S.", "LOC")],
+        ),
+    ],
+)
+def test_regression_span_task_comma(
+    text: str, response: str, gold_ents: List[Tuple[str, str]]
+):
+    """Test that spacy.NER.v3 can deal with comma's in entities"""
+
+    nlp = spacy.blank("en")
+    example_doc = nlp.make_doc(text)
+    ner_task = make_ner_task_v3(examples=[], labels=["ORG", "LOC"])
+    span_reasons = _extract_span_reasons_cot(ner_task, response)
+    assert len(span_reasons) == len(gold_ents)
+    docs = list(ner_task.parse_responses([example_doc], [response]))
+    assert len(docs) == 1
+    doc = docs[0]
+    pred_ents = [(ent.text, ent.label_) for ent in doc.ents]
+    assert pred_ents == gold_ents
