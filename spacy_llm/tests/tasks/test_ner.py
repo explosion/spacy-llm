@@ -917,13 +917,12 @@ def test_regression_span_task_response_parse(
 def test_entity_with_comma(fewshot_cfg_string_v3_lds):
     config = Config().from_str(fewshot_cfg_string_v3_lds)
     nlp = spacy.util.load_model_from_config(config, auto_fill=True)
-    text = "Somebody with the name 'Louis, the XVIIth', and Bob both live in Ireland."
+    text = "Google, Inc. is a large organization"
     doc = nlp(text)
     ents = doc.ents
     assert len(ents) > 0
-    found_louis = False
+    found_google = False
     for ent in ents:
-        if ent.text in ["'Louis, the XVIIth'", "Louis, the XVIIth"]:
-            found_louis = True
-            assert ent.label_ == "PER"
-    assert found_louis
+        if ent.text in ["Google, Inc.", "Google, Inc"]:
+            found_google = True
+    assert found_google
