@@ -253,7 +253,7 @@ def test_spancat_matching_shot_task(text: str, response: str, gold_spans):
     labels = "PER,ORG,LOC"
     llm_spancat = make_spancat_task_v3(examples=[], labels=labels)
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
@@ -326,7 +326,7 @@ def test_spancat_labels(
         examples=[], labels=labels, normalizer=normalizer
     )
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -378,7 +378,7 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
         examples=[], labels=labels, alignment_mode=alignment_mode
     )
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -427,7 +427,7 @@ def test_spancat_matching(response, case_sensitive, gold_spans):
         examples=[], labels=labels, case_sensitive_matching=case_sensitive
     )
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -443,7 +443,7 @@ def test_jinja_template_rendering_without_examples():
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     llm_ner = make_spancat_task_v3(labels=labels)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
@@ -496,7 +496,7 @@ def test_jinja_template_rendering_with_examples(examples_path: Path):
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC,DESTINATION"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)

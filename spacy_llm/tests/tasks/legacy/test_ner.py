@@ -325,7 +325,7 @@ def test_ner_zero_shot_task(text, response, gold_ents):
     labels = "PER,ORG,LOC"
     llm_ner = make_ner_task_v2(labels=labels)
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
@@ -384,7 +384,7 @@ def test_ner_labels(response, normalizer, gold_ents):
     labels = "PER,ORG,LOC"
     llm_ner = make_ner_task_v2(labels=labels, normalizer=normalizer)
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -433,7 +433,7 @@ def test_ner_alignment(response, alignment_mode, gold_ents):
     labels = "PER,ORG,LOC"
     llm_ner = make_ner_task_v2(labels=labels, alignment_mode=alignment_mode)  # type: ignore
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -484,7 +484,7 @@ def test_ner_matching(response, case_sensitive, single_match, gold_ents):
         labels=labels, case_sensitive_matching=case_sensitive, single_match=single_match
     )
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -500,7 +500,7 @@ def test_jinja_template_rendering_without_examples():
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_ner = make_ner_task_v2(labels=labels, examples=None)
@@ -542,7 +542,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     examples = fewshot_reader(examples_path)
@@ -601,7 +601,7 @@ def test_jinja_template_rendering_with_label_definitions():
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     llm_ner = make_ner_task_v2(
         labels=labels,
@@ -660,7 +660,7 @@ def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "ner.jinja2")
     template = file_reader(template_path)
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_ner = make_ner_task_v2(labels=labels, template=template)

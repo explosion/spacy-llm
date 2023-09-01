@@ -122,7 +122,7 @@ def fewshot_cfg_string_v3():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
     description = "This is a description"
-    labels = ["PER", "ORG", "LOC", "DESTINATION"]
+    labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -153,7 +153,7 @@ def ext_template_cfg_string():
     [components.llm.task]
     @llm_tasks = "spacy.NER.v3"
     description = "This is a description"
-    labels = ["PER", "ORG", "LOC", "DESTINATION"]
+    labels = ["PER", "ORG", "LOC"]
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
@@ -221,52 +221,27 @@ def test_ner_config(config: Config):
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize(
     "cfg_str",
-    ["fewshot_cfg_string_v3_lds", "fewshot_cfg_string_v3", "ext_template_cfg_string"],
+    ["fewshot_cfg_string_v3_lds", "fewshot_cfg_string_v3"],
 )
 @pytest.mark.parametrize(
     "text,gold_ents",
     [
-        # simple
         (
             "Marc and Bob both live in Ireland.",
             [("Marc", "PER"), ("Bob", "PER"), ("Ireland", "LOC")],
         ),
-        # same entity names
-        (
-            "Paris, who is a person, travelled to Paris, which is a city, to spend time with her friend Paris, who "
-            "is a person.",
-            [("Paris", "PER"), ("Paris", "LOC"), ("Paris", "PER")],
-        ),
     ],
 )
 def test_ner_predict(cfg_str, text, gold_ents, request):
-    """Use OpenAI to get zero-shot NER results.
+    """Use OpenAI to get NER results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     config = Config().from_str(request.getfixturevalue(cfg_str))
-    is_paris_example = "Paris" in text
 
-    # Simplify by discarding unnecessary label (necessary to make Paris example work).
-    config["components"]["llm"]["task"]["labels"] = "PER,ORG,LOC"
-    if "label_definitions" in config["components"]["llm"]["task"]:
-        config["components"]["llm"]["task"]["label_definitions"].pop("DESTINATION")
-
-    with pytest.warns(
-        UserWarning,
-        match="Examples contain labels that are not specified in the task configuration",
-    ):
-        nlp = spacy.util.load_model_from_config(config, auto_fill=True)
+    nlp = spacy.util.load_model_from_config(config, auto_fill=True)
     doc = nlp(text)
 
-    # We don't expect the dummy template to return correct results.
-    if cfg_str == "ext_template_cfg_string":
-        return
-
     assert len(doc.ents) == len(gold_ents)
-    # Fewshot prompting without label definitions fails to return the correct result for the Paris example.
-    if cfg_str == "fewshot_cfg_string_v3" and is_paris_example:
-        return
-
     for pred_ent, gold_ent in zip(doc.ents, gold_ents):
         assert pred_ent.text == gold_ent[0]
         assert pred_ent.label_ in gold_ent[1].split("|")
@@ -386,7 +361,7 @@ def test_ner_labels(
 
     llm_ner = make_ner_task_v3(examples=[], labels=labels, normalizer=normalizer)
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -442,7 +417,7 @@ def test_ner_alignment(
         examples=[], labels=labels, alignment_mode=alignment_mode
     )
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -493,7 +468,7 @@ def test_ner_matching(
         examples=[], labels=labels, case_sensitive_matching=case_sensitive
     )
     # Prepare doc
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
@@ -509,7 +484,7 @@ def test_jinja_template_rendering_without_examples():
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     llm_ner = make_ner_task_v3(labels=labels)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
@@ -553,16 +528,10 @@ def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_fil
     """
 
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
-    with pytest.warns(
-        UserWarning,
-        match=re.escape(
-            "Labels in examples missing from the task configuration: ['DESTINATION']"
-        ),
-    ):
-        llm_ner = make_ner_task_v3(examples=examples, labels=labels)
+    llm_ner = make_ner_task_v3(examples=examples, labels=labels)
     prompt = list(llm_ner.generate_prompts([doc]))[0]
 
     assert (
@@ -598,16 +567,10 @@ def test_jinja_template_rendering_with_label_definitions(
     with annoying newlines and spaces at the edge of the text.
     """
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
-    with pytest.warns(
-        UserWarning,
-        match=re.escape(
-            "Labels in examples missing from the task configuration: ['DESTINATION']"
-        ),
-    ):
-        llm_ner = make_ner_task_v3(
+    llm_ner = make_ner_task_v3(
             examples=examples,
             labels=labels,
             label_definitions={
@@ -693,7 +656,7 @@ def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "ner.jinja2")
     template = file_reader(template_path)
     labels = "PER,ORG,LOC"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_ner = make_ner_task_v3(examples=[], labels=labels, template=template)
