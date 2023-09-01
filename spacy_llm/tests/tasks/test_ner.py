@@ -988,7 +988,7 @@ def test_add_label():
     doc = nlp(text)
     assert len(doc.ents) == 0
 
-    for label in ["PERSON", "ORGANISATION", "LOCATION"]:
+    for label in ["PERSON", "LOCATION"]:
         llm.add_label(label)
     doc = nlp(text)
     assert len(doc.ents) == 3
