@@ -820,3 +820,31 @@ def test_textcat_serde(noop_config, tmp_path: Path):
     nlp3.from_bytes(nlp1.to_bytes())
 
     assert task1._label_dict == task2._label_dict == task3._label_dict == labels
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_add_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.TextCat.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "I am feeling great."
+    doc = nlp(text)
+    assert len(doc.cats) == 0
+
+    for label in ["HAPPY", "SAD"]:
+        llm.add_label(label)
+    doc = nlp(text)
+    assert len(doc.cats) == 2
+    assert set(doc.cats.keys()) == {"HAPPY", "SAD"}

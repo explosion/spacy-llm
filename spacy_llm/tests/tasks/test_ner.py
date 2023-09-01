@@ -965,3 +965,30 @@ def test_entity_with_comma(fewshot_cfg_string_v3_lds):
     assert ents[1].label_ == "PER"
     assert ents[2].text == "Ireland"
     assert ents[2].label_ == "LOC"
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_add_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.NER.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "Jack and Jill visited France."
+    doc = nlp(text)
+    assert len(doc.ents) == 0
+
+    for label in ["PERSON", "ORGANISATION", "LOCATION"]:
+        llm.add_label(label)
+    doc = nlp(text)
+    assert len(doc.ents) == 3
