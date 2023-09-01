@@ -6,7 +6,6 @@ from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from ..span import parse_responses_cot as parse_span_responses_cot
-from ..span.task import SpanTaskLabelCheck
 from ..span.util import check_label_consistency as check_labels
 from ..span.util import check_label_consistency_cot as check_labels_cot
 from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2
