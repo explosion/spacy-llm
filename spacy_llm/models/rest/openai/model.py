@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Sized, Tuple
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
+import litellm
 
 from ..base import REST
 
@@ -112,9 +113,13 @@ class OpenAI(REST):
         if self._endpoint == Endpoints.CHAT:
             # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
             for prompt in prompts:
-                responses = _request(
-                    {"messages": [{"role": "user", "content": prompt}]}
+                responses = completion(
+                    model=self._name,
+                    messages = {"messages": [{"role": "user", "content": prompt}]},
+                    **self._config
                 )
+                # litellm reads the api key from .env
+
                 if "error" in responses:
                     return responses["error"]
 
