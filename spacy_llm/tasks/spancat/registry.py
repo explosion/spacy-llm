@@ -6,7 +6,6 @@ from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from ..span import parse_responses_cot as parse_span_responses_cot
-from ..span.task import SpanTaskLabelCheck
 from ..span.util import check_label_consistency as check_labels
 from ..span.util import check_label_consistency_cot as check_labels_cot
 from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2
@@ -145,7 +144,6 @@ def make_spancat_task_v3(
     case_sensitive_matching: bool = False,
     spans_key: str = "sc",
     scorer: Optional[Scorer] = None,
-    check_label_consistency: Optional[SpanTaskLabelCheck[SpanCatTask]] = None,
 ):
     """SpanCat.v3 task factory for SpanCat with chain-of-thought prompting.
 
@@ -168,7 +166,6 @@ def make_spancat_task_v3(
     case_sensitive_matching (bool): Whether to search without case sensitivity.
     spans_key (str): Key of the `Doc.spans` dict to save under.
     scorer (Optional[Scorer]): Scorer function.
-    check_label_consistency (SpanTaskLabelCheck): Callable to check label consistency.
     """
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
@@ -191,5 +188,5 @@ def make_spancat_task_v3(
         spans_key=spans_key,
         scorer=scorer or score,
         description=description,
-        check_label_consistency=check_label_consistency or check_labels_cot,
+        check_label_consistency=check_labels_cot,
     )

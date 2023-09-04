@@ -12,10 +12,10 @@ from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
 
 _LATEST_TASKS = (
-    "spacy.NER.v2",
+    "spacy.NER.v3",
     "spacy.REL.v1",
     "spacy.Sentiment.v1",
-    "spacy.SpanCat.v2",
+    "spacy.SpanCat.v3",
     "spacy.Summarization.v1",
     "spacy.TextCat.v3",
 )
