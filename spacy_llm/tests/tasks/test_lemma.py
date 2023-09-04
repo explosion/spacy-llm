@@ -197,7 +197,7 @@ def test_jinja_template_rendering_without_examples():
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     text = "Alice and Bob went to the supermarket"
     doc = nlp.make_doc(text)
 
@@ -240,7 +240,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     text = "Alice and Bob went to the supermarket."
     doc = nlp.make_doc(text)
 
@@ -333,7 +333,7 @@ def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "lemma.jinja2")
     template = file_reader(template_path)
     text = "Alice and Bob went to the supermarket"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(template=template)

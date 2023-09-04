@@ -252,7 +252,7 @@ def test_jinja_template_rendering_without_examples(example_text):
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(example_text)
 
     llm_ner = make_summarization_task(examples=None, max_n_words=10)
@@ -285,7 +285,7 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(example_text)
 
     prompt_examples = fewshot_reader(examples_path)
@@ -342,7 +342,7 @@ Summary:
 def test_external_template_actually_loads(example_text):
     template_path = str(TEMPLATES_DIR / "summarization.jinja2")
     template = file_reader(template_path)
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(example_text)
 
     llm_ner = make_summarization_task(template=template)
