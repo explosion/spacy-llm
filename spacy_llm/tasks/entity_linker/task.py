@@ -40,6 +40,11 @@ class EntityLinkerTask(BuiltinTask):
         self._scorer = scorer
         self._candidate_selector: Optional[CandidateSelector] = None
 
+        # Exclude mentions without candidates from prompt, if set.
+        self._auto_nil = True
+        # Store indices of entities per doc for which no candidates could be found.
+        self._auto_nil_idx: List[List[int]] = []
+
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
@@ -68,8 +73,20 @@ class EntityLinkerTask(BuiltinTask):
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
-        for doc in docs:
+        self._auto_nil_idx = []
+
+        for i_doc, doc in enumerate(docs):
             cands_ents, _ = self._fetch_entity_info(doc)
+            self._auto_nil_idx.append(
+                [len(cand_ents) == 0 for i_ent, cand_ents in enumerate(cands_ents)]
+            )
+
+            # todo
+            #  - store spans (already nilled?) in separate instance var or change current one
+            #  - move data definition out here
+            #  - if _auto_nil: only keep those where _auto_nil_idx[i] is False
+            #  - if _auto_nil: add auto nil spans, in correct sequence, in parse_responses()
+
             yield _template.render(
                 text=EntityLinkerTask.highlight_ents_in_text(doc),
                 mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),

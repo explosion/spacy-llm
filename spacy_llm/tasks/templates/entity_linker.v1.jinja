@@ -36,7 +36,7 @@ REASONING:
         {%- if reason|length -%}
 - {{ reason }}
         {%- else -%}
-- The descriptions of the chosen entity {{ example.solutions[loop.index0] }} fit the presented mention *{{ example.mentions[loop.index0] }}* best.
+- The description of the chosen entity {{ example.solutions[loop.index0] }} fits the presented mention *{{ example.mentions[loop.index0] }}* best.
         {%- endif -%}
 {# whitespace #}
 {# whitespace #}
@@ -44,7 +44,7 @@ REASONING:
 {% else %}
     {%- for reason in example.mentions -%}
         {# whitespace #}
-- The descriptions of the chosen entity {{ example.solutions[loop.index0] }} fit the presented mention *{{ example.mentions[loop.index0] }}* best.
+- The description of the chosen entity {{ example.solutions[loop.index0] }} fits the presented mention *{{ example.mentions[loop.index0] }}* best.
     {%- endfor -%}
 {%- endif -%}
 {# whitespace #}

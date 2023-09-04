@@ -10,6 +10,7 @@ import srsly
 from confection import Config
 from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
+from spacy.pipeline import EntityLinker
 from spacy.tokens import Span
 from spacy.training import Example
 from spacy.util import make_tempdir
@@ -364,7 +365,7 @@ def test_jinja_template_rendering_without_examples(tmp_path):
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     text = "Alice goes to Boston to see the Boston Celtics game."
     doc = nlp.make_doc(text)
     doc.ents = [
@@ -429,7 +430,7 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
     We apply the .strip() method for each prompt so that we don't have to deal
     with annoying newlines and spaces at the edge of the text.
     """
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     text = "Alice goes to Boston to see the Boston Celtics game."
     doc = nlp.make_doc(text)
     doc.ents = [
@@ -471,8 +472,8 @@ ENTITIES:
     Q60. most populous city in the United States
     Q131364. National Basketball Association team in New York City
 REASONING:
-- The descriptions of the chosen entity Q60 fit the presented mention *New York* best.
-- The descriptions of the chosen entity Q131364 fit the presented mention *New York Knicks* best.
+- The description of the chosen entity Q60 fits the presented mention *New York* best.
+- The description of the chosen entity Q131364 fits the presented mention *New York Knicks* best.
 SOLUTION:
 *New York* ::: <Q60>
 *New York Knicks* ::: <Q131364>
@@ -531,7 +532,7 @@ def test_external_template_actually_loads(tmp_path):
     template_path = str(TEMPLATES_DIR / "entity_linker.jinja2")
     template = file_reader(template_path)
     text = "Alice and Bob went to the supermarket"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
 
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
@@ -608,7 +609,7 @@ def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
 
 def test_ent_highlighting():
     """Tests highlighting of entities in text."""
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     text = "Alice goes to Boston to see the Boston Celtics game."
     doc = nlp.make_doc(text)
     doc.ents = [
