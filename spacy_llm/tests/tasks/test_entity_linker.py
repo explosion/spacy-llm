@@ -312,7 +312,7 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
     doc = nlp(doc)
 
     assert len(doc.ents) == 2
-    assert doc.ents[0].kb_id_ == "NIL"
+    assert doc.ents[0].kb_id_ == EntityLinker.NIL
     assert doc.ents[1].kb_id_ == "Q131371"
 
 
