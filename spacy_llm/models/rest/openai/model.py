@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List, Sized, Tuple
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
 from requests import HTTPError
-import litellm
+from litellm import completion
 
 from ..base import REST
 
