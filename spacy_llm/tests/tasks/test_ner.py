@@ -20,7 +20,7 @@ from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.span import SpanReason
 from spacy_llm.tasks.span.parser import _extract_span_reasons_cot
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.ty import LabeledTask, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -210,7 +210,7 @@ def test_ner_config(config: Config):
     labels = config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, Labeled)
+    assert isinstance(task, LabeledTask)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
@@ -940,3 +940,30 @@ def test_regression_span_task_comma(
     doc = docs[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc.ents]
     assert pred_ents == gold_ents
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_add_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.NER.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "Jack and Jill visited France."
+    doc = nlp(text)
+    assert len(doc.ents) == 0
+
+    for label in ["PERSON", "LOCATION"]:
+        llm.add_label(label)
+    doc = nlp(text)
+    assert len(doc.ents) == 3

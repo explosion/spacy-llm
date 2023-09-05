@@ -15,7 +15,7 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, Labeled, LLMTask, PromptExecutorType, ScorableTask
+from ..ty import Cache, LabeledTask, LLMTask, PromptExecutorType, ScorableTask
 from ..ty import Serializable, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
@@ -128,9 +128,14 @@ class LLMWrapper(Pipe):
     @property
     def labels(self) -> Tuple[str, ...]:
         labels: Tuple[str, ...] = tuple()
-        if isinstance(self._task, Labeled):
+        if isinstance(self._task, LabeledTask):
             labels = self._task.labels
         return labels
+
+    def add_label(self, label: str) -> int:
+        if not isinstance(self._task, LabeledTask):
+            raise ValueError("The task of this LLM component does not have labels.")
+        return self._task.add_label(label)
 
     @property
     def task(self) -> LLMTask:

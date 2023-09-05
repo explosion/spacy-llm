@@ -131,9 +131,12 @@ class PromptTemplateProvider(Protocol):
 
 
 @runtime_checkable
-class Labeled(Protocol):
+class LabeledTask(Protocol):
     @property
     def labels(self) -> Tuple[str, ...]:
+        ...
+
+    def add_label(self, label: str) -> int:
         ...
 
 
