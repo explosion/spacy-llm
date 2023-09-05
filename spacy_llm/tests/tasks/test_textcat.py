@@ -316,7 +316,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
         labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     assert list(pred.cats.keys())[0] == label
@@ -348,7 +348,7 @@ def test_textcat_multilabel_labels_are_correct(
         exclusive_classes=exclusive_classes,
         normalizer=lowercase_normalizer(),
     )
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     # Take only those that have scores
@@ -371,7 +371,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     with annoying newlines and spaces at the edge of the text.
     """
     text, labels, _, exclusive_classes, _ = binary
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
     prompt_examples = fewshot_reader(examples_path)
@@ -437,7 +437,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     examples_path, multilabel_excl
 ):
     text, labels, _, exclusive_classes, _ = multilabel_excl
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
     prompt_examples = fewshot_reader(examples_path)
@@ -504,7 +504,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     examples_path, multilabel_nonexcl
 ):
     text, labels, _, exclusive_classes, _ = multilabel_nonexcl
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
     prompt_examples = fewshot_reader(examples_path)
@@ -588,7 +588,7 @@ def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "textcat.jinja2")
     template = file_reader(template_path)
     labels = "Recipe"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
     llm_textcat = make_textcat_task_v3(labels=labels, template=template)
@@ -668,7 +668,7 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
 
 def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
     text, labels, _, exclusive_classes, _ = multilabel_excl
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
     llm_textcat = make_textcat_task_v3(
