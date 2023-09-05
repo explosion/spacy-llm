@@ -64,7 +64,7 @@ def fewshot_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner_v1.yml"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -403,9 +403,9 @@ Alice and Bob went to the supermarket
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "ner.json"),
-        str(EXAMPLES_DIR / "ner.yml"),
-        str(EXAMPLES_DIR / "ner.jsonl"),
+        str(EXAMPLES_DIR / "ner_v1.json"),
+        str(EXAMPLES_DIR / "ner_v1.yml"),
+        str(EXAMPLES_DIR / "ner_v1.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):

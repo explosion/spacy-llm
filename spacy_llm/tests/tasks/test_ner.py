@@ -61,7 +61,7 @@ def noop_config():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+    path = {str((Path(__file__).parent / "examples" / "ner_v3.json"))}
 
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
@@ -90,7 +90,7 @@ def fewshot_cfg_string_v3_lds():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+    path = {str((Path(__file__).parent / "examples" / "ner_v3.json"))}
 
     [components.llm.task.label_definitions]
     PER = "Any named individual in the text"
@@ -125,7 +125,7 @@ def fewshot_cfg_string_v3():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+    path = {str((Path(__file__).parent / "examples" / "ner_v3.json"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -156,11 +156,11 @@ def ext_template_cfg_string():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner.json"))}
+    path = {str((Path(__file__).parent / "examples" / "ner_v3.json"))}
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "ner.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "ner_v3.jinja2"))}
 
     [components.llm.task.normalizer]
     @misc = "spacy.LowercaseNormalizer.v1"
@@ -520,7 +520,7 @@ Answer:
     )
 
 
-@pytest.mark.parametrize("examples_file", ["ner.json", "ner.yml", "ner.jsonl"])
+@pytest.mark.parametrize("examples_file", ["ner_v3.json", "ner_v3.yml", "ner_v3.jsonl"])
 def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_file: str):
     """Test if jinja2 template renders as expected
 
@@ -558,7 +558,7 @@ Answer:
     )
 
 
-@pytest.mark.parametrize("examples_file", ["ner.json", "ner.yml", "ner.jsonl"])
+@pytest.mark.parametrize("examples_file", ["ner_v3.json", "ner_v3.yml", "ner_v3.jsonl"])
 def test_jinja_template_rendering_with_label_definitions(
     examples_dir: Path, examples_file: str
 ):
@@ -654,7 +654,7 @@ def test_fewshot_example_data(value: dict, expected_type: type):
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "ner.jinja2")
+    template_path = str(TEMPLATES_DIR / "ner_v3.jinja2")
     template = file_reader(template_path)
     labels = "PER,ORG,LOC"
     nlp = spacy.blank("en")
@@ -807,7 +807,7 @@ def test_label_inconsistency():
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "ner_inconsistent.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "ner_inconsistent_v3.yml"))}
 
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
