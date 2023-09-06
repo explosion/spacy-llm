@@ -42,7 +42,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -71,7 +71,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
