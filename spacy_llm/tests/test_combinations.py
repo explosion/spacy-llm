@@ -17,8 +17,8 @@ from spacy_llm.pipeline import LLMWrapper
 )
 @pytest.mark.parametrize(
     "task",
-    ["spacy.NER.v1", "spacy.NER.v2", "spacy.TextCat.v1"],
-    ids=["ner.v1", "ner.v2", "textcat"],
+    ["spacy.NER.v1", "spacy.NER.v3", "spacy.TextCat.v1"],
+    ids=["ner.v1", "ner.v3", "textcat"],
 )
 @pytest.mark.parametrize("n_process", [1])  # , 2
 def test_combinations(model: str, task: str, n_process: int):

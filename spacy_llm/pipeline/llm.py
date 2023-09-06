@@ -80,7 +80,7 @@ def make_llm(
     if task is None:
         raise ValueError(
             "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
-            "'spacy.NER.v2'})."
+            "'spacy.NER.v3'})."
         )
     if validate_types:
         validate_type_consistency(task, model)
