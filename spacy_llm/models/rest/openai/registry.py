@@ -10,7 +10,7 @@ _DEFAULT_TEMPERATURE = 0.0
 
 
 @registry.llm_models("spacy.GPT-4.v2")
-def openai_gpt_4(
+def openai_gpt_4_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
     name: Literal[
         "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"
@@ -68,7 +68,7 @@ def openai_gpt_4(
 
 
 @registry.llm_models("spacy.GPT-3-5.v2")
-def openai_gpt_3_5(
+def openai_gpt_3_5_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
     name: Literal[
         "gpt-3.5-turbo",
@@ -146,7 +146,7 @@ def openai_gpt_3_5(
 
 
 @registry.llm_models("spacy.Text-Davinci.v2")
-def openai_text_davinci(
+def openai_text_davinci_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=1000, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -220,7 +220,7 @@ def openai_text_davinci(
 
 
 @registry.llm_models("spacy.Code-Davinci.v2")
-def openai_code_davinci(
+def openai_code_davinci_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -290,7 +290,7 @@ def openai_code_davinci(
 
 
 @registry.llm_models("spacy.Text-Curie.v2")
-def openai_text_curie(
+def openai_text_curie_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -360,7 +360,7 @@ def openai_text_curie(
 
 
 @registry.llm_models("spacy.Text-Babbage.v2")
-def openai_text_babbage(
+def openai_text_babbage_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -430,7 +430,7 @@ def openai_text_babbage(
 
 
 @registry.llm_models("spacy.Text-Ada.v2")
-def openai_text_ada(
+def openai_text_ada_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -500,7 +500,7 @@ def openai_text_ada(
 
 
 @registry.llm_models("spacy.Davinci.v2")
-def openai_davinci(
+def openai_davinci_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -570,7 +570,7 @@ def openai_davinci(
 
 
 @registry.llm_models("spacy.Curie.v2")
-def openai_curie(
+def openai_curie_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -640,7 +640,7 @@ def openai_curie(
 
 
 @registry.llm_models("spacy.Babbage.v2")
-def openai_babbage(
+def openai_babbage_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
@@ -710,7 +710,7 @@ def openai_babbage(
 
 
 @registry.llm_models("spacy.Ada.v2")
-def openai_ada(
+def openai_ada_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(
         max_tokens=500, temperature=_DEFAULT_TEMPERATURE
     ),
