@@ -32,7 +32,7 @@ class Anthropic(REST):
             warnings.warn(
                 "Could not find the API key to access the Anthropic Claude API. Ensure you have an API key "
                 "set up via the Anthropic console (https://console.anthropic.com/), then make it available as "
-                "an environment variable 'ANTHROPIC_API_KEY."
+                "an environment variable 'ANTHROPIC_API_KEY'."
             )
 
         return {"X-API-Key": api_key if api_key else ""}
