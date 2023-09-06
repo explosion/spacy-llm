@@ -12,17 +12,17 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
 
 - Serializable `llm` **component** to integrate prompts into your spaCy pipeline
 - **Modular functions** to define the [**task**](https://spacy.io/api/large-language-models#tasks) (prompting and parsing) and [**model**](https://spacy.io/api/large-language-models#models)
-- Interfaces with the APIs of 
+- Interfaces with the APIs of
   - **[OpenAI](https://platform.openai.com/docs/api-reference/)**
   - **[Cohere](https://docs.cohere.com/reference/generate)**
   - **[Anthropic](https://docs.anthropic.com/claude/reference/)**
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
-  - **[Llama 2](https://huggingface.co/meta-llama)**  
+  - **[Llama 2](https://huggingface.co/meta-llama)**
   - **[OpenLLaMA](https://huggingface.co/openlm-research)**
   - **[StableLM](https://huggingface.co/stabilityai)**
-- Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`  
+- Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`
 - Tasks available out of the box:
   - Named Entity Recognition
   - Text classification
@@ -58,13 +58,18 @@ python -m pip install spacy-llm
 ## 🐍 Quickstart
 
 The task and the model have to be supplied to the `llm` pipeline component using [spaCy's config
-system](https://spacy.io/api/data-formats#config). 
+system](https://spacy.io/api/data-formats#config).
 
-Let's run some text classification using a GPT-4 model from OpenAI. If you're using hosted APIs (as opposed to local 
+Let's run some text classification using a GPT-4 model from OpenAI. If you're using hosted APIs (as opposed to local
 models like Falcon, Dolly or LLaMA), ensure to that your API keys are set as environmental variables.
 
-Create a config file `config.cfg` containing at least the following
-(or see the full example [here](usage_examples/textcat_openai)):
+Create a new API key from openai.com or fetch an existing one, and ensure the
+keys are set as environmental variables. For more background information, see
+the [OpenAI](/api/large-language-models#gpt-3-5) section.
+
+Create a config file `config.cfg` containing at least the following (or see the
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
 
 ```ini
 [nlp]
@@ -92,10 +97,12 @@ from spacy_llm.util import assemble
 nlp = assemble("config.cfg")
 doc = nlp("You look gorgeous!")
 print(doc.cats)
+# {"COMPLIMENT": 1.0, "INSULT": 0.0}
 ```
 
-That's it! There's a lot of other features - prompt templating, more tasks, logging etc. For more information on how to 
+That's it! There's a lot of other features - prompt templating, more tasks, logging etc. For more information on how to
 use those, check out https://spacy.io/api/large-language-models.
+
 
 ## 🚀 Ongoing work
 
@@ -109,7 +116,7 @@ PRs are always welcome!
 
 ## 📝️ Reporting issues
 
-If you have questions regarding the usage of `spacy-llm`, or want to give us feedback after giving it a spin, please use 
+If you have questions regarding the usage of `spacy-llm`, or want to give us feedback after giving it a spin, please use
 the [discussion board](https://github.com/explosion/spacy-llm/discussions).
 Bug reports can be filed on the [spaCy issue tracker](https://github.com/explosion/spacy-llm/issues). Thank you!
 

@@ -15,8 +15,8 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
-from ..ty import validate_type_consistency
+from ..ty import Cache, LabeledTask, LLMTask, PromptExecutorType, ScorableTask
+from ..ty import Serializable, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -52,7 +52,7 @@ def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
-    model: PromptExecutor,
+    model: PromptExecutorType,
     cache: Cache,
     save_io: bool,
     validate_types: bool,
@@ -96,7 +96,7 @@ class LLMWrapper(Pipe):
         *,
         vocab: Vocab,
         task: LLMTask,
-        model: PromptExecutor,
+        model: PromptExecutorType,
         cache: Cache,
         save_io: bool,
     ) -> None:
@@ -128,9 +128,14 @@ class LLMWrapper(Pipe):
     @property
     def labels(self) -> Tuple[str, ...]:
         labels: Tuple[str, ...] = tuple()
-        if isinstance(self._task, Labeled):
+        if isinstance(self._task, LabeledTask):
             labels = self._task.labels
         return labels
+
+    def add_label(self, label: str) -> int:
+        if not isinstance(self._task, LabeledTask):
+            raise ValueError("The task of this LLM component does not have labels.")
+        return self._task.add_label(label)
 
     @property
     def task(self) -> LLMTask:
@@ -156,7 +161,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if isinstance(self._task, Scorable):
+        if isinstance(self._task, ScorableTask):
             return self._task.scorer(examples)
         return {}
 
