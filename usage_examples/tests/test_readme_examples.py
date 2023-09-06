@@ -29,7 +29,7 @@ def test_example_1_classifier():
 
         [components.llm.model]
         @llm_models = "spacy.GPT-3-5.v1"
-        config = {"temperature": 0.3}
+        config = {"temperature": 0.0}
         """
 
         with open(tmpdir / "cfg", "w") as text_file:
