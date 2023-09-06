@@ -21,6 +21,22 @@ from ..ty import Serializable, validate_type_consistency
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
 
+DEFAULT_MODEL_CONFIG = {
+    "@llm_models": "spacy.GPT-3-5.v2",
+    "strict": True,
+}
+DEFAULT_CACHE_CONFIG = (
+    {
+        "@llm_misc": "spacy.BatchCache.v1",
+        "path": None,
+        "batch_size": 64,
+        "max_batches_in_mem": 4,
+    },
+)
+
+DEFAULT_SAVE_IO = False
+DEFAULT_VALIDATE_TYPES = True
+
 
 class CacheConfigType(TypedDict):
     path: Optional[Path]
@@ -34,18 +50,10 @@ class CacheConfigType(TypedDict):
     assigns=[],
     default_config={
         "task": None,
-        "model": {
-            "@llm_models": "spacy.GPT-3-5.v1",
-            "strict": True,
-        },
-        "cache": {
-            "@llm_misc": "spacy.BatchCache.v1",
-            "path": None,
-            "batch_size": 64,
-            "max_batches_in_mem": 4,
-        },
-        "save_io": False,
-        "validate_types": True,
+        "model": DEFAULT_MODEL_CONFIG,
+        "cache": DEFAULT_CACHE_CONFIG,
+        "save_io": DEFAULT_SAVE_IO,
+        "validate_types": DEFAULT_VALIDATE_TYPES,
     },
 )
 def make_llm(
