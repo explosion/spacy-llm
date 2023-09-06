@@ -65,7 +65,7 @@ models like Falcon, Dolly or LLaMA), ensure to that your API keys are set as env
 
 Create a new API key from openai.com or fetch an existing one, and ensure the
 keys are set as environmental variables. For more background information, see
-the [OpenAI](/api/large-language-models#gpt-3-5) section.
+the documentation around setting [API keys](https://spacy.io/api/large-language-models#api-keys).
 
 Create a config file `config.cfg` containing at least the following (or see the
 full example
