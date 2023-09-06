@@ -22,17 +22,15 @@ logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
 
 DEFAULT_MODEL_CONFIG = {
-    "@llm_models": "spacy.GPT-3-5.v2",
+    "@llm_models": "spacy.GPT-3-5.v1",
     "strict": True,
 }
-DEFAULT_CACHE_CONFIG = (
-    {
-        "@llm_misc": "spacy.BatchCache.v1",
-        "path": None,
-        "batch_size": 64,
-        "max_batches_in_mem": 4,
-    },
-)
+DEFAULT_CACHE_CONFIG = {
+    "@llm_misc": "spacy.BatchCache.v1",
+    "path": None,
+    "batch_size": 64,
+    "max_batches_in_mem": 4,
+}
 
 DEFAULT_SAVE_IO = False
 DEFAULT_VALIDATE_TYPES = True
