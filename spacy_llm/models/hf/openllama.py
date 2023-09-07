@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
-from spacy.util import SimpleFrozenDict
+from confection import SimpleFrozenDict
 
 from ...compat import Literal, torch, transformers
 from ...registry.util import registry

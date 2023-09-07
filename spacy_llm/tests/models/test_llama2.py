@@ -36,6 +36,7 @@ name = "Llama-2-7b-hf"
 """
 
 
+@pytest.mark.skip(reason="CI runner needs more GPU memory")
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init():
@@ -47,6 +48,7 @@ def test_init():
     torch.cuda.empty_cache()
 
 
+@pytest.mark.skip(reason="CI runner needs more GPU memory")
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_init_from_config():
@@ -56,6 +58,7 @@ def test_init_from_config():
     torch.cuda.empty_cache()
 
 
+@pytest.mark.skip(reason="CI runner needs more GPU memory")
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 def test_invalid_model():
