@@ -1,6 +1,91 @@
 # Migration guides
 
 <details open>
+  <summary>0.4.x to 0.5.x</summary>
+
+## `0.4.x` to `0.5.x`
+
+`0.5.x` includes internal refactoring that should have minimal to zero impact to the user experience. Mostly, configurations from `0.4.x` 
+should just work on `0.5.x`.
+
+### Use the new Chain-of-Though NER prompting
+
+We've implemented Chain-of-Thought (CoT) prompting for SpanCat and NER tasks, 
+based on the
+[PromptNER paper](https://arxiv.org/pdf/2305.15444.pdf) by Ashok and Lipton
+(2023).
+
+This implementation is available as `spacy.SpanCat.v3` and `spacy.NER.v3`. 
+Zero-shot prompting should remain pretty much the same, though behind the scenes, 
+a dummy prompt example will be used for the CoT implementations. 
+
+For few-shot learning, the provided examples need to be provided in a slightly 
+[different format](https://spacy.io/api/large-language-models#ner) than the v1 and v2 versions.
+
+First, you can provide an explicit `description` of what entities should look like. 
+
+In `0.4.x`:
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = ["DISH", "INGREDIENT", "EQUIPMENT"]
+```
+
+In `0.5.x`:
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v3"
+labels = ["DISH", "INGREDIENT", "EQUIPMENT"]
+description = Entities are the names food dishes,
+    ingredients, and any kind of cooking equipment.
+    Adjectives, verbs, adverbs are not entities.
+    Pronouns are not entities.
+```
+
+Further, the examples for few-shot learning also look different, and you can include both positive as well as negative examples 
+using the new fields `is_entity` and `reason`.
+
+In `0.4.x`:
+```json
+[
+  {
+    "text": "You can't get a great chocolate flavor with carob.",
+    "entities": {
+      "INGREDIENT": ["carob"]
+    }
+  },
+    ...
+]
+```
+
+In `0.5.x`:
+```json
+[
+    {
+        "text": "You can't get a great chocolate flavor with carob.",
+        "spans": [
+            {
+                "text": "chocolate",
+                "is_entity": false,
+                "label": "==NONE==",
+                "reason": "is a flavor in this context, not an ingredient"
+            },
+            {
+                "text": "carob",
+                "is_entity": true,
+                "label": "INGREDIENT",
+                "reason": "is an ingredient to add chocolate flavor"
+            }
+        ]
+    },
+    ...
+]
+```
+
+For a full example using 0.5.0 with Chain-of-Thought prompting for NER, see 
+[this usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_v3_openai).
+
+<details>
   <summary>0.3.x to 0.4.x</summary>
 
 ## `0.3.x` to `0.4.x`
