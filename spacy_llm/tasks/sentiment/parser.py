@@ -12,7 +12,6 @@ def parse_responses_v1(
     task (SentimentTask): Task instance.
     docs (Iterable[Doc]): Corresponding Doc instances.
     responses (Iterable[str]): LLM responses.
-    field (str): Field to store responses in.
     RETURNS (Iterable[Optional[float]]): Sentiment score per doc/response. None on parsing error.
     """
     for prompt_response in responses:
