@@ -13,7 +13,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import registry
 from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
-from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.ty import LabeledTask, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -44,7 +44,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -74,7 +74,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -106,7 +106,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -135,7 +135,7 @@ def zeroshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -208,7 +208,7 @@ def test_textcat_config(task, cfg_string, request):
 
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, Labeled)
+    assert isinstance(task, LabeledTask)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
@@ -316,7 +316,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
         labels=label, exclusive_classes=True, normalizer=lowercase_normalizer()
     )
 
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     assert list(pred.cats.keys())[0] == label
@@ -348,7 +348,7 @@ def test_textcat_multilabel_labels_are_correct(
         exclusive_classes=exclusive_classes,
         normalizer=lowercase_normalizer(),
     )
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
     pred = list(llm_textcat.parse_responses([doc], [response]))[0]
     # Take only those that have scores
@@ -371,13 +371,13 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
     with annoying newlines and spaces at the edge of the text.
     """
     text, labels, _, exclusive_classes, _ = binary
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -437,13 +437,13 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
     examples_path, multilabel_excl
 ):
     text, labels, _, exclusive_classes, _ = multilabel_excl
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -504,13 +504,13 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
     examples_path, multilabel_nonexcl
 ):
     text, labels, _, exclusive_classes, _ = multilabel_nonexcl
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
-    examples = fewshot_reader(examples_path)
+    prompt_examples = fewshot_reader(examples_path)
     llm_textcat = make_textcat_task_v3(
         labels=labels,
-        examples=examples,
+        examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
     prompt = list(llm_textcat.generate_prompts([doc]))[0]
@@ -588,7 +588,7 @@ def test_external_template_actually_loads():
     template_path = str(TEMPLATES_DIR / "textcat.jinja2")
     template = file_reader(template_path)
     labels = "Recipe"
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
     llm_textcat = make_textcat_task_v3(labels=labels, template=template)
@@ -668,7 +668,7 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
 
 def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
     text, labels, _, exclusive_classes, _ = multilabel_excl
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("en")
     doc = nlp(text)
 
     llm_textcat = make_textcat_task_v3(
@@ -820,3 +820,31 @@ def test_textcat_serde(noop_config, tmp_path: Path):
     nlp3.from_bytes(nlp1.to_bytes())
 
     assert task1._label_dict == task2._label_dict == task3._label_dict == labels
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_add_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.TextCat.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "I am feeling great."
+    doc = nlp(text)
+    assert len(doc.cats) == 0
+
+    for label in ["HAPPY", "SAD"]:
+        llm.add_label(label)
+    doc = nlp(text)
+    assert len(doc.cats) == 2
+    assert set(doc.cats.keys()) == {"HAPPY", "SAD"}

@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, Iterable
 
-from spacy.util import SimpleFrozenDict
+from confection import SimpleFrozenDict
 
 from ....compat import Literal
 from ....registry import registry
@@ -32,7 +32,7 @@ def anthropic_claude_2(
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS,
+        endpoint=Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,

@@ -15,11 +15,25 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, Labeled, LLMTask, PromptExecutor, Scorable, Serializable
-from ..ty import validate_type_consistency
+from ..ty import Cache, LabeledTask, LLMTask, PromptExecutorType, ScorableTask
+from ..ty import Serializable, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
+
+DEFAULT_MODEL_CONFIG = {
+    "@llm_models": "spacy.GPT-3-5.v2",
+    "strict": True,
+}
+DEFAULT_CACHE_CONFIG = {
+    "@llm_misc": "spacy.BatchCache.v1",
+    "path": None,
+    "batch_size": 64,
+    "max_batches_in_mem": 4,
+}
+
+DEFAULT_SAVE_IO = False
+DEFAULT_VALIDATE_TYPES = True
 
 
 class CacheConfigType(TypedDict):
@@ -34,25 +48,17 @@ class CacheConfigType(TypedDict):
     assigns=[],
     default_config={
         "task": None,
-        "model": {
-            "@llm_models": "spacy.GPT-3-5.v1",
-            "strict": True,
-        },
-        "cache": {
-            "@llm_misc": "spacy.BatchCache.v1",
-            "path": None,
-            "batch_size": 64,
-            "max_batches_in_mem": 4,
-        },
-        "save_io": False,
-        "validate_types": True,
+        "model": DEFAULT_MODEL_CONFIG,
+        "cache": DEFAULT_CACHE_CONFIG,
+        "save_io": DEFAULT_SAVE_IO,
+        "validate_types": DEFAULT_VALIDATE_TYPES,
     },
 )
 def make_llm(
     nlp: Language,
     name: str,
     task: Optional[LLMTask],
-    model: PromptExecutor,
+    model: PromptExecutorType,
     cache: Cache,
     save_io: bool,
     validate_types: bool,
@@ -72,7 +78,7 @@ def make_llm(
     if task is None:
         raise ValueError(
             "Argument `task` has not been specified, but is required (e. g. {'@llm_tasks': "
-            "'spacy.NER.v2'})."
+            "'spacy.NER.v3'})."
         )
     if validate_types:
         validate_type_consistency(task, model)
@@ -96,7 +102,7 @@ class LLMWrapper(Pipe):
         *,
         vocab: Vocab,
         task: LLMTask,
-        model: PromptExecutor,
+        model: PromptExecutorType,
         cache: Cache,
         save_io: bool,
     ) -> None:
@@ -128,9 +134,14 @@ class LLMWrapper(Pipe):
     @property
     def labels(self) -> Tuple[str, ...]:
         labels: Tuple[str, ...] = tuple()
-        if isinstance(self._task, Labeled):
+        if isinstance(self._task, LabeledTask):
             labels = self._task.labels
         return labels
+
+    def add_label(self, label: str) -> int:
+        if not isinstance(self._task, LabeledTask):
+            raise ValueError("The task of this LLM component does not have labels.")
+        return self._task.add_label(label)
 
     @property
     def task(self) -> LLMTask:
@@ -156,7 +167,7 @@ class LLMWrapper(Pipe):
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        if isinstance(self._task, Scorable):
+        if isinstance(self._task, ScorableTask):
             return self._task.scorer(examples)
         return {}
 

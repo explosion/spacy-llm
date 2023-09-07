@@ -1,8 +1,31 @@
-This is a test NER template. Here are the labels
+Here's the test template for the tests and stuff
 {# whitespace #}
-{%- for label in labels -%}
-{{ label }}
+{{ description }}
+{# whitespace #}
+{%- if label_definitions -%}
+Below are definitions of each label to help aid you in what kinds of named entities to extract for each label.
+Assume these definitions are written by an expert and follow them closely.
+{# whitespace #}
+{%- for label, definition in label_definitions.items() -%}
+{{ label }}: {{ definition }}
 {# whitespace #}
 {%- endfor -%}
 {# whitespace #}
-Here is the text: {{ text }}
+{# whitespace #}
+{%- endif -%}
+Q: Given the paragraph below, identify a list of entities, and for each entry explain why it is or is not an entity:
+{# whitespace #}
+{# whitespace #}
+{%- for example in prompt_examples -%}
+Paragraph: {{ example.text }}
+Answer:
+{# whitespace #}
+{%- for span in example.spans -%}
+{{ loop.index }}. {{ span.to_str() }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+Paragraph: {{ text }}
+Answer:

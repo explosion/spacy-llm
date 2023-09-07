@@ -5,6 +5,8 @@ import spacy
 from confection import Config  # type: ignore[import]
 from thinc.compat import has_torch_cuda_gpu
 
+from ...compat import torch
+
 _PIPE_CFG = {
     "model": {
         "@llm_models": "spacy.Dolly.v1",
@@ -44,6 +46,7 @@ def test_init():
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
     nlp.get_pipe("llm")._model.get_model_names()
+    torch.cuda.empty_cache()
 
 
 @pytest.mark.gpu
@@ -52,6 +55,7 @@ def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     assert nlp.pipe_names == ["llm"]
+    torch.cuda.empty_cache()
 
 
 @pytest.mark.gpu
@@ -62,3 +66,4 @@ def test_invalid_model():
     config["components"]["llm"]["model"]["name"] = "dolly-the-sheep"
     with pytest.raises(ValueError, match="unexpected value; permitted"):
         spacy.util.load_model_from_config(config, auto_fill=True)
+    torch.cuda.empty_cache()
