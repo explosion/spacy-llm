@@ -101,7 +101,7 @@ def fewshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -131,7 +131,7 @@ def fewshot_cfg_string_v3():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -166,7 +166,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -238,6 +238,35 @@ def test_ner_predict(cfg_str, text, gold_ents, request):
     config = Config().from_str(request.getfixturevalue(cfg_str))
 
     nlp = spacy.util.load_model_from_config(config, auto_fill=True)
+    doc = nlp(text)
+
+    assert len(doc.ents) == len(gold_ents)
+    for pred_ent, gold_ent in zip(doc.ents, gold_ents):
+        assert (
+            gold_ent[0] in pred_ent.text
+        )  # occassionally, the LLM predicts "in Ireland" instead of just "Ireland"
+        assert pred_ent.label_ in gold_ent[1].split("|")
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.parametrize(
+    "text,gold_ents",
+    [
+        (
+            "Marc and Bob both live in Ireland.",
+            [("Marc", "PER"), ("Bob", "PER"), ("Ireland", "LOC")],
+        ),
+    ],
+)
+def test_llm_ner_predict(text, gold_ents):
+    """Use llm_ner factory with default OpenAI model to get NER results.
+    Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
+    """
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe("llm_ner")
+    for ent_str, ent_label in gold_ents:
+        llm.add_label(ent_label)
     doc = nlp(text)
 
     assert len(doc.ents) == len(gold_ents)

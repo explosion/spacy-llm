@@ -25,7 +25,7 @@ class OpenAI(REST):
             warnings.warn(
                 "Could not find the API key to access the OpenAI API. Ensure you have an API key "
                 "set up via https://platform.openai.com/account/api-keys, then make it available as "
-                "an environment variable 'OPENAI_API_KEY."
+                "an environment variable 'OPENAI_API_KEY'."
             )
 
         # Check the access and get a list of available models to verify the model argument (if not None)
