@@ -8,7 +8,7 @@
 `0.5.x` includes internal refactoring that should have minimal to zero impact to the user experience. Mostly, configurations from `0.4.x` 
 should just work on `0.5.x`.
 
-### Use the new Chain-of-Though NER prompting
+### Use the new Chain-of-Thought NER prompting
 
 We've implemented Chain-of-Thought (CoT) prompting for SpanCat and NER tasks, 
 based on the
