@@ -86,8 +86,7 @@ factory = "llm"
 labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.model]
-@llm_models = "spacy.GPT-4.v1"
-config = {"temperature": 0.3}
+@llm_models = "spacy.GPT-4.v2"
 ```
 
 Now run:

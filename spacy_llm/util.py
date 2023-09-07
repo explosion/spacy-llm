@@ -1,10 +1,9 @@
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Union
 
-from confection import Config
+from confection import Config, SimpleFrozenDict
 from spacy.language import Language
-from spacy.util import SimpleFrozenDict, get_sourced_components, load_config
-from spacy.util import load_model_from_config
+from spacy.util import get_sourced_components, load_config, load_model_from_config
 
 
 def split_labels(labels: Union[str, Iterable[str]]) -> List[str]:

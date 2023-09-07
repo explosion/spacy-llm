@@ -12,8 +12,8 @@ from spacy_llm.pipeline import LLMWrapper
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["langchain.OpenAI.v1", "spacy.GPT-3-5.v1"],
-    ids=["langchain", "rest-openai"],
+    ["langchain.OpenAI.v1", "spacy.GPT-3-5.v1", "spacy.GPT-3-5.v2"],
+    ids=["langchain", "rest-openai", "rest-openai"],
 )
 @pytest.mark.parametrize(
     "task",
