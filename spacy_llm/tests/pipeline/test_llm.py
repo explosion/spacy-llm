@@ -303,6 +303,9 @@ def test_llm_task_factories():
 
         [components.llm]
         factory = "llm_{task_handle.split('.')[1].lower()}"
+
+        [components.llm.model]
+        @llm_models = "test.NoOpModel.v1"
         """
         config = Config().from_str(cfg_string)
         assemble_from_config(config)
