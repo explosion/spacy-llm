@@ -85,6 +85,8 @@ In `0.5.x`:
 For a full example using 0.5.0 with Chain-of-Thought prompting for NER, see 
 [this usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_v3_openai).
 
+</details>
+
 <details>
   <summary>0.3.x to 0.4.x</summary>
 
