@@ -22,7 +22,7 @@ logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
 
 DEFAULT_MODEL_CONFIG = {
-    "@llm_models": "spacy.GPT-3-5.v1",
+    "@llm_models": "spacy.GPT-3-5.v2",
     "strict": True,
 }
 DEFAULT_CACHE_CONFIG = {
