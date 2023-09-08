@@ -57,11 +57,7 @@ python -m pip install spacy-llm
 
 ## 🐍 Quickstart
 
-The task and the model have to be supplied to the `llm` pipeline component using [spaCy's config
-system](https://spacy.io/api/data-formats#config).
-
-Let's run some text classification using a GPT-4 model from OpenAI. If you're using hosted APIs (as opposed to local
-models like Falcon, Dolly or LLaMA), ensure to that your API keys are set as environmental variables.
+Let's run some text classification using a GPT model from OpenAI. 
 
 Create a new API key from openai.com or fetch an existing one, and ensure the
 keys are set as environmental variables. For more background information, see
@@ -88,8 +84,9 @@ as well as the default GPT-3-5 model from OpenAI.
 
 ### Using a config file
 
-To get more control over the various parameters of the `llm` pipeline, 
-create a config file `config.cfg` containing at least the following (or see the
+To control the various parameters of the `llm` pipeline, we can use 
+[spaCy's config system](https://spacy.io/api/data-formats#config).
+To start, create a config file `config.cfg` containing at least the following (or see the
 full example
 [here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
 
