@@ -20,7 +20,6 @@ percentage points.
 
 For `v3`, zero-shot prompting should remain pretty much the same, though behind the scenes, 
 a dummy prompt example will be used by the CoT implementation. 
-
 For few-shot learning, the provided examples need to be provided in a slightly 
 [different format](https://spacy.io/api/large-language-models#ner) than the `v1` and `v2` versions.
 
