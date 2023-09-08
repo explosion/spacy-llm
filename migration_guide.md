@@ -5,8 +5,8 @@
 
 ## `0.4.x` to `0.5.x`
 
-`0.5.x` includes internal refactoring that should have minimal to zero impact to the user experience. Mostly, configurations from `0.4.x` 
-should just work on `0.5.x`.
+`0.5.x` includes internal refactoring that should have minimal to zero impact to the user experience. 
+Mostly, code and config files from `0.4.x` should just work on `0.5.x`.
 
 ### New Chain-of-Thought NER prompting
 
