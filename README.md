@@ -84,7 +84,7 @@ as well as the default GPT-3-5 model from OpenAI.
 
 ### Using a config file
 
-To get more control over the various parameters of the `llm` pipeline, we can use 
+To control the various parameters of the `llm` pipeline, we can use 
 [spaCy's config system](https://spacy.io/api/data-formats#config).
 To start, create a config file `config.cfg` containing at least the following (or see the
 full example
