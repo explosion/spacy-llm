@@ -31,10 +31,10 @@ def test_ner_dolly(config_name: str):
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
 @pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
 def test_textcat_dolly(config_name: str):
-    """Test NER Dolly usage example.
+    """Test Textcat Dolly usage example.
     config_name (str): Name of config file to use.
     """
-    path = _USAGE_EXAMPLE_PATH / "textcat_openai"
+    path = _USAGE_EXAMPLE_PATH / "textcat_dolly"
     textcat_openai.run_pipeline(
         text="text",
         config_path=path / config_name,

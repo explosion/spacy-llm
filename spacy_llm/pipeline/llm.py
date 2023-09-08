@@ -73,7 +73,7 @@ def make_llm(
     model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
     save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
-    validate_types (bool): Whether to check if signatures of configured backend and task are consistent.
+    validate_types (bool): Whether to check if signatures of configured model and task are consistent.
     """
     if task is None:
         raise ValueError(
