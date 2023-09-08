@@ -8,19 +8,21 @@
 `0.5.x` includes internal refactoring that should have minimal to zero impact to the user experience. Mostly, configurations from `0.4.x` 
 should just work on `0.5.x`.
 
-### Use the new Chain-of-Thought NER prompting
+### New Chain-of-Thought NER prompting
 
 We've implemented Chain-of-Thought (CoT) prompting for SpanCat and NER tasks, 
 based on the
 [PromptNER paper](https://arxiv.org/pdf/2305.15444.pdf) by Ashok and Lipton
-(2023).
+(2023). This implementation is available as `spacy.SpanCat.v3` and `spacy.NER.v3`. 
+On an internal use-case, we've found this implementation to be much more accurate 
+than the `v1` and `v2` versions - with an increase of F-score of up to 15 
+percentage points.
 
-This implementation is available as `spacy.SpanCat.v3` and `spacy.NER.v3`. 
-Zero-shot prompting should remain pretty much the same, though behind the scenes, 
-a dummy prompt example will be used for the CoT implementations. 
+For `v3`, zero-shot prompting should remain pretty much the same, though behind the scenes, 
+a dummy prompt example will be used by the CoT implementation. 
 
 For few-shot learning, the provided examples need to be provided in a slightly 
-[different format](https://spacy.io/api/large-language-models#ner) than the v1 and v2 versions.
+[different format](https://spacy.io/api/large-language-models#ner) than the `v1` and `v2` versions.
 
 First, you can provide an explicit `description` of what entities should look like. 
 
@@ -42,7 +44,7 @@ description = Entities are the names food dishes,
     Pronouns are not entities.
 ```
 
-Further, the examples for few-shot learning also look different, and you can include both positive as well as negative examples 
+Further, the examples for few-shot learning look different, and you can include both positive as well as negative examples 
 using the new fields `is_entity` and `reason`.
 
 In `0.4.x`:
