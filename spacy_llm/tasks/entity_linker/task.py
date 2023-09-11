@@ -2,7 +2,8 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
 from spacy import Language
-from spacy.tokens import Doc
+from spacy.pipeline import EntityLinker
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Self
@@ -42,8 +43,8 @@ class EntityLinkerTask(BuiltinTask):
 
         # Exclude mentions without candidates from prompt, if set.
         self._auto_nil = True
-        # Store indices of entities per doc for which no candidates could be found.
-        self._auto_nil_idx: List[List[int]] = []
+        # Store, per doc and entity, whether candidates could be found.
+        self._include_ent: List[List[bool]] = []
 
     def initialize(
         self,
@@ -73,38 +74,82 @@ class EntityLinkerTask(BuiltinTask):
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
-        self._auto_nil_idx = []
+        # Reset auto-nil attributes for new batch of docs.
+        self._include_ent = []
 
         for i_doc, doc in enumerate(docs):
             cands_ents, _ = self._fetch_entity_info(doc)
-            self._auto_nil_idx.append(
-                [len(cand_ents) == 0 for i_ent, cand_ents in enumerate(cands_ents)]
-            )
+            # Determine which ents have candidates and should be included in prompt.
+            incl_ent = [
+                len(cand_ents) > 0 or not self._auto_nil for cand_ents in cands_ents
+            ]
+            self._include_ent.append(incl_ent)
 
-            # todo
-            #  - store spans (already nilled?) in separate instance var or change current one
-            #  - move data definition out here
-            #  - if _auto_nil: only keep those where _auto_nil_idx[i] is False
-            #  - if _auto_nil: add auto nil spans, in correct sequence, in parse_responses()
+            # todo what to do if doc has no ents left? return alternative "do nothing" prompt?
 
             yield _template.render(
-                text=EntityLinkerTask.highlight_ents_in_text(doc),
-                mentions_str=", ".join([f"*{mention}*" for mention in doc.ents]),
-                mentions=[ent.text for ent in doc.ents],
-                entity_descriptions=[
-                    [ent.description for ent in ents] for ents in cands_ents
+                text=EntityLinkerTask.highlight_ents_in_text(
+                    doc, self._include_ent[i_doc]
+                ),
+                mentions_str=", ".join(
+                    [
+                        f"*{mention}*"
+                        for has_cands, mention in zip(self._include_ent, doc.ents)
+                        if has_cands
+                    ]
+                ),
+                mentions=[
+                    ent.text
+                    for has_cands, ent in zip(self._include_ent, doc.ents)
+                    if has_cands
                 ],
-                entity_ids=[[ent.id for ent in ents] for ents in cands_ents],
+                entity_descriptions=[
+                    [ent.description for ent in ents]
+                    for has_cands, ents in zip(self._include_ent, cands_ents)
+                    if has_cands
+                ],
+                entity_ids=[
+                    [ent.id for ent in ents]
+                    for has_cands, ents in zip(self._include_ent, cands_ents)
+                    if has_cands
+                ],
                 prompt_examples=self._prompt_examples,
             )
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, ent_spans in zip(
-            docs, self._parse_responses(self, docs=docs, responses=responses)
+        for i_doc, data in enumerate(
+            zip(docs, self._parse_responses(self, docs=docs, responses=responses))
         ):
-            doc.ents = ent_spans
+            doc, ent_spans = data
+            # If numbers of ents parsed from LLM response + ents without candiates and number of ents in doc don't
+            # align, skip doc (most likely LLM parsing failed, no guarantee KB IDs can be assigned to correct ents).
+            if len(ent_spans) + sum(self._include_ent[i_doc]) != len(doc.ents):
+                continue
+
+            # Fuse entities with (i. e. inferred by the LLM) and without candidates (i. e. auto-nilled).
+            ent_spans_iter = iter(ent_spans)
+            fused_ents: List[Span] = []
+            for i_ent, ent in enumerate(doc.ents):
+                # Ent was not included in prompt, as there were no candidates - fill in NIL.
+                if not self._include_ent[i_doc][i_ent]:
+                    fused_ents.append(
+                        Span(
+                            doc=doc,
+                            start=ent.start,
+                            end=ent.end,
+                            label=ent.label,
+                            vector=ent.vector,
+                            vector_norm=ent.vector_norm,
+                            kb_id=EntityLinker.NIL,
+                        )
+                    )
+                # Ent had candidates and was included in prompt - we expect a response.
+                else:
+                    fused_ents.append(next(ent_spans_iter))
+
+            doc.ents = fused_ents
             yield doc
 
     def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
@@ -115,18 +160,33 @@ class EntityLinkerTask(BuiltinTask):
         return ["_template"]
 
     @staticmethod
-    def highlight_ents_in_text(doc: Doc) -> str:
+    def highlight_ents_in_text(
+        doc: Doc, include_ents: Optional[List[bool]] = None
+    ) -> str:
         """Highlights entities in doc text with **.
         doc (Doc): Doc whose entities are to be highlighted.
+        include_ents (Optional[List[bool]]): Whether to include entities with the corresponding indices. If None, all
+            are included.
         RETURNS (str): Text with highlighted entities.
         """
+        if include_ents is not None and len(include_ents) != len(doc.ents):
+            raise ValueError(
+                f"`include_ents` has {len(include_ents)} entries, but {len(doc.ents)} are required."
+            )
+
         text = doc.text
-        for i, ent in enumerate(doc.ents):
+        i = 0
+        for ent in doc.ents:
+            # Skip if ent is not supposed to be included.
+            if include_ents is not None and not include_ents[i]:
+                continue
+
             text = (
                 text[: ent.start_char + i * 2]
                 + f"*{ent.text}*"
                 + text[ent.end_char + i * 2 :]
             )
+            i += 1
 
         return text
 
