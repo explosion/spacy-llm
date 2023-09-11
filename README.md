@@ -57,17 +57,36 @@ python -m pip install spacy-llm
 
 ## 🐍 Quickstart
 
-The task and the model have to be supplied to the `llm` pipeline component using [spaCy's config
-system](https://spacy.io/api/data-formats#config).
-
-Let's run some text classification using a GPT-4 model from OpenAI. If you're using hosted APIs (as opposed to local
-models like Falcon, Dolly or LLaMA), ensure to that your API keys are set as environmental variables.
+Let's run some text classification using a GPT model from OpenAI. 
 
 Create a new API key from openai.com or fetch an existing one, and ensure the
 keys are set as environmental variables. For more background information, see
-the [OpenAI](/api/large-language-models#gpt-3-5) section.
+the documentation around setting [API keys](https://spacy.io/api/large-language-models#api-keys).
 
-Create a config file `config.cfg` containing at least the following (or see the
+### In Python code
+
+To do some quick experiments, from 0.5.0 onwards you can run:
+
+```python
+import spacy
+
+nlp = spacy.blank("en")
+llm = nlp.add_pipe("llm_textcat")
+llm.add_label("INSULT")
+llm.add_label("COMPLIMENT")
+doc = nlp("You look gorgeous!")
+print(doc.cats)
+# {"COMPLIMENT": 1.0, "INSULT": 0.0}
+```
+
+By using the `llm_textcat` factory, the latest version of the built-in textcat task is used, 
+as well as the default GPT-3-5 model from OpenAI.
+
+### Using a config file
+
+To control the various parameters of the `llm` pipeline, we can use 
+[spaCy's config system](https://spacy.io/api/data-formats#config).
+To start, create a config file `config.cfg` containing at least the following (or see the
 full example
 [here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
 
@@ -82,12 +101,11 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.TextCat.v2"
+@llm_tasks = "spacy.TextCat.v3"
 labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.model]
-@llm_models = "spacy.GPT-4.v1"
-config = {"temperature": 0.3}
+@llm_models = "spacy.GPT-4.v2"
 ```
 
 Now run:

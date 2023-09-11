@@ -13,7 +13,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import registry
 from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
-from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.ty import LabeledTask, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -44,7 +44,7 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -74,7 +74,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -106,7 +106,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -135,7 +135,7 @@ def zeroshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -208,7 +208,7 @@ def test_textcat_config(task, cfg_string, request):
 
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, Labeled)
+    assert isinstance(task, LabeledTask)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
@@ -820,3 +820,31 @@ def test_textcat_serde(noop_config, tmp_path: Path):
     nlp3.from_bytes(nlp1.to_bytes())
 
     assert task1._label_dict == task2._label_dict == task3._label_dict == labels
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_add_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.TextCat.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "I am feeling great."
+    doc = nlp(text)
+    assert len(doc.cats) == 0
+
+    for label in ["HAPPY", "SAD"]:
+        llm.add_label(label)
+    doc = nlp(text)
+    assert len(doc.cats) == 2
+    assert set(doc.cats.keys()) == {"HAPPY", "SAD"}

@@ -19,10 +19,10 @@ batch_size = 128
 [components.llm]
 factory = "llm"
 
-[components.llm.backend]
-@llm_models = "spacy.REST.v1"
-api = "OpenAI"
-config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
+[components.llm.model]
+@llm_models = "spacy.GPT-3-5.v2"
+name = "gpt-3.5-turbo"
+config = {"temperature": 0.0}
 
 [components.llm.task]
 @llm_tasks = "spacy.NER.v2"
@@ -44,10 +44,10 @@ batch_size = 128
 [components.llm]
 factory = "llm"
 
-[components.llm.backend]
-@llm_models = "spacy.REST.v1"
-api = "OpenAI"
-config = {"model": "gpt-3.5-turbo", "temperature": 0.3}
+[components.llm.model]
+@llm_models = "spacy.GPT-3-5.v2"
+name = "gpt-3.5-turbo"
+config = {"temperature": 0.0}
 
 [components.llm.task]
 @llm_tasks = "spacy.TextCat.v2"

@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, c
 
 import jinja2
 import srsly
-from spacy import Language, util
+from spacy import Language, util, Errors
 from spacy.tokens import Doc
 from spacy.training import Example
 
@@ -311,6 +311,14 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     @property
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
+
+    def add_label(self, label: str) -> int:
+        if not isinstance(label, str):
+            raise ValueError(Errors.E187)
+        if label in self.labels:
+            return 0
+        self._label_dict[self._normalizer(label)] = label
+        return 1
 
     @property
     def normalizer(self) -> Callable[[str], str]:

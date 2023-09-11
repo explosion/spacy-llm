@@ -20,7 +20,7 @@ from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.span import SpanReason
 from spacy_llm.tasks.span.parser import _extract_span_reasons_cot
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import Labeled, LLMTask
+from spacy_llm.ty import LabeledTask, LLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -101,7 +101,7 @@ def fewshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -131,7 +131,7 @@ def fewshot_cfg_string_v3():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -166,7 +166,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -210,7 +210,7 @@ def test_ner_config(config: Config):
     labels = config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
     task = pipe.task
-    assert isinstance(task, Labeled)
+    assert isinstance(task, LabeledTask)
     assert sorted(task.labels) == sorted(tuple(labels))
     assert pipe.labels == task.labels
     assert nlp.pipe_labels["llm"] == list(task.labels)
@@ -238,6 +238,35 @@ def test_ner_predict(cfg_str, text, gold_ents, request):
     config = Config().from_str(request.getfixturevalue(cfg_str))
 
     nlp = spacy.util.load_model_from_config(config, auto_fill=True)
+    doc = nlp(text)
+
+    assert len(doc.ents) == len(gold_ents)
+    for pred_ent, gold_ent in zip(doc.ents, gold_ents):
+        assert (
+            gold_ent[0] in pred_ent.text
+        )  # occassionally, the LLM predicts "in Ireland" instead of just "Ireland"
+        assert pred_ent.label_ in gold_ent[1].split("|")
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.parametrize(
+    "text,gold_ents",
+    [
+        (
+            "Marc and Bob both live in Ireland.",
+            [("Marc", "PER"), ("Bob", "PER"), ("Ireland", "LOC")],
+        ),
+    ],
+)
+def test_llm_ner_predict(text, gold_ents):
+    """Use llm_ner factory with default OpenAI model to get NER results.
+    Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
+    """
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe("llm_ner")
+    for ent_str, ent_label in gold_ents:
+        llm.add_label(ent_label)
     doc = nlp(text)
 
     assert len(doc.ents) == len(gold_ents)
@@ -940,3 +969,30 @@ def test_regression_span_task_comma(
     doc = docs[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc.ents]
     assert pred_ents == gold_ents
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_add_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.NER.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "Jack and Jill visited France."
+    doc = nlp(text)
+    assert len(doc.ents) == 0
+
+    for label in ["PERSON", "LOCATION"]:
+        llm.add_label(label)
+    doc = nlp(text)
+    assert len(doc.ents) == 3

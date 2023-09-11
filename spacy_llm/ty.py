@@ -131,9 +131,12 @@ class PromptTemplateProvider(Protocol):
 
 
 @runtime_checkable
-class Labeled(Protocol):
+class LabeledTask(Protocol):
     @property
     def labels(self) -> Tuple[str, ...]:
+        ...
+
+    def add_label(self, label: str) -> int:
         ...
 
 
@@ -240,7 +243,7 @@ def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
 def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
     """Check whether the types of the task and model signatures match.
     task (LLMTask): Specified task.
-    backend (PromptExecutor): Specified model.
+    model (PromptExecutor): Specified model.
     """
     # Raises an error or prints a warning if something looks wrong/odd.
     if not isinstance(task, LLMTask):

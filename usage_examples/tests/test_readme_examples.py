@@ -28,8 +28,7 @@ def test_example_1_classifier():
         labels = ["COMPLIMENT", "INSULT"]
 
         [components.llm.model]
-        @llm_models = "spacy.GPT-3-5.v1"
-        config = {"temperature": 0.3}
+        @llm_models = "spacy.GPT-3-5.v2"
         """
 
         with open(tmpdir / "cfg", "w") as text_file:
@@ -150,7 +149,7 @@ def test_example_4_python():
                 ],
             },
             "model": {
-                "@llm_models": "spacy.GPT-3-5.v1",
+                "@llm_models": "spacy.GPT-3-5.v2",
             },
         },
     )
