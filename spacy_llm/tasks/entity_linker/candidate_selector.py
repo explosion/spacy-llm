@@ -51,8 +51,6 @@ class PipelineCandidateSelector:
             assert isinstance(cands, list)
             cands.sort(key=lambda x: x.prior_prob, reverse=True)
 
-        # todo if not candidates found: return NIL entity
-
         return [
             [
                 Entity(
@@ -61,6 +59,8 @@ class PipelineCandidateSelector:
                 )
                 for cand in cands[: self._top_n]
             ]
+            if len(cands) > 0
+            else [Entity(id=EntityLinker.NIL, description=UNAVAILABLE_ENTITY_DESC)]
             for cands in all_cands
         ]
 
@@ -73,7 +73,7 @@ class PipelineCandidateSelector:
         """
         if entity_id not in self._descs:
             warnings.warn(
-                f"Entity with ID {entity_id} is not in provided descriptions file."
+                f"Entity with ID {entity_id} is not in provided descriptions."
             )
 
         return self._descs.get(entity_id, UNAVAILABLE_ENTITY_DESC)

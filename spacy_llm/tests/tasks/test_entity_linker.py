@@ -11,7 +11,7 @@ from confection import Config
 from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
 from spacy.pipeline import EntityLinker
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import make_tempdir
 
@@ -20,6 +20,7 @@ from spacy_llm.tasks.entity_linker import EntityLinkerTask, make_entitylinker_ta
 from spacy_llm.util import assemble_from_config
 
 from ...tasks.entity_linker.registry import make_candidate_selector_pipeline
+from ...tasks.entity_linker.util import UNAVAILABLE_ENTITY_DESC
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -298,21 +299,38 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
         overrides={
             "paths.el_nlp": str(tmp_path),
             "paths.el_desc": str(tmp_path / "desc.csv"),
+            "components.llm.save_io": True,
         },
     )
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     nlp.initialize(lambda: [])
 
-    text = "Alice goes to Foo to see the Boston Celtics game."
-    doc = nlp.make_doc(text)
-    doc.ents = [
-        Span(doc=doc, start=3, end=4, label="LOC"),  # NIL
-        Span(doc=doc, start=7, end=9, label="ORG"),  # Q131371
-    ]
-    doc = nlp(doc)
+    def make_doc() -> Doc:
+        text = "Alice goes to Foo to see the Boston Celtics game."
+        doc = nlp.make_doc(text)
+        doc.ents = [
+            Span(doc=doc, start=3, end=4, label="LOC"),  # NIL
+            Span(doc=doc, start=7, end=9, label="ORG"),  # Q131371
+        ]
+        return doc
 
+    # Run with auto-nil: Foo shouldn't appear in prompt. It should be set to NIL due to not having candidates in the KB.
+    assert nlp.components[0][1]._task._auto_nil is True
+    doc = nlp(make_doc())
     assert len(doc.ents) == 2
+    assert "*Foo*" not in doc.user_data["llm_io"]["llm"]["prompt"]
+    assert doc.ents[0].kb_id_ == EntityLinker.NIL
+    assert doc.ents[1].kb_id_ == "Q131371"
+
+    # Run without auto-nil: Foo should appear in prompt with no candidates and default "non-available" description. LLM
+    # should be able to infer that NIL is the correct solution.
+    nlp.components[0][1]._task._auto_nil = False
+    doc = nlp(make_doc())
+    assert (
+        f"- For *Foo*:\n    {EntityLinker.NIL}. {UNAVAILABLE_ENTITY_DESC}"
+        in doc.user_data["llm_io"]["llm"]["prompt"]
+    )
     assert doc.ents[0].kb_id_ == EntityLinker.NIL
     assert doc.ents[1].kb_id_ == "Q131371"
 

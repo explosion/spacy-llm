@@ -44,7 +44,7 @@ class EntityLinkerTask(BuiltinTask):
         # Exclude mentions without candidates from prompt, if set.
         self._auto_nil = True
         # Store, per doc and entity, whether candidates could be found.
-        self._include_ent: List[List[bool]] = []
+        self._has_ent_cands: List[List[bool]] = []
 
     def initialize(
         self,
@@ -75,43 +75,34 @@ class EntityLinkerTask(BuiltinTask):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         # Reset auto-nil attributes for new batch of docs.
-        self._include_ent = []
+        self._has_ent_cands = []
 
         for i_doc, doc in enumerate(docs):
             cands_ents, _ = self._fetch_entity_info(doc)
             # Determine which ents have candidates and should be included in prompt.
-            incl_ent = [
-                len(cand_ents) > 0 or not self._auto_nil for cand_ents in cands_ents
+            has_cands = [
+                {cand_ent.id for cand_ent in cand_ents} != {EntityLinker.NIL}
+                or not self._auto_nil
+                for cand_ents in cands_ents
             ]
-            self._include_ent.append(incl_ent)
+            self._has_ent_cands.append(has_cands)
 
-            # todo what to do if doc has no ents left? return alternative "do nothing" prompt?
-
+            # To improve: if a doc has no entities (with candidates), skip prompt altogether?
             yield _template.render(
-                text=EntityLinkerTask.highlight_ents_in_text(
-                    doc, self._include_ent[i_doc]
-                ),
+                text=EntityLinkerTask.highlight_ents_in_text(doc, has_cands),
                 mentions_str=", ".join(
-                    [
-                        f"*{mention}*"
-                        for has_cands, mention in zip(self._include_ent, doc.ents)
-                        if has_cands
-                    ]
+                    [f"*{mention}*" for hc, mention in zip(has_cands, doc.ents) if hc]
                 ),
-                mentions=[
-                    ent.text
-                    for has_cands, ent in zip(self._include_ent, doc.ents)
-                    if has_cands
-                ],
+                mentions=[ent.text for hc, ent in zip(has_cands, doc.ents) if hc],
                 entity_descriptions=[
                     [ent.description for ent in ents]
-                    for has_cands, ents in zip(self._include_ent, cands_ents)
-                    if has_cands
+                    for hc, ents in zip(has_cands, cands_ents)
+                    if hc
                 ],
                 entity_ids=[
                     [ent.id for ent in ents]
-                    for has_cands, ents in zip(self._include_ent, cands_ents)
-                    if has_cands
+                    for hc, ents in zip(has_cands, cands_ents)
+                    if hc
                 ],
                 prompt_examples=self._prompt_examples,
             )
@@ -119,37 +110,40 @@ class EntityLinkerTask(BuiltinTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for i_doc, data in enumerate(
+        for i_doc, (doc, ent_spans) in enumerate(
             zip(docs, self._parse_responses(self, docs=docs, responses=responses))
         ):
-            doc, ent_spans = data
+            gen_nil_span: Callable[[Span], Span] = lambda ent: Span(  # noqa: E731
+                doc=doc,
+                start=ent.start,
+                end=ent.end,
+                label=ent.label,
+                vector=ent.vector,
+                vector_norm=ent.vector_norm,
+                kb_id=EntityLinker.NIL,
+            )
+
             # If numbers of ents parsed from LLM response + ents without candiates and number of ents in doc don't
             # align, skip doc (most likely LLM parsing failed, no guarantee KB IDs can be assigned to correct ents).
-            if len(ent_spans) + sum(self._include_ent[i_doc]) != len(doc.ents):
-                continue
+            # This can happen when the LLM fails to list solutions for all entities.
+            all_entities_resolved = len(ent_spans) + sum(
+                [not is_in_prompt for is_in_prompt in self._has_ent_cands[i_doc]]
+            ) == len(doc.ents)
 
-            # Fuse entities with (i. e. inferred by the LLM) and without candidates (i. e. auto-nilled).
+            # Fuse entities with (i. e. inferred by the LLM) and without candidates (i. e. auto-niled).
+            # If entity was not included in prompt, as there were no candidates - fill in NIL for this entity.
+            # If numbers of inferred and auto-niled entities don't line up with total number of entities, there is no
+            # guaranteed way to assign a partially resolved list of entities
+            # correctly.
+            # Else: entity had candidates and was included in prompt - fill in resolved KB ID.
             ent_spans_iter = iter(ent_spans)
-            fused_ents: List[Span] = []
-            for i_ent, ent in enumerate(doc.ents):
-                # Ent was not included in prompt, as there were no candidates - fill in NIL.
-                if not self._include_ent[i_doc][i_ent]:
-                    fused_ents.append(
-                        Span(
-                            doc=doc,
-                            start=ent.start,
-                            end=ent.end,
-                            label=ent.label,
-                            vector=ent.vector,
-                            vector_norm=ent.vector_norm,
-                            kb_id=EntityLinker.NIL,
-                        )
-                    )
-                # Ent had candidates and was included in prompt - we expect a response.
-                else:
-                    fused_ents.append(next(ent_spans_iter))
+            doc.ents = [
+                gen_nil_span(ent)
+                if not (all_entities_resolved and self._has_ent_cands[i_doc][i_ent])
+                else next(ent_spans_iter)
+                for i_ent, ent in enumerate(doc.ents)
+            ]
 
-            doc.ents = fused_ents
             yield doc
 
     def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
@@ -230,8 +224,15 @@ class EntityLinkerTask(BuiltinTask):
                         ),
                     )
                 )
-            correct_ent_ids.append(ent.kb_id_)
+                correct_ent_ids.append(ent.kb_id_)
 
             cand_entity_info.append(cands_for_ent)
 
         return cand_entity_info, correct_ent_ids
+
+    @property
+    def has_ent_cands(self) -> List[List[bool]]:
+        """Returns flags indicating whether documents' entities' have candidates in KB.
+        RETURNS (List[List[bool]]): Flags indicating whether documents' entities' have candidates in KB.
+        """
+        return self._has_ent_cands
