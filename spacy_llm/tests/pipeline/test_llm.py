@@ -333,6 +333,9 @@ def test_llm_task_factories_el(tmp_path):
     [components.llm]
     factory = "llm_entitylinker"
 
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+
     [components.llm.task]
     @llm_tasks = "spacy.EntityLinker.v1"
 
