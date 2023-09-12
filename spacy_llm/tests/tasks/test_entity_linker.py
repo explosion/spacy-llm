@@ -323,8 +323,7 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
     assert doc.ents[0].kb_id_ == EntityLinker.NIL
     assert doc.ents[1].kb_id_ == "Q131371"
 
-    # Run without auto-nil: Foo should appear in prompt with no candidates and default "non-available" description. LLM
-    # should be able to infer that NIL is the correct solution.
+    # Run without auto-nil: Foo should appear in prompt with no candidates and default "non-available" description.
     nlp.components[0][1]._task._auto_nil = False
     doc = nlp(make_doc())
     assert (
@@ -332,7 +331,8 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
         in doc.user_data["llm_io"]["llm"]["prompt"]
     )
     assert doc.ents[0].kb_id_ == EntityLinker.NIL
-    assert doc.ents[1].kb_id_ == "Q131371"
+    # Sometimes GPT-3.5 doesn't manage to include the NIL prediction, in which case all entities are set to NIL.
+    assert doc.ents[1].kb_id_ in ("Q131371", EntityLinker.NIL)
 
 
 @pytest.mark.external
