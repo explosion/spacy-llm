@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -52,15 +52,16 @@ class RELTask(BuiltinTaskWithLabels):
         self._verbose = verbose
         self._field = "rel"
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
-        return super().generate_prompts(
-            docs=[
-                Doc(doc.vocab, words=RELTask._preannotate(doc).split()) for doc in docs
-            ],
-            labels=list(self._label_dict.values()),
-            label_definitions=self._label_definitions,
-            preannotate=RELTask._preannotate,
-        )
+    def _preprocess_docs_for_prompt(self, docs: Iterable[Doc]) -> Iterable[Doc]:
+        return [Doc(doc.vocab, words=RELTask._preannotate(doc).split()) for doc in docs]
+
+    @property
+    def _prompt_data(self) -> Dict[str, Any]:
+        return {
+            "labels": list(self._label_dict.values()),
+            "label_definitions": self._label_definitions,
+            "preannotate": RELTask._preannotate,
+        }
 
     @staticmethod
     def _preannotate(doc: Union[Doc, RELExample]) -> str:

@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -78,12 +78,16 @@ class SummarizationTask(BuiltinTask):
                     f"LLM will likely produce responses that are too long."
                 )
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+    @property
+    def _prompt_data(self) -> Dict[str, Any]:
+        """Returns data injected into prompt template. No-op if not overridden by inheriting task class.
+        RETURNS (Dict[str, Any]): Data injected into prompt template.
+        """
         if self._check_example_summaries:
             self._check_prompt_example_summary_len()
             self._check_example_summaries = False
 
-        return super().generate_prompts(docs=docs, max_n_words=self._max_n_words)
+        return {"max_n_words": self._max_n_words}
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
