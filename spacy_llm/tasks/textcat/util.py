@@ -11,11 +11,13 @@ class TextCatExample(BaseModel):
     answer: str
 
     @classmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
-        if kwargs["use_binary"]:
+    def generate(
+        cls, example: Example, use_binary: bool, label_dict: Dict[str, str], **kwargs
+    ) -> Self:
+        if use_binary:
             answer = (
                 "POS"
-                if example.reference.cats[list(kwargs["label_dict"].values())[0]] == 1.0
+                if example.reference.cats[list(label_dict.values())[0]] == 1.0
                 else "NEG"
             )
         else:

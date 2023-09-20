@@ -58,6 +58,12 @@ class Serializable(Protocol):
 
 
 class FewshotExample(abc.ABC, BaseModel):
+    """Base fewshot-example.
+    From Python 3.7 onwards it's possible to make Pydantic models generic, which allows for a clean solution (see
+    https://github.com/pydantic/pydantic/issues/4171) using the controller pattern and Pydantic's GenericModel
+    (BaseModel in Pydantic v2). Until then passing **kwargs seems like the sanest option.
+    """
+
     @classmethod
     @abc.abstractmethod
     def generate(cls, example: Example, **kwargs) -> Self:
