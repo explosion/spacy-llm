@@ -25,12 +25,12 @@ If the text cannot be classified into any of the provided labels, answer `==NONE
 {# whitespace #}
 {%- endif -%}
 {# whitespace #}
-{%- if examples -%}
+{%- if prompt_examples -%}
 {# whitespace #}
 Below are some examples (only use these as a guide):
 {# whitespace #}
 {# whitespace #}
-{%- for example in examples -%}
+{%- for example in prompt_examples -%}
 {# whitespace #}
 Text:
 '''

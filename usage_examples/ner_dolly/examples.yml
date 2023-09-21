@@ -1,15 +1,15 @@
 - text: Jack and Jill went up the hill.
   entities:
-    PER:
+    PERSON:
       - Jack
       - Jill
-    LOC:
+    LOCATION:
       - hill
 - text: Jack fell down and broke his crown.
   entities:
-    PER:
+    PERSON:
       - Jack
 - text: Jill came tumbling after.
   entities:
-    PER:
+    PERSON:
       - Jill

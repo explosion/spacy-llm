@@ -12,8 +12,7 @@ from ..compat import has_openai_key
 
 PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.GPT-3-5.v1",
-        "config": {"temperature": 0.3},
+        "@llm_models": "spacy.GPT-3-5.v2",
     },
     "task": {"@llm_tasks": "spacy.TextCat.v1", "labels": "POSITIVE,NEGATIVE"},
 }
