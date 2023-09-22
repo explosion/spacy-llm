@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, Iterator, List, Tuple
+from typing import Iterable, List, Tuple
 
 from pydantic import ValidationError
 from spacy.tokens import Doc

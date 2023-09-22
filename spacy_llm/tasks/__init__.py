@@ -44,6 +44,7 @@ __all__ = [
     "make_rel_task",
     "make_sentiment_task",
     "make_spancat_task_v3",
+    "make_srl_task",
     "make_summarization_task",
     "make_textcat_task",
     "BuiltinTask",
