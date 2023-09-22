@@ -47,7 +47,9 @@ def _format_response(task: SRLTask, arg_lines) -> List[Tuple[str, str]]:
 
 def parse_responses_v1(
     task: SRLTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[Tuple[List[Dict[str, Any]], List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]]]:
+) -> Iterable[
+    Tuple[List[Dict[str, Any]], List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]]
+]:
     """
     Parse LLM response by extracting predicate-arguments blocks from the generate response.
     For example,
