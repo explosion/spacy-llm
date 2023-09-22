@@ -66,7 +66,7 @@ class SRLTask(SpanTask):
             single_match=single_match,
             description=None,
             allow_overlap=False,
-            check_label_consistency=SRLTask._check_label_consistency,
+            check_label_consistency=SRLTask._check_srl_label_consistency,
         )
 
         self._predicate_key = predicate_key
@@ -154,7 +154,7 @@ class SRLTask(SpanTask):
         return []
 
     @classmethod
-    def _check_label_consistency(cls, task: Self) -> List[FewshotExample]:
+    def _check_srl_label_consistency(cls, task: Self) -> List[FewshotExample]:
         """Checks consistency of labels between examples and defined labels. Emits warning on inconsistency.
 
         Note: it's unusual for a SpanTask to have its own label consistency check implementation (and an example type

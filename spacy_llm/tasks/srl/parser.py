@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Any, Dict
 
 from pydantic import ValidationError
 from spacy.tokens import Doc
@@ -47,7 +47,7 @@ def _format_response(task: SRLTask, arg_lines) -> List[Tuple[str, str]]:
 
 def parse_responses_v1(
     task: SRLTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[Tuple[PredicateItem, Tuple[PredicateItem, List[RoleItem]]]]:
+) -> Iterable[Tuple[List[Dict[str, Any]], List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]]]:
     """
     Parse LLM response by extracting predicate-arguments blocks from the generate response.
     For example,
@@ -91,8 +91,8 @@ def parse_responses_v1(
 
     """
     for doc, prompt_response in zip(docs, responses):
-        predicates = []
-        relations = []
+        predicates: List[Dict[str, Any]] = []
+        relations: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]] = []
         lines = prompt_response.split("\n")
 
         # match lines that start with {Predicate:, Predicate 1:, Predicate1:}
