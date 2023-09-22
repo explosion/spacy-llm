@@ -37,6 +37,9 @@ class SRLExample(FewshotExample):
     predicates: List[PredicateItem]
     relations: List[Tuple[PredicateItem, List[RoleItem]]]
 
+    class Config:
+        arbitrary_types_allowed = True
+
     def __hash__(self):
         return hash((self.text,) + tuple(self.predicates))
 
