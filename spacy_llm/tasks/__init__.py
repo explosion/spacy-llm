@@ -9,7 +9,7 @@ from .noop import NoopTask, make_noop_task
 from .rel import RELTask, make_rel_task
 from .sentiment import SentimentTask, make_sentiment_task
 from .spancat import SpanCatTask, make_spancat_task_v3
-from .srl_task import SRLTask, make_srl_task
+from .srl import SRLTask, make_srl_task
 from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
 
