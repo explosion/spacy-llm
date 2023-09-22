@@ -2,16 +2,15 @@ import warnings
 from typing import Callable, Dict, Iterable, List, Optional, Type
 
 import jinja2
-
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from .util import SRLExample
 from ...compat import Literal, Self
+from ...ty import FewshotExample, Scorer, TaskResponseParser
 from ..span import SpanTask
 from ..templates import read_template
-from ...ty import TaskResponseParser, FewshotExample, Scorer
+from .util import SRLExample
 
 DEFAULT_SPAN_SRL_TEMPLATE_V1 = read_template("span-srl.v1")
 
@@ -142,7 +141,9 @@ class SRLTask(SpanTask):
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:
-        for doc, (predicates, relations) in zip(docs, self._parse_responses(self, docs, responses)):
+        for doc, (predicates, relations) in zip(
+            docs, self._parse_responses(self, docs, responses)
+        ):
             doc._.predicates = predicates
             doc._.relations = relations
             yield doc
@@ -165,7 +166,9 @@ class SRLTask(SpanTask):
         assert task.prompt_examples
         assert issubclass(task.prompt_example_type, SRLExample)
 
-        srl_examples = [task.prompt_example_type(**eg.dict()) for eg in task.prompt_examples]
+        srl_examples = [
+            task.prompt_example_type(**eg.dict()) for eg in task.prompt_examples
+        ]
         example_labels = {
             task.normalizer(r.label): r.label
             for example in srl_examples

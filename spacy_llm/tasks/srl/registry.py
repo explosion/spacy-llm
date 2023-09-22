@@ -1,12 +1,12 @@
-from typing import Callable, Dict, List, Optional, Union, Any, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
+from ...compat import Literal
+from ...registry import registry
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
+from ...util import split_labels
 from .parser import parse_responses_v1
 from .task import DEFAULT_SPAN_SRL_TEMPLATE_V1, SRLTask
 from .util import SRLExample, score
-from ...compat import Literal
-from ...registry import registry
-from ...ty import ExamplesConfigType, TaskResponseParser, Scorer, FewshotExample
-from ...util import split_labels
 
 
 @registry.llm_tasks("spacy.SRL.v1")
@@ -53,9 +53,7 @@ def make_srl_task(
     labels_list = split_labels(labels)
     raw_examples = examples() if callable(examples) else examples
     example_type = prompt_example_type or SRLExample
-    srl_examples = (
-        [example_type(**eg) for eg in raw_examples] if raw_examples else None
-    )
+    srl_examples = [example_type(**eg) for eg in raw_examples] if raw_examples else None
 
     return SRLTask(
         template=template,

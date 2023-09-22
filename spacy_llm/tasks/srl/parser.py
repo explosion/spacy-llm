@@ -1,14 +1,13 @@
-from typing import Iterable, List, Tuple, Iterator
-
 import re
+from typing import Iterable, Iterator, List, Tuple
 
 from pydantic import ValidationError
 from spacy.tokens import Doc
 from wasabi import msg
 
-from .util import PredicateItem, SpanItem, RoleItem
-from .task import SRLTask
 from ..util.parsing import find_substrings
+from .task import SRLTask
+from .util import PredicateItem, RoleItem, SpanItem
 
 
 def _format_response(task: SRLTask, arg_lines) -> List[Tuple[str, str]]:
@@ -32,10 +31,7 @@ def _format_response(task: SRLTask, arg_lines) -> List[Tuple[str, str]]:
                 phrase = phrase.strip("'\" -")
 
                 norm_label = task.normalizer(label)
-                if (
-                        norm_label in task.label_dict
-                        and norm_label not in found_labels
-                ):
+                if norm_label in task.label_dict and norm_label not in found_labels:
                     if phrase.strip():
                         _phrase = phrase.strip()
                         found_labels.add(norm_label)
@@ -102,11 +98,7 @@ def parse_responses_v1(
         # match lines that start with {Predicate:, Predicate 1:, Predicate1:}
         pred_patt = r"^" + re.escape(task.predicate_key) + r"\b\s*\d*[:\-\s]"
         pred_indices, pred_lines = zip(
-            *[
-                (i, line)
-                for i, line in enumerate(lines)
-                if re.search(pred_patt, line)
-            ]
+            *[(i, line) for i, line in enumerate(lines) if re.search(pred_patt, line)]
         )
 
         pred_indices = list(pred_indices)

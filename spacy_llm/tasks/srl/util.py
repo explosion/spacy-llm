@@ -1,10 +1,9 @@
-from typing import Dict, Iterable, List, Tuple, Any
-
 from collections import defaultdict
-from typing_extensions import Self
+from typing import Any, Dict, Iterable, List, Tuple
 
 from pydantic import BaseModel
 from spacy.training import Example
+from typing_extensions import Self
 
 from ...ty import FewshotExample
 
@@ -42,16 +41,18 @@ class SRLExample(FewshotExample):
         return hash((self.text,) + tuple(self.predicates))
 
     def __str__(self):
-        preds = ', '.join([p.text for p in self.predicates])
-        rels = [(p.text, [(r.label, r.role.text) for r in rs]) for p, rs in self.relations]
-        return f"Predicates: {preds}\nRelations: {str(rels)}"""
+        preds = ", ".join([p.text for p in self.predicates])
+        rels = [
+            (p.text, [(r.label, r.role.text) for r in rs]) for p, rs in self.relations
+        ]
+        return f"Predicates: {preds}\nRelations: {str(rels)}" ""
 
     @classmethod
     def generate(cls, example: Example, **kwargs) -> Self:
         return cls(
             text=example.reference.text,
             predicates=example.reference._.predicates,
-            relations=example.reference._.relations
+            relations=example.reference._.relations,
         )
 
 
