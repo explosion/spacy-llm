@@ -1,8 +1,9 @@
-import pytest
-
-from confection import Config
 from pathlib import Path
+
+import pytest
+from confection import Config
 from pytest import FixtureRequest
+
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.tasks.srl import SRLExample
 from spacy_llm.tests.compat import has_openai_key
@@ -149,8 +150,7 @@ def test_srl_config(cfg_string, request: FixtureRequest):
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("cfg_string", ["zeroshot_cfg_string", "fewshot_cfg_string"])
 def test_srl_predict(task, cfg_string, request):
-    """Use OpenAI to get REL results.
-    """
+    """Use OpenAI to get REL results."""
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = assemble_from_config(orig_config)
