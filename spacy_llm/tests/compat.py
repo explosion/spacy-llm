@@ -14,3 +14,8 @@ if os.getenv("CO_API_KEY") is None:
     has_cohere_key = False
 else:
     has_cohere_key = True
+
+if os.getenv("PALM_API_KEY") is None:
+    has_palm_key = False
+else:
+    has_palm_key = True
