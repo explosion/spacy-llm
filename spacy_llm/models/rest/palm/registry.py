@@ -7,7 +7,7 @@ from ....registry import registry
 from .model import Endpoints, PaLM
 
 
-@registry.llm_models("spacy.ChatBison.v1")
+@registry.llm_models("spacy.Bison.v1")
 def palm_bison(
     config: Dict[Any, Any] = SimpleFrozenDict(temperature=0),
     name: Literal["chat-bison-001", "text-bison-001"] = "text-bison-001",  # noqa: F821
