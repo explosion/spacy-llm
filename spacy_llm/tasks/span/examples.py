@@ -5,11 +5,14 @@ from pydantic import BaseModel
 from spacy.tokens import Span
 
 from ...compat import Self
-from ...ty import FewshotExample
-from .task import SpanTaskContraT
+from ...ty import FewshotExample, TaskContraT
 
 
-class SpanExample(FewshotExample[SpanTaskContraT], abc.ABC, Generic[SpanTaskContraT]):
+class SpanExample(FewshotExample[TaskContraT], abc.ABC, Generic[TaskContraT]):
+    """Example for span tasks not using CoT.
+    Note: this should be SpanTaskContraT instead of TaskContraT, but this would entail a circular import.
+    """
+
     text: str
     entities: Dict[str, List[str]]
 
@@ -68,9 +71,11 @@ class SpanReason(BaseModel):
         return self.to_str()
 
 
-class SpanCoTExample(
-    FewshotExample[SpanTaskContraT], abc.ABC, Generic[SpanTaskContraT]
-):
+class SpanCoTExample(FewshotExample[TaskContraT], abc.ABC, Generic[TaskContraT]):
+    """Example for span tasks using CoT.
+    Note: this should be SpanTaskContraT instead of TaskContraT, but this would entail a circular import.
+    """
+
     text: str
     spans: List[SpanReason]
 

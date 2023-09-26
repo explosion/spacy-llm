@@ -1,17 +1,18 @@
 import abc
 from typing import Callable, Dict, Iterable, List, Optional, Protocol, Type, TypeVar
-from typing import Union
+from typing import Union, cast
 
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal, Self
 from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
+from . import SpanExample
+from .examples import SpanCoTExample
 
 SpanTaskContraT = TypeVar("SpanTaskContraT", bound="SpanTask", contravariant=True)
 
 # todo type with spanexample/spancotexample instead of fewshot example
-#   -> circular import?
 
 
 class SpanTaskLabelCheck(Protocol[SpanTaskContraT]):
@@ -27,18 +28,20 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample[Self]],
+        prompt_example_type: Type[Union[SpanExample[Self], SpanCoTExample[Self]]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample[Self]]],
+        prompt_examples: Optional[
+            Union[List[SpanExample[Self]], List[SpanCoTExample[Self]]]
+        ],
         description: Optional[str],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
         case_sensitive_matching: bool,
         allow_overlap: bool,
         single_match: bool,
-        check_label_consistency: SpanTaskLabelCheck,
+        check_label_consistency: SpanTaskLabelCheck[Self],
     ):
         super().__init__(
             parse_responses=parse_responses,
@@ -50,6 +53,10 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             normalizer=normalizer,
         )
 
+        self._prompt_example_type = cast(
+            Type[Union[SpanExample[Self], SpanCoTExample[Self]]],
+            self._prompt_example_type,
+        )
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
         self._case_sensitive_matching = case_sensitive_matching
@@ -126,7 +133,9 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         return self._prompt_examples
 
     @property
-    def prompt_example_type(self) -> Union[Type[FewshotExample[Self]]]:
+    def prompt_example_type(
+        self,
+    ) -> Type[Union[SpanExample[Self], SpanCoTExample[Self]]]:
         return self._prompt_example_type
 
     @property
