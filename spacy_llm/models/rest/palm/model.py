@@ -83,12 +83,12 @@ class PaLM(REST):
         # a request for each iteration. This approach can be prone to rate limit
         # errors. In practice, you can adjust _max_request_time so that the
         # timeout is larger.
-        uses_chat = "text" in self._name
+        uses_chat = "chat" in self._name
         responses = [
             _request(
                 {
                     "prompt": {"text": prompt}
-                    if uses_chat
+                    if not uses_chat
                     else {"messages": [{"content": prompt}]}
                 }
             )
@@ -98,11 +98,11 @@ class PaLM(REST):
             if "candidates" in response:
                 # Although you can set the number of candidates in PaLM to be greater than 1, we only need to return a
                 # single value. In this case, we will just return the very first output.
-                field = "content" if uses_chat else "output"
-                if field in response["candidates"][0]:
-                    api_responses.append(response["candidates"][0]["output"])
-                else:
-                    api_responses.append(srsly.json_dumps(response))
+                api_responses.append(
+                    response["candidates"][0].get(
+                        "content" if uses_chat else "output", srsly.json_dumps(response)
+                    )
+                )
             else:
                 api_responses.append(srsly.json_dumps(response))
 
