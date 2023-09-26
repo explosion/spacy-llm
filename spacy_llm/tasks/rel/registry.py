@@ -3,9 +3,9 @@ from typing import Callable, Dict, List, Optional, Type, Union
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
 from ...util import split_labels
+from .examples import RELExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_REL_TEMPLATE, RELTask
-from .util import RELExample
 
 
 @registry.llm_tasks("spacy.REL.v1")

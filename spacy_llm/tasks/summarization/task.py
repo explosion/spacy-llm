@@ -17,20 +17,20 @@ class SummarizationTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         max_n_words: Optional[int],
         field: str,
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
     ):
         """Default summarization task.
 
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         """
         super().__init__(
             parse_responses=parse_responses,

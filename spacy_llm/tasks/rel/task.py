@@ -5,10 +5,10 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
-from .util import RelationItem, RELExample
+from .util import BaseRELExample, RelationItem
 
 DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
 
@@ -17,18 +17,18 @@ class RELTask(BuiltinTaskWithLabels):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[BaseRELExample[Self]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[BaseRELExample[Self]]],
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
         """Default REL task. Populates a `Doc._.rel` custom attribute.
 
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[BaseRELExample[Self]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.
@@ -36,7 +36,7 @@ class RELTask(BuiltinTaskWithLabels):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[BaseRELExample[Self]]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
@@ -63,7 +63,7 @@ class RELTask(BuiltinTaskWithLabels):
         )
 
     @staticmethod
-    def _preannotate(doc: Union[Doc, RELExample]) -> str:
+    def _preannotate(doc: Union[Doc, BaseRELExample]) -> str:
         """Creates a text version of the document with annotated entities."""
         offset = 0
         text = doc.text
