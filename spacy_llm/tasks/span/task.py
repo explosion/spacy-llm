@@ -11,6 +11,7 @@ from ..builtin_task import BuiltinTaskWithLabels
 SpanTaskContraT = TypeVar("SpanTaskContraT", bound="SpanTask", contravariant=True)
 
 # todo type with spanexample/spancotexample instead of fewshot example
+#   -> circular import?
 
 
 class SpanTaskLabelCheck(Protocol[SpanTaskContraT]):
