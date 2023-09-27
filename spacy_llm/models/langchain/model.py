@@ -5,7 +5,10 @@ from confection import SimpleFrozenDict
 from ...compat import has_langchain, langchain
 from ...registry import registry
 
-from langchain import llms  # noqa: F401, isort:skip
+try:
+    from langchain import llms  # noqa: F401
+except (ImportError, AttributeError):
+    llms = None
 
 
 class LangChain:
