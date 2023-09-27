@@ -1,10 +1,9 @@
 import abc
 from typing import Dict, Generic, Iterable, List
 
-from pydantic import BaseModel
 from spacy.tokens import Span
 
-from ...compat import Self
+from ...compat import BaseModel, Self
 from ...ty import FewshotExample, TaskContraT
 
 
