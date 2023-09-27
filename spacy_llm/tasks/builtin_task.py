@@ -87,7 +87,7 @@ class BuiltinTask(abc.ABC):
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(
-                    self._prompt_example_type.generate(eg, **kwargs)
+                    self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
                 )
 
     def get_cfg(self) -> Dict[str, Any]:
@@ -295,7 +295,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
                 labels.extend(self._extract_labels_from_example(eg))
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
                 self._prompt_examples.append(
-                    self._prompt_example_type.generate(eg, **kwargs)
+                    self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
                 )
 
         self._label_dict = {
