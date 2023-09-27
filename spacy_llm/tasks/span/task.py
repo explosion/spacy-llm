@@ -11,8 +11,6 @@ from .examples import SpanCoTExample
 
 SpanTaskContraT = TypeVar("SpanTaskContraT", bound="SpanTask", contravariant=True)
 
-# todo type with spanexample/spancotexample instead of fewshot example
-
 
 class SpanTaskLabelCheck(Protocol[SpanTaskContraT]):
     """Generic protocol for checking label consistency of SpanTask."""
