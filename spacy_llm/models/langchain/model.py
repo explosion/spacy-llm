@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from confection import SimpleFrozenDict
+from langchain import llms  # noqa: F401
 
 from ...compat import has_langchain, langchain
 from ...registry import registry
