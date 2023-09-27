@@ -79,6 +79,9 @@ class SpanCoTExample(FewshotExample[TaskContraT], abc.ABC, Generic[TaskContraT])
     text: str
     spans: List[SpanReason]
 
+    class Config:
+        arbitrary_types_allowed = True
+
     @staticmethod
     def _extract_span_reasons(spans: Iterable[Span]) -> List[SpanReason]:
         """Extracts SpanReasons from spans.
