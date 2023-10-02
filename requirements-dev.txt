@@ -11,7 +11,7 @@ langchain==0.0.249; python_version>="3.9"
 openai>=0.27; python_version>="3.9"
 
 # Necessary for running all local models on GPU.
-transformers[sentencepiece]>=4.0.0,<4.30
+transformers[sentencepiece]>=4.0.0
 torch
 einops>=0.4
 
