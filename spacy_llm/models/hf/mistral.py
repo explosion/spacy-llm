@@ -55,37 +55,31 @@ class Mistral(HuggingFace):
         assert hasattr(self._tokenizer, "batch_decode")
         prompts = list(prompts)
 
-        tokenized_prompts = [
+        tokenized_input_ids = [
             self._tokenizer(
                 prompt if not self._is_instruct else f"<s>[INST] {prompt} [/INST]",
                 return_tensors="pt",
-            )
+            ).input_ids
             for prompt in prompts
         ]
         if self._device:
-            tokenized_prompts = [tp.to(self._device) for tp in tokenized_prompts]
+            tokenized_input_ids = [tp.to(self._device) for tp in tokenized_input_ids]
 
-        x = [
+        return [
             self._tokenizer.decode(
                 self._model.generate(
-                    **tok_prompt, generation_config=self._hf_config_run
-                )[0],
+                    input_ids=tok_ii, generation_config=self._hf_config_run
+                )[:, tok_ii.shape[1] :][0],
                 skip_special_tokens=True,
             )
-            .replace(prompt, "")
-            .strip()
-            for tok_prompt, prompt in zip(tokenized_prompts, prompts)
+            for tok_ii in tokenized_input_ids
         ]
-        return x
 
     @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
         return (
-            {
-                **default_cfg_init,
-                # "trust_remote_code": True,
-            },
+            default_cfg_init,
             default_cfg_run,
         )
 
