@@ -8,7 +8,7 @@ import spacy
 from spacy.tokens import Doc
 
 from ...registry import registry
-from ..compat import has_openai_key
+from ..compat import has_azure_openai_key, has_openai_key
 
 PIPE_CFG = {
     "model": {
@@ -105,3 +105,27 @@ def test_max_time_error_handling():
                 },
             },
         )
+
+
+@pytest.mark.skipif(
+    has_azure_openai_key is False, reason="OpenAI API key not available"
+)
+@pytest.mark.external
+@pytest.mark.parametrize("deployment_name", ("gpt-35-turbo", "gpt-35-turbo-instruct"))
+def test_azure_openai(deployment_name: str):
+    """Test initialization and simple run for Azure OpenAI."""
+    nlp = spacy.blank("en")
+    _pipe_cfg = {
+        "model": {
+            "@llm_models": "spacy.Azure.v1",
+            "base_url": "https://explosion.openai.azure.com/",
+            "model_type": "completions",
+            "name": deployment_name,
+        },
+        "task": {"@llm_tasks": "spacy.NoOp.v1"},
+        "save_io": True,
+    }
+
+    cfg = copy.deepcopy(_pipe_cfg)
+    nlp.add_pipe("llm", config=cfg)
+    nlp("This is a test.")
