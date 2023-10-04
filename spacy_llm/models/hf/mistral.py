@@ -22,7 +22,6 @@ class Mistral(HuggingFace):
         super().__init__(name=name, config_init=config_init, config_run=config_run)
 
         assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)
-        # self._config_run["pad_token_id"] = self._tokenizer.pad_token_id
 
         # Instantiate GenerationConfig object from config dict.
         self._hf_config_run = transformers.GenerationConfig.from_pretrained(
