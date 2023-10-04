@@ -13,6 +13,7 @@ _PIPE_CFG = {
         "name": "stablelm-base-alpha-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
+    "save_io": True,
 }
 
 _NLP_CONFIG = """
@@ -44,10 +45,13 @@ def test_init(name: str):
     """
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["model"]["name"] = name
+    cfg["model"]["name"] = name  # type: ignore[index]
     nlp.add_pipe("llm", config=cfg)
-    nlp("This is a test.")
+    doc = nlp("This is a test.")
     torch.cuda.empty_cache()
+    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"]
+    )
 
 
 @pytest.mark.gpu

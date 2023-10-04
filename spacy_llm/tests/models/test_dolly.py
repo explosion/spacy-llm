@@ -13,6 +13,7 @@ _PIPE_CFG = {
         "name": "dolly-v2-3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
+    "save_io": True,
 }
 
 _NLP_CONFIG = """
@@ -26,6 +27,7 @@ batch_size = 128
 
 [components.llm]
 factory = "llm"
+save_io = True
 
 [components.llm.task]
 @llm_tasks = "spacy.NoOp.v1"
@@ -41,12 +43,13 @@ name = "dolly-v2-3b"
 def test_init():
     """Test initialization and simple run."""
     nlp = spacy.blank("en")
-    cfg = copy.deepcopy(_PIPE_CFG)
-    cfg["model"]["@llm_models"] = "spacy.Dolly.v1"
-    nlp.add_pipe("llm", config=cfg)
-    nlp("This is a test.")
+    nlp.add_pipe("llm", config=_PIPE_CFG)
+    doc = nlp("This is a test.")
     nlp.get_pipe("llm")._model.get_model_names()
     torch.cuda.empty_cache()
+    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"]
+    )
 
 
 @pytest.mark.gpu
