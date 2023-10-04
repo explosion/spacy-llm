@@ -38,6 +38,7 @@ class Falcon(HuggingFace):
             "text-generation",
             model=self._name,
             tokenizer=self._tokenizer,
+            return_full_text=False,
             **self._config_init,
         )
 
