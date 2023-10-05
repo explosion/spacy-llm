@@ -89,6 +89,7 @@ def openai_gpt_3_5_v2(
         "gpt-3.5-turbo-16k",
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-0613-16k",
+        "gpt-3.5-turbo-instruct",
     ] = "gpt-3.5-turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -98,14 +99,18 @@ def openai_gpt_3_5_v2(
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]): Model to use.
+    name (Literal[
+        "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct"
+    ]): Model to use.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model
 
     DOCS: https://spacy.io/api/large-language-models#models
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value,
+        endpoint=Endpoints.CHAT.value
+        # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
+        if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -122,6 +127,7 @@ def openai_gpt_3_5(
         "gpt-3.5-turbo-16k",
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-0613-16k",
+        "gpt-3.5-turbo-instruct",
     ] = "gpt-3.5-turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -131,14 +137,18 @@ def openai_gpt_3_5(
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]): Model to use.
+    name (Literal[
+        "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct"
+    ]): Model to use.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model
 
     DOCS: https://spacy.io/api/large-language-models#models
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value,
+        endpoint=Endpoints.CHAT.value
+        # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
+        if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,

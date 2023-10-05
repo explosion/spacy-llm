@@ -13,6 +13,7 @@ _PIPE_CFG = {
         "name": "falcon-rw-1b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
+    "save_io": True,
 }
 
 _NLP_CONFIG = """
@@ -43,8 +44,11 @@ def test_init():
     nlp = spacy.blank("en")
     cfg = copy.deepcopy(_PIPE_CFG)
     nlp.add_pipe("llm", config=cfg)
-    nlp("This is a test.")
+    doc = nlp("This is a test.")
     torch.cuda.empty_cache()
+    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"]
+    )
 
 
 @pytest.mark.gpu

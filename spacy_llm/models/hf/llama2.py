@@ -32,6 +32,7 @@ class Llama2(HuggingFace):
             "text-generation",
             model=self._name,
             use_auth_token=True,
+            return_full_text=False,
             **self._config_init,
         )
 

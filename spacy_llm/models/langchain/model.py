@@ -5,6 +5,12 @@ from confection import SimpleFrozenDict
 from ...compat import has_langchain, langchain
 from ...registry import registry
 
+try:
+    from langchain import base_language  # noqa: F401
+    from langchain import llms  # noqa: F401
+except (ImportError, AttributeError):
+    llms = None
+
 
 class LangChain:
     def __init__(
@@ -13,7 +19,7 @@ class LangChain:
         api: str,
         config: Dict[Any, Any],
         query: Callable[
-            ["langchain.llms.base.BaseLLM", Iterable[Any]],
+            ["langchain.base_language.BaseLanguageModel", Iterable[Any]],
             Iterable[Any],
         ],
     ):
@@ -31,9 +37,11 @@ class LangChain:
         self._check_installation()
 
     @staticmethod
-    def get_type_to_cls_dict() -> Dict[str, Type["langchain.llms.base.BaseLLM"]]:
+    def get_type_to_cls_dict() -> Dict[
+        str, Type["langchain.base_language.BaseLanguageModel"]
+    ]:
         """Returns langchain.llms.type_to_cls_dict.
-        RETURNS (Dict[str, Type[langchain.llms.base.BaseLLM]]): langchain.llms.type_to_cls_dict.
+        RETURNS (Dict[str, Type[langchain.base_language.BaseLanguageModel]]): langchain.llms.type_to_cls_dict.
         """
         return langchain.llms.type_to_cls_dict
 
@@ -46,10 +54,10 @@ class LangChain:
 
     @staticmethod
     def query_langchain(
-        model: "langchain.llms.base.BaseLLM", prompts: Iterable[Any]
+        model: "langchain.base_language.BaseLanguageModel", prompts: Iterable[Any]
     ) -> Iterable[Any]:
         """Query LangChain model naively.
-        model (langchain.llms.base.BaseLLM): LangChain model.
+        model (langchain.base_language.BaseLanguageModel): LangChain model.
         prompts (Iterable[Any]): Prompts to execute.
         RETURNS (Iterable[Any]): LLM responses.
         """
@@ -69,7 +77,10 @@ class LangChain:
         def langchain_model(
             name: str,
             query: Optional[
-                Callable[["langchain.llms.base.BaseLLM", Iterable[str]], Iterable[str]]
+                Callable[
+                    ["langchain.base_language.BaseLanguageModel", Iterable[str]],
+                    Iterable[str],
+                ]
             ] = None,
             config: Dict[Any, Any] = SimpleFrozenDict(),
             langchain_class_id: str = class_id,
@@ -112,7 +123,9 @@ class LangChain:
 
 @registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> (
-    Callable[["langchain.llms.base.BaseLLM", Iterable[Any]], Iterable[Any]]
+    Callable[
+        ["langchain.base_language.BaseLanguageModel", Iterable[Any]], Iterable[Any]
+    ]
 ):
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
