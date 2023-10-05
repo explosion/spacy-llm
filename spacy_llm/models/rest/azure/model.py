@@ -73,24 +73,6 @@ class AzureOpenAI(REST):
             self(["test"])
         except ValueError as err:
             raise err
-            # todo check and redo status codes
-            #   - wrong token
-            #   - ?
-            # if r.status_code == 422:
-            #     warnings.warn(
-            #         "Could not access api.openai.com -- 422 permission denied."
-            #         "Visit https://platform.openai.com/account/api-keys to check your API keys."
-            #     )
-            # elif r.status_code != 200:
-            #     if "Incorrect API key" in r.text:
-            #         warnings.warn(
-            #             "Authentication with provided API key failed. Please double-check you provided the correct "
-            #             "credentials."
-            #         )
-            #     else:
-            #         warnings.warn(
-            #             f"Error accessing api.openai.com ({r.status_code}): {r.text}"
-            #         )
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
         headers = {
