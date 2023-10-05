@@ -143,11 +143,7 @@ class AzureOpenAI(REST):
                 # Process responses.
                 assert len(responses["choices"]) == 1
                 response = responses["choices"][0]
-                api_responses.append(
-                    response.get("message", {}).get(
-                        "content", srsly.json_dumps(response)
-                    )
-                )
+                api_responses.append(response.get("text", srsly.json_dumps(response)))
 
         return api_responses
 
