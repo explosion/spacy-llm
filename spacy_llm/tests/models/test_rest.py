@@ -108,7 +108,7 @@ def test_max_time_error_handling():
 
 
 @pytest.mark.skipif(
-    has_azure_openai_key is False, reason="OpenAI API key not available"
+    has_azure_openai_key is False, reason="Azure OpenAI API key not available"
 )
 @pytest.mark.external
 @pytest.mark.parametrize("deployment_name", ("gpt-35-turbo", "gpt-35-turbo-instruct"))
