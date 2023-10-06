@@ -16,12 +16,14 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[OpenAI](https://platform.openai.com/docs/api-reference/)**
   - **[Cohere](https://docs.cohere.com/reference/generate)**
   - **[Anthropic](https://docs.anthropic.com/claude/reference/)**
+  - **[PaLM](https://ai.google/discover/palm2/)**
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
   - **[Llama 2](https://huggingface.co/meta-llama)**
   - **[OpenLLaMA](https://huggingface.co/openlm-research)**
   - **[StableLM](https://huggingface.co/stabilityai)**
+  - **[Mistral](https://huggingface.co/mistralai)**
 - Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`
 - Tasks available out of the box:
   - Named Entity Recognition
@@ -31,6 +33,9 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - Sentiment analysis
   - Span categorization
   - Summarization
+  - Soon:
+    - Entity linking
+    - Semantic role labeling
 - Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
 
 ## 🧠 Motivation
