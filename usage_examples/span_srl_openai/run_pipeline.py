@@ -3,7 +3,8 @@ import typer
 
 from pathlib import Path
 from spacy_llm.util import assemble
-from spacy_llm.tasks.srl_task import SRLExample
+from spacy_llm.tasks.srl.task import SRLExample
+from spacy_llm.tasks.srl.util import PredicateItem, RoleItem
 from typing import Optional
 from wasabi import msg
 
@@ -36,8 +37,11 @@ def run_pipeline(
 
     doc = nlp(text)
 
+    predicates = [PredicateItem(**p) for p in doc._.predicates]
+    relations = [(PredicateItem(**p), [RoleItem(**r) for r in rs]) for p, rs in doc._.relations]
+
     doc_srl = SRLExample(
-        text=doc.text, predicates=doc._.predicates, relations=doc._.relations
+        text=doc.text, predicates=predicates, relations=relations
     )
 
     msg.text(f"Text: {doc_srl.text}")
