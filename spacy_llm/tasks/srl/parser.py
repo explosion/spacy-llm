@@ -10,10 +10,10 @@ from .task import SRLTask
 from .util import PredicateItem, RoleItem, SpanItem
 
 
-def _format_response(task: SRLTask, arg_lines) -> List[Tuple[str, str]]:
+def _format_response(task: SRLTask, arg_lines: List[str]) -> List[Tuple[str, str]]:
     """Parse raw string response into a structured format.
     task (SRLTask): Task to format responses for.
-    arg_lines ():
+    arg_lines (List[str]): The str responses corresponding to the roles of a predicate
     RETURNS (List[Tuple[str, str]]): Formatted response.
     """
     output = []
@@ -90,7 +90,11 @@ def parse_responses_v1(
 
     Once we separate these out, then it is a matter of parsing line by line to extract the predicate
     and its args for each predicate block
-
+    task (SpanTask): Task instance.
+    docs (Iterable[Doc]): Corresponding Doc instances.
+    responses (Iterable[str]): LLM responses.
+    RETURNS (Tuple[List[Dict[str, Any]], List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]]): Predicates to assign
+        to each doc, Relations to assign to each doc.
     """
     for doc, prompt_response in zip(docs, responses):
         predicates: List[Dict[str, Any]] = []
