@@ -38,11 +38,11 @@ def run_pipeline(
     doc = nlp(text)
 
     predicates = [PredicateItem(**p) for p in doc._.predicates]
-    relations = [(PredicateItem(**p), [RoleItem(**r) for r in rs]) for p, rs in doc._.relations]
+    relations = [
+        (PredicateItem(**p), [RoleItem(**r) for r in rs]) for p, rs in doc._.relations
+    ]
 
-    doc_srl = SRLExample(
-        text=doc.text, predicates=predicates, relations=relations
-    )
+    doc_srl = SRLExample(text=doc.text, predicates=predicates, relations=relations)
 
     msg.text(f"Text: {doc_srl.text}")
     msg.text(f"SRL Output:\n{str(doc_srl)}\n")
