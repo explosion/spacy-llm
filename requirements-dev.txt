@@ -7,11 +7,11 @@ mypy>=0.990,<1.1.0; platform_machine != "aarch64" and python_version >= "3.7"
 black==22.3.0
 types-requests==2.28.11.16
 # Prompting libraries needed for testing
-langchain==0.0.249; python_version>="3.9"
+langchain==0.0.302; python_version>="3.9"
 openai>=0.27; python_version>="3.9"
 
 # Necessary for running all local models on GPU.
-transformers[sentencepiece]>=4.0.0,<4.30
+transformers[sentencepiece]>=4.0.0
 torch
 einops>=0.4
 

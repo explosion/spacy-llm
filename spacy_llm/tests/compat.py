@@ -1,16 +1,7 @@
 import os
 
-if os.getenv("OPENAI_API_KEY") is None:
-    has_openai_key = False
-else:
-    has_openai_key = True
-
-if os.getenv("ANTHROPIC_API_KEY") is None:
-    has_anthropic_key = False
-else:
-    has_anthropic_key = True
-
-if os.getenv("CO_API_KEY") is None:
-    has_cohere_key = False
-else:
-    has_cohere_key = True
+has_openai_key = os.getenv("OPENAI_API_KEY") is not None
+has_anthropic_key = os.getenv("ANTHROPIC_API_KEY") is not None
+has_cohere_key = os.getenv("CO_API_KEY") is not None
+has_azure_openai_key = os.getenv("AZURE_OPENAI_KEY") is not None
+has_palm_key = os.getenv("PALM_API_KEY") is not None

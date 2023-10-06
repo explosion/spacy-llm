@@ -14,7 +14,9 @@ class Dolly(HuggingFace):
         """Sets up HF model and needed utilities.
         RETURNS (Any): HF model.
         """
-        return transformers.pipeline(model=self._name, **self._config_init)
+        return transformers.pipeline(
+            model=self._name, return_full_text=False, **self._config_init
+        )
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         """Queries Dolly HF model.
