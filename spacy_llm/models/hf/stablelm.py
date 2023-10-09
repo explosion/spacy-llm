@@ -68,8 +68,8 @@ class StableLM(HuggingFace):
 
     def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
         assert callable(self._tokenizer)
-        tokenized_prompts = [
-            self._tokenizer(prompt, return_tensors="pt")
+        tokenized_input_ids = [
+            self._tokenizer(prompt, return_tensors="pt").input_ids
             for prompt in (
                 # Add prompt formatting for tuned model.
                 prompts
@@ -81,15 +81,17 @@ class StableLM(HuggingFace):
             )
         ]
         if self._device:
-            tokenized_prompts = [tp.to(self._device) for tp in tokenized_prompts]
+            tokenized_input_ids = [tp.to(self._device) for tp in tokenized_input_ids]
 
         assert hasattr(self._model, "generate")
         return [
             self._tokenizer.decode(
-                self._model.generate(**prompt, **self._config_run)[0],
+                self._model.generate(input_ids=tii, **self._config_run)[
+                    :, tii.shape[1] :
+                ][0],
                 skip_special_tokens=True,
             )
-            for prompt in tokenized_prompts
+            for tii in tokenized_input_ids
         ]
 
     @staticmethod
