@@ -1,15 +1,17 @@
 from spacy.training import Example
 
-from ...compat import BaseModel, Self
+from ...compat import Self
+from ...ty import FewshotExample
+from .task import SummarizationTask
 
 
-class SummarizationExample(BaseModel):
+class SummarizationExample(FewshotExample[SummarizationTask]):
     text: str
     summary: str
 
     @classmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
+    def generate(cls, example: Example, task: SummarizationTask) -> Self:
         return cls(
             text=example.reference.text,
-            summary=getattr(example.reference._, kwargs["field"]),
+            summary=getattr(example.reference._, task.field),
         )

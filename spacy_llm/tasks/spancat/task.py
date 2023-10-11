@@ -19,12 +19,12 @@ class SpanCatTask(SpanTask):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -35,8 +35,8 @@ class SpanCatTask(SpanTask):
     ):
         """Default SpanCat task.
 
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.
@@ -45,7 +45,7 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.

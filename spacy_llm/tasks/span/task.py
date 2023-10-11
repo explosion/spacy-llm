@@ -1,23 +1,22 @@
 import abc
-import typing
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
+from typing import cast
 
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal, Protocol, Self
 from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
-from .examples import SpanCoTExample, SpanExample
+from . import SpanExample
+from .examples import SpanCoTExample
 
-_SpanTaskContraT = typing.TypeVar(
-    "_SpanTaskContraT", bound="SpanTask", contravariant=True
-)
+SpanTaskContraT = TypeVar("SpanTaskContraT", bound="SpanTask", contravariant=True)
 
 
-class SpanTaskLabelCheck(Protocol[_SpanTaskContraT]):
+class SpanTaskLabelCheck(Protocol[SpanTaskContraT]):
     """Generic protocol for checking label consistency of SpanTask."""
 
-    def __call__(self, task: _SpanTaskContraT) -> Iterable[FewshotExample]:
+    def __call__(self, task: SpanTaskContraT) -> Iterable[FewshotExample]:
         ...
 
 
@@ -27,18 +26,20 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[Union[SpanExample[Self], SpanCoTExample[Self]]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[
+            Union[List[SpanExample[Self]], List[SpanCoTExample[Self]]]
+        ],
         description: Optional[str],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
         case_sensitive_matching: bool,
         allow_overlap: bool,
         single_match: bool,
-        check_label_consistency: SpanTaskLabelCheck,
+        check_label_consistency: SpanTaskLabelCheck[Self],
     ):
         super().__init__(
             parse_responses=parse_responses,
@@ -50,8 +51,9 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             normalizer=normalizer,
         )
 
-        self._prompt_example_type = typing.cast(
-            Type[SpanExample], self._prompt_example_type
+        self._prompt_example_type = cast(
+            Type[Union[SpanExample[Self], SpanCoTExample[Self]]],
+            self._prompt_example_type,
         )
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
@@ -128,7 +130,9 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         return self._prompt_examples
 
     @property
-    def prompt_example_type(self) -> Union[Type[SpanExample], Type[SpanCoTExample]]:
+    def prompt_example_type(
+        self,
+    ) -> Type[Union[SpanExample[Self], SpanCoTExample[Self]]]:
         return self._prompt_example_type
 
     @property

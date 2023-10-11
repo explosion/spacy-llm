@@ -1,13 +1,17 @@
 import abc
-from typing import Dict, Iterable, List
+from typing import Dict, Generic, Iterable, List
 
 from spacy.tokens import Span
 
-from ...compat import BaseModel
-from ...ty import FewshotExample, Self
+from ...compat import BaseModel, Self
+from ...ty import FewshotExample, TaskContraT
 
 
-class SpanExample(FewshotExample, abc.ABC):
+class SpanExample(FewshotExample[TaskContraT], abc.ABC, Generic[TaskContraT]):
+    """Example for span tasks not using CoT.
+    Note: this should be SpanTaskContraT instead of TaskContraT, but this would entail a circular import.
+    """
+
     text: str
     entities: Dict[str, List[str]]
 
@@ -45,6 +49,7 @@ class SpanReason(BaseModel):
                 "Unable to parse line of LLM output into a SpanReason. ",
                 f"line: {line}",
             )
+
         return cls(
             text=components[0],
             is_entity=components[1].lower() == "true",
@@ -65,9 +70,16 @@ class SpanReason(BaseModel):
         return self.to_str()
 
 
-class SpanCoTExample(FewshotExample, abc.ABC):
+class SpanCoTExample(FewshotExample[TaskContraT], abc.ABC, Generic[TaskContraT]):
+    """Example for span tasks using CoT.
+    Note: this should be SpanTaskContraT instead of TaskContraT, but this would entail a circular import.
+    """
+
     text: str
     spans: List[SpanReason]
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @staticmethod
     def _extract_span_reasons(spans: Iterable[Span]) -> List[SpanReason]:

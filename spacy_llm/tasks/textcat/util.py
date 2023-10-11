@@ -5,18 +5,19 @@ from spacy.training import Example
 
 from ...compat import Self
 from ...ty import FewshotExample
+from .task import TextCatTask
 
 
-class TextCatExample(FewshotExample):
+class TextCatExample(FewshotExample[TextCatTask]):
     text: str
     answer: str
 
     @classmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
-        if kwargs["use_binary"]:
+    def generate(cls, example: Example, task: TextCatTask) -> Self:
+        if task.use_binary:
             answer = (
                 "POS"
-                if example.reference.cats[list(kwargs["label_dict"].values())[0]] == 1.0
+                if example.reference.cats[list(task.label_dict.values())[0]] == 1.0
                 else "NEG"
             )
         else:

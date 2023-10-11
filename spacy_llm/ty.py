@@ -3,14 +3,14 @@ import inspect
 import typing
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
-from typing import Union, cast
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Tuple, Type
+from typing import TypeVar, Union, cast
 
 from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import BaseModel, Protocol, Self, runtime_checkable
+from .compat import GenericModel, Protocol, Self, runtime_checkable
 from .models import langchain
 
 _PromptType = Any
@@ -55,21 +55,6 @@ class Serializable(Protocol):
         exclude: Tuple[str] = cast(Tuple[str], tuple()),
     ):
         ...
-
-
-class FewshotExample(abc.ABC, BaseModel):
-    """Base fewshot-example.
-    From Python 3.7 onwards it's possible to make Pydantic models generic, which allows for a clean solution (see
-    https://github.com/pydantic/pydantic/issues/4171) using the controller pattern and Pydantic's GenericModel
-    (BaseModel in Pydantic v2). Until then passing **kwargs seems like the sanest option.
-    """
-
-    @classmethod
-    @abc.abstractmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
-        """Create a fewshot example from a spaCy example.
-        example (Example): spaCy example.
-        """
 
 
 @runtime_checkable
@@ -117,14 +102,24 @@ class LLMTask(Protocol):
         """
 
 
-_TaskContraT = TypeVar("_TaskContraT", bound=LLMTask, contravariant=True)
+TaskContraT = TypeVar("TaskContraT", bound=LLMTask, contravariant=True)
 
 
-class TaskResponseParser(Protocol[_TaskContraT]):
+class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):
+    @classmethod
+    @abc.abstractmethod
+    def generate(cls, example: Example, task: TaskContraT) -> Self:
+        """Create a fewshot example from a spaCy example.
+        example (Example): spaCy example.
+        task (TaskContraT): Task for which to generate examples.
+        """
+
+
+class TaskResponseParser(Protocol[TaskContraT]):
     """Generic protocol for parsing functions with specific tasks."""
 
     def __call__(
-        self, task: _TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
+        self, task: TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
     ) -> Iterable[Any]:
         ...
 

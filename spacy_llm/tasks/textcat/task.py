@@ -19,11 +19,11 @@ class TextCatTask(BuiltinTaskWithLabels):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
@@ -45,14 +45,14 @@ class TextCatTask(BuiltinTaskWithLabels):
         categorization by passing a flag to the `exclusive_classes` parameter.
 
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template. This task
             assumes binary classification if a single label is provided.
             Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.

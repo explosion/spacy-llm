@@ -2,15 +2,16 @@ from spacy.training import Example
 
 from ...compat import Self
 from ...ty import FewshotExample
+from .task import SentimentTask
 
 
-class SentimentExample(FewshotExample):
+class SentimentExample(FewshotExample[SentimentTask]):
     text: str
     score: float
 
     @classmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
+    def generate(cls, example: Example, task: SentimentTask) -> Self:
         return cls(
             text=example.reference.text,
-            score=getattr(example.reference._, kwargs["field"]),
+            score=getattr(example.reference._, task.field),
         )
