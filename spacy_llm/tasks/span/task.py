@@ -64,7 +64,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         self._description = description
 
         if self._prompt_examples:
-            self._prompt_examples = list(check_label_consistency(self))
+            self._prompt_examples = list(self._check_label_consistency(self))
 
     @property
     def _prompt_data(self) -> Dict[str, Any]:
