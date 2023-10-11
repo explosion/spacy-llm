@@ -111,7 +111,7 @@ class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):
     def generate(cls, example: Example, task: TaskContraT) -> Self:
         """Create a fewshot example from a spaCy example.
         example (Example): spaCy example.
-        task (_TaskContraT): Task for which to generate examples.
+        task (TaskContraT): Task for which to generate examples.
         """
 
 
