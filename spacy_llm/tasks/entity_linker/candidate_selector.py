@@ -1,6 +1,6 @@
 import warnings
 from pathlib import Path
-from typing import Iterable, Union
+from typing import Iterable, Optional, Union
 
 import spacy
 from spacy.pipeline import EntityLinker
@@ -16,7 +16,7 @@ class PipelineCandidateSelector:
     def __init__(
         self,
         nlp_path: Union[Path, str],
-        desc_path: Union[Path, str],
+        desc_path: Optional[Union[Path, str]],
         el_component_name: str,
         top_n: int,
         ent_desc_reader: EntDescReader,
@@ -24,9 +24,11 @@ class PipelineCandidateSelector:
         """
         Loads spaCy pipeline, knowledge base, entity descriptions.
         nlp_path (Union[Path, str]): Path to stored spaCy pipeline.
-        desc_path (Union[Path, str]): Path to .csv file with descriptions for entities. Has to have two columns
-          with the first one being the entity ID, the second one being the description. The entity ID has to match with
-          the entity ID in the stored knowledge base.
+        desc_path (Optional[Union[Path, str]]): Path to .csv file with descriptions for entities. Has to have two
+            columns with the first one being the entity ID, the second one being the description. The entity ID has to
+            match with the entity ID in the stored knowledge base.
+            If not specified, all entity descriptions provided in prompts will be a generic "No description available"
+            or something else to this effect.
         el_component_name (str): EL component name.
         top_n (int): Top n candidates to include in prompt.
         ent_desc_reader (EntDescReader): Entity description reader.
@@ -38,7 +40,7 @@ class PipelineCandidateSelector:
             )
         self._entity_linker: EntityLinker = self._nlp.get_pipe(el_component_name)
         self._kb = self._entity_linker.kb
-        self._descs = ent_desc_reader(desc_path)
+        self._descs = ent_desc_reader(desc_path) if desc_path else {}
         self._top_n = top_n
 
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[Entity]]:
