@@ -1,5 +1,6 @@
 import abc
-from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
+from typing import cast
 
 from spacy.tokens import Doc, Span
 
@@ -65,16 +66,15 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         if self._prompt_examples:
             self._prompt_examples = list(check_label_consistency(self))
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
-        return super().generate_prompts(
-            docs=docs,
-            description=self._description,
-            labels=list(self._label_dict.values()),
-            label_definitions=self._label_definitions,
-            examples=self._prompt_examples,
-            allow_overlap=self._allow_overlap,
-            **kwargs,
-        )
+    @property
+    def _prompt_data(self) -> Dict[str, Any]:
+        return {
+            "description": self._description,
+            "labels": list(self._label_dict.values()),
+            "label_definitions": self._label_definitions,
+            "examples": self._prompt_examples,
+            "allow_overlap": self._allow_overlap,
+        }
 
     @staticmethod
     def _validate_alignment(alignment_mode: str):

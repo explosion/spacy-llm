@@ -26,6 +26,9 @@ python run_pipeline.py \
     ./examples.yml
 ```
 
+By default this uses v3 if the NER recipe, which leverages a chain-of-thought prompt. If you want to run this with v2, 
+use `fewshot_v2.cfg`, `zeroshot_v2`.cfg and `examples_v2.yml` instead.
+
 By default, the pipeline assigns `PERSON`, `ORGANIZATION` or `LOCATION` labels
 for each entity. You can change these labels by updating the
 `zeroshot.cfg` configuration file.

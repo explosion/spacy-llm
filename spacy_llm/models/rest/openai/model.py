@@ -154,6 +154,7 @@ class OpenAI(REST):
             "gpt-3.5-turbo-16k",
             "gpt-3.5-turbo-0613",
             "gpt-3.5-turbo-0613-16k",
+            "gpt-3.5-turbo-instruct",
             # text-davinci
             "text-davinci-002",
             "text-davinci-003",

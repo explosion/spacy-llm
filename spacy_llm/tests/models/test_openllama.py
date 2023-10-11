@@ -13,6 +13,7 @@ _PIPE_CFG = {
         "name": "open_llama_3b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
+    "save_io": True,
 }
 
 _NLP_CONFIG = """
@@ -25,6 +26,7 @@ batch_size = 128
 
 [components.llm]
 factory = "llm"
+save_io = True
 
 [components.llm.task]
 @llm_tasks = "spacy.NoOp.v1"
@@ -41,8 +43,11 @@ def test_init():
     """Test initialization and simple run."""
     nlp = spacy.blank("en")
     nlp.add_pipe("llm", config=_PIPE_CFG)
-    nlp("This is a test.")
+    doc = nlp("This is a test.")
     torch.cuda.empty_cache()
+    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"]
+    )
 
 
 @pytest.mark.gpu
@@ -53,8 +58,11 @@ def test_init_with_set_config():
     cfg = copy.deepcopy(_PIPE_CFG)
     cfg["model"]["config_run"] = {"max_new_tokens": 32}
     nlp.add_pipe("llm", config=cfg)
-    nlp("This is a test.")
+    doc = nlp("This is a test.")
     torch.cuda.empty_cache()
+    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"]
+    )
 
 
 @pytest.mark.gpu

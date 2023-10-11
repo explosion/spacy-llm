@@ -83,14 +83,14 @@ class TextCatTask(BuiltinTaskWithLabels):
             )
             self._exclusive_classes = True
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
-        return super().generate_prompts(
-            docs=docs,
-            labels=list(self._label_dict.values()),
-            label_definitions=self._label_definitions,
-            exclusive_classes=self._exclusive_classes,
-            allow_none=self._allow_none,
-        )
+    @property
+    def _prompt_data(self) -> Dict[str, Any]:
+        return {
+            "labels": list(self._label_dict.values()),
+            "label_definitions": self._label_definitions,
+            "exclusive_classes": self._exclusive_classes,
+            "allow_none": self._allow_none,
+        }
 
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]

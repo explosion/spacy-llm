@@ -60,9 +60,6 @@ class SentimentTask(BuiltinTask):
             get_examples=get_examples, nlp=nlp, n_prompt_examples=n_prompt_examples
         )
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
-        return super().generate_prompts(docs=docs)
-
     def parse_responses(
         self, docs: Iterable[Doc], responses: Iterable[str]
     ) -> Iterable[Doc]:

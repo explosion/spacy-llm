@@ -54,7 +54,9 @@ class OpenLLaMA(HuggingFace):
         assert hasattr(self._model, "generate")
         return [
             self._tokenizer.decode(
-                self._model.generate(input_ids=tii, **self._config_run)[0],
+                self._model.generate(input_ids=tii, **self._config_run)[
+                    :, tii.shape[1] :
+                ][0],
             )
             for tii in tokenized_input_ids
         ]

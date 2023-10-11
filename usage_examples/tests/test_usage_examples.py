@@ -13,7 +13,7 @@ _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
+@pytest.mark.parametrize("config_name", ("fewshot_v2.cfg", "zeroshot_v2.cfg"))
 def test_ner_dolly(config_name: str):
     """Test NER Dolly usage example.
     config_name (str): Name of config file to use.
@@ -22,7 +22,23 @@ def test_ner_dolly(config_name: str):
     ner_dolly.run_pipeline(
         text="text",
         config_path=path / config_name,
-        examples_path=None if config_name == "zeroshot.cfg" else path / "examples.yml",
+        examples_path=None if "zeroshot" in config_name else path / "examples_v2.yml",
+        verbose=False,
+    )
+
+
+@pytest.mark.gpu
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+@pytest.mark.parametrize("config_name", ("fewshot.cfg", "zeroshot.cfg"))
+def test_ner_v3_dolly(config_name: str):
+    """Test NER Dolly usage example.
+    config_name (str): Name of config file to use.
+    """
+    path = _USAGE_EXAMPLE_PATH / "ner_dolly"
+    ner_dolly.run_pipeline(
+        text="text",
+        config_path=path / config_name,
+        examples_path=None if "zeroshot" in config_name else path / "examples.yml",
         verbose=False,
     )
 

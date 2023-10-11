@@ -46,18 +46,34 @@ class BuiltinTask(abc.ABC):
         self._template = template
         self._prompt_example_type = prompt_example_type
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[Any]:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[Any]): Iterable with one prompt per doc.
         """
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
-        for doc in docs:
+        for doc in self._preprocess_docs_for_prompt(docs):
             prompt = _template.render(
-                text=doc.text, prompt_examples=self._prompt_examples, **kwargs
+                text=doc.text,
+                prompt_examples=self._prompt_examples,
+                **self._prompt_data,
             )
             yield prompt
+
+    @property
+    def _prompt_data(self) -> Dict[str, Any]:
+        """Returns data injected into prompt template. No-op if not overridden by inheriting task class.
+        RETURNS (Dict[str, Any]): Data injected into prompt template.
+        """
+        return {}
+
+    def _preprocess_docs_for_prompt(self, docs: Iterable[Doc]) -> Iterable[Doc]:
+        """Preprocesses docs before injection into prompt template. No-op if not overridden by inheriting task class.
+        docs (Iterable[Doc]): Docs to generate prompts from.
+        RETURNS (Iterable[Doc]): Preprocessed docs.
+        """
+        return docs
 
     @abc.abstractmethod
     def parse_responses(

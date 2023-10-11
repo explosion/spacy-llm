@@ -85,7 +85,7 @@ class Scorer(Protocol):
 
 @runtime_checkable
 class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
