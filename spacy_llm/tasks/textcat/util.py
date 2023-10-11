@@ -3,10 +3,11 @@ from typing import Any, Dict, Iterable
 from spacy.scorer import Scorer
 from spacy.training import Example
 
-from ...compat import BaseModel, Self
+from ...compat import Self
+from ...ty import FewshotExample
 
 
-class TextCatExample(BaseModel):
+class TextCatExample(FewshotExample):
     text: str
     answer: str
 
@@ -27,7 +28,7 @@ class TextCatExample(BaseModel):
                 ]
             )
 
-        return TextCatExample(
+        return cls(
             text=example.reference.text,
             answer=answer,
         )

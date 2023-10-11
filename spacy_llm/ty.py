@@ -58,6 +58,12 @@ class Serializable(Protocol):
 
 
 class FewshotExample(abc.ABC, BaseModel):
+    """Base fewshot-example.
+    From Python 3.7 onwards it's possible to make Pydantic models generic, which allows for a clean solution (see
+    https://github.com/pydantic/pydantic/issues/4171) using the controller pattern and Pydantic's GenericModel
+    (BaseModel in Pydantic v2). Until then passing **kwargs seems like the sanest option.
+    """
+
     @classmethod
     @abc.abstractmethod
     def generate(cls, example: Example, **kwargs) -> Self:
@@ -94,7 +100,7 @@ class Scorer(Protocol):
 
 @runtime_checkable
 class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
