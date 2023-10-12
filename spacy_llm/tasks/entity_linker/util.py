@@ -35,7 +35,7 @@ class ELExample(FewshotExample):
         return ", ".join([f"*{mention}*" for mention in self.mentions])
 
     @classmethod
-    def generate(cls, example: Example, **kwargs) -> Optional[Self]:
+    def generate(cls, example: Example, task: EntityLinkerTask) -> Optional[Self]:
         # Check whether all entities have their knowledge base IDs set.
         n_ents = len(example.reference.ents)
         n_set_kb_ids = sum([ent.kb_id != 0 for ent in example.reference.ents])
@@ -53,7 +53,7 @@ class ELExample(FewshotExample):
         # Assemble example.
         mentions = [ent.text for ent in example.reference.ents]
         # Fetch candidates. If true entity not among candidates: fetch description separately and add manually.
-        cands_ents, solutions = kwargs["fetch_entity_info"](example.reference)
+        cands_ents, solutions = task.fetch_entity_info(example.reference)
         # If we are to use available docs as examples, they have to have KB IDs set and hence available solutions.
         assert all([sol is not None for sol in solutions])
 

@@ -5,14 +5,15 @@ from spacy.training import Example
 
 from ...compat import Self
 from ...ty import FewshotExample
+from .task import LemmaTask
 
 
-class LemmaExample(FewshotExample):
+class LemmaExample(FewshotExample[LemmaTask]):
     text: str
     lemmas: List[Dict[str, str]]
 
     @classmethod
-    def generate(cls, example: Example, **kwargs) -> Optional[Self]:
+    def generate(cls, example: Example, task: LemmaTask) -> Optional[Self]:
         lemma_dict = [{t.text: t.lemma_} for t in example.reference]
         return cls(text=example.reference.text, lemmas=lemma_dict)
 

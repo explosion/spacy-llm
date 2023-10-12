@@ -8,6 +8,7 @@ from spacy import Errors, Language, util
 from spacy.tokens import Doc
 from spacy.training import Example
 
+from ..compat import Self
 from ..registry import lowercase_normalizer
 from ..ty import FewshotExample, TaskResponseParser
 
@@ -30,33 +31,49 @@ class BuiltinTask(abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParser,
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         template: str,
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
     ):
         """Initializes task.
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         """
         self._parse_responses = parse_responses
         self._prompt_examples = prompt_examples or []
         self._template = template
         self._prompt_example_type = prompt_example_type
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[Any]:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[Any]): Iterable with one prompt per doc.
         """
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
-        for doc in docs:
+        for doc in self._preprocess_docs_for_prompt(docs):
             prompt = _template.render(
-                text=doc.text, prompt_examples=self._prompt_examples, **kwargs
+                text=doc.text,
+                prompt_examples=self._prompt_examples,
+                **self._prompt_data,
             )
             yield prompt
+
+    @property
+    def _prompt_data(self) -> Dict[str, Any]:
+        """Returns data injected into prompt template. No-op if not overridden by inheriting task class.
+        RETURNS (Dict[str, Any]): Data injected into prompt template.
+        """
+        return {}
+
+    def _preprocess_docs_for_prompt(self, docs: Iterable[Doc]) -> Iterable[Doc]:
+        """Preprocesses docs before injection into prompt template. No-op if not overridden by inheriting task class.
+        docs (Iterable[Doc]): Docs to generate prompts from.
+        RETURNS (Iterable[Doc]): Preprocessed docs.
+        """
+        return docs
 
     @abc.abstractmethod
     def parse_responses(
@@ -85,7 +102,7 @@ class BuiltinTask(abc.ABC):
         """
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                prompt_example = self._prompt_example_type.generate(eg, **kwargs)
+                prompt_example = self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
                 if prompt_example:
                     self._prompt_examples.append(prompt_example)
 
@@ -225,19 +242,19 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParser,
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         template: str,
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
         labels: List[str],
         label_definitions: Optional[Dict[str, str]],
         normalizer: Optional[Callable[[str], str]],
     ):
         """Built-in task with labels.
 
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
@@ -293,7 +310,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             if infer_labels:
                 labels.extend(self._extract_labels_from_example(eg))
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                prompt_example = self._prompt_example_type.generate(eg, **kwargs)
+                prompt_example = self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
                 if prompt_example:
                     self._prompt_examples.append(prompt_example)
 

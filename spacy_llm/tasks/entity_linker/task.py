@@ -19,16 +19,16 @@ class EntityLinkerTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_example_type: Type[FewshotExample[Self]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
         template: str,
         scorer: Scorer,
     ):
         """Default entity linking task.
 
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_example_type (Type[FewshotExample[Self]]): Type to use for fewshot examples.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
         scorer (Scorer): Scorer function.
         """
@@ -67,20 +67,20 @@ class EntityLinkerTask(BuiltinTask):
             get_examples=get_examples,
             nlp=nlp,
             n_prompt_examples=n_prompt_examples,
-            fetch_entity_info=self._fetch_entity_info,
+            fetch_entity_info=self.fetch_entity_info,
         )
         self._candidate_selector = candidate_selector
         if isinstance(self._candidate_selector, InitializableCandidateSelector):
             self._candidate_selector.initialize(nlp.vocab)
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
         # Reset auto-nil attributes for new batch of docs.
         self._has_ent_cands = []
 
         for i_doc, doc in enumerate(docs):
-            cands_ents, _ = self._fetch_entity_info(doc)
+            cands_ents, _ = self.fetch_entity_info(doc)
             # Determine which ents have candidates and should be included in prompt.
             has_cands = [
                 {cand_ent.id for cand_ent in cand_ents} != {EntityLinker.NIL}
@@ -194,7 +194,7 @@ class EntityLinkerTask(BuiltinTask):
                 "[initialize.components.LLM_TASK_NAME.candidate_selector]."
             )
 
-    def _fetch_entity_info(
+    def fetch_entity_info(
         self, doc: Doc
     ) -> Tuple[List[List[Entity]], List[Optional[str]]]:
         """Fetches entity IDs & descriptions and determines solution numbers for entities in doc.
