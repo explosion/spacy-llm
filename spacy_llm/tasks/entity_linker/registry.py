@@ -21,7 +21,7 @@ def make_entitylinker_task(
     examples: ExamplesConfigType = None,
     scorer: Optional[Scorer] = None,
 ):
-    """EntityLinking.v1 task factory.
+    """EntityLinker.v1 task factory.
 
     template (str): Prompt template passed to the model.
     parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
