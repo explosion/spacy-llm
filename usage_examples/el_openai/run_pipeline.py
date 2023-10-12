@@ -33,7 +33,7 @@ def run_pipeline(
         # Construct toy KB.
         build_el_pipeline(tmpdir, tmpdir / "desc.csv")
         paths = {
-            "paths.el_nlp": str(tmpdir),
+            "paths.el_kb": str(tmpdir / "entity_linker" / "kb"),
             "paths.el_desc": str(tmpdir / "desc.csv"),
         }
         msg.text(f"Loading config from {config_path}", show=verbose)
