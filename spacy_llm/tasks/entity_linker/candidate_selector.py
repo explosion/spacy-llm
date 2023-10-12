@@ -2,12 +2,13 @@ import warnings
 from pathlib import Path
 from typing import Iterable, Optional, Union
 
-import spacy
+from spacy import Vocab
+from spacy.kb import InMemoryLookupKB
 from spacy.pipeline import EntityLinker
 from spacy.tokens import Span
 
 from .ty import EntDescReader, Entity
-from .util import UNAVAILABLE_ENTITY_DESC
+from .util import UNAVAILABLE_ENTITY_DESC, InMemoryLookupKBLoader
 
 
 class PipelineCandidateSelector:
@@ -15,15 +16,13 @@ class PipelineCandidateSelector:
 
     def __init__(
         self,
-        nlp_path: Union[Path, str],
+        kb_loader: InMemoryLookupKBLoader,
         desc_path: Optional[Union[Path, str]],
-        el_component_name: str,
         top_n: int,
         ent_desc_reader: EntDescReader,
     ):
-        """
-        Loads spaCy pipeline, knowledge base, entity descriptions.
-        nlp_path (Union[Path, str]): Path to stored spaCy pipeline.
+        """Generates CandidateSelector. Note that this class has to be initialized (.initialize()) before being used.
+        kb_loader (InMemoryLookupKBLoader): KB loader.
         desc_path (Optional[Union[Path, str]]): Path to .csv file with descriptions for entities. Has to have two
             columns with the first one being the entity ID, the second one being the description. The entity ID has to
             match with the entity ID in the stored knowledge base.
@@ -33,21 +32,25 @@ class PipelineCandidateSelector:
         top_n (int): Top n candidates to include in prompt.
         ent_desc_reader (EntDescReader): Entity description reader.
         """
-        self._nlp = spacy.load(nlp_path)
-        if el_component_name not in self._nlp.component_names:
-            raise ValueError(
-                f"Component {el_component_name} wasn't found in pipeline {nlp_path}."
-            )
-        self._entity_linker: EntityLinker = self._nlp.get_pipe(el_component_name)
-        self._kb = self._entity_linker.kb
+        self._kb_loader = kb_loader
+        self._kb: Optional[InMemoryLookupKB] = None
         self._descs = ent_desc_reader(desc_path) if desc_path else {}
         self._top_n = top_n
+
+    def initialize(self, vocab: Vocab) -> None:
+        """Initialize instance with vocabulary.
+        vocab (Vocab): Vocabulary.
+        """
+        self._kb = self._kb_loader(vocab)
 
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[Entity]]:
         """Retrieves top n candidates using spaCy's entity linker's .get_candidates_batch().
         mentions (Iterable[Span]): Mentions to look up entity candidates for.
         RETURNS (Iterable[Iterable[Entity]]): Top n entity candidates per mention.
         """
+        if self._kb is None:
+            raise ValueError("CandidateSelector has to be initialized before usage.")
+
         all_cands = self._kb.get_candidates_batch(mentions)
         for cands in all_cands:
             assert isinstance(cands, list)

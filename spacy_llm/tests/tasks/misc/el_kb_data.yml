@@ -2,48 +2,63 @@ entities:
   Q100:
       name: "Boston"
       desc: "city in and state capital of Massachusetts, United States"
+      embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q131371:
       name: "Boston Celtics"
       desc: "NBA team based in Boston; tied with most NBA Championships"
+      embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q204289:
     name: "Boston"
     desc: "American rock band"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q311975:
     name: "Boston"
     desc: "town in Lincolnshire, England"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q671475:
-      name: "Logan International Airport"
-      desc: "airport in Boston, Massachusetts, United States"
+    name: "Logan International Airport"
+    desc: "airport in Boston, Massachusetts, United States"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q107723060:
-      name: "2021–22 Boston Celtics season"
-      desc: "The 2021–22 Boston Celtics season was the 76th season of the franchise in the National Basketball Association (NBA). Following the Celtics' first-round exit to the Brooklyn Nets in five games from las"
+    name: "2021–22 Boston Celtics season"
+    desc: "The 2021–22 Boston Celtics season was the 76th season of the franchise in the National Basketball Association (NBA). Following the Celtics' first-round exit to the Brooklyn Nets in five games from las"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q3643001:
     name: "Boston"
     desc: "NBA basketball team season"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q3466394:
-      name: "Boston"
-      desc: "season of National Basketball Association team the Boston Celtics"
+    name: "Boston"
+    desc: "season of National Basketball Association team the Boston Celtics"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q3642995:
     name: "Boston"
     desc: "NBA basketball team season"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q60:
     name: "New York"
     desc: "most populous city in the United States"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q1384:
     name": "New York"
     desc: "U.S. state"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q131364:
-      name: "New York Knicks"
-      desc: "National Basketball Association team in New York City"
+    name: "New York Knicks"
+    desc: "National Basketball Association team in New York City"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q14435:
     name: "Big Apple"
     desc: "nickname for New York City"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q89:
     name: "Apple"
     desc: "fruit of the apple tree"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   Q312:
     name: "Apple"
     desc: "American multinational technology company"
+    embedding: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 aliases:
   - alias: "Boston"
     entities: ["Q100", "Q131371", "Q204289", "Q311975", "Q671475"]

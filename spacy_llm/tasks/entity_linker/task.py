@@ -10,7 +10,7 @@ from ...compat import Self
 from ...ty import FewshotExample, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
-from .ty import CandidateSelector, Entity
+from .ty import CandidateSelector, Entity, InitializableCandidateSelector
 
 DEFAULT_EL_TEMPLATE_V1 = read_template("entity_linker.v1")
 
@@ -70,6 +70,8 @@ class EntityLinkerTask(BuiltinTask):
             fetch_entity_info=self._fetch_entity_info,
         )
         self._candidate_selector = candidate_selector
+        if isinstance(self._candidate_selector, InitializableCandidateSelector):
+            self._candidate_selector.initialize(nlp.vocab)
 
     def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
         environment = jinja2.Environment()

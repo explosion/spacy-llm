@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, Union
 
 from pydantic import BaseModel
+from spacy import Vocab
 from spacy.tokens import Span
 
 from ...compat import Protocol, runtime_checkable
@@ -29,6 +30,15 @@ class CandidateSelector(Protocol):
         RETURNS (str): Entity description for entity with specfied ID. If no description found, returned string equals
             spacy_llm.tasks.entity_linker.util.UNAVAILABLE_ENTITY_DESC.
         """
+
+
+@runtime_checkable
+class InitializableCandidateSelector(Protocol):
+    def initialize(self, vocab: Vocab):
+        """Initialize instance with vocabulary.
+        vocab (Vocab): Vocabulary.
+        """
+        ...
 
 
 EntDescReader = Callable[[Union[Path, str]], Dict[str, str]]

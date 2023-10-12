@@ -1,8 +1,13 @@
 import csv
+import dataclasses
 import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+import spacy
+import srsly
+from spacy import Vocab
+from spacy.kb import InMemoryLookupKB
 from spacy.pipeline import EntityLinker
 from spacy.scorer import Scorer
 from spacy.training import Example
@@ -92,3 +97,60 @@ def ent_desc_reader_csv(path: Union[Path, str]) -> Dict[str, str]:
             )
 
     return descs
+
+
+@dataclasses.dataclass
+class InMemoryLookupKBLoader:
+    """Config/init helper class for InMemoryLookupKB usage in CandidateSelector."""
+
+    path: Union[str, Path]
+    nlp_path: Optional[Union[str, Path]]
+
+    def __post_init__(self):
+        if self.nlp_path and isinstance(self.nlp_path, str):
+            self.nlp_path = Path(self.nlp_path)
+        if self.path and isinstance(self.path, str):
+            self.path = Path(self.path)
+
+    def __call__(self, vocab: Vocab) -> InMemoryLookupKB:
+        """Loads InMemoryLookupKB instance from disk.
+        vocab (Vocab): Vocab instance of executing pipeline.
+        """
+        assert isinstance(self.path, Path) and isinstance(self.nlp_path, Path)
+
+        # If path is directory: assume it's a pah to the serialized KB directory.
+        if self.path.is_dir():
+            # Load pipeline, use its vocab. If pipeline path isn't set, try loading the surrounding pipeline
+            # (which might fail).
+            nlp_path = self.nlp_path if self.nlp_path else self.path.parent.parent
+            try:
+                nlp = spacy.load(nlp_path)
+            except IOError as err:
+                raise ValueError(
+                    f"Pipeline at path {nlp_path} could not be loaded. Make sure to specify the correct path."
+                ) from err
+            kb = InMemoryLookupKB(nlp.vocab, entity_vector_length=1)
+            kb.from_disk(self.path)
+
+        # Otherwise: has to be path to .yaml file.
+        else:
+            kb_data = srsly.read_yaml(self.path)
+            entities = kb_data["entities"]
+            qids = list(entities.keys())
+            kb = InMemoryLookupKB(
+                vocab=vocab,
+                entity_vector_length=len(kb_data["entities"][qids[0]]["embedding"]),
+            )
+
+            # Set entities (with dummy values for frequencies).
+            kb.set_entities(
+                entity_list=qids,
+                vector_list=[entities[qid]["embedding"] for qid in qids],
+                freq_list=[1] * len(qids),
+            )
+
+            # Add aliases and dummy prior probabilities.
+            for alias_data in kb_data["aliases"]:
+                kb.add_alias(**alias_data)
+
+        return kb

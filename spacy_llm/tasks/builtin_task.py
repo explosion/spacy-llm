@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, c
 
 import jinja2
 import srsly
-from spacy import Language, util, Errors
+from spacy import Errors, Language, util
 from spacy.tokens import Doc
 from spacy.training import Example
 
