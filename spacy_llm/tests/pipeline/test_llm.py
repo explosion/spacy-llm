@@ -322,6 +322,7 @@ def test_llm_task_factories_el(tmp_path):
     cfg = """
     [paths]
     el_nlp = null
+    el_kb = null
     el_desc = null
 
     [nlp]
@@ -345,13 +346,17 @@ def test_llm_task_factories_el(tmp_path):
 
     [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    nlp_path = ${paths.el_nlp}
     desc_path = ${paths.el_desc}
+
+    [initialize.components.llm.candidate_selector.kb_loader]
+    path = ${paths.el_kb}
+    nlp_path = ${paths.el_nlp}
     """
     config = Config().from_str(
         cfg,
         overrides={
             "paths.el_nlp": str(tmp_path),
+            "paths.el_kb": str(tmp_path / "entity_linker" / "kb"),
             "paths.el_desc": str(tmp_path / "desc.csv"),
         },
     )
