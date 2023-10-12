@@ -109,14 +109,14 @@ class InMemoryLookupKBLoader:
     def __post_init__(self):
         if self.nlp_path and isinstance(self.nlp_path, str):
             self.nlp_path = Path(self.nlp_path)
-        if self.path and isinstance(self.path, str):
+        if isinstance(self.path, str):
             self.path = Path(self.path)
 
     def __call__(self, vocab: Vocab) -> InMemoryLookupKB:
         """Loads InMemoryLookupKB instance from disk.
         vocab (Vocab): Vocab instance of executing pipeline.
         """
-        assert isinstance(self.path, Path) and isinstance(self.nlp_path, Path)
+        assert isinstance(self.path, Path)
 
         # If path is directory: assume it's a pah to the serialized KB directory.
         if self.path.is_dir():
