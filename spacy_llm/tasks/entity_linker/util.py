@@ -170,7 +170,9 @@ class KBYamlLoader(BaseInMemoryLookupKBLoader):
         qids = list(entities.keys())
         kb = InMemoryLookupKB(
             vocab=vocab,
-            entity_vector_length=len(kb_data["entities"][qids[0]]["embedding"]),
+            entity_vector_length=len(
+                kb_data["entities"][qids[0]].get("embedding", [0])
+            ),
         )
 
         # Set entities (with dummy values for frequencies).
