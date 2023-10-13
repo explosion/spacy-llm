@@ -54,6 +54,7 @@ class Anthropic(REST):
         headers = {
             **self._credentials,
             "model": self._name,
+            "anthropic_version": self._config.get("anthropic_version", "2023-06-01"),
             "Content-Type": "application/json",
         }
 
