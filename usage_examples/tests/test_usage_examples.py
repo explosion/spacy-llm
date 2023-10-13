@@ -16,7 +16,7 @@ _USAGE_EXAMPLE_PATH = Path(__file__).parent.parent
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("config_name", ("zeroshot.cfg", "fewshot.cfg"))
 def test_el_openai(config_name: str):
-    """Test NER Dolly usage example.
+    """Test OpenAI EL usage example.
     config_name (str): Name of config file to use.
     """
     path = _USAGE_EXAMPLE_PATH / "el_openai"
