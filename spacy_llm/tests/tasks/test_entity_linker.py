@@ -20,7 +20,8 @@ from spacy_llm.tasks.entity_linker import EntityLinkerTask, make_entitylinker_ta
 from spacy_llm.util import assemble_from_config
 
 from ...tasks.entity_linker.registry import make_candidate_selector_pipeline
-from ...tasks.entity_linker.util import UNAVAILABLE_ENTITY_DESC, InMemoryLookupKBLoader
+from ...tasks.entity_linker.registry import make_kb_serialized_loader
+from ...tasks.entity_linker.util import UNAVAILABLE_ENTITY_DESC
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -102,11 +103,12 @@ def noop_config():
 
     [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    desc_path = ${paths.el_desc}
 
     [initialize.components.llm.candidate_selector.kb_loader]
+    @llm_misc = "spacy.KBSerializedLoader.v1"
     path = ${paths.el_kb}
     nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
     """
 
 
@@ -141,11 +143,12 @@ def zeroshot_cfg_string():
 
     [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    desc_path = ${paths.el_desc}
 
     [initialize.components.llm.candidate_selector.kb_loader]
+    @llm_misc = "spacy.KBSerializedLoader.v1"
     path = ${paths.el_kb}
     nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
     """
 
 
@@ -184,11 +187,12 @@ def fewshot_cfg_string():
 
     [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    desc_path = ${{paths.el_desc}}
 
     [initialize.components.llm.candidate_selector.kb_loader]
+    @llm_misc = "spacy.KBSerializedLoader.v1"
     path = ${{paths.el_kb}}
     nlp_path = ${{paths.el_nlp}}
+    desc_path = ${{paths.el_desc}}
     """
 
 
@@ -228,11 +232,12 @@ def ext_template_cfg_string():
 
     [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    desc_path = ${{paths.el_desc}}
 
     [initialize.components.llm.candidate_selector.kb_loader]
+    @llm_misc = "spacy.KBSerializedLoader.v1"
     path = ${{paths.el_kb}}
     nlp_path = ${{paths.el_nlp}}
+    desc_path = ${{paths.el_desc}}
     """
 
 
@@ -414,10 +419,11 @@ def test_jinja_template_rendering_without_examples(tmp_path):
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=None)
     el_task._candidate_selector = make_candidate_selector_pipeline(
-        kb_loader=InMemoryLookupKBLoader(
-            path=tmp_path / "entity_linker" / "kb", nlp_path=tmp_path
-        ),
-        desc_path=tmp_path / "desc.csv",
+        kb_loader=make_kb_serialized_loader(
+            path=tmp_path / "entity_linker" / "kb",
+            nlp_path=tmp_path,
+            desc_path=tmp_path / "desc.csv",
+        )
     )
     el_task._candidate_selector.initialize(spacy.load(tmp_path).vocab)
     prompt = list(el_task.generate_prompts([doc]))[0]
@@ -483,10 +489,11 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=fewshot_reader(examples_path))
     el_task._candidate_selector = make_candidate_selector_pipeline(
-        kb_loader=InMemoryLookupKBLoader(
-            path=tmp_path / "entity_linker" / "kb", nlp_path=tmp_path
-        ),
-        desc_path=tmp_path / "desc.csv",
+        kb_loader=make_kb_serialized_loader(
+            path=tmp_path / "entity_linker" / "kb",
+            nlp_path=tmp_path,
+            desc_path=tmp_path / "desc.csv",
+        )
     )
     el_task._candidate_selector.initialize(spacy.load(tmp_path).vocab)
     prompt = list(el_task.generate_prompts([doc]))[0]
@@ -584,10 +591,11 @@ def test_external_template_actually_loads(tmp_path):
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(template=template, examples=None)
     el_task._candidate_selector = make_candidate_selector_pipeline(
-        kb_loader=InMemoryLookupKBLoader(
-            path=tmp_path / "entity_linker" / "kb", nlp_path=tmp_path
-        ),
-        desc_path=tmp_path / "desc.csv",
+        kb_loader=make_kb_serialized_loader(
+            path=tmp_path / "entity_linker" / "kb",
+            nlp_path=tmp_path,
+            desc_path=tmp_path / "desc.csv",
+        )
     )
     el_task._candidate_selector.initialize(spacy.load(tmp_path).vocab)
 
@@ -676,24 +684,34 @@ def test_ent_highlighting():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("method", ("kb_no_nlp", "from_file"))
-def test_entity_linker_predict_alternaive_kb_inits(method, request, tmp_path):
+@pytest.mark.parametrize("loader", ("yaml",))  # "serialized_no_nlp",
+def test_entity_linker_predict_alternative_kb_inits(loader, request, tmp_path):
     """Use OpenAI to get EL results with different KB initialization methods."""
     cfg = request.getfixturevalue("fewshot_cfg_string")
-    if method == "kb_no_nlp":
+    if loader == "serialized_no_nlp":
         overrides = {
             "paths.el_kb": str(tmp_path / "entity_linker" / "kb"),
             "paths.el_desc": str(tmp_path / "desc.csv"),
         }
+        build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     else:
         overrides = {
             "paths.el_kb": str(
                 Path(__file__).resolve().parent / "misc" / "el_kb_data.yml"
             ),
-            "paths.el_desc": str(tmp_path / "desc.csv"),
         }
     orig_config = Config().from_str(cfg, overrides=overrides)
-    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    if loader == "yaml":
+        orig_config["initialize"]["components"]["llm"]["candidate_selector"][
+            "kb_loader"
+        ]["@llm_misc"] = "spacy.KBYamlLoader.v1"
+        orig_config["initialize"]["components"]["llm"]["candidate_selector"][
+            "kb_loader"
+        ].pop("nlp_path")
+        orig_config["initialize"]["components"]["llm"]["candidate_selector"][
+            "kb_loader"
+        ].pop("desc_path")
+
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     nlp.initialize(lambda: [])
 

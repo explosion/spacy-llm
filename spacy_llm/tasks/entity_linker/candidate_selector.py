@@ -1,14 +1,13 @@
 import warnings
-from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Dict, Iterable, Optional
 
 from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
 from spacy.pipeline import EntityLinker
 from spacy.tokens import Span
 
-from .ty import EntDescReader, Entity
-from .util import UNAVAILABLE_ENTITY_DESC, InMemoryLookupKBLoader
+from .ty import Entity, InMemoryLookupKBLoader
+from .util import UNAVAILABLE_ENTITY_DESC
 
 
 class PipelineCandidateSelector:
@@ -17,31 +16,22 @@ class PipelineCandidateSelector:
     def __init__(
         self,
         kb_loader: InMemoryLookupKBLoader,
-        desc_path: Optional[Union[Path, str]],
         top_n: int,
-        ent_desc_reader: EntDescReader,
     ):
         """Generates CandidateSelector. Note that this class has to be initialized (.initialize()) before being used.
         kb_loader (InMemoryLookupKBLoader): KB loader.
-        desc_path (Optional[Union[Path, str]]): Path to .csv file with descriptions for entities. Has to have two
-            columns with the first one being the entity ID, the second one being the description. The entity ID has to
-            match with the entity ID in the stored knowledge base.
-            If not specified, all entity descriptions provided in prompts will be a generic "No description available"
-            or something else to this effect.
-        el_component_name (str): EL component name.
         top_n (int): Top n candidates to include in prompt.
-        ent_desc_reader (EntDescReader): Entity description reader.
         """
         self._kb_loader = kb_loader
         self._kb: Optional[InMemoryLookupKB] = None
-        self._descs = ent_desc_reader(desc_path) if desc_path else {}
+        self._descs: Dict[str, str] = {}
         self._top_n = top_n
 
     def initialize(self, vocab: Vocab) -> None:
         """Initialize instance with vocabulary.
         vocab (Vocab): Vocabulary.
         """
-        self._kb = self._kb_loader(vocab)
+        self._kb, self._descs = self._kb_loader(vocab)
 
     def __call__(self, mentions: Iterable[Span]) -> Iterable[Iterable[Entity]]:
         """Retrieves top n candidates using spaCy's entity linker's .get_candidates_batch().

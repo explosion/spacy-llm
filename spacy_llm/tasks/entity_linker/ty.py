@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Union
+from typing import Callable, Dict, Iterable, Tuple, Union
 
 from pydantic import BaseModel
 from spacy import Vocab
+from spacy.kb import InMemoryLookupKB
 from spacy.tokens import Span
 
 from ...compat import Protocol, runtime_checkable
@@ -41,4 +42,6 @@ class InitializableCandidateSelector(Protocol):
         ...
 
 
-EntDescReader = Callable[[Union[Path, str]], Dict[str, str]]
+DescFormat = Dict[str, str]
+EntDescReader = Callable[[Union[Path, str]], DescFormat]
+InMemoryLookupKBLoader = Callable[[Vocab], Tuple[InMemoryLookupKB, DescFormat]]

@@ -9,8 +9,9 @@ from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
 from .candidate_selector import PipelineCandidateSelector
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
-from .ty import EntDescReader
-from .util import ELExample, InMemoryLookupKBLoader, ent_desc_reader_csv, score
+from .ty import EntDescReader, InMemoryLookupKBLoader
+from .util import ELExample, KBSerializedLoader, KBYamlLoader, ent_desc_reader_csv
+from .util import score
 
 
 @registry.llm_tasks("spacy.EntityLinker.v1")
@@ -59,27 +60,16 @@ def make_entitylinker_task(
 def make_candidate_selector_pipeline(
     kb_loader: InMemoryLookupKBLoader,
     top_n: int = 5,
-    desc_path: Optional[Union[Path, str]] = None,
-    ent_desc_reader: Optional[EntDescReader] = None,
 ) -> PipelineCandidateSelector:
     """Generates CandidateSelector. Note that this class has to be initialized (.initialize()) before being used.
     kb_loader (InMemoryLookupKBLoader): KB loader.
-    desc_path (Optional[Union[Path, str]]): Path to .csv file with descriptions for entities. Has to have two
-        columns with the first one being the entity ID, the second one being the description. The entity ID has to
-        match with the entity ID in the stored knowledge base.
-        If not specified, all entity descriptions provided in prompts will be a generic "No description available"
-        or something else to this effect.
-    el_component_name (str): EL component name.
     top_n (int): Top n candidates to include in prompt.
-    ent_desc_reader (EntDescReader): Entity description reader.
     """
     # Note: we could also move the class implementation here directly. This was just done to separate registration from
     # implementation code.
     return PipelineCandidateSelector(
         kb_loader=kb_loader,
         top_n=top_n,
-        desc_path=desc_path,
-        ent_desc_reader=ent_desc_reader or ent_desc_reader_csv,
     )
 
 
@@ -89,3 +79,40 @@ def make_ent_desc_reader() -> EntDescReader:
     RETURNS (Dict[str, str]): Dict with ID -> description.
     """
     return ent_desc_reader_csv
+
+
+@registry.llm_misc("spacy.KBSerializedLoader.v1")
+def make_kb_serialized_loader(
+    path: Union[str, Path],
+    nlp_path: Optional[Union[str, Path]] = None,
+    desc_path: Optional[Union[str, Path]] = None,
+    ent_desc_reader: Optional[EntDescReader] = None,
+) -> KBSerializedLoader:
+    """Instantiates KBSerializedLoader for loading KBs from serialized directories (as done during spaCy pipeline
+    serialization).
+    path (Union[str, Path]): Path to KB directory.
+    nlp_path (Optional[Union[str, Path]]): Path to NLP pipeline whose vocab data to use. If this is None, the loader
+        will try to load the serialized pipeline surrounding the KB directory.
+    desc_path (Optional[Union[Path, str]]): Path to .csv file with descriptions for entities. Has to have two
+        columns with the first one being the entity ID, the second one being the description. The entity ID has to
+        match with the entity ID in the stored knowledge base.
+        If not specified, all entity descriptions provided in prompts will be a generic "No description available"
+        or something else to this effect.
+    ent_desc_reader (EntDescReader): Entity description reader.
+    RETURNS (KBSerializedLoader): Loader instance.
+    """
+    return KBSerializedLoader(
+        path=path,
+        nlp_path=nlp_path,
+        desc_path=desc_path,
+        ent_desc_reader=ent_desc_reader or ent_desc_reader_csv,
+    )
+
+
+@registry.llm_misc("spacy.KBYamlLoader.v1")
+def make_kb_yaml_loader(path: Union[str, Path]) -> KBYamlLoader:
+    """Instantiates KBYamlLoader for generating KBs from .yaml file containing entity data.
+    path (Union[str, Path]): Path to KB directory.
+    RETURNS (KBYamlLoader): Loader instance.
+    """
+    return KBYamlLoader(path=path)

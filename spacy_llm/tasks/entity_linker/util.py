@@ -1,8 +1,9 @@
+import abc
 import csv
 import dataclasses
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import spacy
 import srsly
@@ -15,6 +16,7 @@ from spacy.training import Example
 from ...compat import Self
 from ...ty import FewshotExample
 from .task import EntityLinkerTask
+from .ty import DescFormat, EntDescReader
 
 UNAVAILABLE_ENTITY_DESC: str = "This entity doesn't have a description."
 
@@ -100,57 +102,86 @@ def ent_desc_reader_csv(path: Union[Path, str]) -> Dict[str, str]:
 
 
 @dataclasses.dataclass
-class InMemoryLookupKBLoader:
-    """Config/init helper class for InMemoryLookupKB usage in CandidateSelector."""
-
+class BaseInMemoryLookupKBLoader:
     path: Union[str, Path]
-    nlp_path: Optional[Union[str, Path]]
+    """Path to artefact containing knowledge base data."""
 
     def __post_init__(self):
-        if self.nlp_path and isinstance(self.nlp_path, str):
-            self.nlp_path = Path(self.nlp_path)
         if isinstance(self.path, str):
             self.path = Path(self.path)
 
-    def __call__(self, vocab: Vocab) -> InMemoryLookupKB:
-        """Loads InMemoryLookupKB instance from disk.
+    @abc.abstractmethod
+    def __call__(self, vocab: Vocab) -> Tuple[InMemoryLookupKB, DescFormat]:
+        """Loads KB instance.
         vocab (Vocab): Vocab instance of executing pipeline.
+        RETURNS (Tuple[InMemoryLookupKB, DescFormat]): Loaded/generated KB instance; descriptions for entities.
         """
+        ...
+
+
+@dataclasses.dataclass
+class KBSerializedLoader(BaseInMemoryLookupKBLoader):
+    """Config/init helper class for loading InMemoryLookupKB instance from a serialized KB directory."""
+
+    nlp_path: Optional[Union[str, Path]]
+    """Path to serialized NLP pipeline. If None, path will be guessed."""
+    desc_path: Optional[Union[Path, str]]
+    """Path to .csv file with descriptions for entities. Has to have two columns with the first one being the entity ID,
+        the second one being the description. The entity ID has to match with the entity ID in the stored knowledge
+        base.
+        If not specified, all entity descriptions provided in prompts will be a generic "No description available" or
+        something else to this effect.
+    """
+    ent_desc_reader: EntDescReader
+    """Entity description file reader."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.nlp_path and isinstance(self.nlp_path, str):
+            self.nlp_path = Path(self.nlp_path)
+
+    def __call__(self, vocab: Vocab) -> Tuple[InMemoryLookupKB, DescFormat]:
         assert isinstance(self.path, Path)
 
-        # If path is directory: assume it's a pah to the serialized KB directory.
-        if self.path.is_dir():
-            # Load pipeline, use its vocab. If pipeline path isn't set, try loading the surrounding pipeline
-            # (which might fail).
-            nlp_path = self.nlp_path if self.nlp_path else self.path.parent.parent
-            try:
-                nlp = spacy.load(nlp_path)
-            except IOError as err:
-                raise ValueError(
-                    f"Pipeline at path {nlp_path} could not be loaded. Make sure to specify the correct path."
-                ) from err
-            kb = InMemoryLookupKB(nlp.vocab, entity_vector_length=1)
-            kb.from_disk(self.path)
+        # Load pipeline, use its vocab. If pipeline path isn't set, try loading the surrounding pipeline
+        # (which might fail).
+        nlp_path = self.nlp_path if self.nlp_path else self.path.parent.parent
+        try:
+            nlp = spacy.load(nlp_path)
+        except IOError as err:
+            raise ValueError(
+                f"Pipeline at path {nlp_path} could not be loaded. Make sure to specify the correct path."
+            ) from err
+        kb = InMemoryLookupKB(nlp.vocab, entity_vector_length=1)
+        kb.from_disk(self.path)
 
-        # Otherwise: has to be path to .yaml file.
-        else:
-            kb_data = srsly.read_yaml(self.path)
-            entities = kb_data["entities"]
-            qids = list(entities.keys())
-            kb = InMemoryLookupKB(
-                vocab=vocab,
-                entity_vector_length=len(kb_data["entities"][qids[0]]["embedding"]),
-            )
+        return kb, self.ent_desc_reader(self.desc_path) if self.desc_path else {}
 
-            # Set entities (with dummy values for frequencies).
-            kb.set_entities(
-                entity_list=qids,
-                vector_list=[entities[qid]["embedding"] for qid in qids],
-                freq_list=[1] * len(qids),
-            )
 
-            # Add aliases and dummy prior probabilities.
-            for alias_data in kb_data["aliases"]:
-                kb.add_alias(**alias_data)
+@dataclasses.dataclass
+class KBYamlLoader(BaseInMemoryLookupKBLoader):
+    """Config/init helper class for generating a InMemoryLookupKB instance from a .yaml file."""
 
-        return kb
+    def __call__(self, vocab: Vocab) -> Tuple[InMemoryLookupKB, DescFormat]:
+        assert isinstance(self.path, Path)
+
+        kb_data = srsly.read_yaml(self.path)
+        entities = kb_data["entities"]
+        qids = list(entities.keys())
+        kb = InMemoryLookupKB(
+            vocab=vocab,
+            entity_vector_length=len(kb_data["entities"][qids[0]]["embedding"]),
+        )
+
+        # Set entities (with dummy values for frequencies).
+        kb.set_entities(
+            entity_list=qids,
+            vector_list=[entities[qid]["embedding"] for qid in qids],
+            freq_list=[1] * len(qids),
+        )
+
+        # Add aliases and dummy prior probabilities.
+        for alias_data in kb_data["aliases"]:
+            kb.add_alias(**alias_data)
+
+        return kb, {qid: entities[qid].get("desc") for qid in qids}
