@@ -125,7 +125,7 @@ class EntityLinkerTask(BuiltinTask):
                 kb_id=EntityLinker.NIL,
             )
 
-            # If numbers of ents parsed from LLM response + ents without candiates and number of ents in doc don't
+            # If numbers of ents parsed from LLM response + ents without candidates and number of ents in doc don't
             # align, skip doc (most likely LLM parsing failed, no guarantee KB IDs can be assigned to correct ents).
             # This can happen when the LLM fails to list solutions for all entities.
             all_entities_resolved = len(ent_spans) + sum(
