@@ -98,7 +98,7 @@ def make_kb_serialized_loader(
         match with the entity ID in the stored knowledge base.
         If not specified, all entity descriptions provided in prompts will be a generic "No description available"
         or something else to this effect.
-    ent_desc_reader (EntDescReader): Entity description reader.
+    ent_desc_reader (Optional[EntDescReader]): Entity description reader.
     RETURNS (KBSerializedLoader): Loader instance.
     """
     return KBSerializedLoader(

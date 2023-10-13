@@ -346,11 +346,12 @@ def test_llm_task_factories_el(tmp_path):
 
     [initialize.components.llm.candidate_selector]
     @llm_misc = "spacy.CandidateSelector.v1"
-    desc_path = ${paths.el_desc}
 
     [initialize.components.llm.candidate_selector.kb_loader]
+    @llm_misc = "spacy.KBSerializedLoader.v1"
     path = ${paths.el_kb}
     nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
     """
     config = Config().from_str(
         cfg,
