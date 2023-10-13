@@ -176,7 +176,8 @@ class KBYamlLoader(BaseInMemoryLookupKBLoader):
         # Set entities (with dummy values for frequencies).
         kb.set_entities(
             entity_list=qids,
-            vector_list=[entities[qid]["embedding"] for qid in qids],
+            # Use [0] as default embedding if no embeddings are specified.
+            vector_list=[entities[qid].get("embedding", [0]) for qid in qids],
             freq_list=[1] * len(qids),
         )
 
