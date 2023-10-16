@@ -108,10 +108,11 @@ TaskContraT = TypeVar("TaskContraT", bound=LLMTask, contravariant=True)
 class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):
     @classmethod
     @abc.abstractmethod
-    def generate(cls, example: Example, task: TaskContraT) -> Self:
+    def generate(cls, example: Example, task: TaskContraT) -> Optional[Self]:
         """Create a fewshot example from a spaCy example.
         example (Example): spaCy example.
         task (TaskContraT): Task for which to generate examples.
+        RETURNS (Optional[Self]): Generated example. None, if example couldn't be generated.
         """
 
 

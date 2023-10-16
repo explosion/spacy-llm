@@ -30,7 +30,7 @@ def make_lemma_task(
     template (str): Prompt template passed to the model.
     parse_responses (Optional[TaskResponseParser]): Callable for parsing LLM responses for this task.
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     scorer (Optional[Scorer]): Scorer function.
     """

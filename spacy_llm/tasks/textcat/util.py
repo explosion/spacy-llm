@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 from spacy.scorer import Scorer
 from spacy.training import Example
@@ -13,7 +13,7 @@ class TextCatExample(FewshotExample[TextCatTask]):
     answer: str
 
     @classmethod
-    def generate(cls, example: Example, task: TextCatTask) -> Self:
+    def generate(cls, example: Example, task: TextCatTask) -> Optional[Self]:
         if task.use_binary:
             answer = (
                 "POS"

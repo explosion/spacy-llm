@@ -1,3 +1,5 @@
+from typing import Optional
+
 from spacy.training import Example
 
 from ...compat import Self
@@ -10,7 +12,7 @@ class SummarizationExample(FewshotExample[SummarizationTask]):
     summary: str
 
     @classmethod
-    def generate(cls, example: Example, task: SummarizationTask) -> Self:
+    def generate(cls, example: Example, task: SummarizationTask) -> Optional[Self]:
         return cls(
             text=example.reference.text,
             summary=getattr(example.reference._, task.field),

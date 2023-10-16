@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 from spacy.scorer import Scorer
 from spacy.training import Example
@@ -13,7 +13,7 @@ class LemmaExample(FewshotExample[LemmaTask]):
     lemmas: List[Dict[str, str]]
 
     @classmethod
-    def generate(cls, example: Example, task: LemmaTask) -> Self:
+    def generate(cls, example: Example, task: LemmaTask) -> Optional[Self]:
         lemma_dict = [{t.text: t.lemma_} for t in example.reference]
         return cls(text=example.reference.text, lemmas=lemma_dict)
 

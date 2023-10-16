@@ -41,7 +41,7 @@ def make_textcat_task(
     labels (str): Comma-separated list of labels to pass to the template.
         This task assumes binary classification if a single label is provided.
         Leave empty to populate it at initialization time (only if examples are provided).
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     exclusive_classes (bool): If True, require the language model to suggest only one
@@ -106,7 +106,7 @@ def make_textcat_task_v2(
         This task assumes binary classification if a single label is provided.
         Leave empty to populate it at initialization time (only if examples are provided).
     template (str): Prompt template passed to the model.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     exclusive_classes (bool): If True, require the language model to suggest only one
@@ -175,7 +175,7 @@ def make_textcat_task_v3(
     template (str): Prompt template passed to the model.
     label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
         These descriptions are added to the prompt to help instruct the LLM on what to extract.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     exclusive_classes (bool): If True, require the language model to suggest only one
