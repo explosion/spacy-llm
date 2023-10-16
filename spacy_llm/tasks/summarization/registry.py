@@ -22,7 +22,7 @@ def make_summarization_task(
     parse_responses (Optional[TaskResponseParser[SummarizationTask]]): Callable for parsing LLM responses for
         this task.
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     max_n_words (int): Max. number of words to use in summary.
     field (str): The name of the doc extension in which to store the summary.

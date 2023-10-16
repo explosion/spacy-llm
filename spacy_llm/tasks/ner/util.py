@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 from spacy.scorer import get_ner_prf
 from spacy.training import Example
@@ -12,7 +12,7 @@ from .task import NERTask
 
 class NERExample(SpanExample[NERTask]):
     @classmethod
-    def generate(cls, example: Example, task: NERTask) -> Self:
+    def generate(cls, example: Example, task: NERTask) -> Optional[Self]:
         entities = defaultdict(list)
         for ent in example.reference.ents:
             entities[ent.label_].append(ent.text)
@@ -22,7 +22,7 @@ class NERExample(SpanExample[NERTask]):
 
 class NERCoTExample(SpanCoTExample[NERTask]):
     @classmethod
-    def generate(cls, example: Example, task: NERTask) -> Self:
+    def generate(cls, example: Example, task: NERTask) -> Optional[Self]:
         return cls(
             text=example.reference.text,
             spans=SpanCoTExample._extract_span_reasons(example.reference.ents),

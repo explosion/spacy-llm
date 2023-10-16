@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 from spacy.pipeline.spancat import spancat_score
 from spacy.training import Example
@@ -12,7 +12,7 @@ from .task import SpanCatTask
 
 class SpanCatExample(SpanExample[SpanCatTask]):
     @classmethod
-    def generate(cls, example: Example, task: SpanCatTask) -> Self:
+    def generate(cls, example: Example, task: SpanCatTask) -> Optional[Self]:
         entities = defaultdict(list)
         for span in example.reference.spans[task.spans_key]:
             entities[span.label_].append(span.text)
