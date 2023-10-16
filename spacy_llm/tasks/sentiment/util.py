@@ -1,3 +1,5 @@
+from typing import Any, Dict, Iterable
+
 from spacy.training import Example
 
 from ...compat import Self
@@ -14,3 +16,18 @@ class SentimentExample(FewshotExample):
             text=example.reference.text,
             score=getattr(example.reference._, kwargs["field"]),
         )
+
+
+def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    """Score lemmatization accuracy in examples.
+    examples (Iterable[Example]): Examples to score.
+    RETURNS (Dict[str, Any]): Dict with metric name -> score.
+    """
+    score_diffs = [
+        abs(
+            getattr(example.predicted._, kwargs["field"])
+            - getattr(example.reference._, kwargs["field"])
+        )
+        for example in examples
+    ]
+    return {"acc_sentiment": sum(score_diffs) / len(score_diffs)}
