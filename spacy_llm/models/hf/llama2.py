@@ -31,7 +31,6 @@ class Llama2(HuggingFace):
         return transformers.pipeline(
             "text-generation",
             model=self._name,
-            use_auth_token=True,
             return_full_text=False,
             **self._config_init,
         )
@@ -48,14 +47,7 @@ class Llama2(HuggingFace):
 
     @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
-        return (
-            {
-                **default_cfg_init,
-                "trust_remote_code": True,
-            },
-            default_cfg_run,
-        )
+        return HuggingFace.compile_default_configs()
 
 
 @registry.llm_models("spacy.Llama2.v1")
