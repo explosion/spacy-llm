@@ -33,7 +33,7 @@ def make_spancat_task(
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     labels (str): Comma-separated list of labels to pass to the template.
         Leave empty to populate it at initialization time (only if examples are provided).
-    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
+    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
