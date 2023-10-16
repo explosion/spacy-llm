@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from spacy.training import Example
 
@@ -14,7 +14,7 @@ class RELExample(FewshotExample[RELTask]):
     relations: List[RelationItem]
 
     @classmethod
-    def generate(cls, example: Example, task: RELTask) -> Self:
+    def generate(cls, example: Example, task: RELTask) -> Optional[Self]:
         entities = [
             EntityItem(
                 start_char=ent.start_char,
