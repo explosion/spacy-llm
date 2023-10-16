@@ -30,4 +30,5 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         )
         for example in examples
     ]
+
     return {"acc_sentiment": 1 - (sum(score_diffs) / len(score_diffs))}
