@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -19,6 +19,7 @@ class LemmaTask(BuiltinTask):
         prompt_example_type: Type[FewshotExample[Self]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         template: str,
+        n_token_estimator: NTokenEstimator,
         scorer: Scorer,
     ):
         """Default lemmatization task.
@@ -27,6 +28,7 @@ class LemmaTask(BuiltinTask):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         scorer (Scorer): Scorer function.
         """
         super().__init__(
@@ -34,6 +36,7 @@ class LemmaTask(BuiltinTask):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
         )
         self._scorer = scorer
 

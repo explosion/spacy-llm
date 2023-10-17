@@ -21,6 +21,7 @@ PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
+NTokenEstimator = Callable[[str], int]
 
 
 @runtime_checkable

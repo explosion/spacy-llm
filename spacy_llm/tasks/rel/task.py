@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 from .util import EntityItem, RelationItem
@@ -22,6 +22,7 @@ class RELTask(BuiltinTaskWithLabels):
         template: str,
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
@@ -37,6 +38,7 @@ class RELTask(BuiltinTaskWithLabels):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
@@ -45,6 +47,7 @@ class RELTask(BuiltinTaskWithLabels):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,

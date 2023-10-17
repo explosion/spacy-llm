@@ -1,8 +1,10 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, Scorer
+from ...ty import TaskResponseParser
 from ...util import split_labels
+from ..util.tokenization import make_default_n_token_estimator
 from .parser import parse_responses_v1_v2_v3
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V1, DEFAULT_TEXTCAT_TEMPLATE_V2
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V3, TextCatTask
@@ -62,6 +64,7 @@ def make_textcat_task(
         labels=labels_list,
         template=DEFAULT_TEXTCAT_TEMPLATE_V1,
         prompt_examples=textcat_examples,
+        n_token_estimator=make_default_n_token_estimator(),
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -128,6 +131,7 @@ def make_textcat_task_v2(
         labels=labels_list,
         template=template,
         prompt_examples=textcat_examples,
+        n_token_estimator=make_default_n_token_estimator(),
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -145,6 +149,7 @@ def make_textcat_task_v3(
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
+    n_token_estimator: Optional[NTokenEstimator] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -177,6 +182,7 @@ def make_textcat_task_v3(
         These descriptions are added to the prompt to help instruct the LLM on what to extract.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
+    n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     exclusive_classes (bool): If True, require the language model to suggest only one
         label per class. This is automatically set when using binary classification.
@@ -199,6 +205,7 @@ def make_textcat_task_v3(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=textcat_examples,
+        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,

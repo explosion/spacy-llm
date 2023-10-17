@@ -5,7 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal, Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
 from ..span import SpanTask
 from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
@@ -25,6 +25,7 @@ class SpanCatTask(SpanTask):
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -46,6 +47,7 @@ class SpanCatTask(SpanTask):
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -62,6 +64,7 @@ class SpanCatTask(SpanTask):
             template=template,
             label_definitions=label_definitions,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,

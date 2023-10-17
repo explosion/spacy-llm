@@ -10,7 +10,7 @@ from spacy.training import Example
 
 from ..compat import Self
 from ..registry import lowercase_normalizer
-from ..ty import FewshotExample, TaskResponseParser
+from ..ty import FewshotExample, NTokenEstimator, TaskResponseParser
 
 
 class BuiltinTask(abc.ABC):
@@ -34,17 +34,20 @@ class BuiltinTask(abc.ABC):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
     ):
         """Initializes task.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         """
         self._parse_responses = parse_responses
         self._prompt_examples = prompt_examples or []
         self._template = template
         self._prompt_example_type = prompt_example_type
+        self._n_token_estimator = n_token_estimator
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]:
         """Generate prompts from docs.
@@ -162,7 +165,6 @@ class BuiltinTask(abc.ABC):
         exclude (Tuple[str]): Names of properties to exclude from deserialization.
         RETURNS (BuiltinTask): Modified BuiltinTask instance.
         """
-
         deserialize = {
             "cfg": lambda b: self.set_cfg(srsly.json_loads(b)),
             "prompt_examples": lambda b: self._set_prompt_examples(
@@ -245,6 +247,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
         labels: List[str],
         label_definitions: Optional[Dict[str, str]],
         normalizer: Optional[Callable[[str], str]],
@@ -255,6 +258,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
@@ -268,6 +272,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
         )
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {

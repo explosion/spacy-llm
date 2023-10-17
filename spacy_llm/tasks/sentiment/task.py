@@ -4,7 +4,7 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, Self, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Self, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -19,6 +19,7 @@ class SentimentTask(BuiltinTask):
         prompt_example_type: Type[FewshotExample[Self]],
         field: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
     ):
         """Sentiment analysis task.
 
@@ -27,12 +28,14 @@ class SentimentTask(BuiltinTask):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         field (str): The name of the doc extension in which to store the sentiment score.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         """
         super().__init__(
             parse_responses=parse_responses,
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
         )
         self._field = field
         self._check_doc_extension()

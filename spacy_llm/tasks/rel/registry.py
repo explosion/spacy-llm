@@ -1,8 +1,10 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator
+from ...ty import TaskResponseParser
 from ...util import split_labels
+from ..util.tokenization import make_default_n_token_estimator
 from .examples import RELExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_REL_TEMPLATE, RELTask
@@ -16,6 +18,7 @@ def make_rel_task(
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
+    n_token_estimator: Optional[NTokenEstimator] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     verbose: bool = False,
 ) -> "RELTask":
@@ -35,6 +38,7 @@ def make_rel_task(
         full examples, although both can be provided.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
+    n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     verbose (bool): Controls the verbosity of the task.
     """
@@ -50,6 +54,7 @@ def make_rel_task(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=rel_examples,
+        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
         normalizer=normalizer,
         verbose=verbose,
     )

@@ -6,7 +6,7 @@ from spacy.training import Example
 from wasabi import msg
 
 from ...compat import Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 
@@ -24,6 +24,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         template: str,
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
@@ -53,6 +54,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         label_definitions (Optional[Dict[str, str]]): Optional dict mapping a label to a description of that label.
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
@@ -65,6 +67,7 @@ class TextCatTask(BuiltinTaskWithLabels):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,

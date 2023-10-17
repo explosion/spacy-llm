@@ -6,7 +6,7 @@ from spacy.training import Example
 from spacy.util import filter_spans
 
 from ...compat import Literal, Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
 from ..span import SpanTask
 from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
@@ -25,6 +25,7 @@ class NERTask(SpanTask):
         prompt_example_type: Type[FewshotExample[Self]],
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        n_token_estimator: NTokenEstimator,
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -40,6 +41,7 @@ class NERTask(SpanTask):
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[SpanTask]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
@@ -59,6 +61,7 @@ class NERTask(SpanTask):
             template=template,
             parse_responses=parse_responses,
             prompt_example_type=prompt_example_type,
+            n_token_estimator=n_token_estimator,
             label_definitions=label_definitions,
             prompt_examples=prompt_examples,
             normalizer=normalizer,

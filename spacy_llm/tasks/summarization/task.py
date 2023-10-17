@@ -6,7 +6,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -19,6 +19,7 @@ class SummarizationTask(BuiltinTask):
         parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
+        n_token_estimator: NTokenEstimator,
         max_n_words: Optional[int],
         field: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
@@ -28,6 +29,7 @@ class SummarizationTask(BuiltinTask):
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
+        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
@@ -37,6 +39,7 @@ class SummarizationTask(BuiltinTask):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            n_token_estimator=n_token_estimator,
         )
         self._max_n_words = max_n_words
         self._field = field

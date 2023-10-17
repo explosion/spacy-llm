@@ -1,7 +1,9 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator
+from ...ty import TaskResponseParser
+from ..util.tokenization import make_default_n_token_estimator
 from .parser import parse_responses_v1
 from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
 from .util import SentimentExample
@@ -13,6 +15,7 @@ def make_sentiment_task(
     parse_responses: Optional[TaskResponseParser[SentimentTask]] = None,
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
+    n_token_estimator: Optional[NTokenEstimator] = None,
     field: str = "sentiment",
 ):
     """Sentiment.v1 task factory.
@@ -23,6 +26,7 @@ def make_sentiment_task(
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
+    n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
     field (str): The name of the doc extension in which to store the summary.
     """
     raw_examples = examples() if callable(examples) else examples
@@ -36,5 +40,6 @@ def make_sentiment_task(
         parse_responses=parse_responses or parse_responses_v1,
         prompt_example_type=example_type,
         prompt_examples=sentiment_examples,
+        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
         field=field,
     )
