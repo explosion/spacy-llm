@@ -3,14 +3,14 @@ import inspect
 import typing
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
-from typing import Union, cast
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Tuple, Type
+from typing import TypeVar, Union, cast
 
 from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import BaseModel, Protocol, Self, runtime_checkable
+from .compat import GenericModel, Protocol, Self, runtime_checkable
 from .models import langchain
 
 _PromptType = Any
@@ -57,15 +57,6 @@ class Serializable(Protocol):
         ...
 
 
-class FewshotExample(abc.ABC, BaseModel):
-    @classmethod
-    @abc.abstractmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
-        """Create a fewshot example from a spaCy example.
-        example (Example): spaCy example.
-        """
-
-
 @runtime_checkable
 class ScorableTask(Protocol):
     """Differs from Scorable in that it describes an object with a scorer() function, i. e. a scorable
@@ -94,7 +85,7 @@ class Scorer(Protocol):
 
 @runtime_checkable
 class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
@@ -111,14 +102,25 @@ class LLMTask(Protocol):
         """
 
 
-_TaskContraT = TypeVar("_TaskContraT", bound=LLMTask, contravariant=True)
+TaskContraT = TypeVar("TaskContraT", bound=LLMTask, contravariant=True)
 
 
-class TaskResponseParser(Protocol[_TaskContraT]):
+class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):
+    @classmethod
+    @abc.abstractmethod
+    def generate(cls, example: Example, task: TaskContraT) -> Optional[Self]:
+        """Create a fewshot example from a spaCy example.
+        example (Example): spaCy example.
+        task (TaskContraT): Task for which to generate examples.
+        RETURNS (Optional[Self]): Generated example. None, if example couldn't be generated.
+        """
+
+
+class TaskResponseParser(Protocol[TaskContraT]):
     """Generic protocol for parsing functions with specific tasks."""
 
     def __call__(
-        self, task: _TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
+        self, task: TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
     ) -> Iterable[Any]:
         ...
 

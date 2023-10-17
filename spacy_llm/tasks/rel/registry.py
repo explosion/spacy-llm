@@ -3,9 +3,9 @@ from typing import Callable, Dict, List, Optional, Type, Union
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
 from ...util import split_labels
+from .examples import RELExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_REL_TEMPLATE, RELTask
-from .util import RELExample
 
 
 @registry.llm_tasks("spacy.REL.v1")
@@ -33,7 +33,7 @@ def make_rel_task(
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
         full examples, although both can be provided.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     verbose (bool): Controls the verbosity of the task.

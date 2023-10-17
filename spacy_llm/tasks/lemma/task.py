@@ -16,16 +16,16 @@ class LemmaTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_example_type: Type[FewshotExample[Self]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
         template: str,
         scorer: Scorer,
     ):
         """Default lemmatization task.
 
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
         scorer (Scorer): Scorer function.
         """
