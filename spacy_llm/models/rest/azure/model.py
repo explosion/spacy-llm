@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -18,6 +18,7 @@ class ModelType(str, Enum):
 class AzureOpenAI(REST):
     def __init__(
         self,
+        deployment_name: str,
         name: str,
         endpoint: str,
         config: Dict[Any, Any],
@@ -30,6 +31,7 @@ class AzureOpenAI(REST):
     ):
         self._model_type = model_type
         self._api_version = api_version
+        self._deployment_name = deployment_name
         super().__init__(
             name=name,
             endpoint=endpoint,
@@ -48,7 +50,7 @@ class AzureOpenAI(REST):
         return (
             self._endpoint
             + ("" if self._endpoint.endswith("/") else "/")
-            + f"openai/deployments/{self._name}/{self._model_type.value}"
+            + f"openai/deployments/{self._deployment_name}/{self._model_type.value}"
         )
 
     @property
@@ -102,7 +104,6 @@ class AzureOpenAI(REST):
                 ) from ex
             responses = r.json()
 
-            # todo check if this is the same
             if "error" in responses:
                 if self._strict:
                     raise ValueError(f"API call failed: {responses}.")
@@ -147,11 +148,22 @@ class AzureOpenAI(REST):
 
         return api_responses
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        # We treat the deployment name as "model name", hence it can be arbitrary.
-        return ("",)
-
-    def _check_model(self) -> None:
-        # We treat the deployment name as "model name", hence it can be arbitrary.
-        pass
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
+            # gpt-4
+            "gpt-4": 8192,
+            "gpt-4-32k": 32768,
+            # gpt-3.5
+            "gpt-3.5-turbo": 4097,
+            "gpt-3.5-turbo-16k": 16385,
+            "gpt-3.5-turbo-instruct": 4097,
+            # text-davinci
+            "text-davinci-002": 4097,
+            "text-davinci-003": 4097,
+            # others
+            "code-davinci-002": 8001,
+            "text-curie-001": 2049,
+            "text-babbage-001": 2049,
+            "text-ada-001": 2049,
+        }

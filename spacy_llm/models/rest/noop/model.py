@@ -1,5 +1,6 @@
+import sys
 import time
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable
 
 from ..base import REST
 
@@ -34,6 +35,6 @@ class NoOpModel(REST):
         time.sleep(NoOpModel._CALL_TIMEOUT)
         return [_NOOP_RESPONSE] * len(list(prompts))
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return ("NoOp",)
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {"NoOp": sys.maxsize}

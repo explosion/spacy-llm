@@ -10,6 +10,7 @@ _DEFAULT_TEMPERATURE = 0.0
 
 @registry.llm_models("spacy.Azure.v1")
 def azure_openai(
+    deployment_name: str,
     name: str,
     base_url: str,
     model_type: ModelType,
@@ -22,9 +23,14 @@ def azure_openai(
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
+    Docs on OpenAI models supported by Azure:
+    https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#model-summary-table-and-region-availability.
+
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (str): Name of the deployment to use. Note that this does not necessarily equal the name of the model used by
-        that deployment, as deployment names in Azure OpenAI can be arbitrary.
+    deployment_name (str): Name of the deployment to use. Note that this does not necessarily equal the name of the
+        model used by that deployment, as deployment names in Azure OpenAI can be arbitrary.
+    name (str): Name of the model used by this deployment. This is required to infer the context length that can be
+        assumed for prompting.
     endpoint (str): The URL for your Azure OpenAI endpoint. This is usually something like
         "https://{prefix}.openai.azure.com/".
     model_type (ModelType): Whether the deployed model is a text completetion model (e. g.
@@ -43,6 +49,7 @@ def azure_openai(
     DOCS: https://spacy.io/api/large-language-models#models
     """
     return AzureOpenAI(
+        deployment_name=deployment_name,
         name=name,
         endpoint=base_url,
         config=config,

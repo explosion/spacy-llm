@@ -49,6 +49,10 @@ class Llama2(HuggingFace):
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         return HuggingFace.compile_default_configs()
 
+    @property
+    def context_length(self) -> int:
+        return 4096
+
 
 @registry.llm_models("spacy.Llama2.v1")
 def llama2_hf(

@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -108,25 +108,25 @@ class Anthropic(REST):
         assert len(api_responses) == len(prompts)
         return api_responses
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return (
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
             # claude-2
-            "claude-2",
-            "claude-2-100k",
+            "claude-2": 100000,
+            "claude-2-100k": 100000,
             # claude-1
-            "claude-1",
-            "claude-1-100k",
+            "claude-1": 100000,
+            "claude-1-100k": 100000,
             # claude-instant-1
-            "claude-instant-1",
-            "claude-instant-1-100k",
+            "claude-instant-1": 100000,
+            "claude-instant-1-100k": 100000,
             # claude-instant-1.1
-            "claude-instant-1.1",
-            "claude-instant-1.1-100k",
+            "claude-instant-1.1": 100000,
+            "claude-instant-1.1-100k": 100000,
             # claude-1.3
-            "claude-1.3",
-            "claude-1.3-100k",
+            "claude-1.3": 100000,
+            "claude-1.3-100k": 100000,
             # others
-            "claude-1.0",
-            "claude-1.2",
-        )
+            "claude-1.0": 100000,
+            "claude-1.2": 100000,
+        }

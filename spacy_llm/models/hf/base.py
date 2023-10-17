@@ -61,6 +61,13 @@ class HuggingFace(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def context_length(self) -> int:
+        """Returns context length in number of tokens for this model.
+        RETURNS (int): Max. number of tokens in allowed in prompt for the current model.
+        """
+
+    @property
+    @abc.abstractmethod
     def hf_account(self) -> str:
         """Name of HF account for this model.
         RETURNS (str): Name of HF account.

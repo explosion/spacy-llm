@@ -76,6 +76,10 @@ class OpenLLaMA(HuggingFace):
             {**default_cfg_run, "max_new_tokens": 32},
         )
 
+    @property
+    def context_length(self) -> int:
+        return 2048
+
 
 @registry.llm_models("spacy.OpenLLaMA.v1")
 def openllama_hf(

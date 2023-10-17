@@ -107,6 +107,10 @@ class StableLM(HuggingFace):
             },
         )
 
+    @property
+    def context_length(self) -> int:
+        return 4096
+
 
 @registry.llm_models("spacy.StableLM.v1")
 def stablelm_hf(

@@ -79,11 +79,25 @@ class REST(abc.ABC):
         """
 
     @classmethod
-    @abc.abstractmethod
     def get_model_names(cls) -> Tuple[str, ...]:
         """Names of supported models.
         RETURNS (Tuple[str]): Names of supported models.
         """
+        return tuple(cls._get_context_lengths().keys())
+
+    @staticmethod
+    @abc.abstractmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        """Get context lengths per model name.
+        RETURNS (Dict[str, int]): Dict with model name -> context length.
+        """
+
+    @property
+    def context_length(self) -> int:
+        """Returns context length in number of tokens for this model.
+        RETURNS (int): Max. number of tokens in allowed in prompt for the current model.
+        """
+        return self._get_context_lengths()[self._name]
 
     @property
     @abc.abstractmethod

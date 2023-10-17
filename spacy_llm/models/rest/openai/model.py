@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -141,30 +141,30 @@ class OpenAI(REST):
 
         return api_responses
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return (
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
             # gpt-4
-            "gpt-4",
-            "gpt-4-0314",
-            "gpt-4-32k",
-            "gpt-4-32k-0314",
+            "gpt-4": 8192,
+            "gpt-4-0314": 8192,
+            "gpt-4-32k": 32768,
+            "gpt-4-32k-0314": 32768,
             # gpt-3.5
-            "gpt-3.5-turbo",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo-0613",
-            "gpt-3.5-turbo-0613-16k",
-            "gpt-3.5-turbo-instruct",
+            "gpt-3.5-turbo": 4097,
+            "gpt-3.5-turbo-16k": 16385,
+            "gpt-3.5-turbo-0613": 4097,
+            "gpt-3.5-turbo-0613-16k": 16385,
+            "gpt-3.5-turbo-instruct": 4097,
             # text-davinci
-            "text-davinci-002",
-            "text-davinci-003",
+            "text-davinci-002": 4097,
+            "text-davinci-003": 4097,
             # others
-            "code-davinci-002",
-            "text-curie-001",
-            "text-babbage-001",
-            "text-ada-001",
-            "davinci",
-            "curie",
-            "babbage",
-            "ada",
-        )
+            "code-davinci-002": 8001,
+            "text-curie-001": 2049,
+            "text-babbage-001": 2049,
+            "text-ada-001": 2049,
+            "davinci": 2049,
+            "curie": 2049,
+            "babbage": 2049,
+            "ada": 2049,
+        }

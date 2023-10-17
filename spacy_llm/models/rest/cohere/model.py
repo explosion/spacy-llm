@@ -115,3 +115,12 @@ class Cohere(REST):
     @classmethod
     def get_model_names(cls) -> Tuple[str, ...]:
         return "command", "command-light", "command-light-nightly", "command-nightly"
+
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
+            "command": 4096,
+            "command-light": 4096,
+            "command-light-nightly": 4096,
+            "command-nightly": 4096,
+        }

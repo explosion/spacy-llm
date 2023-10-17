@@ -63,6 +63,10 @@ class Falcon(HuggingFace):
             default_cfg_run,
         )
 
+    @property
+    def context_length(self) -> int:
+        return 2048
+
 
 @registry.llm_models("spacy.Falcon.v1")
 def falcon_hf(

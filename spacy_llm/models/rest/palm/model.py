@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -108,6 +108,9 @@ class PaLM(REST):
 
         return api_responses
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return "text-bison-001", "chat-bison-001"
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
+            "text-bison-001": 8192,
+            "chat-bison-001": 8192,
+        }

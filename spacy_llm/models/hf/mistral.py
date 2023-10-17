@@ -82,6 +82,10 @@ class Mistral(HuggingFace):
             default_cfg_run,
         )
 
+    @property
+    def context_length(self) -> int:
+        return 8000
+
 
 @registry.llm_models("spacy.Mistral.v1")
 def mistral_hf(

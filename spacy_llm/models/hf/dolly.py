@@ -46,6 +46,10 @@ class Dolly(HuggingFace):
             default_cfg_run,
         )
 
+    @property
+    def context_length(self) -> int:
+        return 2048
+
 
 @registry.llm_models("spacy.Dolly.v1")
 def dolly_hf(
