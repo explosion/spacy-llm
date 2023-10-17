@@ -6,7 +6,8 @@ from spacy.training import Example
 from spacy.util import filter_spans
 
 from ...compat import Literal, Self
-from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..span import SpanTask
 from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
@@ -26,6 +27,8 @@ class NERTask(SpanTask):
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -42,6 +45,8 @@ class NERTask(SpanTask):
         parse_responses (TaskResponseParser[SpanTask]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
@@ -62,6 +67,8 @@ class NERTask(SpanTask):
             parse_responses=parse_responses,
             prompt_example_type=prompt_example_type,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             label_definitions=label_definitions,
             prompt_examples=prompt_examples,
             normalizer=normalizer,

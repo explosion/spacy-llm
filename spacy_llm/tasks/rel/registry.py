@@ -1,13 +1,19 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator
-from ...ty import TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, ShardMapper
+from ...ty import ShardReducer, TaskResponseParser
 from ...util import split_labels
-from ..util.tokenization import make_default_n_token_estimator
+from ..util.sharding import make_n_token_estimator, make_shard_mapper
 from .examples import RELExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_REL_TEMPLATE, RELTask
+from .util import reduce_shards_to_doc
+
+
+@registry.llm_misc("spacy.RELShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc
 
 
 @registry.llm_tasks("spacy.REL.v1")
@@ -19,6 +25,8 @@ def make_rel_task(
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     n_token_estimator: Optional[NTokenEstimator] = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     verbose: bool = False,
 ) -> "RELTask":
@@ -39,6 +47,8 @@ def make_rel_task(
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     verbose (bool): Controls the verbosity of the task.
     """
@@ -54,7 +64,9 @@ def make_rel_task(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=rel_examples,
-        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
+        n_token_estimator=n_token_estimator or make_n_token_estimator(),
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         normalizer=normalizer,
         verbose=verbose,
     )

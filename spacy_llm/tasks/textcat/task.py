@@ -6,7 +6,8 @@ from spacy.training import Example
 from wasabi import msg
 
 from ...compat import Self
-from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 
@@ -25,6 +26,8 @@ class TextCatTask(BuiltinTaskWithLabels):
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
@@ -55,6 +58,8 @@ class TextCatTask(BuiltinTaskWithLabels):
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
@@ -68,6 +73,8 @@ class TextCatTask(BuiltinTaskWithLabels):
             template=template,
             prompt_examples=prompt_examples,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,

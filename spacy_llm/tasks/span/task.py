@@ -5,7 +5,8 @@ from typing import cast
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal, Protocol, Self
-from ...ty import FewshotExample, NTokenEstimator, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from . import SpanExample
 from .examples import SpanCoTExample
@@ -34,6 +35,8 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             Union[List[SpanExample[Self]], List[SpanCoTExample[Self]]]
         ],
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         description: Optional[str],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
@@ -48,6 +51,8 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             template=template,
             prompt_examples=prompt_examples,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,

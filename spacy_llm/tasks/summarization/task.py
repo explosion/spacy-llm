@@ -6,7 +6,8 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, NTokenEstimator, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -20,6 +21,8 @@ class SummarizationTask(BuiltinTask):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         max_n_words: Optional[int],
         field: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
@@ -30,6 +33,8 @@ class SummarizationTask(BuiltinTask):
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
@@ -40,6 +45,8 @@ class SummarizationTask(BuiltinTask):
             template=template,
             prompt_examples=prompt_examples,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._max_n_words = max_n_words
         self._field = field

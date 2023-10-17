@@ -10,7 +10,8 @@ from spacy.training import Example
 
 from ..compat import Self
 from ..registry import lowercase_normalizer
-from ..ty import FewshotExample, NTokenEstimator, TaskResponseParser
+from ..ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
+from ..ty import TaskResponseParser
 
 
 class BuiltinTask(abc.ABC):
@@ -35,6 +36,8 @@ class BuiltinTask(abc.ABC):
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
     ):
         """Initializes task.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
@@ -42,6 +45,8 @@ class BuiltinTask(abc.ABC):
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         """
         self._parse_responses = parse_responses
         self._prompt_examples = prompt_examples or []
@@ -248,6 +253,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         labels: List[str],
         label_definitions: Optional[Dict[str, str]],
         normalizer: Optional[Callable[[str], str]],
@@ -259,6 +266,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
@@ -273,6 +282,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             template=template,
             prompt_examples=prompt_examples,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {

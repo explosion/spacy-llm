@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Any, Dict, Iterable, Optional
 
 from spacy.scorer import get_ner_prf
+from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
@@ -35,3 +36,12 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): Dict with metric name -> score.
     """
     return get_ner_prf(examples)
+
+
+def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
+    """Reduces shards to docs for NERTask.
+    shards (Iterable[Doc]): Shards to reduce to single doc instance.
+    RETURNS (Doc): Fused doc instance.
+    """
+    # todo this is yet a dummy implementation that will only return the first doc shard.
+    return list(shards)[0]

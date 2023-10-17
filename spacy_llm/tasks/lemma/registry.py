@@ -2,11 +2,11 @@ from typing import Optional, Type
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, Scorer
-from ...ty import TaskResponseParser
-from ..util.tokenization import make_default_n_token_estimator
+from ...ty import ShardMapper, ShardReducer, TaskResponseParser
+from ..util.sharding import make_n_token_estimator, make_shard_mapper
 from .parser import parse_responses_v1
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
-from .util import LemmaExample, score
+from .util import LemmaExample, reduce_shards_to_doc, score
 
 
 @registry.llm_misc("spacy.LemmaParser.v1")
@@ -19,6 +19,11 @@ def make_lemma_scorer() -> Scorer:
     return score
 
 
+@registry.llm_misc("spacy.LemmaShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc
+
+
 @registry.llm_tasks("spacy.Lemma.v1")
 def make_lemma_task(
     template: str = DEFAULT_LEMMA_TEMPLATE_V1,
@@ -26,6 +31,8 @@ def make_lemma_task(
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
     n_token_estimator: Optional[NTokenEstimator] = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     scorer: Optional[Scorer] = None,
 ):
     """Lemma.v1 task factory.
@@ -36,6 +43,8 @@ def make_lemma_task(
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     scorer (Optional[Scorer]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
@@ -49,6 +58,8 @@ def make_lemma_task(
         parse_responses=parse_responses or parse_responses_v1,
         prompt_example_type=example_type,
         prompt_examples=lemma_examples,
-        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
+        n_token_estimator=n_token_estimator or make_n_token_estimator(),
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         scorer=scorer or score,
     )

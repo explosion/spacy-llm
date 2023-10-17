@@ -5,7 +5,8 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, NTokenEstimator, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 from .util import EntityItem, RelationItem
@@ -23,6 +24,8 @@ class RELTask(BuiltinTaskWithLabels):
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
@@ -39,6 +42,8 @@ class RELTask(BuiltinTaskWithLabels):
             full examples, although both can be provided.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
@@ -48,6 +53,8 @@ class RELTask(BuiltinTaskWithLabels):
             template=template,
             prompt_examples=prompt_examples,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,

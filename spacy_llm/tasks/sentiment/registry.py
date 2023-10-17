@@ -1,12 +1,17 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator
-from ...ty import TaskResponseParser
-from ..util.tokenization import make_default_n_token_estimator
+from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, ShardMapper
+from ...ty import ShardReducer, TaskResponseParser
+from ..util.sharding import make_n_token_estimator, make_shard_mapper
 from .parser import parse_responses_v1
 from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
-from .util import SentimentExample
+from .util import SentimentExample, reduce_shards_to_doc
+
+
+@registry.llm_misc("spacy.SentimentShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc
 
 
 @registry.llm_tasks("spacy.Sentiment.v1")
@@ -16,6 +21,8 @@ def make_sentiment_task(
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
     n_token_estimator: Optional[NTokenEstimator] = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     field: str = "sentiment",
 ):
     """Sentiment.v1 task factory.
@@ -27,6 +34,8 @@ def make_sentiment_task(
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     field (str): The name of the doc extension in which to store the summary.
     """
     raw_examples = examples() if callable(examples) else examples
@@ -40,6 +49,8 @@ def make_sentiment_task(
         parse_responses=parse_responses or parse_responses_v1,
         prompt_example_type=example_type,
         prompt_examples=sentiment_examples,
-        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
+        n_token_estimator=n_token_estimator or make_n_token_estimator(),
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         field=field,
     )

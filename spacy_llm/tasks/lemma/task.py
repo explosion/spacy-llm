@@ -5,7 +5,8 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, NTokenEstimator, Scorer, TaskResponseParser
+from ...ty import FewshotExample, NTokenEstimator, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -20,6 +21,8 @@ class LemmaTask(BuiltinTask):
         prompt_examples: Optional[List[FewshotExample[Self]]],
         template: str,
         n_token_estimator: NTokenEstimator,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer,
         scorer: Scorer,
     ):
         """Default lemmatization task.
@@ -29,6 +32,8 @@ class LemmaTask(BuiltinTask):
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
         n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         scorer (Scorer): Scorer function.
         """
         super().__init__(
@@ -37,6 +42,8 @@ class LemmaTask(BuiltinTask):
             template=template,
             prompt_examples=prompt_examples,
             n_token_estimator=n_token_estimator,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._scorer = scorer
 

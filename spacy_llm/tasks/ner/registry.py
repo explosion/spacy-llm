@@ -3,15 +3,20 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 from ...compat import Literal
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, Scorer
-from ...ty import TaskResponseParser
+from ...ty import ShardMapper, ShardReducer, TaskResponseParser
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from ..span import parse_responses_cot as parse_span_responses_cot
 from ..span.util import check_label_consistency, check_label_consistency_cot
-from ..util.tokenization import make_default_n_token_estimator
+from ..util.sharding import make_n_token_estimator, make_shard_mapper
 from .task import DEFAULT_NER_TEMPLATE_V1, DEFAULT_NER_TEMPLATE_V2
 from .task import DEFAULT_NER_TEMPLATE_V3, NERTask, SpanTask
-from .util import NERCoTExample, NERExample, score
+from .util import NERCoTExample, NERExample, reduce_shards_to_doc, score
+
+
+@registry.llm_misc("spacy.NERShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc
 
 
 @registry.llm_tasks("spacy.NER.v1")
@@ -53,7 +58,9 @@ def make_ner_task(
         labels=labels_list,
         template=DEFAULT_NER_TEMPLATE_V1,
         prompt_examples=span_examples,
-        n_token_estimator=make_default_n_token_estimator(),
+        n_token_estimator=make_n_token_estimator(),
+        shard_mapper=make_shard_mapper(),
+        shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -114,7 +121,9 @@ def make_ner_task_v2(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=span_examples,
-        n_token_estimator=make_default_n_token_estimator(),
+        n_token_estimator=make_n_token_estimator(),
+        shard_mapper=make_shard_mapper(),
+        shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -134,6 +143,8 @@ def make_ner_task_v3(
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
     n_token_estimator: Optional[NTokenEstimator] = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
@@ -156,6 +167,8 @@ def make_ner_task_v3(
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     n_token_estimator (Optional[NTokenEstimator]): Estimates number of tokens in a string.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -175,7 +188,9 @@ def make_ner_task_v3(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=span_examples,
-        n_token_estimator=n_token_estimator or make_default_n_token_estimator(),
+        n_token_estimator=n_token_estimator or make_n_token_estimator(),
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
