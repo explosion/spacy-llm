@@ -5,8 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
-from ...ty import TaskResponseParser
+from ...ty import FewshotExample, ShardMapper, ShardReducer, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
 from .util import EntityItem, RelationItem
@@ -23,12 +22,22 @@ class RELTask(BuiltinTaskWithLabels):
         template: str,
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
-        n_token_estimator: NTokenEstimator,
         shard_mapper: ShardMapper,
         shard_reducer: ShardReducer,
         normalizer: Optional[Callable[[str], str]],
         verbose: bool,
     ):
+        super().__init__(
+            parse_responses=parse_responses,
+            prompt_example_type=prompt_example_type,
+            template=template,
+            prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
+            labels=labels,
+            label_definitions=label_definitions,
+            normalizer=normalizer,
+        )
         """Default REL task. Populates a `Doc._.rel` custom attribute.
 
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
@@ -40,33 +49,20 @@ class RELTask(BuiltinTaskWithLabels):
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
-        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
-        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in
+            prompts.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
         shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         verbose (bool): Controls the verbosity of the task.
         """
-        super().__init__(
-            parse_responses=parse_responses,
-            prompt_example_type=prompt_example_type,
-            template=template,
-            prompt_examples=prompt_examples,
-            n_token_estimator=n_token_estimator,
-            shard_mapper=shard_mapper,
-            shard_reducer=shard_reducer,
-            labels=labels,
-            label_definitions=label_definitions,
-            normalizer=normalizer,
-        )
         self._verbose = verbose
         self._field = "rel"
 
     def _preprocess_docs_for_prompt(self, docs: Iterable[Doc]) -> Iterable[Doc]:
         return [Doc(doc.vocab, words=RELTask._preannotate(doc).split()) for doc in docs]
 
-    @property
-    def _prompt_data(self) -> Dict[str, Any]:
+    def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
         return {
             "labels": list(self._label_dict.values()),
             "label_definitions": self._label_definitions,

@@ -24,7 +24,7 @@ ExamplesConfigType = Union[
 NTokenEstimator = Callable[[str], int]
 ShardMapper = Callable[
     # Requires doc, context length and callable for rendering template from doc shard text.
-    [Doc, int, Callable[[str], str]],
+    [Doc, int, Callable[[Doc], str]],
     # Returns each shard as a doc.
     Iterable[Doc],
 ]

@@ -5,8 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal, Self
-from ...ty import FewshotExample, NTokenEstimator, Scorer, ShardMapper, ShardReducer
-from ...ty import TaskResponseParser
+from ...ty import FewshotExample, Scorer, ShardMapper, ShardReducer, TaskResponseParser
 from ..span import SpanTask
 from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
@@ -26,7 +25,6 @@ class SpanCatTask(SpanTask):
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
-        n_token_estimator: NTokenEstimator,
         shard_mapper: ShardMapper,
         shard_reducer: ShardReducer,
         normalizer: Optional[Callable[[str], str]],
@@ -50,7 +48,6 @@ class SpanCatTask(SpanTask):
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
-        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
         shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
@@ -69,7 +66,6 @@ class SpanCatTask(SpanTask):
             template=template,
             label_definitions=label_definitions,
             prompt_examples=prompt_examples,
-            n_token_estimator=n_token_estimator,
             shard_mapper=shard_mapper,
             shard_reducer=shard_reducer,
             normalizer=normalizer,

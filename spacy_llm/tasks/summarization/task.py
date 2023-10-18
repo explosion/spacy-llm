@@ -6,8 +6,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
-from ...ty import TaskResponseParser
+from ...ty import FewshotExample, ShardMapper, ShardReducer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -20,7 +19,6 @@ class SummarizationTask(BuiltinTask):
         parse_responses: TaskResponseParser[Self],
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
-        n_token_estimator: NTokenEstimator,
         shard_mapper: ShardMapper,
         shard_reducer: ShardReducer,
         max_n_words: Optional[int],
@@ -32,7 +30,6 @@ class SummarizationTask(BuiltinTask):
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
-        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
         shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         max_n_words (Optional[int]): Max. number of words to use in summary.
@@ -44,7 +41,6 @@ class SummarizationTask(BuiltinTask):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
-            n_token_estimator=n_token_estimator,
             shard_mapper=shard_mapper,
             shard_reducer=shard_reducer,
         )
@@ -88,11 +84,7 @@ class SummarizationTask(BuiltinTask):
                     f"LLM will likely produce responses that are too long."
                 )
 
-    @property
-    def _prompt_data(self) -> Dict[str, Any]:
-        """Returns data injected into prompt template. No-op if not overridden by inheriting task class.
-        RETURNS (Dict[str, Any]): Data injected into prompt template.
-        """
+    def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
         if self._check_example_summaries:
             self._check_prompt_example_summary_len()
             self._check_example_summaries = False

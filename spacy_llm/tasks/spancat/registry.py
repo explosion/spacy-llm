@@ -2,14 +2,14 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from ...compat import Literal
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, Scorer
-from ...ty import ShardMapper, ShardReducer, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from ..span import parse_responses_cot as parse_span_responses_cot
 from ..span.util import check_label_consistency as check_labels
 from ..span.util import check_label_consistency_cot as check_labels_cot
-from ..util.sharding import make_n_token_estimator, make_shard_mapper
+from ..util.sharding import make_shard_mapper
 from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2
 from .task import DEFAULT_SPANCAT_TEMPLATE_V3, SpanCatTask
 from .util import SpanCatCoTExample, SpanCatExample, reduce_shards_to_doc, score
@@ -62,7 +62,6 @@ def make_spancat_task(
         prompt_example_type=example_type,
         template=DEFAULT_SPANCAT_TEMPLATE_V1,
         prompt_examples=span_examples,
-        n_token_estimator=make_n_token_estimator(),
         shard_mapper=make_shard_mapper(),
         shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
@@ -129,7 +128,6 @@ def make_spancat_task_v2(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=span_examples,
-        n_token_estimator=make_n_token_estimator(),
         shard_mapper=make_shard_mapper(),
         shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
@@ -152,7 +150,6 @@ def make_spancat_task_v3(
     description: Optional[str] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
-    n_token_estimator: Optional[NTokenEstimator] = None,
     shard_mapper: Optional[ShardMapper] = None,
     shard_reducer: Optional[ShardReducer] = None,
     normalizer: Optional[Callable[[str], str]] = None,
@@ -177,7 +174,6 @@ def make_spancat_task_v3(
         full examples, although both can be provided.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
-    n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
     shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
     shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
@@ -200,7 +196,6 @@ def make_spancat_task_v3(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=span_examples,
-        n_token_estimator=n_token_estimator or make_n_token_estimator(),
         shard_mapper=shard_mapper or make_shard_mapper(),
         shard_reducer=shard_reducer or make_shard_reducer(),
         normalizer=normalizer,

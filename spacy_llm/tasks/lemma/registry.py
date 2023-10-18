@@ -1,9 +1,9 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, NTokenEstimator, Scorer
-from ...ty import ShardMapper, ShardReducer, TaskResponseParser
-from ..util.sharding import make_n_token_estimator, make_shard_mapper
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
+from ..util.sharding import make_shard_mapper
 from .parser import parse_responses_v1
 from .task import DEFAULT_LEMMA_TEMPLATE_V1, LemmaTask
 from .util import LemmaExample, reduce_shards_to_doc, score
@@ -30,7 +30,6 @@ def make_lemma_task(
     parse_responses: Optional[TaskResponseParser[LemmaTask]] = None,
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
-    n_token_estimator: Optional[NTokenEstimator] = None,
     shard_mapper: Optional[ShardMapper] = None,
     shard_reducer: Optional[ShardReducer] = None,
     scorer: Optional[Scorer] = None,
@@ -58,7 +57,6 @@ def make_lemma_task(
         parse_responses=parse_responses or parse_responses_v1,
         prompt_example_type=example_type,
         prompt_examples=lemma_examples,
-        n_token_estimator=n_token_estimator or make_n_token_estimator(),
         shard_mapper=shard_mapper or make_shard_mapper(),
         shard_reducer=shard_reducer or make_shard_reducer(),
         scorer=scorer or score,

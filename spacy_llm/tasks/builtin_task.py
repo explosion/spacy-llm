@@ -10,8 +10,7 @@ from spacy.training import Example
 
 from ..compat import Self
 from ..registry import lowercase_normalizer
-from ..ty import FewshotExample, NTokenEstimator, ShardMapper, ShardReducer
-from ..ty import TaskResponseParser
+from ..ty import FewshotExample, ShardMapper, ShardReducer, TaskResponseParser
 
 
 class BuiltinTask(abc.ABC):
@@ -35,7 +34,6 @@ class BuiltinTask(abc.ABC):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
-        n_token_estimator: NTokenEstimator,
         shard_mapper: ShardMapper,
         shard_reducer: ShardReducer,
     ):
@@ -44,7 +42,6 @@ class BuiltinTask(abc.ABC):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
-        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
         shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         """
@@ -52,7 +49,8 @@ class BuiltinTask(abc.ABC):
         self._prompt_examples = prompt_examples or []
         self._template = template
         self._prompt_example_type = prompt_example_type
-        self._n_token_estimator = n_token_estimator
+        self._shard_mapper = shard_mapper
+        self._shard_reducer = shard_reducer
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]:
         """Generate prompts from docs.
@@ -61,17 +59,32 @@ class BuiltinTask(abc.ABC):
         """
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
+
+        def render_template(shard: Doc) -> str:
+            """Renders template for a given doc (shard).
+            shard (Doc): Doc shard. Note that if the prompt is small enough to fit within the model's context window,
+                there will only be one shard, which is identical to the original doc.
+            RETURNS (str): Rendered template.
+            """
+            return _template.render(
+                text=doc.text,
+                prompt_examples=self._prompt_examples,
+                **self._get_prompt_data(shard),
+            )
+
         for doc in self._preprocess_docs_for_prompt(docs):
+            # todo make prompt data a doc-dependent function (worry about EL after this works for available tasks)
             prompt = _template.render(
                 text=doc.text,
                 prompt_examples=self._prompt_examples,
-                **self._prompt_data,
+                **self._get_prompt_data(doc),
             )
             yield prompt
 
-    @property
-    def _prompt_data(self) -> Dict[str, Any]:
-        """Returns data injected into prompt template. No-op if not overridden by inheriting task class.
+    def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
+        """Returns data injected into prompt template. No-op if not overridden by inheriting task class. The data
+        returned by this might be static (i. e. the same for all doc shards) or dynamic (contingent on the doc shard).
+        shard (Doc): Doc (shard) for which prompt data should be fetched.
         RETURNS (Dict[str, Any]): Data injected into prompt template.
         """
         return {}
@@ -121,7 +134,6 @@ class BuiltinTask(abc.ABC):
 
     def set_cfg(self, cfg: Dict[str, Any]) -> None:
         """Deserialize the task's configuration attributes.
-
         cfg (Dict[str, Any]): dictionary containing configuration attributes.
         """
         for key, value in cfg.items():
@@ -134,7 +146,6 @@ class BuiltinTask(abc.ABC):
 
     def _set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
         """Set prompt examples.
-
         examples (List[Dict[str, Any]]): prompt examples.
         """
         self._prompt_examples = [
@@ -191,7 +202,6 @@ class BuiltinTask(abc.ABC):
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-
         serialize = {
             "cfg": lambda p: srsly.write_json(p, self.get_cfg()),
             "prompt_examples": lambda p: srsly.write_msgpack(
@@ -252,7 +262,6 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
-        n_token_estimator: NTokenEstimator,
         shard_mapper: ShardMapper,
         shard_reducer: ShardReducer,
         labels: List[str],
@@ -265,7 +274,6 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
-        n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
         shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
         labels (List[str]): List of labels to pass to the template.
@@ -281,7 +289,6 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
-            n_token_estimator=n_token_estimator,
             shard_mapper=shard_mapper,
             shard_reducer=shard_reducer,
         )
