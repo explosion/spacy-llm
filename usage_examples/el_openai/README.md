@@ -2,15 +2,15 @@
 
 This example shows how you can perform entity linking with LLMs.
 This requires detecting named entities (i. e. performing NER) beforehand. You can do this using spaCy's `ner` 
-component or `spacy-llm`s NER task. The default config in this example utilizes the pretrained NER component from 
+component or `spacy-llm`'s NER task. The default config in this example utilizes the pretrained NER component from 
 `en_core_web_md` for that.
 
 > ⚠️ Ensure `en_core_web_md` is installed (`spacy download en_core_web_md`) before running this example.
 
-Note that linking entities still requires a knowledge base. `spacy-llm` natively supports spaCy's knowledge base, but 
-this can be any arbitrary knowledge base as long as the required interface is implemented.
+Note that linking entities requires a knowledge base that defines the unique identifiers. `spacy-llm` natively supports spaCy's knowledge base class, but 
+this object can contain any arbitrary knowledge base as long as the required interface is implemented.
 For this example we provide a toy KB that supports a very limited number of entities (see 
-[`el_kb_data.yml`](spacy_llm/tests/el_kb_data.yml) - entities not listed in this file won't be linked).
+[`el_kb_data.yml`](spacy_llm/tests/el_kb_data.yml)) - entities not listed in this file won't be linked.
 
 First, create a new API key from [openai.com](https://platform.openai.com/account/api-keys) or fetch an existing one. Record the secret key and make sure this is
 available as an environmental variable:
