@@ -1,7 +1,7 @@
 # mypy: ignore-errors
 import copy
 import re
-from typing import Iterable
+from typing import Iterable, Optional
 
 import pytest
 import spacy
@@ -22,7 +22,9 @@ PIPE_CFG = {
 class _CountTask:
     _PROMPT_TEMPLATE = "Count the number of characters in this string: '{text}'."
 
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[str]:
         for doc in docs:
             yield _CountTask._PROMPT_TEMPLATE.format(text=doc.text)
 

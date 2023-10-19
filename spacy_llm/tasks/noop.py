@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 
 from spacy.tokens import Doc
 
@@ -13,7 +13,9 @@ def make_noop_task():
 
 
 class NoopTask:
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[str]:
         for _ in docs:
             yield _NOOP_PROMPT
 

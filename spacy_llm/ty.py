@@ -26,7 +26,7 @@ ShardMapper = Callable[
     # Requires doc, context length and callable for rendering template from doc shard text.
     [Doc, int, Callable[[Doc], str]],
     # Returns each shard as a doc.
-    Iterable[Doc],
+    Union[Iterable[Doc], Doc],
 ]
 ShardReducer = Callable[[Iterable[Doc]], Doc]
 
@@ -93,9 +93,13 @@ class Scorer(Protocol):
 
 @runtime_checkable
 class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
+        context_length (int): Context length for model this task is executed with. Needed for sharding and fusing docs,
+            if the corresponding prompts exceed the context length. If None, context length is assumed to be infinite.
         RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
         """
 
@@ -188,6 +192,15 @@ class Cache(Protocol):
         """Loads doc from cache. If doc is not in cache, None is returned.
         doc (Doc): Unprocessed doc whose processed equivalent should be returned.
         RETURNS (Optional[Doc]): Cached and processed version of doc, if available. Otherwise None.
+        """
+
+
+@runtime_checkable
+class ModelWithContextLength(Protocol):
+    @property
+    def context_length(self) -> int:
+        """Provides context length for the corresponding model.
+        RETURNS (int): Context length for the corresponding model.
         """
 
 

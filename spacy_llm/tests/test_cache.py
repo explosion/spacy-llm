@@ -3,7 +3,7 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Optional
 
 import pytest
 import spacy
@@ -211,7 +211,9 @@ def test_prompt_template_handling():
 
         @registry.llm_tasks("NoPromptTemplate.v1")
         class NoopTask_NoPromptTemplate:
-            def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+            def generate_prompts(
+                self, docs: Iterable[Doc], context_length: Optional[int] = None
+            ) -> Iterable[str]:
                 return [""] * len(list(docs))
 
             def parse_responses(

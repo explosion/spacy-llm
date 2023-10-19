@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, Iterable, List, Optional, Union
 
 from spacy.tokens import Doc
 
@@ -21,7 +21,7 @@ def make_n_token_estimator() -> NTokenEstimator:
 
 @registry.llm_misc("spacy.ShardMapper.v1")
 def make_shard_mapper(
-    n_token_estimator: NTokenEstimator = make_n_token_estimator(),
+    n_token_estimator: Optional[NTokenEstimator] = None,
     buffer_frac: float = 1.1,
 ) -> ShardMapper:
     """Generates Callable mapping doc to doc shards fitting within context length.
@@ -32,14 +32,15 @@ def make_shard_mapper(
     #  splitting we can't rely one...maybe checking for sentences and/or as optional arg?
     RETURNS (ShardMapper): Callable mapping doc to doc shards fitting within context length.
     """
+    n_tok_est: NTokenEstimator = n_token_estimator or make_n_token_estimator()
 
     def map_doc_to_shards(
         doc: Doc, context_length: int, render_template: Callable[[Doc], str]
-    ):
+    ) -> Union[Iterable[Doc], Doc]:
         prompt = render_template(doc)
 
         # If prompt with complete doc too long: split in shards.
-        if n_token_estimator(prompt) * buffer_frac > context_length:
+        if n_tok_est(prompt) * buffer_frac > context_length:
             shards: List[Doc] = []
             # Prompt length unfortunately can't be exacted computed prior to rendering the prompt, as external
             # information not present in the doc (e. g. entity description for EL prompts) may be injected.
@@ -62,7 +63,7 @@ def make_shard_mapper(
                     end_idx = start_idx + int(len(remaining_doc) * fraction)
                     shard = doc[start_idx:end_idx].as_doc(copy_user_data=True)
                     fits_in_context = (
-                        n_token_estimator(render_template(shard)) * buffer_frac
+                        n_tok_est(render_template(shard)) * buffer_frac
                         <= context_length
                     )
                     fraction /= 2
@@ -81,6 +82,6 @@ def make_shard_mapper(
             return shards
 
         else:
-            return [doc]
+            return doc
 
     return map_doc_to_shards

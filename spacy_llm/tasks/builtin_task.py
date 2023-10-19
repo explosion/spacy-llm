@@ -52,9 +52,13 @@ class BuiltinTask(abc.ABC):
         self._shard_mapper = shard_mapper
         self._shard_reducer = shard_reducer
 
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]:
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[Any]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
+        ontext_length (int): Context length for model this task is executed with. Needed for sharding and fusing docs,
+            if the corresponding prompts exceed the context length. If None, context length is assumed to be infinite.
         RETURNS (Iterable[Any]): Iterable with one prompt per doc.
         """
         environment = jinja2.Environment()
@@ -73,13 +77,17 @@ class BuiltinTask(abc.ABC):
             )
 
         for doc in self._preprocess_docs_for_prompt(docs):
-            # todo make prompt data a doc-dependent function (worry about EL after this works for available tasks)
-            prompt = _template.render(
-                text=doc.text,
-                prompt_examples=self._prompt_examples,
-                **self._get_prompt_data(doc),
+            # If no context length provided (e. g. because models don't provide it): don't shard.
+            shards = (
+                self._shard_mapper(doc, context_length, render_template)
+                if context_length is not None
+                else [doc]
             )
-            yield prompt
+            prompts = [
+                render_template(shard)
+                for shard in (shards if isinstance(shards, list) else [shards])
+            ]
+            yield prompts if len(prompts) > 1 else prompts[0]
 
     def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
         """Returns data injected into prompt template. No-op if not overridden by inheriting task class. The data

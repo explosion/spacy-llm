@@ -15,8 +15,9 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LabeledTask, LLMTask, PromptExecutorType, ScorableTask
-from ..ty import Serializable, validate_type_consistency
+from ..ty import Cache, LabeledTask, LLMTask, ModelWithContextLength
+from ..ty import PromptExecutorType, ScorableTask, Serializable
+from ..ty import validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -204,8 +205,13 @@ class LLMWrapper(Pipe):
         modified_docs: Iterator[Doc] = iter(())
         if len(noncached_doc_batch) > 0:
             n_iters = 3 if self._save_io else 2
+            context_length: Optional[int] = None
+            if isinstance(self._model, ModelWithContextLength):
+                context_length = self._model.context_length
+
             prompts_iters = tee(
-                self._task.generate_prompts(noncached_doc_batch), n_iters
+                self._task.generate_prompts(noncached_doc_batch, context_length),
+                n_iters,
             )
             responses_iters = tee(self._model(prompts_iters[0]), n_iters)
             for prompt, response, doc in zip(
