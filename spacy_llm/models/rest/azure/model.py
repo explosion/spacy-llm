@@ -48,7 +48,7 @@ class AzureOpenAI(REST):
         return (
             self._endpoint
             + ("" if self._endpoint.endswith("/") else "/")
-            + f"openai/deployments/{self._name}/{self._model_type.value}"
+            + f"openai/deployments/{self._name}/"+("" if self._model_type.value == "completions" else "chat/")+"completions"
         )
 
     @property
