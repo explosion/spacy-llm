@@ -123,17 +123,15 @@ class BaseInMemoryLookupKBLoader:
 class KBObjectLoader(BaseInMemoryLookupKBLoader):
     """Config/init helper class for loading InMemoryLookupKB instance from a serialized KB directory."""
 
+    # Path to serialized NLP pipeline. If None, path will be guessed.
     nlp_path: Optional[Union[str, Path]]
-    """Path to serialized NLP pipeline. If None, path will be guessed."""
+    # Path to .csv file with descriptions for entities. Has to have two columns with the first one being the entity ID,
+    # the second one being the description. The entity ID has to match with the entity ID in the stored knowledge base.
+    # If not specified, all entity descriptions provided in prompts will be a generic "No description available" or
+    # something else to this effect.
     desc_path: Optional[Union[Path, str]]
-    """Path to .csv file with descriptions for entities. Has to have two columns with the first one being the entity ID,
-        the second one being the description. The entity ID has to match with the entity ID in the stored knowledge
-        base.
-        If not specified, all entity descriptions provided in prompts will be a generic "No description available" or
-        something else to this effect.
-    """
+    # Entity description file reader.
     ent_desc_reader: EntDescReader
-    """Entity description file reader."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -184,8 +182,17 @@ class KBFileLoader(BaseInMemoryLookupKBLoader):
             freq_list=[1] * len(qids),
         )
 
-        # Add aliases and dummy prior probabilities.
+        # Add aliases and prior probabilities.
         for alias_data in kb_data["aliases"]:
-            kb.add_alias(**alias_data)
+            try:
+                kb.add_alias(**alias_data)
+            except ValueError as err:
+                if "E134" in str(err):
+                    raise ValueError(
+                        f"Parsing of YAML file for knowledge base creation failed due to entity in "
+                        f"`aliases` section not declared in `entities` section: {alias_data}. Double-"
+                        f"check your .yaml file is correct."
+                    ) from err
+                raise err
 
         return kb, {qid: entities[qid].get("desc") for qid in qids}
