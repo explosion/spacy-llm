@@ -10,8 +10,7 @@ from .candidate_selector import PipelineCandidateSelector
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
 from .ty import EntDescReader, InMemoryLookupKBLoader
-from .util import ELExample, KBSerializedLoader, KBYamlLoader, ent_desc_reader_csv
-from .util import score
+from .util import ELExample, KBFileLoader, KBObjectLoader, ent_desc_reader_csv, score
 
 
 @registry.llm_tasks("spacy.EntityLinker.v1")
@@ -81,14 +80,14 @@ def make_ent_desc_reader() -> EntDescReader:
     return ent_desc_reader_csv
 
 
-@registry.llm_misc("spacy.KBSerializedLoader.v1")
-def make_kb_serialized_loader(
+@registry.llm_misc("spacy.KBObjectLoader.v1")
+def make_kb_object_loader(
     path: Union[str, Path],
     nlp_path: Optional[Union[str, Path]] = None,
     desc_path: Optional[Union[str, Path]] = None,
     ent_desc_reader: Optional[EntDescReader] = None,
-) -> KBSerializedLoader:
-    """Instantiates KBSerializedLoader for loading KBs from serialized directories (as done during spaCy pipeline
+) -> KBObjectLoader:
+    """Instantiates KBObjectLoader for loading KBs from serialized directories (as done during spaCy pipeline
     serialization).
     path (Union[str, Path]): Path to KB directory.
     nlp_path (Optional[Union[str, Path]]): Path to NLP pipeline whose vocab data to use. If this is None, the loader
@@ -99,9 +98,9 @@ def make_kb_serialized_loader(
         If not specified, all entity descriptions provided in prompts will be a generic "No description available"
         or something else to this effect.
     ent_desc_reader (Optional[EntDescReader]): Entity description reader.
-    RETURNS (KBSerializedLoader): Loader instance.
+    RETURNS (KBObjectLoader): Loader instance.
     """
-    return KBSerializedLoader(
+    return KBObjectLoader(
         path=path,
         nlp_path=nlp_path,
         desc_path=desc_path,
@@ -109,10 +108,10 @@ def make_kb_serialized_loader(
     )
 
 
-@registry.llm_misc("spacy.KBYamlLoader.v1")
-def make_kb_yaml_loader(path: Union[str, Path]) -> KBYamlLoader:
-    """Instantiates KBYamlLoader for generating KBs from .yaml file containing entity data.
+@registry.llm_misc("spacy.KBFileLoader.v1")
+def make_kb_file_loader(path: Union[str, Path]) -> KBFileLoader:
+    """Instantiates KBFileLoader for generating KBs from a file containing entity data.
     path (Union[str, Path]): Path to KB directory.
-    RETURNS (KBYamlLoader): Loader instance.
+    RETURNS (KBFileLoader): Loader instance.
     """
-    return KBYamlLoader(path=path)
+    return KBFileLoader(path=path)

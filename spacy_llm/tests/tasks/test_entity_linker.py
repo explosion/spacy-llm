@@ -20,7 +20,7 @@ from spacy_llm.tasks.entity_linker import EntityLinkerTask, make_entitylinker_ta
 from spacy_llm.util import assemble_from_config
 
 from ...tasks.entity_linker.registry import make_candidate_selector_pipeline
-from ...tasks.entity_linker.registry import make_kb_serialized_loader
+from ...tasks.entity_linker.registry import make_kb_object_loader
 from ...tasks.entity_linker.util import UNAVAILABLE_ENTITY_DESC
 from ..compat import has_openai_key
 
@@ -105,7 +105,7 @@ def noop_config():
     @llm_misc = "spacy.CandidateSelector.v1"
 
     [initialize.components.llm.candidate_selector.kb_loader]
-    @llm_misc = "spacy.KBSerializedLoader.v1"
+    @llm_misc = "spacy.KBObjectLoader.v1"
     path = ${paths.el_kb}
     nlp_path = ${paths.el_nlp}
     desc_path = ${paths.el_desc}
@@ -145,7 +145,7 @@ def zeroshot_cfg_string():
     @llm_misc = "spacy.CandidateSelector.v1"
 
     [initialize.components.llm.candidate_selector.kb_loader]
-    @llm_misc = "spacy.KBSerializedLoader.v1"
+    @llm_misc = "spacy.KBObjectLoader.v1"
     path = ${paths.el_kb}
     nlp_path = ${paths.el_nlp}
     desc_path = ${paths.el_desc}
@@ -189,7 +189,7 @@ def fewshot_cfg_string():
     @llm_misc = "spacy.CandidateSelector.v1"
 
     [initialize.components.llm.candidate_selector.kb_loader]
-    @llm_misc = "spacy.KBSerializedLoader.v1"
+    @llm_misc = "spacy.KBObjectLoader.v1"
     path = ${{paths.el_kb}}
     nlp_path = ${{paths.el_nlp}}
     desc_path = ${{paths.el_desc}}
@@ -234,7 +234,7 @@ def ext_template_cfg_string():
     @llm_misc = "spacy.CandidateSelector.v1"
 
     [initialize.components.llm.candidate_selector.kb_loader]
-    @llm_misc = "spacy.KBSerializedLoader.v1"
+    @llm_misc = "spacy.KBObjectLoader.v1"
     path = ${{paths.el_kb}}
     nlp_path = ${{paths.el_nlp}}
     desc_path = ${{paths.el_desc}}
@@ -419,7 +419,7 @@ def test_jinja_template_rendering_without_examples(tmp_path):
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=None)
     el_task._candidate_selector = make_candidate_selector_pipeline(
-        kb_loader=make_kb_serialized_loader(
+        kb_loader=make_kb_object_loader(
             path=tmp_path / "entity_linker" / "kb",
             nlp_path=tmp_path,
             desc_path=tmp_path / "desc.csv",
@@ -489,7 +489,7 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(examples=fewshot_reader(examples_path))
     el_task._candidate_selector = make_candidate_selector_pipeline(
-        kb_loader=make_kb_serialized_loader(
+        kb_loader=make_kb_object_loader(
             path=tmp_path / "entity_linker" / "kb",
             nlp_path=tmp_path,
             desc_path=tmp_path / "desc.csv",
@@ -591,7 +591,7 @@ def test_external_template_actually_loads(tmp_path):
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
     el_task = make_entitylinker_task(template=template, examples=None)
     el_task._candidate_selector = make_candidate_selector_pipeline(
-        kb_loader=make_kb_serialized_loader(
+        kb_loader=make_kb_object_loader(
             path=tmp_path / "entity_linker" / "kb",
             nlp_path=tmp_path,
             desc_path=tmp_path / "desc.csv",
@@ -704,7 +704,7 @@ def test_entity_linker_predict_alternative_kb_inits(loader, request, tmp_path):
     if loader == "yaml":
         orig_config["initialize"]["components"]["llm"]["candidate_selector"][
             "kb_loader"
-        ]["@llm_misc"] = "spacy.KBYamlLoader.v1"
+        ]["@llm_misc"] = "spacy.KBFileLoader.v1"
         orig_config["initialize"]["components"]["llm"]["candidate_selector"][
             "kb_loader"
         ].pop("nlp_path")

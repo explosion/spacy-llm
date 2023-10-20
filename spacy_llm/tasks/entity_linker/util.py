@@ -120,7 +120,7 @@ class BaseInMemoryLookupKBLoader:
 
 
 @dataclasses.dataclass
-class KBSerializedLoader(BaseInMemoryLookupKBLoader):
+class KBObjectLoader(BaseInMemoryLookupKBLoader):
     """Config/init helper class for loading InMemoryLookupKB instance from a serialized KB directory."""
 
     nlp_path: Optional[Union[str, Path]]
@@ -159,8 +159,9 @@ class KBSerializedLoader(BaseInMemoryLookupKBLoader):
 
 
 @dataclasses.dataclass
-class KBYamlLoader(BaseInMemoryLookupKBLoader):
-    """Config/init helper class for generating a InMemoryLookupKB instance from a .yaml file."""
+class KBFileLoader(BaseInMemoryLookupKBLoader):
+    """Config/init helper class for generating a InMemoryLookupKB instance from a file.
+    Currently supports only .yaml files."""
 
     def __call__(self, vocab: Vocab) -> Tuple[InMemoryLookupKB, DescFormat]:
         assert isinstance(self.path, Path)
