@@ -17,7 +17,7 @@ def cohere_command(
     max_tries: int = Cohere.DEFAULT_MAX_TRIES,
     interval: float = Cohere.DEFAULT_INTERVAL,
     max_request_time: float = Cohere.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Cohere instance for 'command' model using REST to prompt API.
     name (Literal["command", "command-light", "command-light-nightly", "command-nightly"]): Model  to use.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.

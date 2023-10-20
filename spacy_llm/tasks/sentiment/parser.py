@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from spacy.tokens import Doc
 
@@ -6,16 +6,24 @@ from .task import SentimentTask
 
 
 def parse_responses_v1(
-    task: SentimentTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[Optional[float]]:
+    task: SentimentTask,
+    shards: Iterable[Iterable[Doc]],
+    responses: Iterable[Iterable[str]],
+) -> Iterable[Iterable[Optional[float]]]:
     """Parses LLM responses for spacy.Sentiment.v1.
     task (SentimentTask): Task instance.
-    docs (Iterable[Doc]): Corresponding Doc instances.
-    responses (Iterable[str]): LLM responses.
-    RETURNS (Iterable[Optional[float]]): Sentiment score per doc/response. None on parsing error.
+    shards (Iterable[Iterable[Doc]]): Doc shards.
+    responses (Iterable[Iterable[str]]): LLM responses.
+    RETURNS (Iterable[Iterable[Optional[float]]]): Sentiment score per shard/response. None on parsing error.
     """
-    for prompt_response in responses:
-        try:
-            yield float("".join(prompt_response.replace("Answer:", "").strip().split()))
-        except ValueError:
-            yield None
+    for responses_for_doc in responses:
+        results_for_doc: List[Optional[float]] = []
+        for response in responses_for_doc:
+            try:
+                results_for_doc.append(
+                    float("".join(response.replace("Answer:", "").strip().split()))
+                )
+            except ValueError:
+                results_for_doc.append(None)
+
+        yield results_for_doc

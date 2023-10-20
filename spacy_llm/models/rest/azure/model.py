@@ -76,77 +76,87 @@ class AzureOpenAI(REST):
         except ValueError as err:
             raise err
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         headers = {
             **self._credentials,
             "Content-Type": "application/json",
         }
-        api_responses: List[str] = []
-        prompts = list(prompts)
+        all_api_responses: List[List[str]] = []
 
-        def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
-            r = self.retry(
-                call_method=requests.post,
-                url=self.endpoint,
-                headers=headers,
-                json={**json_data, **self._config},
-                timeout=self._max_request_time,
-                params={"api-version": self._api_version},
-            )
-            try:
-                r.raise_for_status()
-            except HTTPError as ex:
-                res_content = srsly.json_loads(r.content.decode("utf-8"))
-                # Include specific error message in exception.
-                raise ValueError(
-                    f"Request to Azure OpenAI API failed: "
-                    f"{res_content.get('error', {}).get('message', str(res_content))}"
-                ) from ex
-            responses = r.json()
+        for prompts_for_doc in prompts:
+            api_responses: List[str] = []
+            prompts_for_doc = list(prompts_for_doc)
 
-            if "error" in responses:
-                if self._strict:
-                    raise ValueError(f"API call failed: {responses}.")
-                else:
-                    assert isinstance(prompts, Sized)
-                    return {"error": [srsly.json_dumps(responses)] * len(prompts)}
-
-            return responses
-
-        # The (Azure) OpenAI API doesn't support batching yet, so we have to send individual requests.
-        # https://learn.microsoft.com/en-us/answers/questions/1334800/batching-requests-in-azure-openai
-
-        if self._model_type == ModelType.CHAT:
-            # Note: this is yet (2023-10-05) untested, as Azure doesn't seem to allow the deployment of a chat model
-            # yet.
-            for prompt in prompts:
-                responses = _request(
-                    {"messages": [{"role": "user", "content": prompt}]}
+            def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
+                r = self.retry(
+                    call_method=requests.post,
+                    url=self.endpoint,
+                    headers=headers,
+                    json={**json_data, **self._config},
+                    timeout=self._max_request_time,
+                    params={"api-version": self._api_version},
                 )
-                if "error" in responses:
-                    return responses["error"]
+                try:
+                    r.raise_for_status()
+                except HTTPError as ex:
+                    res_content = srsly.json_loads(r.content.decode("utf-8"))
+                    # Include specific error message in exception.
+                    raise ValueError(
+                        f"Request to Azure OpenAI API failed: "
+                        f"{res_content.get('error', {}).get('message', str(res_content))}"
+                    ) from ex
+                responses = r.json()
 
-                # Process responses.
-                assert len(responses["choices"]) == 1
-                response = responses["choices"][0]
-                api_responses.append(
-                    response.get("message", {}).get(
-                        "content", srsly.json_dumps(response)
+                if "error" in responses:
+                    if self._strict:
+                        raise ValueError(f"API call failed: {responses}.")
+                    else:
+                        assert isinstance(prompts_for_doc, Sized)
+                        return {
+                            "error": [srsly.json_dumps(responses)]
+                            * len(prompts_for_doc)
+                        }
+
+                return responses
+
+            # The (Azure) OpenAI API doesn't support batching yet, so we have to send individual requests.
+            # https://learn.microsoft.com/en-us/answers/questions/1334800/batching-requests-in-azure-openai
+
+            if self._model_type == ModelType.CHAT:
+                # Note: this is yet (2023-10-05) untested, as Azure doesn't seem to allow the deployment of a chat model
+                # yet.
+                for prompt in prompts_for_doc:
+                    responses = _request(
+                        {"messages": [{"role": "user", "content": prompt}]}
                     )
-                )
+                    if "error" in responses:
+                        return responses["error"]
 
-        elif self._model_type == ModelType.COMPLETION:
-            for prompt in prompts:
-                responses = _request({"prompt": prompt})
-                if "error" in responses:
-                    return responses["error"]
+                    # Process responses.
+                    assert len(responses["choices"]) == 1
+                    response = responses["choices"][0]
+                    api_responses.append(
+                        response.get("message", {}).get(
+                            "content", srsly.json_dumps(response)
+                        )
+                    )
 
-                # Process responses.
-                assert len(responses["choices"]) == 1
-                response = responses["choices"][0]
-                api_responses.append(response.get("text", srsly.json_dumps(response)))
+            elif self._model_type == ModelType.COMPLETION:
+                for prompt in prompts_for_doc:
+                    responses = _request({"prompt": prompt})
+                    if "error" in responses:
+                        return responses["error"]
 
-        return api_responses
+                    # Process responses.
+                    assert len(responses["choices"]) == 1
+                    response = responses["choices"][0]
+                    api_responses.append(
+                        response.get("text", srsly.json_dumps(response))
+                    )
+
+            all_api_responses.append(api_responses)
+
+        return all_api_responses
 
     @staticmethod
     def _get_context_lengths() -> Dict[str, int]:

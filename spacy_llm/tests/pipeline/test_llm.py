@@ -2,7 +2,7 @@ import logging
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Tuple
 
 import pytest
 import spacy
@@ -158,8 +158,9 @@ def test_type_checking_invalid(noop_config) -> None:
 
         def generate_prompts(
             self, docs: Iterable[Doc], context_length: Optional[int] = None
-        ) -> Iterable[int]:
-            return [0] * len(list(docs))
+        ) -> Iterable[Tuple[Iterable[int], Iterable[Doc]]]:
+            for doc in docs:
+                yield [0], doc
 
         def parse_responses(
             self, docs: Iterable[Doc], responses: Iterable[float]

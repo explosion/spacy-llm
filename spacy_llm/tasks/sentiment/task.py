@@ -68,19 +68,23 @@ class SentimentTask(BuiltinTask):
         )
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, docs: Iterable[Doc], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
         self._check_doc_extension()
+        shards: List[Doc] = []
 
-        for doc, sentiment_score in zip(
-            docs, self._parse_responses(self, docs, responses)
-        ):
-            try:
-                setattr(doc._, self._field, sentiment_score)
-            except ValueError:
-                setattr(doc._, self._field, None)
+        for responses_for_doc in responses:
+            for shard, sentiment_score in zip(
+                docs, self._parse_responses(self, docs, responses_for_doc)
+            ):
+                try:
+                    setattr(shard._, self._field, sentiment_score)
+                except ValueError:
+                    setattr(shard._, self._field, None)
 
-            yield doc
+                shards.append(shard)
+
+            yield self._shard_reducer(shards)
 
     @property
     def _cfg_keys(self) -> List[str]:

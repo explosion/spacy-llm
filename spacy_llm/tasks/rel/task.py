@@ -92,13 +92,19 @@ class RELTask(BuiltinTaskWithLabels):
         return text
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
         self._check_extension(self._field)
 
-        for doc, rel_items in zip(docs, self._parse_responses(self, docs, responses)):
-            doc._.rel = rel_items
-            yield doc
+        for shards_for_doc, rel_items_for_doc in zip(
+            shards, self._parse_responses(self, shards, responses)
+        ):
+            updated_shards_for_doc: List[Doc] = []
+            for shard, rel_items in zip(shards_for_doc, rel_items_for_doc):
+                shard._.rel = rel_items
+                updated_shards_for_doc.append(shard)
+
+            yield self._shard_reducer(updated_shards_for_doc)
 
     def initialize(
         self,

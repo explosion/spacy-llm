@@ -44,21 +44,28 @@ class LemmaTask(BuiltinTask):
         self._scorer = scorer
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        for doc, lemmas in zip(docs, self._parse_responses(self, docs, responses)):
-            tokens = [token for token in doc]
-            # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
-            # match.
-            if len(tokens) != len(lemmas):
-                yield doc
+        for shards_for_doc, lemmas_for_doc in zip(
+            shards, self._parse_responses(self, shards, responses)
+        ):
+            updated_shards_for_doc: List[Doc] = []
 
-            # Assign lemmas.
-            for token, lemma_info in zip(tokens, lemmas):
-                if len(lemma_info) > 0:
-                    token.lemma_ = lemma_info[1]
+            for shard, lemmas in zip(shards_for_doc, lemmas_for_doc):
+                tokens = [token for token in shard]
+                # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
+                # match.
+                if len(tokens) != len(lemmas):
+                    updated_shards_for_doc.append(shard)
 
-            yield doc
+                # Assign lemmas.
+                for token, lemma_info in zip(tokens, lemmas):
+                    if len(lemma_info) > 0:
+                        token.lemma_ = lemma_info[1]
+
+                updated_shards_for_doc.append(shard)
+
+            yield self._shard_reducer(updated_shards_for_doc)
 
     def initialize(
         self,

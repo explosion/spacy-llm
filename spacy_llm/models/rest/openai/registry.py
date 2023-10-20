@@ -31,7 +31,7 @@ def openai_gpt_4_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -61,7 +61,7 @@ def openai_gpt_4(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -95,7 +95,7 @@ def openai_gpt_3_5_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -133,7 +133,7 @@ def openai_gpt_3_5(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -169,7 +169,7 @@ def openai_text_davinci_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -199,7 +199,7 @@ def openai_text_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -229,7 +229,7 @@ def openai_code_davinci_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -257,7 +257,7 @@ def openai_code_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -287,7 +287,7 @@ def openai_text_curie_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-curie' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -315,7 +315,7 @@ def openai_text_curie(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-curie' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -345,7 +345,7 @@ def openai_text_babbage_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-babbage' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -373,7 +373,7 @@ def openai_text_babbage(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-babbage' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -403,7 +403,7 @@ def openai_text_ada_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-ada' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -431,7 +431,7 @@ def openai_text_ada(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'text-ada' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -461,7 +461,7 @@ def openai_davinci_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'davinci' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -489,7 +489,7 @@ def openai_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'davinci' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -519,7 +519,7 @@ def openai_curie_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'curie' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -547,7 +547,7 @@ def openai_curie(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'curie' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -577,7 +577,7 @@ def openai_babbage_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'babbage' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -605,7 +605,7 @@ def openai_babbage(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'babbage' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -635,7 +635,7 @@ def openai_ada_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'ada' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
@@ -663,7 +663,7 @@ def openai_ada(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'ada' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.

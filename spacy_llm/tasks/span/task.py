@@ -100,11 +100,17 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         raise NotImplementedError()
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        for doc, spans in zip(docs, self._parse_responses(self, docs, responses)):
-            self.assign_spans(doc, spans)
-            yield doc
+
+        for shards_for_doc, spans_for_doc in zip(
+            shards, self._parse_responses(self, shards, responses)
+        ):
+            shards_for_doc = list(shards_for_doc)
+            for shard, spans in zip(shards_for_doc, spans_for_doc):
+                self.assign_spans(shard, spans)
+
+            yield self._shard_reducer(shards_for_doc)
 
     @property
     def _cfg_keys(self) -> List[str]:

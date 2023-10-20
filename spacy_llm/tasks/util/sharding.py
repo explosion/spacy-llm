@@ -82,6 +82,6 @@ def make_shard_mapper(
             return shards
 
         else:
-            return doc
+            return [doc]
 
     return map_doc_to_shards

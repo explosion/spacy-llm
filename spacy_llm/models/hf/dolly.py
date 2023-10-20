@@ -18,14 +18,18 @@ class Dolly(HuggingFace):
             model=self._name, return_full_text=False, **self._config_init
         )
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:  # type: ignore[override]
         """Queries Dolly HF model.
         pipeline (transformers.pipeline): Transformers pipeline to query.
-        prompts (Iterable[str]): Prompts to query Dolly model with.
-        RETURNS (Iterable[str]): Prompt responses.
+        prompts (Iterable[Iterable[str]]): Prompts per doc to query Dolly model with.
+        RETURNS (Iterable[Iterable[str]]): Prompt responses per doc.
         """
         return [
-            self._model(pr, **self._config_run)[0]["generated_text"] for pr in prompts
+            [
+                self._model(pr, **self._config_run)[0]["generated_text"]
+                for pr in prompts_for_doc
+            ]
+            for prompts_for_doc in prompts
         ]
 
     @property
@@ -56,7 +60,7 @@ def dolly_hf(
     name: Dolly.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Generates Dolly instance that can execute a set of prompts and return the raw responses.
     name (Literal): Name of the Dolly model. Has to be one of Dolly.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.

@@ -72,10 +72,10 @@ class REST(abc.ABC):
             )
 
     @abc.abstractmethod
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         """Executes prompts on specified API.
-        prompts (Iterable[str]): Prompts to execute.
-        RETURNS (Iterable[str]): API responses.
+        prompts (Iterable[Iterable[str]]): Prompts to execute.
+        RETURNS (Iterable[Iterable[str]]): API responses.
         """
 
     @classmethod

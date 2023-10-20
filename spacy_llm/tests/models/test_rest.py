@@ -1,7 +1,7 @@
 # mypy: ignore-errors
 import copy
 import re
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Tuple
 
 import pytest
 import spacy
@@ -24,12 +24,12 @@ class _CountTask:
 
     def generate_prompts(
         self, docs: Iterable[Doc], context_length: Optional[int] = None
-    ) -> Iterable[str]:
+    ) -> Iterable[Tuple[Iterable[str], Iterable[Doc]]]:
         for doc in docs:
-            yield _CountTask._PROMPT_TEMPLATE.format(text=doc.text)
+            yield _CountTask._PROMPT_TEMPLATE.format(text=doc.text), [doc]
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, docs: Iterable[Doc], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
         return docs
 

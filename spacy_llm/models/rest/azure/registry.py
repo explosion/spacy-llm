@@ -20,7 +20,7 @@ def azure_openai(
     interval: float = AzureOpenAI.DEFAULT_INTERVAL,
     max_request_time: float = AzureOpenAI.DEFAULT_MAX_REQUEST_TIME,
     api_version: str = "2023-05-15",
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     Docs on OpenAI models supported by Azure:

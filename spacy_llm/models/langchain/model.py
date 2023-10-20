@@ -19,15 +19,15 @@ class LangChain:
         api: str,
         config: Dict[Any, Any],
         query: Callable[
-            ["langchain.base_language.BaseLanguageModel", Iterable[Any]],
-            Iterable[Any],
+            ["langchain.base_language.BaseLanguageModel", Iterable[Iterable[Any]]],
+            Iterable[Iterable[Any]],
         ],
     ):
         """Initializes model instance for integration APIs.
         name (str): Name of LangChain model to instantiate.
         api (str): Name of class/API.
         config (Dict[Any, Any]): Config passed on to LangChain model.
-        query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
+        query (Callable[[Any, Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         """
         self._langchain_model = LangChain.get_type_to_cls_dict()[api](
@@ -45,23 +45,25 @@ class LangChain:
         """
         return langchain.llms.type_to_cls_dict
 
-    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
+    def __call__(self, prompts: Iterable[Iterable[Any]]) -> Iterable[Iterable[Any]]:
         """Executes prompts on specified API.
-        prompts (Iterable[Any]): Prompts to execute.
-        RETURNS (Iterable[Any]): API responses.
+        prompts (Iterable[Iterable[Any]]): Prompts to execute.
+        RETURNS (Iterable[Iterable[Any]]): API responses.
         """
         return self.query(self._langchain_model, prompts)
 
     @staticmethod
     def query_langchain(
-        model: "langchain.base_language.BaseLanguageModel", prompts: Iterable[Any]
-    ) -> Iterable[Any]:
+        model: "langchain.base_language.BaseLanguageModel",
+        prompts: Iterable[Iterable[Any]],
+    ) -> Iterable[Iterable[Any]]:
         """Query LangChain model naively.
         model (langchain.base_language.BaseLanguageModel): LangChain model.
-        prompts (Iterable[Any]): Prompts to execute.
-        RETURNS (Iterable[Any]): LLM responses.
+        prompts (Iterable[Iterable[Any]]): Prompts to execute.
+        RETURNS (Iterable[Iterable[Any]]): LLM responses.
         """
-        return [model(pr) for pr in prompts]
+        assert callable(model)
+        return [[model(pr) for pr in prompts_for_doc] for prompts_for_doc in prompts]
 
     @staticmethod
     def _check_installation() -> None:
@@ -78,13 +80,16 @@ class LangChain:
             name: str,
             query: Optional[
                 Callable[
-                    ["langchain.base_language.BaseLanguageModel", Iterable[str]],
-                    Iterable[str],
+                    [
+                        "langchain.base_language.BaseLanguageModel",
+                        Iterable[Iterable[str]],
+                    ],
+                    Iterable[Iterable[str]],
                 ]
             ] = None,
             config: Dict[Any, Any] = SimpleFrozenDict(),
             langchain_class_id: str = class_id,
-        ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
+        ) -> Optional[Callable[[Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]]:
             try:
                 return LangChain(
                     name=name,
@@ -124,11 +129,12 @@ class LangChain:
 @registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> (
     Callable[
-        ["langchain.base_language.BaseLanguageModel", Iterable[Any]], Iterable[Any]
+        ["langchain.base_language.BaseLanguageModel", Iterable[Iterable[Any]]],
+        Iterable[Iterable[Any]],
     ]
 ):
     """Returns query Callable for LangChain.
-    RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
-        the specified LangChain model.
+    RETURNS (Callable[["langchain.base_language.BaseLanguageModel", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]):
+        Callable executing simple prompts on the specified LangChain model.
     """
     return LangChain.query_langchain

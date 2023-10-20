@@ -15,7 +15,7 @@ def palm_bison(
     max_tries: int = PaLM.DEFAULT_MAX_TRIES,
     interval: float = PaLM.DEFAULT_INTERVAL,
     max_request_time: float = PaLM.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Google instance for PaLM Bison model using REST to prompt API.
     name (Literal["chat-bison-001", "text-bison-001"]): Model  to use.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.

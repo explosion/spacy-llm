@@ -92,11 +92,18 @@ class SummarizationTask(BuiltinTask):
         return {"max_n_words": self._max_n_words}
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, docs: Iterable[Doc], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        for doc, summary in zip(docs, self._parse_responses(self, docs, responses)):
-            setattr(doc._, self._field, summary)
-            yield doc
+        shards: List[Doc] = []
+
+        for responses_for_doc in responses:
+            for shard, summary in zip(
+                docs, self._parse_responses(self, docs, responses_for_doc)
+            ):
+                setattr(shard._, self._field, summary)
+                shards.append(shard)
+
+            yield self._shard_reducer(shards)
 
     @property
     def _cfg_keys(self) -> List[str]:

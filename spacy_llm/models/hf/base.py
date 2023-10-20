@@ -39,10 +39,10 @@ class HuggingFace(abc.ABC):
         self._model = self.init_model()
 
     @abc.abstractmethod
-    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
+    def __call__(self, prompts: Iterable[Iterable[Any]]) -> Iterable[Iterable[Any]]:
         """Executes prompts on specified API.
-        prompts (Iterable[Any]): Prompts to execute.
-        RETURNS (Iterable[Any]): API responses.
+        prompts (Iterable[Iterable[Any]]): Prompts to execute per doc.
+        RETURNS (Iterable[Iterable[Any]]): API responses per doc.
         """
 
     def _check_model(self) -> None:

@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Tuple
 
 from spacy.tokens import Doc
 
@@ -15,15 +15,15 @@ def make_noop_task():
 class NoopTask:
     def generate_prompts(
         self, docs: Iterable[Doc], context_length: Optional[int] = None
-    ) -> Iterable[str]:
-        for _ in docs:
-            yield _NOOP_PROMPT
+    ) -> Iterable[Tuple[Iterable[str], Iterable[Doc]]]:
+        for doc in docs:
+            yield [_NOOP_PROMPT], [doc]
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        # Not doing anything
-        return docs
+        # Grab the first shard per doc
+        return [list(shards_for_doc)[0] for shards_for_doc in shards]
 
     @property
     def prompt_template(self) -> str:

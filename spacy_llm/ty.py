@@ -17,7 +17,9 @@ _PromptType = Any
 _ResponseType = Any
 _ParsedResponseType = Any
 
-PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
+PromptExecutorType = Callable[
+    [Iterable[Iterable[_PromptType]]], Iterable[_ResponseType]
+]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
 ]
@@ -26,7 +28,7 @@ ShardMapper = Callable[
     # Requires doc, context length and callable for rendering template from doc shard text.
     [Doc, int, Callable[[Doc], str]],
     # Returns each shard as a doc.
-    Union[Iterable[Doc], Doc],
+    Iterable[Doc],
 ]
 ShardReducer = Callable[[Iterable[Doc]], Doc]
 
@@ -95,22 +97,26 @@ class Scorer(Protocol):
 class LLMTask(Protocol):
     def generate_prompts(
         self, docs: Iterable[Doc], context_length: Optional[int] = None
-    ) -> Iterable[_PromptType]:
+    ) -> Iterable[Tuple[Iterable[_PromptType], Iterable[Doc]]]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         context_length (int): Context length for model this task is executed with. Needed for sharding and fusing docs,
             if the corresponding prompts exceed the context length. If None, context length is assumed to be infinite.
-        RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
+        RETURNS (Iterable[Tuple[Iterable[_PromptType], Iterable[Doc]]]): Iterable with one to n prompts per doc
+            (multiple prompts in case of multiple shards) and the corresponding shards. The relationship between shard
+            and prompt is 1:1.
         """
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[_ResponseType]
+        self,
+        shards: Iterable[Iterable[Doc]],
+        responses: Iterable[Iterable[_ResponseType]],
     ) -> Iterable[Doc]:
         """
         Parses LLM responses.
-        docs (Iterable[Doc]): Docs to map responses into.
-        responses ([Iterable[_ResponseType]]): LLM responses.
-        RETURNS (Iterable[Doc]]): Updated docs.
+        docs (Iterable[Iterable[Doc]]): Doc shards to map responses into.
+        responses ([Iterable[Iterable[_ResponseType]]]): LLM responses.
+        RETURNS (Iterable[Doc]]): Updated (and fused) docs.
         """
 
 
@@ -132,8 +138,11 @@ class TaskResponseParser(Protocol[TaskContraT]):
     """Generic protocol for parsing functions with specific tasks."""
 
     def __call__(
-        self, task: TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
-    ) -> Iterable[Any]:
+        self,
+        task: TaskContraT,
+        shards: Iterable[Iterable[Doc]],
+        responses: Iterable[Iterable[Any]],
+    ) -> Iterable[Iterable[Any]]:
         ...
 
 
@@ -204,25 +213,37 @@ class ModelWithContextLength(Protocol):
         """
 
 
-def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
+def _do_args_match(out_arg: Iterable, in_arg: Iterable, nesting_level: int) -> bool:
     """Compares argument type of Iterables for compatibility.
     in_arg (Iterable): Input argument.
     out_arg (Iterable): Output argument.
+    nesting_level (int): Expected level of nesting in types. E. g. Iterable[Iterable[Any]] has a level of 2,
+        Iterable[Any] of 1. Note that this is assumed for all sub-types in out_arg and in_arg, as this is sufficient for
+        the current use case of checking the compatibility of task-to-model and model-to-parser communication flow.
     RETURNS (bool): True if type variables are of the same length and if type variables in out_arg are a subclass
         of (or the same class as) the type variables in in_arg.
     """
     assert hasattr(out_arg, "__args__") and hasattr(in_arg, "__args__")
-    # Replace Any with object to make issubclass() check work.
-    out_type_vars = [arg if arg != Any else object for arg in out_arg.__args__]
-    in_type_vars = [arg if arg != Any else object for arg in in_arg.__args__]
 
-    if len(out_type_vars) != len(in_type_vars):
+    out_types, in_types = out_arg, in_arg
+    for level in range(nesting_level):
+        out_types = (
+            out_types.__args__[0] if level < (nesting_level - 1) else out_types.__args__  # type: ignore[attr-defined]
+        )
+        in_types = (
+            in_types.__args__[0] if level < (nesting_level - 1) else in_types.__args__  # type: ignore[attr-defined]
+        )
+    # Replace Any with object to make issubclass() check work.
+    out_types = [arg if arg != Any else object for arg in out_types]
+    in_types = [arg if arg != Any else object for arg in in_types]
+
+    if len(out_types) != len(in_types):
         return False
 
     return all(
         [
             issubclass(out_tv, in_tv) or issubclass(in_tv, out_tv)
-            for out_tv, in_tv in zip(out_type_vars, in_type_vars)
+            for out_tv, in_tv in zip(out_types, in_types)
         ]
     )
 
@@ -275,12 +296,13 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         )
     if not hasattr(task, "generate_prompts"):
         raise ValueError(
-            "A task needs to have the following method: generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]"
+            "A task needs to have the following method: generate_prompts(self, docs: Iterable[Doc]) -> "
+            "Iterable[Iterable[Any]]"
         )
     if not hasattr(task, "parse_responses"):
         raise ValueError(
             "A task needs to have the following method: "
-            "parse_responses(self, docs: Iterable[Doc], responses: Iterable[Any]) -> Iterable[Doc]"
+            "parse_responses(self, docs: Iterable[Doc], responses: Iterable[Iterable[Any]]) -> Iterable[Doc]"
         )
 
     type_hints = {
@@ -334,14 +356,14 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
             raise ValueError(msg)
 
     # Ensure that the template returns the same type as expected by the model
-    if not _do_args_match(template_output, model_input):  # type: ignore[arg-type]
+    if not _do_args_match(template_output, model_input, 2):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
             f"`model` (`{model_input}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the model
-    if not _do_args_match(model_output, parse_input):  # type: ignore[arg-type]
+    if not _do_args_match(model_output, parse_input, 2):  # type: ignore[arg-type]
         warnings.warn(
             f"Type returned from `model` (`{model_output}`) doesn't match type expected by "
             f"`task.parse_responses()` (`{parse_input}`)."

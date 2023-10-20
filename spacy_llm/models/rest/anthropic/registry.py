@@ -15,7 +15,7 @@ def anthropic_claude_2(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-2' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-2", "claude-2-100k"]): Model to use.
@@ -49,7 +49,7 @@ def anthropic_claude_1(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-1' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-1", "claude-1-100k"]): Model to use.
@@ -85,7 +85,7 @@ def anthropic_claude_instant_1(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-instant-1' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-instant-1", "claude-instant-1-100k"]): Model to use.
@@ -121,7 +121,7 @@ def anthropic_claude_instant_1_1(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-instant-1.1' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-instant-1.1", "claude-instant-1.1-100k"]): Model to use.
@@ -155,7 +155,7 @@ def anthropic_claude_1_0(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-1.0' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-1.0"]): Model to use.
@@ -189,7 +189,7 @@ def anthropic_claude_1_2(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-1.2' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-1.2"]): Model to use.
@@ -223,7 +223,7 @@ def anthropic_claude_1_3(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Returns Anthropic instance for 'claude-1.3' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
     name (Literal["claude-1.3", "claude-1.3-100k"]): Model variant to use.

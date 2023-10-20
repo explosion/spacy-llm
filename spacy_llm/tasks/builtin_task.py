@@ -54,12 +54,14 @@ class BuiltinTask(abc.ABC):
 
     def generate_prompts(
         self, docs: Iterable[Doc], context_length: Optional[int] = None
-    ) -> Iterable[Any]:
+    ) -> Iterable[Tuple[Iterable[Any], Iterable[Doc]]]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         ontext_length (int): Context length for model this task is executed with. Needed for sharding and fusing docs,
             if the corresponding prompts exceed the context length. If None, context length is assumed to be infinite.
-        RETURNS (Iterable[Any]): Iterable with one prompt per doc.
+        RETURNS (Iterable[Tuple[Iterable[Any], Iterable[Doc]]]): Iterable with one to n prompts per doc (multiple
+            prompts in case of multiple shards) and the corresponding shards. The relationship between shard and prompt
+            is 1:1.
         """
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
@@ -83,11 +85,7 @@ class BuiltinTask(abc.ABC):
                 if context_length is not None
                 else [doc]
             )
-            prompts = [
-                render_template(shard)
-                for shard in (shards if isinstance(shards, list) else [shards])
-            ]
-            yield prompts if len(prompts) > 1 else prompts[0]
+            yield [render_template(shard) for shard in shards], shards
 
     def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
         """Returns data injected into prompt template. No-op if not overridden by inheriting task class. The data
@@ -106,12 +104,12 @@ class BuiltinTask(abc.ABC):
 
     @abc.abstractmethod
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[Any]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[Any]]
     ) -> Iterable[Doc]:
         """
         Parses LLM responses.
-        docs (Iterable[Doc]): Docs to map responses into.
-        responses ([Iterable[Any]]): LLM responses.
+        shards (Iterable[Iterable[Doc]]): Doc shards to map responses into.
+        responses ([Iterable[Iterable[Any]]]): LLM responses per doc.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
 

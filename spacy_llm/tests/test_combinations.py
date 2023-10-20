@@ -20,7 +20,7 @@ from spacy_llm.pipeline import LLMWrapper
     ["spacy.NER.v1", "spacy.NER.v3", "spacy.TextCat.v1"],
     ids=["ner.v1", "ner.v3", "textcat"],
 )
-@pytest.mark.parametrize("n_process", [1])  # , 2
+@pytest.mark.parametrize("n_process", [1, 2])
 def test_combinations(model: str, task: str, n_process: int):
     """Randomly test combinations of models and tasks."""
     ops = get_current_ops()

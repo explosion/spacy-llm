@@ -165,12 +165,14 @@ def test_example_5_custom_model():
     import random
 
     @registry.llm_models("RandomClassification.v1")
-    def random_textcat(labels: str) -> Callable[[Iterable[str]], Iterable[str]]:
+    def random_textcat(
+        labels: str,
+    ) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
         labels = labels.split(",")
 
-        def _classify(prompts: Iterable[str]) -> Iterable[str]:
-            for _ in prompts:
-                yield random.choice(labels)
+        def _classify(prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
+            for prompts_for_doc in prompts:
+                yield [random.choice(labels) for _ in prompts_for_doc]
 
         return _classify
 

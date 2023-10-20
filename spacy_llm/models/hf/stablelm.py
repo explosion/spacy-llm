@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from confection import SimpleFrozenDict
 
@@ -66,33 +66,42 @@ class StableLM(HuggingFace):
     def hf_account(self) -> str:
         return "stabilityai"
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:  # type: ignore[override]
         assert callable(self._tokenizer)
-        tokenized_input_ids = [
-            self._tokenizer(prompt, return_tensors="pt").input_ids
-            for prompt in (
-                # Add prompt formatting for tuned model.
-                prompts
-                if not self._is_tuned
-                else [
-                    f"{StableLM._SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
-                    for prompt in prompts
+        responses: List[List[str]] = []
+
+        for prompts_for_doc in prompts:
+            tokenized_input_ids = [
+                self._tokenizer(prompt, return_tensors="pt").input_ids
+                for prompt in (
+                    # Add prompt formatting for tuned model.
+                    prompts_for_doc
+                    if not self._is_tuned
+                    else [
+                        f"{StableLM._SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
+                        for prompt in prompts_for_doc
+                    ]
+                )
+            ]
+            if self._device:
+                tokenized_input_ids = [
+                    tp.to(self._device) for tp in tokenized_input_ids
+                ]
+
+            assert hasattr(self._model, "generate")
+            responses.append(
+                [
+                    self._tokenizer.decode(
+                        self._model.generate(input_ids=tii, **self._config_run)[
+                            :, tii.shape[1] :
+                        ][0],
+                        skip_special_tokens=True,
+                    )
+                    for tii in tokenized_input_ids
                 ]
             )
-        ]
-        if self._device:
-            tokenized_input_ids = [tp.to(self._device) for tp in tokenized_input_ids]
 
-        assert hasattr(self._model, "generate")
-        return [
-            self._tokenizer.decode(
-                self._model.generate(input_ids=tii, **self._config_run)[
-                    :, tii.shape[1] :
-                ][0],
-                skip_special_tokens=True,
-            )
-            for tii in tokenized_input_ids
-        ]
+        return responses
 
     @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -117,7 +126,7 @@ def stablelm_hf(
     name: StableLM.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Generates StableLM instance that can execute a set of prompts and return the raw responses.
     name (Literal): Name of the StableLM model. Has to be one of StableLM.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
