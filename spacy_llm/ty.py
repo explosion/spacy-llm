@@ -136,7 +136,10 @@ class LabeledTask(Protocol):
     def labels(self) -> Tuple[str, ...]:
         ...
 
-    def add_label(self, label: str) -> int:
+    def add_label(self, label: str, label_definition: Optional[str]) -> int:
+        ...
+
+    def clear(self) -> None:
         ...
 
 
