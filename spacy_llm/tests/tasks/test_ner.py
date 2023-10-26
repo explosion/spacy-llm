@@ -992,10 +992,10 @@ def test_add_label():
     doc = nlp(text)
     assert len(doc.ents) == 0
 
-    for label, definition in [("PERSON", "A person is a human being, an individual belonging to the species Homo sapiens."), ("LOCATION", None)]:
+    for label, definition in [("PERSON", "Every person with the name Jack"), ("LOCATION", None)]:
         llm.add_label(label, definition)
     doc = nlp(text)
-    assert len(doc.ents) == 3
+    assert len(doc.ents) == 2
 
 
 @pytest.mark.external
