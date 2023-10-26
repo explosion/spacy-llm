@@ -321,15 +321,15 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         self._label_dict[self._normalizer(label)] = label
         if label_definition is None:
             return 1
-        if self._label_definition is None:
-            self._label_definition = {}
-        self._label_definition[label] = label_definition
+        if self._label_definitions is None:
+            self._label_definitions = {}
+        self._label_definitions[label] = label_definition
         return 1
     
     def clear(self) -> None:
         """Reset all labels."""
         self._label_dict = {}
-        self._label_definition = None
+        self._label_definitions = None
 
     @property
     def normalizer(self) -> Callable[[str], str]:
