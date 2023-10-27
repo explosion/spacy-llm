@@ -209,9 +209,6 @@ class LLMWrapper(Pipe):
             if isinstance(self._model, ModelWithContextLength):
                 context_length = self._model.context_length
 
-            # todo obtain doc shards. after that:
-            #       - fix tee() handling of returned iterators (tee separately)
-            #       - pass doc shards instead of noncached_doc_batch
             prompts_iters = tee(
                 self._task.generate_prompts(noncached_doc_batch, context_length),
                 n_iters + 1,
