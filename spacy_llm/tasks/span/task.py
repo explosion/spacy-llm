@@ -1,4 +1,5 @@
 import abc
+from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 from typing import cast
 
@@ -102,9 +103,9 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        shards = tuple(shards)
+        shards_teed = tee(shards, 2)
         for shards_for_doc, spans_for_doc in zip(
-            shards, self._parse_responses(self, shards, responses)
+            shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
             shards_for_doc = list(shards_for_doc)
             for shard, spans in zip(shards_for_doc, spans_for_doc):

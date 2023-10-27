@@ -24,9 +24,11 @@ def test_anthropic_api_response_is_correct():
 
     prompt = "Count the number of characters in this string: hello"
     num_prompts = 3
-    responses = anthropic(prompts=[prompt] * num_prompts)
+    responses = anthropic(prompts=[[prompt]] * num_prompts)
     for response in responses:
-        assert isinstance(response, str)
+        assert isinstance(response, list)
+        assert len(response) == 1
+        assert isinstance(response[0], str)
 
 
 @pytest.mark.external

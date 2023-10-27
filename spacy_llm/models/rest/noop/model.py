@@ -33,7 +33,7 @@ class NoOpModel(REST):
     def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         # Assume time penalty for API calls.
         time.sleep(NoOpModel._CALL_TIMEOUT)
-        return [_NOOP_RESPONSE] * len(list(prompts))
+        return [[_NOOP_RESPONSE]] * len(list(prompts))
 
     @staticmethod
     def _get_context_lengths() -> Dict[str, int]:
