@@ -209,23 +209,19 @@ class LLMWrapper(Pipe):
             if isinstance(self._model, ModelWithContextLength):
                 context_length = self._model.context_length
 
-            # todo obtain doc shards. should this be a separate step or be obtained from generate_prompts()?
-            #   probably better to go with the latter, as sharding is linked to prompt generation.
-            #   this means amending typing and return values everywhere with returned doc shards (rename
-            #   generate_prompts()?).
-            #   after that:
+            # todo obtain doc shards. after that:
             #       - fix tee() handling of returned iterators (tee separately)
             #       - pass doc shards instead of noncached_doc_batch
             prompts_iters = tee(
                 self._task.generate_prompts(noncached_doc_batch, context_length),
                 n_iters + 1,
             )
-
             responses_iters = tee(
                 self._model((elem[0] for elem in prompts_iters[0])), n_iters
             )
+
             for prompts_and_shards, response, doc in zip(
-                prompts_iters[1], responses_iters[1], noncached_doc_batch
+                prompts_iters[1], responses_iters[0], noncached_doc_batch
             ):
                 logger.debug(
                     "Generated prompt for doc: %s\n%s", doc.text, prompts_and_shards[0]
@@ -234,11 +230,11 @@ class LLMWrapper(Pipe):
 
             modified_docs = iter(
                 self._task.parse_responses(
-                    (elem[1] for elem in prompts_iters[3]), responses_iters[0]
+                    (elem[1] for elem in prompts_iters[2]), responses_iters[1]
                 )
             )
 
-        final_docs = []
+        final_docs: List[Doc] = []
         for i, doc in enumerate(docs):
             if is_cached[i]:
                 cached_doc = self._cache[doc]
@@ -254,8 +250,8 @@ class LLMWrapper(Pipe):
                         "llm_io", defaultdict(dict)
                     )
                     llm_io = doc.user_data["llm_io"][self._name]
-                    llm_io["prompt"] = str(next(prompts_iters[2])[0])
-                    llm_io["response"] = str(next(responses_iters[2])[0])
+                    llm_io["prompt"] = str(next(prompts_iters[-1])[0])
+                    llm_io["response"] = str(next(responses_iters[-1]))
 
                 self._cache.add(doc)
                 final_docs.append(doc)

@@ -297,7 +297,7 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
     if not hasattr(task, "generate_prompts"):
         raise ValueError(
             "A task needs to have the following method: generate_prompts(self, docs: Iterable[Doc]) -> "
-            "Iterable[Iterable[Any]]"
+            "Iterable[Tuple[Iterable[Any], Iterable[Doc]]]"
         )
     if not hasattr(task, "parse_responses"):
         raise ValueError(
@@ -311,9 +311,9 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         "model": _extract_model_call_signature(model),
     }
 
-    parse_input: Optional[Type] = None
-    model_input: Optional[Type] = None
-    model_output: Optional[Type] = None
+    parse_in: Optional[Type] = None
+    model_in: Optional[Type] = None
+    model_out: Optional[Type] = None
 
     # Validate the 'model' object
     if not (len(type_hints["model"]) == 2 and "return" in type_hints["model"]):
@@ -322,9 +322,9 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         )
     for k in type_hints["model"]:
         if k == "return":
-            model_output = type_hints["model"][k]
+            model_out = type_hints["model"][k]
         else:
-            model_input = type_hints["model"][k]
+            model_in = type_hints["model"][k]
 
     # validate the 'parse' object
     if not (len(type_hints["parse"]) == 3 and "return" in type_hints["parse"]):
@@ -335,36 +335,53 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         # find the 'prompt_responses' var without assuming its name
         type_k = type_hints["parse"][k]
         if type_k != typing.Iterable[Doc]:
-            parse_input = type_hints["parse"][k]
+            parse_in = type_hints["parse"][k]
 
-    template_output = type_hints["template"]["return"]
+    template_out = type_hints["template"]["return"]
 
     # Check that all variables are Iterables.
     for var, msg in (
-        (template_output, "`task.generate_prompts()` needs to return an `Iterable`."),
+        (template_out, "`task.generate_prompts()` needs to return an `Iterable`."),
         (
-            model_input,
+            model_in,
             "The prompts variable in the 'model' needs to be an `Iterable`.",
         ),
-        (model_output, "The `model` function needs to return an `Iterable`."),
+        (model_out, "The `model` function needs to return an `Iterable`."),
         (
-            parse_input,
+            parse_in,
             "`responses` in `task.parse_responses()` needs to be an `Iterable`.",
         ),
     ):
-        if not var != Iterable:
+        if not (hasattr(var, "_name") and var._name == "Iterable"):
             raise ValueError(msg)
 
-    # Ensure that the template returns the same type as expected by the model
-    if not _do_args_match(template_output, model_input, 2):  # type: ignore[arg-type]
+    # Ensure that template/prompt generator output is Iterable of 2-Tuple, the second of which fits doc shards type.
+    template_out_type = template_out.__args__[0]
+    if not (
+        hasattr(template_out_type, "_name")
+        and template_out_type._name == "Tuple"
+        and len(template_out_type.__args__) == 2
+    ):
         warnings.warn(
-            f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
-            f"`model` (`{model_input}`)."
+            f"Type in `Iterable` returned from `task.generate_prompts()` (`{template_out_type}`) has to be a 2-tuple "
+            f"(prompts, doc shards)."
+        )
+    template_out_prompt_type = template_out_type.__args__[0]
+
+    # Ensure that the template returns the same type as expected by the model
+    assert hasattr(model_in, "__args__")
+    assert model_in is not None
+    if not _do_args_match(
+        template_out_prompt_type, model_in.__args__[0], 1
+    ):  # type: ignore[arg-type]
+        warnings.warn(
+            f"First type in `Iterable[Tuple[...]] returned from `task.generate_prompts()` "
+            f"(`{template_out_prompt_type}`) doesn't match type expected by `model` (`{model_in}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the model
-    if not _do_args_match(model_output, parse_input, 2):  # type: ignore[arg-type]
+    if not _do_args_match(model_out, parse_in, 2):  # type: ignore[arg-type]
         warnings.warn(
-            f"Type returned from `model` (`{model_output}`) doesn't match type expected by "
-            f"`task.parse_responses()` (`{parse_input}`)."
+            f"Type returned from `model` (`{model_out}`) doesn't match type expected by "
+            f"`task.parse_responses()` (`{parse_in}`)."
         )
