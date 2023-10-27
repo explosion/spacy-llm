@@ -369,7 +369,6 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
     template_out_prompt_type = template_out_type.__args__[0]
 
     # Ensure that the template returns the same type as expected by the model
-    assert hasattr(model_in, "__args__")
     assert model_in is not None
     if not _do_args_match(
         template_out_prompt_type, model_in.__args__[0], 1
