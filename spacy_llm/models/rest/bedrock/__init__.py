@@ -1,4 +1,4 @@
 from .model import Bedrock
-from .registry import titan_express
+from .registry import bedrock
 
-__all__ = ["Bedrock", "titan_express"]
+__all__ = ["Bedrock", "bedrock"]
