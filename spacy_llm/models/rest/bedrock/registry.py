@@ -32,29 +32,3 @@ def titan_express(
     return Bedrock(
         model_id=model_id, region=region, config=config, max_retries=max_retries
     )
-
-
-@registry.llm_models("spacy.Bedrock.Titan.Lite.v1")
-def titan_lite(
-    region: str,
-    model_id: Models = Models.TITAN_LITE,
-    config: Dict[Any, Any] = SimpleFrozenDict(
-        temperature=_DEFAULT_TEMPERATURE,
-        maxTokenCount=_DEFAULT_MAX_TOKEN_COUNT,
-        stopSequences=_DEFAULT_STOP_SEQUENCES,
-        topP=_DEFAULT_TOP_P,
-    ),
-    max_retries: int = _DEFAULT_RETRIES,
-) -> Callable[[Iterable[str]], Iterable[str]]:
-    """Returns Bedrock instance for 'amazon-titan-lite' model using boto3 to prompt API.
-    region (str): Specify the AWS region for the service
-    model_id (ModelId): ID of the deployed model (titan-lite)
-    region (str): Specify the AWS region for the service
-    config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    """
-    return Bedrock(
-        model_id=model_id,
-        region=region,
-        config=config,
-        max_retries=max_retries,
-    )

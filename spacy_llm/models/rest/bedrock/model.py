@@ -8,7 +8,6 @@ from typing import Any, Dict, Iterable, List, Optional
 class Models(str, Enum):
     # Completion models
     TITAN_EXPRESS = "amazon.titan-text-express-v1"
-    TITAN_LITE = "amazon.titan-text-lite-v1"
 
 
 class Bedrock:
