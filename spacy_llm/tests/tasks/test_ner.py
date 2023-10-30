@@ -994,7 +994,8 @@ def test_add_label():
 
     for label, definition in [
         ("PERSON", "Every person with the name Jack"),
-        ("LOCATION", None),
+        ("LOCATION", "A geographical location, like a country or a city"),
+        ("COMPANY", None),
     ]:
         llm.add_label(label, definition)
     doc = nlp(text)
