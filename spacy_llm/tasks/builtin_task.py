@@ -312,13 +312,24 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
 
-    def add_label(self, label: str) -> int:
+    def add_label(self, label: str, label_definition: Optional[str] = None) -> int:
+        """Add a label to the task"""
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
         self._label_dict[self._normalizer(label)] = label
+        if label_definition is None:
+            return 1
+        if self._label_definitions is None:
+            self._label_definitions = {}
+        self._label_definitions[label] = label_definition
         return 1
+
+    def clear(self) -> None:
+        """Reset all labels."""
+        self._label_dict = {}
+        self._label_definitions = None
 
     @property
     def normalizer(self) -> Callable[[str], str]:
