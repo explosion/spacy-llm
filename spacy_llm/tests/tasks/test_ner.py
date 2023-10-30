@@ -992,7 +992,10 @@ def test_add_label():
     doc = nlp(text)
     assert len(doc.ents) == 0
 
-    for label, definition in [("PERSON", "Every person with the name Jack"), ("LOCATION", None)]:
+    for label, definition in [
+        ("PERSON", "Every person with the name Jack"),
+        ("LOCATION", None),
+    ]:
         llm.add_label(label, definition)
     doc = nlp(text)
     assert len(doc.ents) == 2

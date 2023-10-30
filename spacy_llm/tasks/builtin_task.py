@@ -312,8 +312,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     def labels(self) -> Tuple[str, ...]:
         return tuple(self._label_dict.values())
 
-    def add_label(self, label: str, label_definition: Optional[str]=None) -> int:
-        """ Add a label to the task """
+    def add_label(self, label: str, label_definition: Optional[str] = None) -> int:
+        """Add a label to the task"""
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
         if label in self.labels:
@@ -325,7 +325,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             self._label_definitions = {}
         self._label_definitions[label] = label_definition
         return 1
-    
+
     def clear(self) -> None:
         """Reset all labels."""
         self._label_dict = {}
