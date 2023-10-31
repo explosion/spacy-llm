@@ -4,7 +4,6 @@ import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-
 from ..base import REST
 
 
@@ -172,7 +171,7 @@ class Bedrock(REST):
             raise NoCredentialsError
 
     @property
-    def credentials(self) -> Dict[str, str]:
+    def credentials(self) -> Dict[str, Optional[str]]:  # type: ignore
         return self.get_session_kwargs()
 
     @classmethod
