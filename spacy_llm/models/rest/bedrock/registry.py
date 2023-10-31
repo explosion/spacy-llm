@@ -31,6 +31,8 @@ def bedrock(
         presencePenalty=_DEFAULT_PRESENCE_PENALTY,
         frequencyPenalty=_DEFAULT_FREQUENCY_PENALTY,
         stop_sequences=_DEFAULT_STOP_SEQUENCES,
+        # Params for Cohere models
+        max_tokens=_DEFAULT_MAX_TOKEN_COUNT,
     ),
     max_tries: int = _DEFAULT_RETRIES,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
