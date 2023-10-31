@@ -64,8 +64,8 @@ def test_llm_pipe(nlp: Language, n_process: int):
     for doc in docs:
         llm_io = doc.user_data["llm_io"]
 
-        assert llm_io["llm"]["prompt"] == _NOOP_PROMPT
-        assert llm_io["llm"]["response"] == _NOOP_RESPONSE
+        assert llm_io["llm"]["prompt"] == str([_NOOP_PROMPT])
+        assert llm_io["llm"]["response"] == str([_NOOP_RESPONSE])
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
@@ -158,14 +158,14 @@ def test_type_checking_invalid(noop_config) -> None:
 
         def generate_prompts(
             self, docs: Iterable[Doc], context_length: Optional[int] = None
-        ) -> Iterable[Tuple[Iterable[int], Iterable[Doc]]]:
+        ) -> Iterable[Tuple[Iterable[Iterable[int]], Iterable[Doc]]]:
             for doc in docs:
-                yield [0], doc
+                yield [[0]], doc
 
         def parse_responses(
-            self, docs: Iterable[Doc], responses: Iterable[float]
+            self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[float]]
         ) -> Iterable[Doc]:
-            return docs
+            return list(shards)[0]
 
     nlp = spacy.blank("en")
     with pytest.warns(UserWarning) as record:
