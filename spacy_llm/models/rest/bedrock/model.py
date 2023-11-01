@@ -14,6 +14,8 @@ class Models(str, Enum):
     AI21_JURASSIC_ULTRA = "ai21.j2-ultra-v1"
     AI21_JURASSIC_MID = "ai21.j2-mid-v1"
     COHERE_COMMAND = "cohere.command-text-v14"
+    ANTHROPIC_CLAUDE = "anthropic.claude-v2"
+    ANTHROPIC_CLAUDE_INSTANT = "anthropic.claude-instant-v1"
 
 
 TITAN_PARAMS = ["maxTokenCount", "stopSequences", "temperature", "topP"]
@@ -26,6 +28,13 @@ AI21_JURASSIC_PARAMS = [
     "frequencyPenalty",
 ]
 COHERE_PARAMS = ["max_tokens", "temperature"]
+ANTHROPIC_PARAMS = [
+    "max_tokens_to_sample",
+    "temperature",
+    "top_k",
+    "top_p",
+    "stop_sequences",
+]
 
 
 class Bedrock(REST):
@@ -49,6 +58,8 @@ class Bedrock(REST):
             config_params = AI21_JURASSIC_PARAMS
         if self._model_id in [Models.COHERE_COMMAND]:
             config_params = COHERE_PARAMS
+        if self._model_id in [Models.ANTHROPIC_CLAUDE_INSTANT, Models.ANTHROPIC_CLAUDE]:
+            config_params = ANTHROPIC_PARAMS
 
         for i in config_params:
             self._config[i] = config[i]
@@ -149,6 +160,11 @@ class Bedrock(REST):
                 responses = json.loads(r["body"].read().decode())["generations"][0][
                     "text"
                 ]
+            elif self._model_id in [
+                Models.ANTHROPIC_CLAUDE_INSTANT,
+                Models.ANTHROPIC_CLAUDE,
+            ]:
+                responses = json.loads(r["body"].read().decode())["completion"]
 
             return responses
 
@@ -166,7 +182,15 @@ class Bedrock(REST):
                 responses = _request(json.dumps({"prompt": prompt, **self._config}))
             elif self._model_id in [Models.COHERE_COMMAND]:
                 responses = _request(json.dumps({"prompt": prompt, **self._config}))
-
+            elif self._model_id in [
+                Models.ANTHROPIC_CLAUDE_INSTANT,
+                Models.ANTHROPIC_CLAUDE,
+            ]:
+                responses = _request(
+                    json.dumps(
+                        {"prompt": f"\n\nHuman: {prompt}\n\nAssistant:", **self._config}
+                    )
+                )
             api_responses.append(responses)
 
         return api_responses
@@ -195,4 +219,6 @@ class Bedrock(REST):
             "ai21.j2-ultra-v1",
             "ai21.j2-mid-v1",
             "cohere.command-text-v14",
+            "anthropic.claude-v2",
+            "anthropic.claude-instant-v1",
         )
