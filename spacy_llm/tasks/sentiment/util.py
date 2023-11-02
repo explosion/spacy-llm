@@ -19,7 +19,7 @@ class SentimentExample(FewshotExample):
 
 
 def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-    """Score lemmatization accuracy in examples.
+    """Score sentiment accuracy in examples.
     examples (Iterable[Example]): Examples to score.
     RETURNS (Dict[str, Any]): Dict with metric name -> score.
     """
