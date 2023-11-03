@@ -173,7 +173,7 @@ def test_jinja_template_rendering_without_examples():
     doc = nlp.make_doc(text)
 
     sentiment_task = make_sentiment_task(examples=None)
-    prompt = list(sentiment_task.generate_prompts([doc]))[0]
+    prompt = list(sentiment_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -207,7 +207,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc(text)
 
     sentiment_task = make_sentiment_task(examples=fewshot_reader(examples_path))
-    prompt = list(sentiment_task.generate_prompts([doc]))[0]
+    prompt = list(sentiment_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -255,7 +255,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc(text)
 
     sentiment_task = make_sentiment_task(template=template)
-    prompt = list(sentiment_task.generate_prompts([doc]))[0]
+    prompt = list(sentiment_task.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == f"""

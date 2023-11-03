@@ -395,7 +395,7 @@ def test_ner_labels(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([[doc_in]], [[response]]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 

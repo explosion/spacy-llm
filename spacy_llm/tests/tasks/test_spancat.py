@@ -446,7 +446,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     llm_spancat = make_spancat_task_v3(labels=labels)
-    prompt = list(llm_spancat.generate_prompts([doc]))[0]
+    prompt = list(llm_spancat.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -501,7 +501,7 @@ def test_jinja_template_rendering_with_examples(examples_path: Path):
 
     examples = fewshot_reader(examples_path)
     llm_spancat = make_spancat_task_v3(labels=labels, examples=examples)
-    prompt = list(llm_spancat.generate_prompts([doc]))[0]
+    prompt = list(llm_spancat.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()

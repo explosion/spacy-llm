@@ -547,7 +547,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
 
     examples = fewshot_reader(examples_path)
     llm_ner = make_ner_task_v2(labels=labels, examples=examples)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -611,7 +611,7 @@ def test_jinja_template_rendering_with_label_definitions():
             "LOC": "Location definition",
         },
     )
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()

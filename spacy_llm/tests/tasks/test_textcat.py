@@ -380,7 +380,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
         examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -446,7 +446,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
         examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -513,7 +513,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
         examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -592,7 +592,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
     llm_textcat = make_textcat_task_v3(labels=labels, template=template)
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -680,7 +680,7 @@ def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
         },
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """

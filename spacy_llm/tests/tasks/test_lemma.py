@@ -199,7 +199,7 @@ def test_jinja_template_rendering_without_examples():
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(examples=None)
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -242,7 +242,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -334,7 +334,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(template=template)
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == f"""

@@ -253,7 +253,7 @@ def test_jinja_template_rendering_without_examples(example_text):
     doc = nlp.make_doc(example_text)
 
     llm_ner = make_summarization_task(examples=None, max_n_words=10)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -294,7 +294,7 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
             "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
         ),
     ):
-        prompt = list(llm_ner.generate_prompts([doc]))[0]
+        prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -343,7 +343,7 @@ def test_external_template_actually_loads(example_text):
     doc = nlp.make_doc(example_text)
 
     llm_ner = make_summarization_task(template=template)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
