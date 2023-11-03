@@ -318,7 +318,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
 
     nlp = spacy.blank("en")
     doc = nlp(text)
-    pred = list(llm_textcat.parse_responses([doc], [response]))[0]
+    pred = list(llm_textcat.parse_responses([[doc]], [[response]]))[0]
     assert list(pred.cats.keys())[0] == label
     assert list(pred.cats.values())[0] == expected_score
 
@@ -350,7 +350,7 @@ def test_textcat_multilabel_labels_are_correct(
     )
     nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
-    pred = list(llm_textcat.parse_responses([doc], [response]))[0]
+    pred = list(llm_textcat.parse_responses([[doc]], [[response]]))[0]
     # Take only those that have scores
     pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
     assert set(pred_cats) == set(expected)
@@ -636,9 +636,9 @@ INSULTS = [
 def test_textcat_scoring(zeroshot_cfg_string, n_insults):
     @registry.llm_models("Dummy")
     def factory():
-        def b(prompts: Iterable[str]) -> Iterable[str]:
+        def b(prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
             for _ in prompts:
-                yield "POS"
+                yield ["POS"]
 
         return b
 

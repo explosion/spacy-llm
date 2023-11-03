@@ -250,9 +250,9 @@ def test_incorrect_indexing():
         len(
             list(
                 task._parse_responses(
-                    task, [doc], ['{"dep": 0, "dest": 0, "relation": "LivesIn"}']
+                    task, [[doc]], [['{"dep": 0, "dest": 0, "relation": "LivesIn"}']]
                 )
-            )[0]
+            )[0][0]
         )
         == 1
     )
@@ -260,9 +260,9 @@ def test_incorrect_indexing():
         len(
             list(
                 task._parse_responses(
-                    task, [doc], ['{"dep": 0, "dest": 1, "relation": "LivesIn"}']
+                    task, [[doc]], [['{"dep": 0, "dest": 1, "relation": "LivesIn"}']]
                 )
-            )[0]
+            )[0][0]
         )
         == 0
     )

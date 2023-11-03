@@ -451,7 +451,7 @@ def test_ner_alignment(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([[doc_in]], [[response]]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -502,7 +502,7 @@ def test_ner_matching(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([[doc_in]], [[response]]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -517,7 +517,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     llm_ner = make_ner_task_v3(labels=labels)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -562,7 +562,7 @@ def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_fil
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
     llm_ner = make_ner_task_v3(examples=examples, labels=labels)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -609,7 +609,7 @@ def test_jinja_template_rendering_with_label_definitions(
             "LOC": "Location definition",
         },
     )
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -690,7 +690,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_ner = make_ner_task_v3(examples=[], labels=labels, template=template)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
     assert prompt.strip().startswith("Here's the test template for the tests and stuff")
 
 
@@ -935,7 +935,7 @@ def test_regression_span_task_response_parse(
     span_reasons = _extract_span_reasons_cot(ner_task, response)
     assert len(span_reasons) == len(gold_ents)
 
-    docs = list(ner_task.parse_responses([example_doc], [response]))
+    docs = list(ner_task.parse_responses([[example_doc]], [[response]]))
     assert len(docs) == 1
 
     doc = docs[0]
@@ -964,7 +964,7 @@ def test_regression_span_task_comma(
     ner_task = make_ner_task_v3(examples=[], labels=["ORG", "LOC"])
     span_reasons = _extract_span_reasons_cot(ner_task, response)
     assert len(span_reasons) == len(gold_ents)
-    docs = list(ner_task.parse_responses([example_doc], [response]))
+    docs = list(ner_task.parse_responses([[example_doc]], [[response]]))
     assert len(docs) == 1
     doc = docs[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc.ents]

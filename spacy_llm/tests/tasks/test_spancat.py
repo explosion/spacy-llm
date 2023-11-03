@@ -257,7 +257,7 @@ def test_spancat_matching_shot_task(text: str, response: str, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -330,7 +330,7 @@ def test_spancat_labels(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -382,7 +382,7 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -431,7 +431,7 @@ def test_spancat_matching(response, case_sensitive, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
