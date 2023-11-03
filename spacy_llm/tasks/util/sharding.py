@@ -28,8 +28,8 @@ def make_shard_mapper(
     n_token_estimator (NTokenEstimator): Estimates number of tokens in a string.
     buffer_frac (float): Buffer to consider in assessment of whether prompt fits into context. E. g. if value is 1.1,
         prompt length * 1.1 will be compared with the context length.
-    # todo sharding would be better with sentences instead of tokens, but this requires some form of sentence
-    #  splitting we can't rely one...maybe checking for sentences and/or as optional arg?
+    todo sharding would be better with sentences instead of tokens, but this requires some form of sentence
+     splitting we can't rely one...maybe checking for sentences and/or as optional arg?
     RETURNS (ShardMapper): Callable mapping doc to doc shards fitting within context length.
     """
     n_tok_est: NTokenEstimator = n_token_estimator or make_n_token_estimator()
@@ -54,6 +54,9 @@ def make_shard_mapper(
             fraction = 0.5
             start_idx = 0
 
+            if n_tok_est(render_template(doc)) * buffer_frac <= context_length:
+                return [doc]
+
             while remaining_doc is not None:
                 fits_in_context = False
                 shard: Optional[Doc] = None
@@ -68,6 +71,12 @@ def make_shard_mapper(
                     )
                     fraction /= 2
 
+                # todo doc properties, such as .ents, have to be included for some tasks (e. g. REL, EL) to work. how
+                #  should this be done in cases where the properties transcend shard limits?
+                #   - should sharding never cut across entities/other properties?
+                #   - should entities or all other properties be dropped if they transcend shard properties? this seems
+                #     like the most pragmatic solution for now.
+                #   - which properties should be copied to shards other than .ents?
                 assert shard is not None
                 shards.append(shard)
                 fraction = 1

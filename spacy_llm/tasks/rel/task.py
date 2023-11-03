@@ -101,12 +101,11 @@ class RELTask(BuiltinTaskWithLabels):
         for shards_for_doc, rel_items_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
-            updated_shards_for_doc: List[Doc] = []
+            shards_for_doc = list(shards_for_doc)
             for shard, rel_items in zip(shards_for_doc, rel_items_for_doc):
                 shard._.rel = rel_items
-                updated_shards_for_doc.append(shard)
 
-            yield self._shard_reducer(updated_shards_for_doc)
+            yield self._shard_reducer(shards_for_doc)
 
     def initialize(
         self,

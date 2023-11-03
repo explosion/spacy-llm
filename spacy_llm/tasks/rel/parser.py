@@ -19,13 +19,13 @@ def parse_responses_v1(
     """
     for responses_for_doc, shards_for_doc in zip(responses, shards):
         results_for_doc: List[List[RelationItem]] = []
-        for response, doc in zip(responses_for_doc, shards_for_doc):
+        for response, shard in zip(responses_for_doc, shards_for_doc):
             relations: List[RelationItem] = []
             for line in response.strip().split("\n"):
                 try:
                     rel_item = RelationItem.parse_raw(line)
-                    if 0 <= rel_item.dep < len(doc.ents) and 0 <= rel_item.dest < len(
-                        doc.ents
+                    if 0 <= rel_item.dep < len(shard.ents) and 0 <= rel_item.dest < len(
+                        shard.ents
                     ):
                         relations.append(rel_item)
                 except ValidationError:
