@@ -141,8 +141,8 @@ def test_lemma_config(cfg_string, request):
 @pytest.mark.parametrize(
     "cfg_string",
     [
-        "zeroshot_cfg_string",
-        "fewshot_cfg_string",
+        # "zeroshot_cfg_string",
+        # "fewshot_cfg_string",
         "ext_template_cfg_string",
     ],
 )

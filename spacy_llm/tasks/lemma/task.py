@@ -48,7 +48,6 @@ class LemmaTask(BuiltinTask):
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
         shards_teed = tee(shards, 2)
-
         for shards_for_doc, lemmas_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
