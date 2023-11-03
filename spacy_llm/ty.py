@@ -375,7 +375,7 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
     ):  # type: ignore[arg-type]
         warnings.warn(
             f"First type in `Iterable[Tuple[...]] returned from `task.generate_prompts()` "
-            f"(`{template_out_prompt_type}`) doesn't match type expected by `model` (`{model_in}`)."
+            f"(`{template_out_prompt_type}`) doesn't match type expected by `model` (`{model_in.__args__[0]}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the model

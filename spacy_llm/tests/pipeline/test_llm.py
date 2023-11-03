@@ -158,9 +158,9 @@ def test_type_checking_invalid(noop_config) -> None:
 
         def generate_prompts(
             self, docs: Iterable[Doc], context_length: Optional[int] = None
-        ) -> Iterable[Tuple[Iterable[Iterable[int]], Iterable[Doc]]]:
+        ) -> Iterable[Tuple[Iterable[int], Iterable[Doc]]]:
             for doc in docs:
-                yield [[0]], doc
+                yield [0], [doc]
 
         def parse_responses(
             self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[float]]
@@ -174,13 +174,13 @@ def test_type_checking_invalid(noop_config) -> None:
     assert len(record) == 2
     assert (
         str(record[0].message)
-        == "Type returned from `task.generate_prompts()` (`typing.Iterable[int]`) doesn't match type "
-        "expected by `model` (`typing.Iterable[str]`)."
+        == "First type in `Iterable[Tuple[...]] returned from `task.generate_prompts()` (`typing.Iterable[int]`) "
+        "doesn't match type expected by `model` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)
-        == "Type returned from `model` (`typing.Iterable[str]`) doesn't match type "
-        "expected by `task.parse_responses()` (`typing.Iterable[float]`)."
+        == "Type returned from `model` (`typing.Iterable[typing.Iterable[str]]`) doesn't match type expected by "
+        "`task.parse_responses()` (`typing.Iterable[typing.Iterable[float]]`)."
     )
 
     # Run with disabled type consistency validation.
