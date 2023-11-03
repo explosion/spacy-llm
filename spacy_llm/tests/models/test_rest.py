@@ -26,12 +26,13 @@ class _CountTask:
         self, docs: Iterable[Doc], context_length: Optional[int] = None
     ) -> Iterable[Tuple[Iterable[str], Iterable[Doc]]]:
         for doc in docs:
-            yield _CountTask._PROMPT_TEMPLATE.format(text=doc.text), [doc]
+            yield [_CountTask._PROMPT_TEMPLATE.format(text=doc.text)], [doc]
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[Iterable[str]]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        return docs
+        # Grab the first shard per doc
+        return [list(shards_for_doc)[0] for shards_for_doc in shards]
 
     @property
     def prompt_template(self) -> str:
