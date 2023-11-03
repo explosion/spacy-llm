@@ -29,7 +29,7 @@ class Cohere(REST):
 
     def _verify_auth(self) -> None:
         try:
-            self(["test"])
+            self([["test"]])
         except ValueError as err:
             if "invalid api token" in str(err):
                 warnings.warn(

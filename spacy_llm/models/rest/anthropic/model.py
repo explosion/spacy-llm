@@ -40,7 +40,7 @@ class Anthropic(REST):
     def _verify_auth(self) -> None:
         # Execute a dummy prompt. If the API setup is incorrect, we should fail at initialization time.
         try:
-            self(["test"])
+            self([["test"]])
         except ValueError as err:
             if "authentication_error" in str(err):
                 warnings.warn(

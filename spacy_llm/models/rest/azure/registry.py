@@ -21,7 +21,7 @@ def azure_openai(
     max_request_time: float = AzureOpenAI.DEFAULT_MAX_REQUEST_TIME,
     api_version: str = "2023-05-15",
 ) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
-    """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
+    """Returns Azure OpenAI instance for models deployed on Azure's OpenAI service using REST to prompt API.
 
     Docs on OpenAI models supported by Azure:
     https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#model-summary-table-and-region-availability.

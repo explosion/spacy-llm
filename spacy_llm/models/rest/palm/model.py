@@ -31,7 +31,7 @@ class PaLM(REST):
 
     def _verify_auth(self) -> None:
         try:
-            self(["What's 2+2?"])
+            self([["What's 2+2?"]])
         except ValueError as err:
             if "API key not valid" in str(err):
                 warnings.warn(

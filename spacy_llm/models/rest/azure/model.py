@@ -50,7 +50,7 @@ class AzureOpenAI(REST):
         return (
             self._endpoint
             + ("" if self._endpoint.endswith("/") else "/")
-            + f"openai/deployments/{self._name}/{'' if self._model_type == ModelType.COMPLETION else 'chat/'}"
+            + f"openai/deployments/{self._deployment_name}/{'' if self._model_type == ModelType.COMPLETION else 'chat/'}"
             f"completions"
         )
 
@@ -73,7 +73,7 @@ class AzureOpenAI(REST):
 
     def _verify_auth(self) -> None:
         try:
-            self(["test"])
+            self([["test"]])
         except ValueError as err:
             raise err
 
