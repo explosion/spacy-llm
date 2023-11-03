@@ -1,4 +1,5 @@
 import warnings
+from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
@@ -92,18 +93,18 @@ class SummarizationTask(BuiltinTask):
         return {"max_n_words": self._max_n_words}
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[Iterable[str]]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        shards: List[Doc] = []
+        shards_teed = tee(shards, 2)
 
-        for responses_for_doc in responses:
-            for shard, summary in zip(
-                docs, self._parse_responses(self, docs, responses_for_doc)
-            ):
+        for shards_for_doc, summaries_for_doc in zip(
+            shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
+        ):
+            shards_for_doc = list(shards_for_doc)
+            for shard, summary in zip(shards_for_doc, summaries_for_doc):
                 setattr(shard._, self._field, summary)
-                shards.append(shard)
 
-            yield self._shard_reducer(shards)
+            yield self._shard_reducer(shards_for_doc)
 
     @property
     def _cfg_keys(self) -> List[str]:

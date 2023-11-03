@@ -144,7 +144,7 @@ def test_sentiment_predict(cfg_string, request):
         ("zeroshot_cfg_string", "sentiment_x"),
     ],
 )
-def test_lemma_io(cfg_string_field, request):
+def test_sentiment_io(cfg_string_field, request):
     cfg_string, field = cfg_string_field
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
