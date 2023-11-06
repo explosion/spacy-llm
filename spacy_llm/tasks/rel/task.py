@@ -2,7 +2,7 @@ from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from spacy.language import Language
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Self
@@ -61,7 +61,24 @@ class RELTask(BuiltinTaskWithLabels):
         self._field = "rel"
 
     def _preprocess_docs_for_prompt(self, docs: Iterable[Doc]) -> Iterable[Doc]:
-        return [Doc(doc.vocab, words=RELTask._preannotate(doc).split()) for doc in docs]
+        preprocessed_docs: List[Doc] = []
+
+        for doc in docs:
+            preprocessed_docs.append(
+                Doc(doc.vocab, words=RELTask._preannotate(doc).split())
+            )
+            preprocessed_docs[-1].ents = [
+                Span(
+                    preprocessed_docs[-1],
+                    ent.start,
+                    ent.end,
+                    label=ent.label_,
+                    kb_id=ent.kb_id_,
+                )
+                for ent in doc.ents
+            ]
+
+        return preprocessed_docs
 
     def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
         return {
@@ -97,7 +114,6 @@ class RELTask(BuiltinTaskWithLabels):
     ) -> Iterable[Doc]:
         self._check_extension(self._field)
         shards_teed = tee(shards, 2)
-
         for shards_for_doc, rel_items_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):

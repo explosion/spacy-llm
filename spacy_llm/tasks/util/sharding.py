@@ -54,9 +54,6 @@ def make_shard_mapper(
             fraction = 0.5
             start_idx = 0
 
-            if n_tok_est(render_template(doc)) * buffer_frac <= context_length:
-                return [doc]
-
             while remaining_doc is not None:
                 fits_in_context = False
                 shard: Optional[Doc] = None
