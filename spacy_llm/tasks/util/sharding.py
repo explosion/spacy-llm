@@ -68,12 +68,6 @@ def make_shard_mapper(
                     )
                     fraction /= 2
 
-                # todo doc properties, such as .ents, have to be included for some tasks (e. g. REL, EL) to work. how
-                #  should this be done in cases where the properties transcend shard limits?
-                #   - should sharding never cut across entities/other properties?
-                #   - should entities or all other properties be dropped if they transcend shard properties? this seems
-                #     like the most pragmatic solution for now.
-                #   - which properties should be copied to shards other than .ents?
                 assert shard is not None
                 shards.append(shard)
                 fraction = 1
