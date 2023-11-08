@@ -151,7 +151,6 @@ def openai_gpt_3_5_v2(
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-0613-16k",
         "gpt-3.5-turbo-instruct",
-        "gpt-3.5-turbo-1106",
     ] = "gpt-3.5-turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -162,8 +161,7 @@ def openai_gpt_3_5_v2(
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
     name (Literal[
-        "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct",
-        "gpt-3.5-turbo-1106"
+        "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct"
     ]): Model to use.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model
 
