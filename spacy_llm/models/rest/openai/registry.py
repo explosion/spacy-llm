@@ -152,7 +152,6 @@ def openai_gpt_3_5_v2(
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-0613-16k",
         "gpt-3.5-turbo-instruct",
-        "gpt-3.5-turbo-1106",
     ] = "gpt-3.5-turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
