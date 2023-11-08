@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -107,7 +107,3 @@ class PaLM(REST):
                 api_responses.append(srsly.json_dumps(response))
 
         return api_responses
-
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return "text-bison-001", "chat-bison-001"
