@@ -25,7 +25,7 @@ Parameter explanations:
 def openai_gpt_4_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
     name: Literal[
-        "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"
+        "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-1106-preview"
     ] = "gpt-4",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -35,7 +35,8 @@ def openai_gpt_4_v2(
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Optional[Literal["0314", "32k", "32k-0314"]]): Model to use. Base 'gpt-4' model by default.
+    name (Optional[Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-1106-preview"]]): Model to use.
+        Base 'gpt-4' model by default.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model
 
     DOCS: https://spacy.io/api/large-language-models#models
@@ -65,7 +66,8 @@ def openai_gpt_4(
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Optional[Literal["0314", "32k", "32k-0314"]]): Model to use. Base 'gpt-4' model by default.
+    name (Optional[Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]]): Model to use. Base 'gpt-4' model by
+        default.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model
 
     DOCS: https://spacy.io/api/large-language-models#models
@@ -90,6 +92,7 @@ def openai_gpt_3_5_v2(
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-0613-16k",
         "gpt-3.5-turbo-instruct",
+        "gpt-3.5-turbo-1106",
     ] = "gpt-3.5-turbo",  # noqa: F722,F821
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -100,7 +103,8 @@ def openai_gpt_3_5_v2(
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
     name (Literal[
-        "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct"
+        "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct",
+        "gpt-3.5-turbo-1106"
     ]): Model to use.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model
 
