@@ -8,7 +8,9 @@ black==22.3.0
 types-requests==2.28.11.16
 # Prompting libraries needed for testing
 langchain==0.0.331; python_version>="3.9"
-openai>=0.27; python_version>="3.9"
+# Workaround for LangChain bug: pin OpenAI version. To be removed after LangChain has been fixed - see
+# https://github.com/langchain-ai/langchain/issues/12967.
+openai>=0.27,<=0.28.1; python_version>="3.9"
 
 # Necessary for running all local models on GPU.
 transformers[sentencepiece]>=4.0.0
