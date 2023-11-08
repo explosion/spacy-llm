@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -140,33 +140,3 @@ class OpenAI(REST):
                     api_responses.append(srsly.json_dumps(response))
 
         return api_responses
-
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return (
-            # gpt-4
-            "gpt-4",
-            "gpt-4-0314",
-            "gpt-4-32k",
-            "gpt-4-32k-0314",
-            "gpt-4-1106-preview",
-            # gpt-3.5
-            "gpt-3.5-turbo",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo-0613",
-            "gpt-3.5-turbo-0613-16k",
-            "gpt-3.5-turbo-instruct",
-            "gpt-3.5-turbo-1106",
-            # text-davinci
-            "text-davinci-002",
-            "text-davinci-003",
-            # others
-            "code-davinci-002",
-            "text-curie-001",
-            "text-babbage-001",
-            "text-ada-001",
-            "davinci",
-            "curie",
-            "babbage",
-            "ada",
-        )

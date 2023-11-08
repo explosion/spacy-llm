@@ -21,11 +21,40 @@ Parameter explanations:
 """
 
 
+@registry.llm_models("spacy.GPT-4.v3")
+def openai_gpt_4_v3(
+    config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
+    name: str = "gpt-4",  # noqa: F722
+    strict: bool = OpenAI.DEFAULT_STRICT,
+    max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
+    interval: float = OpenAI.DEFAULT_INTERVAL,
+    max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+) -> Callable[[Iterable[str]], Iterable[str]]:
+    """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
+
+    config (Dict[Any, Any]): LLM config passed on to the model's initialization.
+    name (str): Model name to use. Can be any model name supported by the OpenAI API - e. g. 'gpt-4',
+        "gpt-4-1106-preview", ....
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model
+
+    DOCS: https://spacy.io/api/large-language-models#models
+    """
+    return OpenAI(
+        name=name,
+        endpoint=Endpoints.CHAT.value,
+        config=config,
+        strict=strict,
+        max_tries=max_tries,
+        interval=interval,
+        max_request_time=max_request_time,
+    )
+
+
 @registry.llm_models("spacy.GPT-4.v2")
 def openai_gpt_4_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
     name: Literal[
-        "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-1106-preview"
+        "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"
     ] = "gpt-4",  # noqa: F722
     strict: bool = OpenAI.DEFAULT_STRICT,
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
@@ -35,8 +64,8 @@ def openai_gpt_4_v2(
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Optional[Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314", "gpt-4-1106-preview"]]): Model to use.
-        Base 'gpt-4' model by default.
+    name (Optional[Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]]): Model to use. Base 'gpt-4' model by
+        default.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model
 
     DOCS: https://spacy.io/api/large-language-models#models
@@ -75,6 +104,37 @@ def openai_gpt_4(
     return OpenAI(
         name=name,
         endpoint=Endpoints.CHAT.value,
+        config=config,
+        strict=strict,
+        max_tries=max_tries,
+        interval=interval,
+        max_request_time=max_request_time,
+    )
+
+
+@registry.llm_models("spacy.GPT-3-5.v3")
+def openai_gpt_3_5_v3(
+    config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
+    name: str = "gpt-3.5-turbo",
+    strict: bool = OpenAI.DEFAULT_STRICT,
+    max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
+    interval: float = OpenAI.DEFAULT_INTERVAL,
+    max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+) -> Callable[[Iterable[str]], Iterable[str]]:
+    """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
+
+    config (Dict[Any, Any]): LLM config passed on to the model's initialization.
+    name (str): Name of model to use. Can be any model name supported by the OpenAI API - e. g. 'gpt-3.5',
+        "gpt-3.5-turbo", ....
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-3.5' model
+
+    DOCS: https://spacy.io/api/large-language-models#models
+    """
+    return OpenAI(
+        name=name,
+        endpoint=Endpoints.CHAT.value
+        # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
+        if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
