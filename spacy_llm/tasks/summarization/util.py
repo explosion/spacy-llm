@@ -25,5 +25,6 @@ def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # todo this is yet a dummy implementation that will only return the first doc shard.
-    return list(shards)[0]
+    # Summaries are per shard, so we can merge. Number of shards is considered in max. number of words. This means that
+    # the resulting summaries will be per shard, which should be an approximately correct summary still.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

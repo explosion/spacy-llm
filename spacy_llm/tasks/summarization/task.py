@@ -85,12 +85,16 @@ class SummarizationTask(BuiltinTask):
                     f"LLM will likely produce responses that are too long."
                 )
 
-    def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
+    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
         if self._check_example_summaries:
             self._check_prompt_example_summary_len()
             self._check_example_summaries = False
 
-        return {"max_n_words": self._max_n_words}
+        return {
+            "max_n_words": int(self._max_n_words / n_shards)
+            if self._max_n_words is not None
+            else None
+        }
 
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]

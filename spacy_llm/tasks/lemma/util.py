@@ -32,5 +32,5 @@ def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # todo this is yet a dummy implementation that will only return the first doc shard.
-    return list(shards)[0]
+    # Lemmas are token-specific, so we can just merge docs.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

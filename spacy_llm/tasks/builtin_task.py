@@ -1,4 +1,5 @@
 import abc
+from itertools import tee
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, cast
 
@@ -66,16 +67,17 @@ class BuiltinTask(abc.ABC):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
 
-        def render_template(shard: Doc) -> str:
+        def render_template(shard: Doc, n_shards: int) -> str:
             """Renders template for a given doc (shard).
             shard (Doc): Doc shard. Note that if the prompt is small enough to fit within the model's context window,
                 there will only be one shard, which is identical to the original doc.
+            n_shards (int): Total number of shards.
             RETURNS (str): Rendered template.
             """
             return _template.render(
                 text=doc.text,
                 prompt_examples=self._prompt_examples,
-                **self._get_prompt_data(shard),
+                **self._get_prompt_data(shard, n_shards),
             )
 
         for doc in self._preprocess_docs_for_prompt(docs):
@@ -85,12 +87,17 @@ class BuiltinTask(abc.ABC):
                 if context_length is not None
                 else [doc]
             )
-            yield [render_template(shard) for shard in shards], shards
+            shards_teed = tee(shards, 3)
+            yield [
+                render_template(shard, len(list(shards_teed[0])))
+                for shard in shards_teed[1]
+            ], shards_teed[2]
 
-    def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
+    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
         """Returns data injected into prompt template. No-op if not overridden by inheriting task class. The data
         returned by this might be static (i. e. the same for all doc shards) or dynamic (contingent on the doc shard).
         shard (Doc): Doc (shard) for which prompt data should be fetched.
+        n_shards (int): Total number of shards.
         RETURNS (Dict[str, Any]): Data injected into prompt template.
         """
         return {}

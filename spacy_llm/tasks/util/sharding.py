@@ -35,9 +35,9 @@ def make_shard_mapper(
     n_tok_est: NTokenEstimator = n_token_estimator or make_n_token_estimator()
 
     def map_doc_to_shards(
-        doc: Doc, context_length: int, render_template: Callable[[Doc], str]
+        doc: Doc, context_length: int, render_template: Callable[[Doc, int], str]
     ) -> Union[Iterable[Doc], Doc]:
-        prompt = render_template(doc)
+        prompt = render_template(doc, 1)
 
         # If prompt with complete doc too long: split in shards.
         if n_tok_est(prompt) * buffer_frac > context_length:
@@ -63,7 +63,8 @@ def make_shard_mapper(
                     end_idx = start_idx + int(len(remaining_doc) * fraction)
                     shard = doc[start_idx:end_idx].as_doc(copy_user_data=True)
                     fits_in_context = (
-                        n_tok_est(render_template(shard)) * buffer_frac
+                        n_tok_est(render_template(shard, int(1 / fraction)))
+                        * buffer_frac
                         <= context_length
                     )
                     fraction /= 2

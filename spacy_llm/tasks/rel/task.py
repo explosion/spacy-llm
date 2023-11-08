@@ -80,7 +80,7 @@ class RELTask(BuiltinTaskWithLabels):
 
         return preprocessed_docs
 
-    def _get_prompt_data(self, shard: Doc) -> Dict[str, Any]:
+    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
         return {
             "labels": list(self._label_dict.values()),
             "label_definitions": self._label_definitions,

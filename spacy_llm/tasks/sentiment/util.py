@@ -25,5 +25,6 @@ def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # todo this is yet a dummy implementation that will only return the first doc shard.
+    # todo make generic, pass task to shard reducers (necessary e. g. for tasks with dynamic fields in docs)
+    # todo Weight-average sentiment scores over shards based on token count per shard.
     return list(shards)[0]
