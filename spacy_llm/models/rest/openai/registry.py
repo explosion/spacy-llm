@@ -64,8 +64,7 @@ def openai_gpt_4_v2(
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Optional[Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]]): Model to use. Base 'gpt-4' model by
-        default.
+    name (Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]): Model to use. Base 'gpt-4' model by default.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model
 
     DOCS: https://spacy.io/api/large-language-models#models
@@ -95,7 +94,7 @@ def openai_gpt_4(
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
     config (Dict[Any, Any]): LLM config passed on to the model's initialization.
-    name (Optional[Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]]): Model to use. Base 'gpt-4' model by
+    name (Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]): Model to use. Base 'gpt-4' model by
         default.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): OpenAI instance for 'gpt-4' model
 
