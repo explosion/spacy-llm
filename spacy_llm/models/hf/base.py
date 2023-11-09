@@ -27,11 +27,30 @@ class HuggingFace(abc.ABC):
         inference_config (Dict[Any, Any]): HF config for model run.
         """
         self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
-        self._config_init, self._config_run = self.compile_default_configs()
+        default_cfg_init, default_cfg_run = self.compile_default_configs()
+        self._config_init, self._config_run = default_cfg_init, default_cfg_run
+
         if config_init:
             self._config_init = {**self._config_init, **config_init}
         if config_run:
             self._config_run = {**self._config_run, **config_run}
+
+        # `device` and `device_map` are conflicting arguments - ensure they aren't both set.
+        # Case 1: we have a CUDA GPU (and hence device="cuda:0" by default), but device_map is set by user.
+        if config_init:
+            if "device" in default_cfg_init and "device_map" in config_init:
+                self._config_init.pop("device")
+            # Case 2: we don't have a CUDA GPU (and hence "device_map=auto" by default), but device is set by user.
+            if "device_map" in default_cfg_init and "device" in config_init:
+                self._config_init.pop("device_map")
+            # Case 3: both explicitly set by user.
+            if "device" in config_init and "device_map" in config_init:
+                warnings.warn(
+                    "`device` and `device_map` are conflicting arguments - don't set both. Dropping argument "
+                    "`device`."
+                )
+                if "device" in self._config_init:
+                    self._config_init.pop("device")
 
         # Init HF model.
         HuggingFace.check_installation()
@@ -106,6 +125,7 @@ class HuggingFace(abc.ABC):
                     "Install CUDA to load and run the LLM on the GPU, or install 'accelerate' to dynamically "
                     "distribute the LLM on the CPU or even the hard disk. The latter may be slow."
                 )
+
         return default_cfg_init, default_cfg_run
 
     @abc.abstractmethod

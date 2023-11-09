@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from confection import SimpleFrozenDict
 
@@ -17,7 +17,6 @@ class Mistral(HuggingFace):
         config_run: Optional[Dict[str, Any]],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        self._device: Optional[str] = None
         self._is_instruct = "instruct" in name
         super().__init__(name=name, config_init=config_init, config_run=config_run)
 
@@ -33,14 +32,15 @@ class Mistral(HuggingFace):
     def init_model(self) -> Any:
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
         init_cfg = self._config_init
+        device: Optional[str] = None
         if "device" in init_cfg:
-            self._device = init_cfg.pop("device")
+            device = init_cfg.pop("device")
 
         model = transformers.AutoModelForCausalLM.from_pretrained(
             self._name, **init_cfg, resume_download=True
         )
-        if self._device:
-            model.to(self._device)
+        if device:
+            model.to(device)
 
         return model
 
@@ -61,8 +61,7 @@ class Mistral(HuggingFace):
             ).input_ids
             for prompt in prompts
         ]
-        if self._device:
-            tokenized_input_ids = [tp.to(self._device) for tp in tokenized_input_ids]
+        tokenized_input_ids = [tp.to(self._model.device) for tp in tokenized_input_ids]
 
         return [
             self._tokenizer.decode(
@@ -73,14 +72,6 @@ class Mistral(HuggingFace):
             )
             for tok_ii in tokenized_input_ids
         ]
-
-    @staticmethod
-    def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
-        return (
-            default_cfg_init,
-            default_cfg_run,
-        )
 
 
 @registry.llm_models("spacy.Mistral.v1")
