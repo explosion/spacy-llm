@@ -52,6 +52,18 @@ class HuggingFace(abc.ABC):
                 if "device" in self._config_init:
                     self._config_init.pop("device")
 
+        # Fetch proper torch.dtype, if specified.
+        if has_torch and self._config_init.get("torch_dtype", "") not in ("", "auto"):
+            try:
+                self._config_init["torch_dtype"] = getattr(
+                    torch, self._config_init["torch_dtype"]
+                )
+            except AttributeError as ex:
+                raise ValueError(
+                    f"Invalid value {self._config_init['torch_dtype']} was specified for `torch_dtype`. "
+                    f"Double-check you specified a valid dtype."
+                ) from ex
+
         # Init HF model.
         HuggingFace.check_installation()
         self._check_model()

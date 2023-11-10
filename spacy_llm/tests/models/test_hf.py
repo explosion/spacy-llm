@@ -6,6 +6,8 @@ from thinc.compat import has_torch_cuda_gpu
 
 from spacy_llm.compat import has_accelerate
 
+from ...compat import torch
+
 _PIPE_CFG = {
     "model": {
         "@llm_models": "",
@@ -22,7 +24,7 @@ _PIPE_CFG = {
     "model", (("spacy.Dolly.v1", "dolly-v2-3b"), ("spacy.Llama2.v1", "Llama-2-7b-hf"))
 )
 def test_device_config_conflict(model: Tuple[str, str]):
-    """Test initialization and simple run."""
+    """Test device configuration."""
     nlp = spacy.blank("en")
     model, name = model
     cfg = {**_PIPE_CFG, **{"model": {"@llm_models": model, "name": name}}}
@@ -47,3 +49,28 @@ def test_device_config_conflict(model: Tuple[str, str]):
         else:
             with pytest.raises(ImportError, match="requires Accelerate"):
                 nlp.add_pipe("llm", name="llm3", config=cfg)
+
+
+@pytest.mark.gpu
+@pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+def test_torch_dtype():
+    """Test torch_dtype setting."""
+    nlp = spacy.blank("en")
+    cfg = {
+        **_PIPE_CFG,
+        **{"model": {"@llm_models": "spacy.Dolly.v1", "name": "dolly-v2-3b"}},
+    }
+
+    # Should be converted to torch.float16.
+    cfg["model"]["config_init"] = {"torch_dtype": "float16"}  # type: ignore[index]
+    llm = nlp.add_pipe("llm", name="llm1", config=cfg)
+    assert llm._model._config_init["torch_dtype"] == torch.float16
+
+    # Should remain "auto".
+    cfg["model"]["config_init"] = {"torch_dtype": "auto"}  # type: ignore[index]
+    nlp.add_pipe("llm", name="llm2", config=cfg)
+
+    # Should fail - nonexistent dtype.
+    cfg["model"]["config_init"] = {"torch_dtype": "float999"}  # type: ignore[index]
+    with pytest.raises(ValueError, match="Invalid value float999"):
+        nlp.add_pipe("llm", name="llm3", config=cfg)
