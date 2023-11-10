@@ -4,6 +4,8 @@ import pytest
 import spacy
 from thinc.compat import has_torch_cuda_gpu
 
+from spacy_llm.compat import has_accelerate
+
 _PIPE_CFG = {
     "model": {
         "@llm_models": "",
@@ -31,9 +33,17 @@ def test_device_config_conflict(model: Tuple[str, str]):
 
     # Set device_map only.
     cfg["model"]["config_init"] = {"device_map": "auto"}  # type: ignore[index]
-    nlp.add_pipe("llm", name="llm2", config=cfg)
+    if has_accelerate:
+        nlp.add_pipe("llm", name="llm2", config=cfg)
+    else:
+        with pytest.raises(ImportError, match="requires Accelerate"):
+            nlp.add_pipe("llm", name="llm2", config=cfg)
 
     # Set device_map and device.
     cfg["model"]["config_init"] = {"device_map": "auto", "device": "cpu"}  # type: ignore[index]
     with pytest.warns(UserWarning, match="conflicting arguments"):
-        nlp.add_pipe("llm", name="llm3", config=cfg)
+        if has_accelerate:
+            nlp.add_pipe("llm", name="llm3", config=cfg)
+        else:
+            with pytest.raises(ImportError, match="requires Accelerate"):
+                nlp.add_pipe("llm", name="llm3", config=cfg)

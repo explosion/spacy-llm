@@ -16,8 +16,6 @@ openai>=0.27,<=0.28.1; python_version>="3.9"
 transformers[sentencepiece]>=4.0.0
 torch
 einops>=0.4
-# For testing device mapping.
-accelerate
 
 # Necessary for pytest checks and ignores.
 sqlalchemy; python_version<"3.9"
