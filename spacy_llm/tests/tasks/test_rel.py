@@ -270,8 +270,8 @@ def test_incorrect_indexing():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.issue(366)
-def test_labels(request: FixtureRequest):
+def test_labels_in_prompt(request: FixtureRequest):
+    """See https://github.com/explosion/spacy-llm/issues/366."""
     config = Config().from_str(request.getfixturevalue("zeroshot_cfg_string"))
     config["components"].pop("ner")
     config.pop("initialize")
