@@ -42,7 +42,6 @@ class StableLM(HuggingFace):
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_tuned = "tuned" in name
-        self._device: Optional[str] = None
         super().__init__(name=name, config_init=config_init, config_run=config_run)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
@@ -51,14 +50,15 @@ class StableLM(HuggingFace):
         """
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
         init_cfg = self._config_init
+        device: Optional[str] = None
         if "device" in init_cfg:
-            self._device = init_cfg.pop("device")
+            device = init_cfg.pop("device")
+
         model = transformers.AutoModelForCausalLM.from_pretrained(
             self._name, **init_cfg
         )
-
-        if self._device:
-            model.half().to(self._device)
+        if device:
+            model.half().to(device)
 
         return model
 
@@ -80,8 +80,7 @@ class StableLM(HuggingFace):
                 ]
             )
         ]
-        if self._device:
-            tokenized_input_ids = [tp.to(self._device) for tp in tokenized_input_ids]
+        tokenized_input_ids = [tp.to(self._model.device) for tp in tokenized_input_ids]
 
         assert hasattr(self._model, "generate")
         return [
