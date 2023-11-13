@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import jinja2
-from spacy import Language
+from spacy import Language, Vocab
 from spacy.pipeline import EntityLinker
 from spacy.tokens import Doc, Span
 from spacy.training import Example
@@ -69,9 +69,15 @@ class EntityLinkerTask(BuiltinTask):
             n_prompt_examples=n_prompt_examples,
             fetch_entity_info=self.fetch_entity_info,
         )
+        self.set_candidate_selector(candidate_selector, nlp.vocab)
+
+    def set_candidate_selector(
+        self, candidate_selector: CandidateSelector, vocab: Vocab
+    ) -> None:
+        """Sets candidate selector instance."""
         self._candidate_selector = candidate_selector
         if isinstance(self._candidate_selector, InitializableCandidateSelector):
-            self._candidate_selector.initialize(nlp.vocab)
+            self._candidate_selector.initialize(vocab)
 
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
         environment = jinja2.Environment()
