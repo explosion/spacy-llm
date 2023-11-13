@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from confection import SimpleFrozenDict
 
-from ...compat import Literal, torch, transformers
+from ...compat import Literal, transformers
 from ...registry.util import registry
 from .base import HuggingFace
 
@@ -72,7 +72,7 @@ class OpenLLaMA(HuggingFace):
         return (
             {
                 **default_cfg_init,
-                "torch_dtype": torch.float16,
+                "torch_dtype": "float16",
             },
             {**default_cfg_run, "max_new_tokens": 32},
         )
