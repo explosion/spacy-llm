@@ -53,7 +53,11 @@ class HuggingFace(abc.ABC):
                     self._config_init.pop("device")
 
         # Fetch proper torch.dtype, if specified.
-        if has_torch and self._config_init.get("torch_dtype", "") not in ("", "auto"):
+        if (
+            has_torch
+            and "torch_dtype" in self._config_init
+            and self._config_init["torch_dtype"] != "auto"
+        ):
             try:
                 self._config_init["torch_dtype"] = getattr(
                     torch, self._config_init["torch_dtype"]
