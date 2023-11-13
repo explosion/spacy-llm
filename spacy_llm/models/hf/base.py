@@ -124,7 +124,7 @@ class HuggingFace(abc.ABC):
         default_cfg_run: Dict[str, Any] = {}
 
         if has_torch:
-            default_cfg_init["torch_dtype"] = torch.bfloat16
+            default_cfg_init["torch_dtype"] = "bfloat16"
             if has_torch_cuda_gpu:
                 # this ensures it fails explicitely when GPU is not enabled or sufficient
                 default_cfg_init["device"] = "cuda:0"
