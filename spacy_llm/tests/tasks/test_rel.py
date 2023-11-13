@@ -266,3 +266,23 @@ def test_incorrect_indexing():
         )
         == 0
     )
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.issue(366)
+def test_labels(request: FixtureRequest):
+    config = Config().from_str(request.getfixturevalue("zeroshot_cfg_string"))
+    config["components"].pop("ner")
+    config.pop("initialize")
+    config["nlp"]["pipeline"] = ["llm"]
+    config["components"]["llm"]["task"]["labels"] = ["A", "B", "C"]
+    nlp = assemble_from_config(config)
+
+    doc = Doc(get_lang_class("en")().vocab, words=["Well", "hello", "there"])
+    doc.ents = [Span(doc, 0, 1, "A"), Span(doc, 1, 2, "B"), Span(doc, 2, 3, "C")]
+
+    assert (
+        "Well[ENT0:A] hello[ENT1:B] there[ENT2:C]"
+        in list(nlp.get_pipe("llm")._task.generate_prompts([doc]))[0]
+    )

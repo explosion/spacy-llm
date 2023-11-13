@@ -71,7 +71,9 @@ class RELTask(BuiltinTaskWithLabels):
         for i, ent in enumerate(doc.ents):
             end = ent.end_char
             before, after = text[: end + offset], text[end + offset :]
-            annotation = f"[ENT{i}:{ent.label}]"
+            annotation = (
+                f"[ENT{i}:{ent.label if isinstance(doc, RELExample) else ent.label_}]"
+            )
             offset += len(annotation)
             text = f"{before}{annotation}{after}"
 
