@@ -4,9 +4,7 @@ import pytest
 import spacy
 from thinc.compat import has_torch_cuda_gpu
 
-from spacy_llm.compat import has_accelerate
-
-from ...compat import torch
+from spacy_llm.compat import has_accelerate, torch
 
 _PIPE_CFG = {
     "model": {
