@@ -19,9 +19,10 @@ from spacy_llm.registry import fewshot_reader, file_reader
 from spacy_llm.tasks.entity_linker import EntityLinkerTask, make_entitylinker_task
 from spacy_llm.util import assemble_from_config
 
+from ...tasks.entity_linker.candidate_selector import KBCandidateSelector
 from ...tasks.entity_linker.registry import make_candidate_selector_pipeline
 from ...tasks.entity_linker.registry import make_kb_object_loader
-from ...tasks.entity_linker.util import UNAVAILABLE_ENTITY_DESC
+from ...tasks.entity_linker.util import UNAVAILABLE_ENTITY_DESC, KBFileLoader
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -684,7 +685,7 @@ def test_ent_highlighting():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("loader", ("yaml",))  # "serialized_no_nlp",
+@pytest.mark.parametrize("loader", ("yaml", "serialized_no_nlp"))
 def test_entity_linker_predict_alternative_kb_inits(loader, request, tmp_path):
     """Use OpenAI to get EL results with different KB initialization methods."""
     cfg = request.getfixturevalue("fewshot_cfg_string")
@@ -725,3 +726,28 @@ def test_entity_linker_predict_alternative_kb_inits(loader, request, tmp_path):
     assert len(doc.ents) == 2
     assert doc.ents[0].kb_id_ == "Q100"
     assert doc.ents[1].kb_id_ == "Q131371"
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_init_with_code():
+    """Tests EntityLinker task example with only code, no config."""
+    nlp = spacy.blank("en")
+    llm_ner = nlp.add_pipe("llm_ner")
+    for label in ("PERSON", "ORGANISATION", "LOCATION", "SPORTS TEAM"):
+        llm_ner.add_label(label)
+    nlp.initialize()
+
+    nlp.add_pipe("llm_entitylinker")._task.set_candidate_selector(
+        KBCandidateSelector(
+            kb_loader=KBFileLoader(
+                path=Path(__file__).parent / "misc" / "el_kb_data.yml"
+            ),
+            top_n=5,
+        ),
+        nlp.vocab,
+    )
+    assert (
+        nlp("Thibeau Courtois plays for the Red Devils in New York").ents[2].kb_id_
+        == "Q60"
+    )
