@@ -37,7 +37,7 @@ def parse_responses_v1(
                 label=ent.label,
                 vector=ent.vector,
                 vector_norm=ent.vector_norm,
-                kb_id=solution.replace("NIL", EntityLinker.NIL),
+                kb_id=solution if solution != "NIL" else EntityLinker.NIL,
             )
             for ent, solution in zip(ents, solutions)
         ]

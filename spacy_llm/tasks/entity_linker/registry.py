@@ -6,7 +6,7 @@ from spacy.scorer import Scorer
 
 from ...registry import registry
 from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
-from .candidate_selector import PipelineCandidateSelector
+from .candidate_selector import KBCandidateSelector
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
 from .ty import EntDescReader, InMemoryLookupKBLoader
@@ -32,19 +32,18 @@ def make_entitylinker_task(
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = prompt_example_type or ELExample
-    examples = [example_type(**eg) for eg in raw_examples] if raw_examples else None
+    examples = [example_type(**eg) for eg in raw_examples] if raw_examples else []
     # Ensure there is a reason for every solution, even if it's empty. This makes templating easier.
-    if examples:
-        for example in examples:
-            if example.reasons is None:
-                example.reasons = [""] * len(example.solutions)
-            elif 0 < len(example.reasons) < len(example.solutions):
-                warnings.warn(
-                    f"The number of reasons doesn't match the number of solutions ({len(example.reasons)} "
-                    f"vs. {len(example.solutions)}). There must be one reason per solution for an entity "
-                    f"linking example, or no reasons at all. Ignoring all specified reasons."
-                )
-                example.reasons = [""] * len(example.solutions)
+    for example in examples:
+        if example.reasons is None:
+            example.reasons = [""] * len(example.solutions)
+        elif 0 < len(example.reasons) < len(example.solutions):
+            warnings.warn(
+                f"The number of reasons doesn't match the number of solutions ({len(example.reasons)} "
+                f"vs. {len(example.solutions)}). There must be one reason per solution for an entity "
+                f"linking example, or no reasons at all. Ignoring all specified reasons."
+            )
+            example.reasons = [""] * len(example.solutions)
 
     return EntityLinkerTask(
         template=template,
@@ -59,14 +58,14 @@ def make_entitylinker_task(
 def make_candidate_selector_pipeline(
     kb_loader: InMemoryLookupKBLoader,
     top_n: int = 5,
-) -> PipelineCandidateSelector:
+) -> KBCandidateSelector:
     """Generates CandidateSelector. Note that this class has to be initialized (.initialize()) before being used.
     kb_loader (InMemoryLookupKBLoader): KB loader.
     top_n (int): Top n candidates to include in prompt.
     """
     # Note: we could also move the class implementation here directly. This was just done to separate registration from
     # implementation code.
-    return PipelineCandidateSelector(
+    return KBCandidateSelector(
         kb_loader=kb_loader,
         top_n=top_n,
     )
