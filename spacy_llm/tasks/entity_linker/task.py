@@ -197,7 +197,7 @@ class EntityLinkerTask(BuiltinTask):
         if not self._candidate_selector:
             raise ValueError(
                 "Candidate selector hasn't been initialized. Pass the corresponding config to "
-                "[initialize.components.LLM_TASK_NAME.candidate_selector]."
+                "[initialize.components.COMPONENT_NAME.candidate_selector]."
             )
 
     def fetch_entity_info(
