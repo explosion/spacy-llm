@@ -317,7 +317,7 @@ def test_llm_task_factories():
 
 
 def test_llm_task_factories_el(tmp_path):
-    """Test whether llm_entity_linking factory run successfully. It's necessary to do this separately, as the EL task
+    """Test whether llm_entity_linking factory runs successfully. It's necessary to do this separately, as the EL task
     requires a non-defaultable extra config setup and knowledge base."""
     cfg = """
     [paths]
