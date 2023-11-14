@@ -41,7 +41,7 @@ class EntityLinkerTask(BuiltinTask):
         self._scorer = scorer
         self._candidate_selector: Optional[CandidateSelector] = None
 
-        # Exclude mentions without candidates from prompt, if set.
+        # Exclude mentions without candidates from prompt, if set. Mostly used for internal debugging.
         self._auto_nil = True
         # Store, per doc and entity, whether candidates could be found.
         self._has_ent_cands: List[List[bool]] = []

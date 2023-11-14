@@ -143,7 +143,7 @@ class KBObjectLoader(BaseInMemoryLookupKBLoader):
 
         # Load pipeline, use its vocab. If pipeline path isn't set, try loading the surrounding pipeline
         # (which might fail).
-        nlp_path = self.nlp_path if self.nlp_path else self.path.parent.parent
+        nlp_path = self.nlp_path or self.path.parent.parent
         try:
             nlp = spacy.load(nlp_path)
         except IOError as err:
