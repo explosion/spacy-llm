@@ -158,7 +158,7 @@ class KBObjectLoader(BaseInMemoryLookupKBLoader):
 
 @dataclasses.dataclass
 class KBFileLoader(BaseInMemoryLookupKBLoader):
-    """Config/init helper class for generating a InMemoryLookupKB instance from a file.
+    """Config/init helper class for generating an InMemoryLookupKB instance from a file.
     Currently supports only .yaml files."""
 
     def __call__(self, vocab: Vocab) -> Tuple[InMemoryLookupKB, DescFormat]:
