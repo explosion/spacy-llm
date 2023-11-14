@@ -1,4 +1,3 @@
-from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy import Language
@@ -21,7 +20,7 @@ class LemmaTask(BuiltinTask):
         prompt_examples: Optional[List[FewshotExample[Self]]],
         template: str,
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         scorer: Scorer,
     ):
         """Default lemmatization task.
@@ -31,7 +30,7 @@ class LemmaTask(BuiltinTask):
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         scorer (Scorer): Scorer function.
         """
         super().__init__(
@@ -47,7 +46,7 @@ class LemmaTask(BuiltinTask):
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        shards_teed = tee(shards, 2)
+        shards_teed = self._tee_2d_iterable(shards, 2)
         for shards_for_doc, lemmas_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
@@ -67,7 +66,7 @@ class LemmaTask(BuiltinTask):
 
                 updated_shards_for_doc.append(shard)
 
-            yield self._shard_reducer(updated_shards_for_doc)
+            yield self._shard_reducer(self, updated_shards_for_doc)  # type: ignore[arg-type]
 
     def initialize(
         self,

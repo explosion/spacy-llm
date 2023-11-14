@@ -38,10 +38,11 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return get_ner_prf(examples)
 
 
-def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
+def reduce_shards_to_doc(task: NERTask, shards: Iterable[Doc]) -> Doc:
     """Reduces shards to docs for NERTask.
+    task (NERTask): Task.
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # todo this is yet a dummy implementation that will only return the first doc shard.
-    return list(shards)[0]
+    # NERTask only affects span-specific information, so we can just merge shards.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

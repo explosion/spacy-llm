@@ -1,4 +1,3 @@
-from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
@@ -26,7 +25,7 @@ class TextCatTask(BuiltinTaskWithLabels):
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         normalizer: Optional[Callable[[str], str]],
         exclusive_classes: bool,
         allow_none: bool,
@@ -57,7 +56,7 @@ class TextCatTask(BuiltinTaskWithLabels):
             These descriptions are added to the prompt to help instruct the LLM on what to extract.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
         exclusive_classes (bool): If True, require the language model to suggest only one
             label per class. This is automatically set when using binary classification.
@@ -101,7 +100,7 @@ class TextCatTask(BuiltinTaskWithLabels):
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        shards_teed = tee(shards, 2)
+        shards_teed = self._tee_2d_iterable(shards, 2)
         for shards_for_doc, cats_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
@@ -111,7 +110,7 @@ class TextCatTask(BuiltinTaskWithLabels):
                 shard.cats = cats
                 updated_shards_for_doc.append(shard)
 
-            yield self._shard_reducer(updated_shards_for_doc)
+            yield self._shard_reducer(self, updated_shards_for_doc)  # type: ignore[arg-type]
 
     def scorer(
         self,

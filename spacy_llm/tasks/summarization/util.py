@@ -20,8 +20,9 @@ class SummarizationExample(FewshotExample[SummarizationTask]):
         )
 
 
-def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
+def reduce_shards_to_doc(task: SummarizationTask, shards: Iterable[Doc]) -> Doc:
     """Reduces shards to docs for SummarizationTask.
+    task (SummarizationTask): Task.
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """

@@ -36,7 +36,7 @@ class BuiltinTask(abc.ABC):
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
     ):
         """Initializes task.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
@@ -44,7 +44,7 @@ class BuiltinTask(abc.ABC):
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         """
         self._parse_responses = parse_responses
         self._prompt_examples = prompt_examples or []
@@ -265,6 +265,18 @@ class BuiltinTask(abc.ABC):
         if not Doc.has_extension(extension):
             Doc.set_extension(extension, default=[])
 
+    @staticmethod
+    def _tee_2d_iterable(
+        data: Iterable[Iterable[Any]], n: int
+    ) -> Tuple[Iterable[List[Doc]], ...]:
+        """Tees two-dimensional Iterable. As Iterables in the nested iterables get consumed with the first access, we
+        need to materialize them - this is done by converting them to a list.
+        data (Iterable[Iterable[Any]]): Data to tee.
+        n (int): Number of tees to return.
+        RETURNS (Tuple[Iterable[List[Doc]], ...]): n-sized tuple of Iterables with inner Iterables converted to Lists.
+        """
+        return tee((list(inner_data) for inner_data in data), n)
+
 
 class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     """Built-in tasks with labels."""
@@ -276,7 +288,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         labels: List[str],
         label_definitions: Optional[Dict[str, str]],
         normalizer: Optional[Callable[[str], str]],
@@ -288,7 +300,7 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description

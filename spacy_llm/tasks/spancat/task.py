@@ -26,7 +26,7 @@ class SpanCatTask(SpanTask):
         spans_key: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -49,7 +49,7 @@ class SpanCatTask(SpanTask):
         spans_key (str): Key of the `Doc.spans` dict to save under.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.

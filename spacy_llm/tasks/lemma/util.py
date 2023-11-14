@@ -27,10 +27,11 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_token_attr(examples, "lemma")
 
 
-def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
+def reduce_shards_to_doc(task: LemmaTask, shards: Iterable[Doc]) -> Doc:
     """Reduces shards to docs for LemmaTask.
+    task (LemmaTask): Task.
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # Lemmas are token-specific, so we can just merge docs.
+    # Lemmas are token-specific, so we can just merge shards.
     return Doc.from_docs(list(shards), ensure_whitespace=True)

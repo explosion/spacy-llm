@@ -1,5 +1,4 @@
 import abc
-from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 from typing import cast
 
@@ -35,7 +34,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             Union[List[SpanExample[Self]], List[SpanCoTExample[Self]]]
         ],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         description: Optional[str],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
@@ -103,7 +102,8 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        shards_teed = tee(shards, 2)
+        shards_teed = self._tee_2d_iterable(shards, 2)
+
         for shards_for_doc, spans_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
@@ -111,7 +111,7 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
             for shard, spans in zip(shards_for_doc, spans_for_doc):
                 self.assign_spans(shard, spans)
 
-            yield self._shard_reducer(shards_for_doc)
+            yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
 
     @property
     def _cfg_keys(self) -> List[str]:

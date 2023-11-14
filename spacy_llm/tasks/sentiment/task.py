@@ -1,4 +1,3 @@
-from itertools import tee
 from typing import Callable, Iterable, List, Optional, Type
 
 from spacy.language import Language
@@ -21,7 +20,7 @@ class SentimentTask(BuiltinTask):
         field: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
     ):
         """Sentiment analysis task.
 
@@ -32,7 +31,7 @@ class SentimentTask(BuiltinTask):
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in
             prompts.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         """
         super().__init__(
             parse_responses=parse_responses,
@@ -72,7 +71,7 @@ class SentimentTask(BuiltinTask):
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
         self._check_doc_extension()
-        shards_teed = tee(shards, 2)
+        shards_teed = self._tee_2d_iterable(shards, 2)
 
         for shards_for_doc, scores_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
@@ -84,7 +83,7 @@ class SentimentTask(BuiltinTask):
                 except ValueError:
                     setattr(shard._, self._field, None)
 
-            yield self._shard_reducer(shards_for_doc)
+            yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
 
     @property
     def _cfg_keys(self) -> List[str]:

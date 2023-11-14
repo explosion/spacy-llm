@@ -1,5 +1,4 @@
 import warnings
-from itertools import tee
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
@@ -21,7 +20,7 @@ class SummarizationTask(BuiltinTask):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         max_n_words: Optional[int],
         field: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
@@ -32,7 +31,7 @@ class SummarizationTask(BuiltinTask):
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
@@ -99,7 +98,7 @@ class SummarizationTask(BuiltinTask):
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        shards_teed = tee(shards, 2)
+        shards_teed = self._tee_2d_iterable(shards, 2)
 
         for shards_for_doc, summaries_for_doc in zip(
             shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
@@ -108,7 +107,7 @@ class SummarizationTask(BuiltinTask):
             for shard, summary in zip(shards_for_doc, summaries_for_doc):
                 setattr(shard._, self._field, summary)
 
-            yield self._shard_reducer(shards_for_doc)
+            yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
 
     @property
     def _cfg_keys(self) -> List[str]:

@@ -26,7 +26,7 @@ class NERTask(SpanTask):
         label_definitions: Optional[Dict[str, str]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
-        shard_reducer: ShardReducer,
+        shard_reducer: ShardReducer[Self],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -43,7 +43,7 @@ class NERTask(SpanTask):
         parse_responses (TaskResponseParser[SpanTask]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
-        shard_reducer (ShardReducer): Reduces doc shards back into one doc instance.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
             of the label to help the language model output the entities wanted.
             It is usually easier to provide these definitions rather than

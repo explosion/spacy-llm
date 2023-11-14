@@ -44,10 +44,11 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
 
 
-def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
+def reduce_shards_to_doc(task: SpanCatTask, shards: Iterable[Doc]) -> Doc:
     """Reduces shards to docs for SpanCatTask.
+    task (SpanCatTask): Task.
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # todo this is yet a dummy implementation that will only return the first doc shard.
-    return list(shards)[0]
+    # SpanCatTask only affects span-specific information, so we can just merge shards.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

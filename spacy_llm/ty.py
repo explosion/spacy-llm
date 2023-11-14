@@ -30,7 +30,6 @@ ShardMapper = Callable[
     # Returns each shard as a doc.
     Iterable[Doc],
 ]
-ShardReducer = Callable[[Iterable[Doc]], Doc]
 
 
 @runtime_checkable
@@ -121,6 +120,15 @@ class LLMTask(Protocol):
 
 
 TaskContraT = TypeVar("TaskContraT", bound=LLMTask, contravariant=True)
+
+
+@runtime_checkable
+class ShardReducer(Protocol[TaskContraT]):
+    """Generic protocol for tasks' shard reducer."""
+
+    def __call__(self, task: TaskContraT, shards: Iterable[Doc]) -> Doc:
+        """Merges shard to single Doc."""
+        ...
 
 
 class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):

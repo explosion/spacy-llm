@@ -5,10 +5,9 @@ from ...ty import ExamplesConfigType, FewshotExample, ShardMapper, ShardReducer
 from ...ty import TaskResponseParser
 from ...util import split_labels
 from ..util.sharding import make_shard_mapper
-from .examples import RELExample
 from .parser import parse_responses_v1
 from .task import DEFAULT_REL_TEMPLATE, RELTask
-from .util import reduce_shards_to_doc
+from .util import RELExample, reduce_shards_to_doc
 
 
 @registry.llm_misc("spacy.RELShardReducer.v1")

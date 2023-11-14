@@ -1,7 +1,6 @@
-from .examples import RELExample
 from .registry import make_rel_task
 from .task import DEFAULT_REL_TEMPLATE, RELTask
-from .util import RelationItem
+from .util import RelationItem, RELExample
 
 __all__ = [
     "DEFAULT_REL_TEMPLATE",

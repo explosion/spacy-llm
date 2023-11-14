@@ -1,4 +1,5 @@
-from typing import Any, Dict, Iterable, Optional
+from collections import defaultdict
+from typing import Any, DefaultDict, Dict, Iterable, Optional
 
 from spacy.scorer import Scorer
 from spacy.tokens import Doc
@@ -49,10 +50,23 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
 
 
-def reduce_shards_to_doc(shards: Iterable[Doc]) -> Doc:
+def reduce_shards_to_doc(task: TextCatTask, shards: Iterable[Doc]) -> Doc:
     """Reduces shards to docs for TextCatTask.
+    task (TextCatTask): Task.
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
-    # todo this is yet a dummy implementation that will only return the first doc shard.
-    return list(shards)[0]
+    shards = list(shards)
+
+    # Compute average sum per category weighted by shard length.
+    weights = [len(shard) for shard in shards]
+    weights = [n_tokens / sum(weights) for n_tokens in weights]
+    all_cats: DefaultDict[str, float] = defaultdict(lambda: 0)
+    for weight, shard in zip(weights, shards):
+        for cat, cat_score in shard.cats.items():
+            all_cats[cat] += cat_score * weight
+
+    doc = Doc.from_docs(shards, ensure_whitespace=True)
+    doc.cats = all_cats
+
+    return doc
