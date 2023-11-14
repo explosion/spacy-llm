@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -48,7 +48,8 @@ class AzureOpenAI(REST):
         return (
             self._endpoint
             + ("" if self._endpoint.endswith("/") else "/")
-            + f"openai/deployments/{self._name}/{self._model_type.value}"
+            + f"openai/deployments/{self._name}/{'' if self._model_type == ModelType.COMPLETION else 'chat/'}"
+            f"completions"
         )
 
     @property
@@ -146,12 +147,3 @@ class AzureOpenAI(REST):
                 api_responses.append(response.get("text", srsly.json_dumps(response)))
 
         return api_responses
-
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        # We treat the deployment name as "model name", hence it can be arbitrary.
-        return ("",)
-
-    def _check_model(self) -> None:
-        # We treat the deployment name as "model name", hence it can be arbitrary.
-        pass

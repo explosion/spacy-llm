@@ -992,7 +992,42 @@ def test_add_label():
     doc = nlp(text)
     assert len(doc.ents) == 0
 
+    for label, definition in [
+        ("PERSON", "Every person with the name Jack"),
+        ("LOCATION", "A geographical location, like a country or a city"),
+        ("COMPANY", None),
+    ]:
+        llm.add_label(label, definition)
+    doc = nlp(text)
+    assert len(doc.ents) > 1
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_clear_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.NER.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "Jack and Jill visited France."
+    doc = nlp(text)
+
     for label in ["PERSON", "LOCATION"]:
         llm.add_label(label)
     doc = nlp(text)
     assert len(doc.ents) == 3
+
+    llm.clear()
+
+    doc = nlp(text)
+    assert len(doc.ents) == 0

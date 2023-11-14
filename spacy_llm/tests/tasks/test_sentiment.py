@@ -1,8 +1,10 @@
 from pathlib import Path
 
+import numpy
 import pytest
 import spacy
 from confection import Config
+from spacy.training import Example
 from spacy.util import make_tempdir
 
 from spacy_llm.registry import fewshot_reader, file_reader
@@ -262,4 +264,21 @@ def test_external_template_actually_loads():
 Text: {text}
 Sentiment:
 """.strip()
+    )
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sentiment_score(request):
+    """Test scoring mechanism."""
+    cfg = request.getfixturevalue("zeroshot_cfg_string")
+    orig_config = Config().from_str(cfg)
+    nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
+
+    sent_diff = 0.2
+    doc1 = nlp("This works well.")
+    doc2 = doc1.copy()
+    doc2._.sentiment -= sent_diff
+    assert numpy.isclose(
+        nlp.get_pipe("llm").score([Example(doc1, doc2)])["acc_sentiment"], 1 - sent_diff
     )

@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -54,7 +54,7 @@ class Anthropic(REST):
         headers = {
             **self._credentials,
             "model": self._name,
-            "anthropic_version": self._config.get("anthropic_version", "2023-06-01"),
+            "anthropic-version": self._config.get("anthropic-version", "2023-06-01"),
             "Content-Type": "application/json",
         }
 
@@ -107,26 +107,3 @@ class Anthropic(REST):
 
         assert len(api_responses) == len(prompts)
         return api_responses
-
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return (
-            # claude-2
-            "claude-2",
-            "claude-2-100k",
-            # claude-1
-            "claude-1",
-            "claude-1-100k",
-            # claude-instant-1
-            "claude-instant-1",
-            "claude-instant-1-100k",
-            # claude-instant-1.1
-            "claude-instant-1.1",
-            "claude-instant-1.1-100k",
-            # claude-1.3
-            "claude-1.3",
-            "claude-1.3-100k",
-            # others
-            "claude-1.0",
-            "claude-1.2",
-        )

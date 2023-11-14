@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from confection import SimpleFrozenDict
 
-from ...compat import Literal, torch, transformers
+from ...compat import Literal, transformers
 from ...registry.util import registry
 from .base import HuggingFace
 
@@ -22,7 +22,6 @@ class OpenLLaMA(HuggingFace):
         config_run: Optional[Dict[str, Any]],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        self._device: Optional[str] = None
         super().__init__(name=name, config_init=config_init, config_run=config_run)
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
@@ -32,14 +31,15 @@ class OpenLLaMA(HuggingFace):
         # Initialize tokenizer and model.
         self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
         init_cfg = self._config_init
+        device: Optional[str] = None
         if "device" in init_cfg:
-            self._device = init_cfg.pop("device")
+            device = init_cfg.pop("device")
+
         model = transformers.AutoModelForCausalLM.from_pretrained(
             self._name, **init_cfg
         )
-
-        if self._device:
-            model.to(self._device)
+        if device:
+            model.to(device)
 
         return model
 
@@ -48,8 +48,9 @@ class OpenLLaMA(HuggingFace):
         tokenized_input_ids = [
             self._tokenizer(prompt, return_tensors="pt").input_ids for prompt in prompts
         ]
-        if self._device:
-            tokenized_input_ids = [tii.to(self._device) for tii in tokenized_input_ids]
+        tokenized_input_ids = [
+            tii.to(self._model.device) for tii in tokenized_input_ids
+        ]
 
         assert hasattr(self._model, "generate")
         return [
@@ -71,7 +72,7 @@ class OpenLLaMA(HuggingFace):
         return (
             {
                 **default_cfg_init,
-                "torch_dtype": torch.float16,
+                "torch_dtype": "float16",
             },
             {**default_cfg_run, "max_new_tokens": 32},
         )
