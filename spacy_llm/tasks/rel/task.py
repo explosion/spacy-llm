@@ -8,7 +8,8 @@ from ...compat import Self
 from ...ty import FewshotExample, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
 from ..templates import read_template
-from .util import EntityItem, RelationItem
+from . import RELExample
+from .util import RelationItem
 
 DEFAULT_REL_TEMPLATE: str = read_template("rel.v1")
 
@@ -78,7 +79,7 @@ class RELTask(BuiltinTaskWithLabels):
             end = ent.end_char
             before, after = text[: end + offset], text[end + offset :]
             annotation = (
-                f"[ENT{i}:{ent.label if isinstance(ent, EntityItem) else ent.label_}]"
+                f"[ENT{i}:{ent.label if isinstance(doc, RELExample) else ent.label_}]"
             )
             offset += len(annotation)
             text = f"{before}{annotation}{after}"

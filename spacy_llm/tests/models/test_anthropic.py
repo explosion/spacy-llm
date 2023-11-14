@@ -56,7 +56,10 @@ def test_anthropic_error_unsupported_model():
     """Ensure graceful handling of error when model is not supported"""
     incorrect_model = "x-gpt-3.5-turbo"
     with pytest.raises(
-        ValueError, match=re.escape("Model 'x-gpt-3.5-turbo' is not supported")
+        ValueError,
+        match=re.escape(
+            "Ensure that the selected model (x-gpt-3.5-turbo) is supported by the API"
+        ),
     ):
         Anthropic(
             name=incorrect_model,

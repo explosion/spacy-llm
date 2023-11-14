@@ -43,7 +43,7 @@ class LangChain:
         """Returns langchain.llms.type_to_cls_dict.
         RETURNS (Dict[str, Type[langchain.base_language.BaseLanguageModel]]): langchain.llms.type_to_cls_dict.
         """
-        return langchain.llms.type_to_cls_dict
+        return getattr(langchain.llms, "type_to_cls_dict")
 
     def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
         """Executes prompts on specified API.
