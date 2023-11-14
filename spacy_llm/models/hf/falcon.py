@@ -19,7 +19,6 @@ class Falcon(HuggingFace):
         config_run: Optional[Dict[str, Any]],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        self._device: Optional[str] = None
         super().__init__(name=name, config_init=config_init, config_run=config_run)
 
         assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)

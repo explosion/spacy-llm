@@ -1,10 +1,11 @@
-from typing import Callable, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, Self, ShardMapper, ShardReducer, TaskResponseParser
+from ...ty import FewshotExample, Scorer, Self, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -21,6 +22,7 @@ class SentimentTask(BuiltinTask):
         prompt_examples: Optional[List[FewshotExample[Self]]],
         shard_mapper: ShardMapper,
         shard_reducer: ShardReducer[Self],
+        scorer: Scorer,
     ):
         """Sentiment analysis task.
 
@@ -42,6 +44,7 @@ class SentimentTask(BuiltinTask):
             shard_reducer=shard_reducer,
         )
         self._field = field
+        self._scorer = scorer
         self._check_doc_extension()
 
     def _check_doc_extension(self):
@@ -84,6 +87,9 @@ class SentimentTask(BuiltinTask):
                     setattr(shard._, self._field, None)
 
             yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
+
+    def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        return self._scorer(examples, field=self._field)
 
     @property
     def _cfg_keys(self) -> List[str]:

@@ -1,7 +1,7 @@
 import abc
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional
 
 import requests  # type: ignore
 from requests import ConnectTimeout, ReadTimeout
@@ -61,15 +61,7 @@ class REST(abc.ABC):
         assert self._interval > 0
         assert self._max_request_time > 0
 
-        self._check_model()
         self._verify_auth()
-
-    def _check_model(self) -> None:
-        """Checks whether model is supported. Raises if it isn't."""
-        if self._name not in self.get_model_names():
-            raise ValueError(
-                f"Model '{self._name}' is not supported - select one of {self.get_model_names()} instead"
-            )
 
     @abc.abstractmethod
     def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
@@ -77,13 +69,6 @@ class REST(abc.ABC):
         prompts (Iterable[Iterable[str]]): Prompts to execute.
         RETURNS (Iterable[Iterable[str]]): API responses.
         """
-
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        """Names of supported models.
-        RETURNS (Tuple[str]): Names of supported models.
-        """
-        return tuple(cls._get_context_lengths().keys())
 
     @staticmethod
     @abc.abstractmethod
@@ -97,6 +82,7 @@ class REST(abc.ABC):
         """Returns context length in number of tokens for this model.
         RETURNS (int): Max. number of tokens in allowed in prompt for the current model.
         """
+        # todo if context length not available in dict: accept param, otherwise fail?
         return self._get_context_lengths()[self._name]
 
     @property

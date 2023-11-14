@@ -1,12 +1,12 @@
 from typing import Optional, Type
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, ShardMapper, ShardReducer
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, ShardMapper, ShardReducer
 from ...ty import TaskResponseParser
 from ..util.sharding import make_shard_mapper
 from .parser import parse_responses_v1
 from .task import DEFAULT_SENTIMENT_TEMPLATE_V1, SentimentTask
-from .util import SentimentExample, reduce_shards_to_doc
+from .util import SentimentExample, reduce_shards_to_doc, score
 
 
 @registry.llm_misc("spacy.SentimentShardReducer.v1")
@@ -23,6 +23,7 @@ def make_sentiment_task(
     shard_mapper: Optional[ShardMapper] = None,
     shard_reducer: Optional[ShardReducer] = None,
     field: str = "sentiment",
+    scorer: Optional[Scorer] = None,
 ):
     """Sentiment.v1 task factory.
 
@@ -35,6 +36,7 @@ def make_sentiment_task(
     shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
     shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     field (str): The name of the doc extension in which to store the summary.
+    scorer (Optional[Scorer]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = prompt_example_type or SentimentExample
@@ -50,4 +52,5 @@ def make_sentiment_task(
         shard_mapper=shard_mapper or make_shard_mapper(),
         shard_reducer=shard_reducer or make_shard_reducer(),
         field=field,
+        scorer=scorer or score,
     )

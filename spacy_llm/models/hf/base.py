@@ -27,11 +27,45 @@ class HuggingFace(abc.ABC):
         inference_config (Dict[Any, Any]): HF config for model run.
         """
         self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
-        self._config_init, self._config_run = self.compile_default_configs()
+        default_cfg_init, default_cfg_run = self.compile_default_configs()
+        self._config_init, self._config_run = default_cfg_init, default_cfg_run
+
         if config_init:
             self._config_init = {**self._config_init, **config_init}
         if config_run:
             self._config_run = {**self._config_run, **config_run}
+
+        # `device` and `device_map` are conflicting arguments - ensure they aren't both set.
+        if config_init:
+            # Case 1: both device and device_map explicitly set by user.
+            if "device" in config_init and "device_map" in config_init:
+                warnings.warn(
+                    "`device` and `device_map` are conflicting arguments - don't set both. Dropping argument "
+                    "`device`."
+                )
+                self._config_init.pop("device")
+            # Case 2: we have a CUDA GPU (and hence device="cuda:0" by default), but device_map is set by user.
+            elif "device" in default_cfg_init and "device_map" in config_init:
+                self._config_init.pop("device")
+            # Case 3: we don't have a CUDA GPU (and hence "device_map=auto" by default), but device is set by user.
+            elif "device_map" in default_cfg_init and "device" in config_init:
+                self._config_init.pop("device_map")
+
+        # Fetch proper torch.dtype, if specified.
+        if (
+            has_torch
+            and "torch_dtype" in self._config_init
+            and self._config_init["torch_dtype"] != "auto"
+        ):
+            try:
+                self._config_init["torch_dtype"] = getattr(
+                    torch, self._config_init["torch_dtype"]
+                )
+            except AttributeError as ex:
+                raise ValueError(
+                    f"Invalid value {self._config_init['torch_dtype']} was specified for `torch_dtype`. "
+                    f"Double-check you specified a valid dtype."
+                ) from ex
 
         # Init HF model.
         HuggingFace.check_installation()
@@ -96,7 +130,7 @@ class HuggingFace(abc.ABC):
         default_cfg_run: Dict[str, Any] = {}
 
         if has_torch:
-            default_cfg_init["torch_dtype"] = torch.bfloat16
+            default_cfg_init["torch_dtype"] = "bfloat16"
             if has_torch_cuda_gpu:
                 # this ensures it fails explicitely when GPU is not enabled or sufficient
                 default_cfg_init["device"] = "cuda:0"
@@ -113,6 +147,7 @@ class HuggingFace(abc.ABC):
                     "Install CUDA to load and run the LLM on the GPU, or install 'accelerate' to dynamically "
                     "distribute the LLM on the CPU or even the hard disk. The latter may be slow."
                 )
+
         return default_cfg_init, default_cfg_run
 
     @abc.abstractmethod
