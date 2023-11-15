@@ -732,22 +732,26 @@ def test_entity_linker_predict_alternative_kb_inits(loader, request, tmp_path):
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_init_with_code():
     """Tests EntityLinker task example with only code, no config."""
+    candidate_selector = KBCandidateSelector(
+        kb_loader=KBFileLoader(path=Path(__file__).parent / "misc" / "el_kb_data.yml"),
+        top_n=5,
+    )
     nlp = spacy.blank("en")
     llm_ner = nlp.add_pipe("llm_ner")
     for label in ("PERSON", "ORGANISATION", "LOCATION", "SPORTS TEAM"):
         llm_ner.add_label(label)
+
+    llm = nlp.add_pipe("llm_entitylinker")
+    llm._task.set_candidate_selector(candidate_selector, nlp.vocab)
     nlp.initialize()
 
-    nlp.add_pipe("llm_entitylinker")._task.set_candidate_selector(
-        KBCandidateSelector(
-            kb_loader=KBFileLoader(
-                path=Path(__file__).parent / "misc" / "el_kb_data.yml"
-            ),
-            top_n=5,
-        ),
-        nlp.vocab,
-    )
     assert (
         nlp("Thibeau Courtois plays for the Red Devils in New York").ents[2].kb_id_
         == "Q60"
     )
+
+    # Should fail due to candidate selector not being set.
+    nlp = spacy.blank("en")
+    nlp.add_pipe("llm_entitylinker")
+    with pytest.raises(ValueError, match="candidate_selector has to be provided"):
+        nlp.initialize()

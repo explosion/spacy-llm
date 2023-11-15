@@ -50,15 +50,16 @@ class EntityLinkerTask(BuiltinTask):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: Language,
-        candidate_selector: CandidateSelector,
+        candidate_selector: Optional[CandidateSelector] = None,
         n_prompt_examples: int = 0,
     ) -> None:
         """Initialize entity linking task.
         get_examples (Callable[[], Iterable["Example"]]): Callable that provides examples
             for initialization.
         nlp (Language): Language instance.
-        candidate_selector (CandidateSelector): Factory for a candidate selection callable
-            returning candidates for a given Span and context.
+        candidate_selector (Optional[CandidateSelector]): Factory for a candidate selection callable returning
+            candidates for a given Span and context. If candidate selector hasn't been set explicitly before with
+            .set_candidate_selector(), it has to be provided here - otherwise an error will be raised.
         n_prompt_examples (int): How many prompt examples to infer from the provided Example objects.
             0 by default. Takes all examples if set to -1.
 
@@ -69,7 +70,13 @@ class EntityLinkerTask(BuiltinTask):
             n_prompt_examples=n_prompt_examples,
             fetch_entity_info=self.fetch_entity_info,
         )
-        self.set_candidate_selector(candidate_selector, nlp.vocab)
+        if candidate_selector:
+            self.set_candidate_selector(candidate_selector, nlp.vocab)
+        elif self._candidate_selector is None:
+            raise ValueError(
+                "candidate_selector has to be provided when initializing the LLM component with the "
+                "entity_linking task."
+            )
 
     def set_candidate_selector(
         self, candidate_selector: CandidateSelector, vocab: Vocab
