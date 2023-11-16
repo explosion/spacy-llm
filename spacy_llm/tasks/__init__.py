@@ -3,6 +3,7 @@ from spacy import Language
 from ..pipeline.llm import DEFAULT_CACHE_CONFIG, DEFAULT_MODEL_CONFIG, DEFAULT_SAVE_IO
 from ..pipeline.llm import DEFAULT_VALIDATE_TYPES, make_llm
 from .builtin_task import BuiltinTask
+from .entity_linker import EntityLinkerTask, make_entitylinker_task
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task_v3
 from .noop import NoopTask, make_noop_task
@@ -13,6 +14,7 @@ from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
 
 _LATEST_TASKS = (
+    "spacy.EntityLinker.v1",
     "spacy.NER.v3",
     "spacy.REL.v1",
     "spacy.Sentiment.v1",
@@ -36,6 +38,7 @@ for task_handle in _LATEST_TASKS:
     )
 
 __all__ = [
+    "make_entitylinker_task",
     "make_lemma_task",
     "make_ner_task_v3",
     "make_noop_task",
@@ -45,6 +48,7 @@ __all__ = [
     "make_summarization_task",
     "make_textcat_task",
     "BuiltinTask",
+    "EntityLinkerTask",
     "LemmaTask",
     "NERTask",
     "NoopTask",

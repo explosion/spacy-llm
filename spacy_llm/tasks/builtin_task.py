@@ -102,9 +102,9 @@ class BuiltinTask(abc.ABC):
         """
         for eg in get_examples():
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
-                )
+                prompt_example = self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
+                if prompt_example:
+                    self._prompt_examples.append(prompt_example)
 
     def get_cfg(self) -> Dict[str, Any]:
         """Serialize the task's configuration attributes."""
@@ -310,9 +310,9 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             if infer_labels:
                 labels.extend(self._extract_labels_from_example(eg))
             if n_prompt_examples < 0 or len(self._prompt_examples) < n_prompt_examples:
-                self._prompt_examples.append(
-                    self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
-                )
+                prompt_example = self._prompt_example_type.generate(eg, self)  # type: ignore[arg-type]
+                if prompt_example:
+                    self._prompt_examples.append(prompt_example)
 
         self._label_dict = {
             self._normalizer(label): label for label in sorted(set(labels))

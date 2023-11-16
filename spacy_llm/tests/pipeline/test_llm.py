@@ -24,6 +24,7 @@ from ...cache import BatchCache
 from ...registry.reader import fewshot_reader
 from ...util import assemble_from_config
 from ..compat import has_openai_key
+from ..tasks.test_entity_linker import build_el_pipeline
 
 
 @pytest.fixture
@@ -294,6 +295,10 @@ def test_pipe_labels():
 def test_llm_task_factories():
     """Test whether llm_TASK factories run successfully."""
     for task_handle in _LATEST_TASKS:
+        # Separate test for EntityLinker in test_llm_task_factories_el().
+        if task_handle == "spacy.EntityLinker.v1":
+            continue
+
         cfg_string = f"""
         [nlp]
         lang = "en"
@@ -309,6 +314,55 @@ def test_llm_task_factories():
         """
         config = Config().from_str(cfg_string)
         assemble_from_config(config)
+
+
+def test_llm_task_factories_el(tmp_path):
+    """Test whether llm_entity_linking factory runs successfully. It's necessary to do this separately, as the EL task
+    requires a non-defaultable extra config setup and knowledge base."""
+    cfg = """
+    [paths]
+    el_nlp = null
+    el_kb = null
+    el_desc = null
+
+    [nlp]
+    lang = "en"
+    pipeline = ["llm"]
+
+    [components]
+
+    [components.llm]
+    factory = "llm_entitylinker"
+
+    [components.llm.model]
+    @llm_models = "test.NoOpModel.v1"
+
+    [components.llm.task]
+    @llm_tasks = "spacy.EntityLinker.v1"
+
+    [initialize]
+    [initialize.components]
+    [initialize.components.llm]
+
+    [initialize.components.llm.candidate_selector]
+    @llm_misc = "spacy.CandidateSelector.v1"
+
+    [initialize.components.llm.candidate_selector.kb_loader]
+    @llm_misc = "spacy.KBObjectLoader.v1"
+    path = ${paths.el_kb}
+    nlp_path = ${paths.el_nlp}
+    desc_path = ${paths.el_desc}
+    """
+    config = Config().from_str(
+        cfg,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_kb": str(tmp_path / "entity_linker" / "kb"),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
+    )
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    assemble_from_config(config)
 
 
 @pytest.mark.external
