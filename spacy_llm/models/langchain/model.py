@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from confection import SimpleFrozenDict
-from pydantic import ValidationError
+from pydantic import ExtraError, ValidationError
 
 from ...compat import has_langchain, langchain
 from ...registry import registry
@@ -27,24 +27,45 @@ class LangChain:
         query (Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         """
-        # LangChain expects a range of different model ID argument names. There doesn't seem to be a clean way to
-        # determine those from the outset, we'll fail our way through them.
+        self._langchain_model = LangChain._init_langchain_model(name, api, config)
+        self.query = query
+        self._check_installation()
+
+    @classmethod
+    def _init_langchain_model(
+        cls, name: str, api: str, config: Dict[Any, Any]
+    ) -> "langchain.llms.BaseLLM":
+        """Initializes langchain model. langchain expects a range of different model ID argument names, depending on the
+        model class. There doesn't seem to be a clean way to determine those from the outset, we'll fail our way through
+        them.
+        Includes error checks for model ID arguments.
+        name (str): Name of LangChain model to instantiate.
+        api (str): Name of class/API.
+        config (Dict[Any, Any]): Config passed on to LangChain model.
+        """
         model_init_args = ["model", "model_name", "model_id"]
         for model_init_arg in model_init_args:
             try:
-                self._langchain_model = LangChain.get_type_to_cls_dict()[api](
+                return cls.get_type_to_cls_dict()[api](
                     **{model_init_arg: name}, **config
                 )
-                break
-            except (ValidationError, UserWarning) as err:
+            except ValidationError as err:
                 if model_init_arg == model_init_args[-1]:
-                    raise ValueError(
-                        "Couldn't initialize LangChain model with known model ID arguments. Please report this to "
-                        "https://github.com/explosion/spacy-llm/issues. Thank you!"
-                    ) from err
-
-        self.query = query
-        self._check_installation()
+                    # If init error indicates that model ID arg is extraneous: raise error with hint on how to proceed.
+                    if any(
+                        [
+                            rerr
+                            for rerr in err.raw_errors
+                            if isinstance(rerr.exc, ExtraError)
+                            and model_init_arg in rerr.loc_tuple()
+                        ]
+                    ):
+                        raise ValueError(
+                            "Couldn't initialize LangChain model with known model ID arguments. Please report this to "
+                            "https://github.com/explosion/spacy-llm/issues. Thank you!"
+                        ) from err
+                    # Otherwise: raise error as-is.
+                    raise err
 
     @staticmethod
     def get_type_to_cls_dict() -> Dict[str, Type["langchain.llms.BaseLLM"]]:
