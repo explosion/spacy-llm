@@ -1,12 +1,12 @@
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from confection import SimpleFrozenDict
+from pydantic import ValidationError
 
 from ...compat import has_langchain, langchain
 from ...registry import registry
 
 try:
-    from langchain import base_language  # noqa: F401
     from langchain import llms  # noqa: F401
 except (ImportError, AttributeError):
     llms = None
@@ -18,30 +18,38 @@ class LangChain:
         name: str,
         api: str,
         config: Dict[Any, Any],
-        query: Callable[
-            ["langchain.base_language.BaseLanguageModel", Iterable[Any]],
-            Iterable[Any],
-        ],
+        query: Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]],
     ):
         """Initializes model instance for integration APIs.
         name (str): Name of LangChain model to instantiate.
         api (str): Name of class/API.
         config (Dict[Any, Any]): Config passed on to LangChain model.
-        query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
+        query (Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         """
-        self._langchain_model = LangChain.get_type_to_cls_dict()[api](
-            model_name=name, **config
-        )
+        # LangChain expects a range of different model ID argument names. There doesn't seem to be a clean way to
+        # determine those from the outset, we'll fail our way through them.
+        model_init_args = ["model", "model_name", "model_id"]
+        for model_init_arg in model_init_args:
+            try:
+                self._langchain_model = LangChain.get_type_to_cls_dict()[api](
+                    **{model_init_arg: name}, **config
+                )
+                break
+            except (ValidationError, UserWarning) as err:
+                if model_init_arg == model_init_args[-1]:
+                    raise ValueError(
+                        "Couldn't initialize LangChain model with known model ID arguments. Please report this to "
+                        "https://github.com/explosion/spacy-llm/issues. Thank you!"
+                    ) from err
+
         self.query = query
         self._check_installation()
 
     @staticmethod
-    def get_type_to_cls_dict() -> Dict[
-        str, Type["langchain.base_language.BaseLanguageModel"]
-    ]:
+    def get_type_to_cls_dict() -> Dict[str, Type["langchain.llms.BaseLLM"]]:
         """Returns langchain.llms.type_to_cls_dict.
-        RETURNS (Dict[str, Type[langchain.base_language.BaseLanguageModel]]): langchain.llms.type_to_cls_dict.
+        RETURNS (Dict[str, Type[langchain.llms.BaseLLM]]): langchain.llms.type_to_cls_dict.
         """
         return getattr(langchain.llms, "type_to_cls_dict")
 
@@ -54,10 +62,10 @@ class LangChain:
 
     @staticmethod
     def query_langchain(
-        model: "langchain.base_language.BaseLanguageModel", prompts: Iterable[Any]
+        model: "langchain.llms.BaseLLM", prompts: Iterable[Any]
     ) -> Iterable[Any]:
         """Query LangChain model naively.
-        model (langchain.base_language.BaseLanguageModel): LangChain model.
+        model (langchain.llms.BaseLLM): LangChain model.
         prompts (Iterable[Any]): Prompts to execute.
         RETURNS (Iterable[Any]): LLM responses.
         """
@@ -77,10 +85,7 @@ class LangChain:
         def langchain_model(
             name: str,
             query: Optional[
-                Callable[
-                    ["langchain.base_language.BaseLanguageModel", Iterable[str]],
-                    Iterable[str],
-                ]
+                Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]
             ] = None,
             config: Dict[Any, Any] = SimpleFrozenDict(),
             langchain_class_id: str = class_id,
@@ -123,9 +128,7 @@ class LangChain:
 
 @registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> (
-    Callable[
-        ["langchain.base_language.BaseLanguageModel", Iterable[Any]], Iterable[Any]
-    ]
+    Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]
 ):
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
