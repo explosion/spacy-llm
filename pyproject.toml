@@ -24,7 +24,8 @@ filterwarnings = [
     "ignore:^.*The `dict` method is deprecated; use `model_dump` instead.*",
     "ignore:^.*The `parse_obj` method is deprecated; use `model_validate` instead.*",
     "ignore:^.*`__get_validators__` is deprecated.*",
-    "ignore:^.*The `construct` method is deprecated.*"
+    "ignore:^.*The `construct` method is deprecated.*",
+    "ignore:^.*Pydantic V1 style `@validator` validators are deprecated."
 ]
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API",
