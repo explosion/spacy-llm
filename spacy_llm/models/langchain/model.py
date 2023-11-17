@@ -1,9 +1,8 @@
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from confection import SimpleFrozenDict
-from pydantic import ExtraError, ValidationError
 
-from ...compat import has_langchain, langchain
+from ...compat import ExtraError, ValidationError, has_langchain, langchain
 from ...registry import registry
 
 try:
