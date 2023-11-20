@@ -12,7 +12,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
 from spacy_llm.tasks.spancat import SpanCatTask, make_spancat_task_v2
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import LabeledTask, LLMTask
+from spacy_llm.ty import LabeledTask, ShardingLLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ...compat import has_openai_key
@@ -85,7 +85,7 @@ def test_spancat_config(cfg_string, request):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
     labels = orig_config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)

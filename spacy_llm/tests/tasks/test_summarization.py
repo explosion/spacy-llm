@@ -8,7 +8,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.ty import LLMTask
+from spacy_llm.ty import ShardingLLMTask
 from spacy_llm.util import assemble_from_config
 
 from ...tasks import make_summarization_task
@@ -152,7 +152,7 @@ def test_summarization_config(cfg_string, request):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
 
 @pytest.mark.external

@@ -5,7 +5,7 @@ from ..pipeline.llm import DEFAULT_VALIDATE_TYPES, make_llm
 from .builtin_task import BuiltinTask
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task_v3
-from .noop import NoopTask, make_noop_task
+from .noop import NoopTask, ShardingNoopTask, make_noop_task, make_noopnoshards_task
 from .rel import RELTask, make_rel_task
 from .sentiment import SentimentTask, make_sentiment_task
 from .spancat import SpanCatTask, make_spancat_task_v3
@@ -39,6 +39,7 @@ __all__ = [
     "make_lemma_task",
     "make_ner_task_v3",
     "make_noop_task",
+    "make_noopnoshards_task",
     "make_rel_task",
     "make_sentiment_task",
     "make_spancat_task_v3",
@@ -50,6 +51,7 @@ __all__ = [
     "NoopTask",
     "RELTask",
     "SentimentTask",
+    "ShardingNoopTask",
     "SpanCatTask",
     "SummarizationTask",
     "TextCatTask",

@@ -16,8 +16,8 @@ from spacy.vocab import Vocab
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
 from ..ty import Cache, LabeledTask, LLMTask, ModelWithContextLength
-from ..ty import PromptExecutorType, ScorableTask, Serializable
-from ..ty import validate_type_consistency
+from ..ty import PromptExecutorType, ScorableTask, Serializable, ShardingLLMTask
+from ..ty import supports_sharding, validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -35,6 +35,7 @@ DEFAULT_CACHE_CONFIG = {
 
 DEFAULT_SAVE_IO = False
 DEFAULT_VALIDATE_TYPES = True
+_LLMTask = Union[LLMTask, ShardingLLMTask]
 
 
 class CacheConfigType(TypedDict):
@@ -58,7 +59,7 @@ class CacheConfigType(TypedDict):
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[LLMTask],
+    task: Optional[_LLMTask],
     model: PromptExecutorType,
     cache: Cache,
     save_io: bool,
@@ -69,7 +70,7 @@ def make_llm(
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+    task (Optional[_LLMTask]): An _LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
     model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
@@ -102,7 +103,7 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         vocab: Vocab,
-        task: LLMTask,
+        task: _LLMTask,
         model: PromptExecutorType,
         cache: Cache,
         save_io: bool,
@@ -113,8 +114,8 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         vocab (Vocab): Pipeline vocabulary.
-        task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
-            structured information and set that back on the docs.
+        task (Optional[_LLMTask]): An _LLMTask can generate prompts for given docs, and can parse the LLM's responses
+            into structured information and set that back on the docs.
         model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
         save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
@@ -150,7 +151,7 @@ class LLMWrapper(Pipe):
         return self._task.clear()
 
     @property
-    def task(self) -> LLMTask:
+    def task(self) -> _LLMTask:
         return self._task
 
     def __call__(self, doc: Doc) -> Doc:
@@ -198,6 +199,7 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs
         RETURNS (List[Doc]): Processed batch of docs with task annotations set
         """
+        has_shards = supports_sharding(self._task)
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
         if len(noncached_doc_batch) < len(docs):
@@ -214,27 +216,42 @@ class LLMWrapper(Pipe):
             if isinstance(self._model, ModelWithContextLength):
                 context_length = self._model.context_length
 
+            # Only pass context length if this is a sharding task.
             prompts_iters = tee(
-                self._task.generate_prompts(noncached_doc_batch, context_length),
+                self._task.generate_prompts(noncached_doc_batch, context_length)  # type: ignore[call-arg]
+                if has_shards
+                else self._task.generate_prompts(noncached_doc_batch),
                 n_iters + 1,
             )
             responses_iters = tee(
-                self._model((elem[0] for elem in prompts_iters[0])), n_iters
+                self._model(
+                    # Ensure that model receives Iterable[Iterable[Any]]. If task doesn't shard, its prompt is wrapped
+                    # in a list to conform to the nested structure.
+                    (elem[0] if has_shards else [elem] for elem in prompts_iters[0])
+                ),
+                n_iters,
             )
 
-            for prompts_and_shards, response, doc in zip(
+            for prompt_data, response, doc in zip(
                 prompts_iters[1], responses_iters[0], noncached_doc_batch
             ):
                 logger.debug(
-                    "Generated prompt for doc: %s\n%s", doc.text, prompts_and_shards[0]
+                    "Generated prompt for doc: %s\n%s",
+                    doc.text,
+                    prompt_data[0] if has_shards else prompt_data,
                 )
                 logger.debug("LLM response for doc: %s\n%s", doc.text, response)
 
-            modified_docs = iter(
+            resp = list(
                 self._task.parse_responses(
-                    (elem[1] for elem in prompts_iters[2]), responses_iters[1]
+                    (
+                        elem[1] if has_shards else noncached_doc_batch[i]
+                        for i, elem in enumerate(prompts_iters[2])
+                    ),
+                    responses_iters[1],
                 )
             )
+            modified_docs = iter(resp)
 
         final_docs: List[Doc] = []
         for i, doc in enumerate(docs):
@@ -252,7 +269,10 @@ class LLMWrapper(Pipe):
                         "llm_io", defaultdict(dict)
                     )
                     llm_io = doc.user_data["llm_io"][self._name]
-                    llm_io["prompt"] = str(next(prompts_iters[-1])[0])
+                    next_prompt = next(prompts_iters[-1])
+                    llm_io["prompt"] = str(
+                        next_prompt[0] if has_shards else next_prompt
+                    )
                     llm_io["response"] = str(next(responses_iters[-1]))
 
                 self._cache.add(doc)
@@ -274,7 +294,7 @@ class LLMWrapper(Pipe):
         serialize = {}
 
         if isinstance(self._task, Serializable):
-            serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
+            serialize["task"] = lambda: self._task.to_bytes(exclude=exclude)  # type: ignore[attr-defined, union-attr]
         if isinstance(self._model, Serializable):
             serialize["model"] = lambda: self._model.to_bytes(exclude=exclude)  # type: ignore[attr-defined]
 
@@ -296,9 +316,9 @@ class LLMWrapper(Pipe):
         deserialize = {}
 
         if isinstance(self._task, Serializable):
-            deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+            deserialize["task"] = lambda b: self._task.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined,union-attr]
         if isinstance(self._model, Serializable):
-            deserialize["model"] = lambda b: self._model.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined]
+            deserialize["model"] = lambda b: self._model.from_bytes(b, exclude=exclude)  # type: ignore[attr-defined,union-attr]
 
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -314,9 +334,9 @@ class LLMWrapper(Pipe):
         serialize = {}
 
         if isinstance(self._task, Serializable):
-            serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+            serialize["task"] = lambda p: self._task.to_disk(p, exclude=exclude)  # type: ignore[attr-defined,union-attr]
         if isinstance(self._model, Serializable):
-            serialize["model"] = lambda p: self._model.to_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+            serialize["model"] = lambda p: self._model.to_disk(p, exclude=exclude)  # type: ignore[attr-defined,union-attr]
 
         util.to_disk(path, serialize, exclude)
 
@@ -332,9 +352,9 @@ class LLMWrapper(Pipe):
         serialize = {}
 
         if isinstance(self._task, Serializable):
-            serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+            serialize["task"] = lambda p: self._task.from_disk(p, exclude=exclude)  # type: ignore[attr-defined,union-attr]
         if isinstance(self._model, Serializable):
-            serialize["model"] = lambda p: self._model.from_disk(p, exclude=exclude)  # type: ignore[attr-defined]
+            serialize["model"] = lambda p: self._model.from_disk(p, exclude=exclude)  # type: ignore[attr-defined,union-attr]
 
         util.from_disk(path, serialize, exclude)
         return self

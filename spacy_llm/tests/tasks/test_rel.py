@@ -10,7 +10,7 @@ from spacy.util import get_lang_class
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.tasks.rel import DEFAULT_REL_TEMPLATE, RelationItem, RELTask
-from spacy_llm.ty import LabeledTask, LLMTask
+from spacy_llm.ty import LabeledTask, ShardingLLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ...tasks import make_rel_task
@@ -122,7 +122,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
     task = pipe.task
     labels = orig_config["components"]["llm"]["task"]["labels"]

@@ -51,11 +51,20 @@ def test_llm_init(nlp):
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
-def test_llm_pipe(nlp: Language, n_process: int):
+@pytest.mark.parametrize("shard", [True, False])
+def test_llm_pipe(noop_config: Dict[str, Any], n_process: int, shard: bool):
     """Test call .pipe()."""
+    nlp = spacy.blank("en")
+    nlp.add_pipe(
+        "llm",
+        config={**noop_config, **{"task": {"@llm_tasks": "spacy.NoOpNoShards.v1"}}}
+        if not shard
+        else noop_config,
+    )
     ops = get_current_ops()
     if not isinstance(ops, NumpyOps) and n_process != 1:
         pytest.skip("Only test multiple processes on CPU")
+
     docs = list(
         nlp.pipe(texts=["This is a test", "This is another test"], n_process=n_process)
     )
@@ -63,8 +72,7 @@ def test_llm_pipe(nlp: Language, n_process: int):
 
     for doc in docs:
         llm_io = doc.user_data["llm_io"]
-
-        assert llm_io["llm"]["prompt"] == str([_NOOP_PROMPT])
+        assert llm_io["llm"]["prompt"] == str([_NOOP_PROMPT] if shard else _NOOP_PROMPT)
         assert llm_io["llm"]["response"] == str([_NOOP_RESPONSE])
 
 

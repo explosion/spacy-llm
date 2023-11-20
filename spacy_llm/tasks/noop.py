@@ -9,10 +9,15 @@ _NOOP_PROMPT = "Don't do anything."
 
 @registry.llm_tasks("spacy.NoOp.v1")
 def make_noop_task():
+    return ShardingNoopTask()
+
+
+@registry.llm_tasks("spacy.NoOpNoShards.v1")
+def make_noopnoshards_task():
     return NoopTask()
 
 
-class NoopTask:
+class ShardingNoopTask:
     def generate_prompts(
         self, docs: Iterable[Doc], context_length: Optional[int] = None
     ) -> Iterable[Tuple[Iterable[str], Iterable[Doc]]]:
@@ -22,8 +27,25 @@ class NoopTask:
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        # Grab the first shard per doc
         return [list(shards_for_doc)[0] for shards_for_doc in shards]
+
+    @property
+    def prompt_template(self) -> str:
+        return """
+        This is the NoOp
+        prompt template
+        """
+
+
+class NoopTask:
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+        for doc in docs:
+            yield _NOOP_PROMPT
+
+    def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[str]
+    ) -> Iterable[Doc]:
+        return docs
 
     @property
     def prompt_template(self) -> str:
