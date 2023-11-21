@@ -1,0 +1,66 @@
+entities:
+  Q100:
+      name: "Boston"
+      desc: "city in and state capital of Massachusetts, United States"
+  Q131371:
+      name: "Boston Celtics"
+      desc: "NBA team based in Boston; tied with most NBA Championships"
+  Q204289:
+    name: "Boston"
+    desc: "American rock band"
+  Q311975:
+    name: "Boston"
+    desc: "town in Lincolnshire, England"
+  Q671475:
+    name: "Logan International Airport"
+    desc: "airport in Boston, Massachusetts, United States"
+  Q107723060:
+    name: "2021–22 Boston Celtics season"
+    desc: "The 2021–22 Boston Celtics season was the 76th season of the franchise in the National Basketball Association (NBA). Following the Celtics' first-round exit to the Brooklyn Nets in five games from las"
+  Q3643001:
+    name: "Boston"
+    desc: "NBA basketball team season"
+  Q3466394:
+    name: "Boston"
+    desc: "season of National Basketball Association team the Boston Celtics"
+  Q3642995:
+    name: "Boston"
+    desc: "NBA basketball team season"
+  Q60:
+    name: "New York"
+    desc: "most populous city in the United States"
+  Q1384:
+    name: "New York"
+    desc: "U.S. state"
+  Q131364:
+    name: "New York Knicks"
+    desc: "National Basketball Association team in New York City"
+  Q14435:
+    name: "Big Apple"
+    desc: "nickname for New York City"
+  Q89:
+    name: "Apple"
+    desc: "fruit of the apple tree"
+  Q312:
+    name: "Apple"
+    desc: "American multinational technology company"
+aliases:
+  - alias: "Boston"
+    entities: ["Q100", "Q131371", "Q204289", "Q311975", "Q671475"]
+    probabilities: [0.5, 0.2, 0.12, 0.1, 0.08]
+  - alias: "Boston Celtics"
+    entities: ["Q131371", "Q107723060", "Q3643001", "Q3466394", "Q3642995"]
+    probabilities: [0.5, 0.2, 0.12, 0.1, 0.08]
+  - alias: "New York"
+    entities: ["Q60", "Q1384"]
+    probabilities: [0.6, 0.4]
+  - alias: "New York Knicks"
+    entities: ["Q60", "Q131364"]
+    probabilities: [0.6, 0.4]
+  - alias: "Big Apple"
+    entities: ["Q14435", "Q89"]
+    probabilities: [0.6, 0.4]
+  - alias: "Apple"
+    entities: ["Q89", "Q312"]
+    probabilities: [0.6, 0.4]
+  
