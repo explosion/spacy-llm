@@ -33,7 +33,7 @@ def parse_responses_v1(
             ents = [
                 ent
                 for i_ent, ent in enumerate(shard.ents)
-                if task.has_ent_cands[i_doc][i_ent]
+                if task.has_ent_cands_by_shard[i_doc][i_shard][i_ent]
             ]
 
             results_for_doc.append(

@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type
 
 from spacy import Language, Vocab
 from spacy.pipeline import EntityLinker
@@ -103,30 +103,11 @@ class EntityLinkerTask(BuiltinTask):
         # update it here, as we don't know yet how the shards will look like.
         self._ents_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
         self._has_ent_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
-        preprocessed_docs: List[Doc] = []
 
-        for i, doc in enumerate(docs):
-            preprocessed_doc = Doc(
-                doc.vocab,
-                words=EntityLinkerTask.highlight_ents_in_text(
-                    doc, self._has_ent_cands_by_doc[i]
-                ).split(),
-            )
-            preprocessed_doc.ents = [
-                Span(
-                    doc=preprocessed_doc,
-                    start=ent.start,
-                    end=ent.end,
-                    label=ent.label,
-                    vector=ent.vector,
-                    vector_norm=ent.vector_norm,
-                    kb_id=EntityLinker.NIL,
-                )
-                for ent in doc.ents
-            ]
-            preprocessed_docs.append(preprocessed_doc)
-
-        return preprocessed_docs
+        return [
+            EntityLinkerTask.highlight_ents_in_doc(doc, self._has_ent_cands_by_doc[i])
+            for i, doc in enumerate(docs)
+        ]
 
     def _find_entity_candidates(
         self, docs: Iterable[Doc]
@@ -179,14 +160,7 @@ class EntityLinkerTask(BuiltinTask):
             "mentions_str": ", ".join(
                 [mention.text for hc, mention in zip(has_cands, shard.ents) if hc]
             ),
-            "mentions": [
-                # Due to retokenization of doc with entity highlighting entity mentions are wrapped in "*".
-                ent.text
-                if not (ent.text.startswith("*") and ent.text.endswith("*"))
-                else ent.text[1:-1]
-                for hc, ent in zip(has_cands, shard.ents)
-                if hc
-            ],
+            "mentions": [ent.text for hc, ent in zip(has_cands, shard.ents) if hc],
             "entity_descriptions": [
                 [ent.description for ent in ents]
                 for hc, ents in zip(has_cands, ents_cands)
@@ -249,7 +223,10 @@ class EntityLinkerTask(BuiltinTask):
                     for i_ent, ent in enumerate(shard.ents)
                 ]
 
-                updated_shards_for_doc.append(shard)
+                # Remove entity highlights in shards.
+                updated_shards_for_doc.append(
+                    EntityLinkerTask.unhighlight_ents_in_doc(shard)
+                )
 
             yield self._shard_reducer(self, updated_shards_for_doc)  # type: ignore[arg-type]
 
@@ -261,39 +238,99 @@ class EntityLinkerTask(BuiltinTask):
         return ["_template"]
 
     @staticmethod
-    def highlight_ents_in_text(
+    def highlight_ents_in_doc(
         doc: Doc, include_ents: Optional[List[bool]] = None
-    ) -> str:
-        """Highlights entities in doc text with **.
+    ) -> Doc:
+        """Highlights entities in doc by wrapping them in **.
         doc (Doc): Doc whose entities are to be highlighted.
         include_ents (Optional[List[bool]]): Whether to include entities with the corresponding indices. If None, all
             are included.
-        RETURNS (str): Text with highlighted entities.
+        RETURNS (Doc): Doc with highlighted entities.
         """
         if include_ents is not None and len(include_ents) != len(doc.ents):
             raise ValueError(
                 f"`include_ents` has {len(include_ents)} entries, but {len(doc.ents)} are required."
             )
 
-        text = doc.text
-        i = 0
-        for ent in doc.ents:
-            # Skip if ent is not supposed to be included.
-            if include_ents is not None and not include_ents[i]:
-                continue
+        ents_to_highlight_idx = [
+            i
+            for i, ent in enumerate(doc.ents)
+            if (include_ents is None or include_ents[i])
+        ]
+        ents_idx = [(ent.start, ent.end) for ent in doc.ents]
 
-            text = (
-                text[: ent.start_char + i * 2]
-                + (
-                    f"*{ent.text}*"
-                    if not (ent.text.startswith("*") and ent.text.endswith("*"))
-                    else ent.text
+        # Include *-marker as tokens. Update entity indices.
+        i_ent = 0
+        new_ent_idx: List[Tuple[int, int]] = []
+        token_texts: List[str] = []
+        to_highlight = i_ent in ents_to_highlight_idx
+        offset = 0
+        for token in doc:
+            if i_ent < len(ents_idx) and token.i == ents_idx[i_ent][1]:
+                if to_highlight:
+                    token_texts.append("*")
+                    offset += 1
+                i_ent += 1
+                to_highlight = i_ent in ents_to_highlight_idx
+            if i_ent < len(ents_idx) and token.i == ents_idx[i_ent][0]:
+                if to_highlight:
+                    token_texts.append("*")
+                    offset += 1
+                new_ent_idx.append(
+                    (ents_idx[i_ent][0] + offset, ents_idx[i_ent][1] + offset)
                 )
-                + text[ent.end_char + i * 2 :]
-            )
-            i += 1
+            token_texts.append(token.text)
 
-        return text
+        # Create doc with new tokens and entities.
+        highlighted_doc = Doc(doc.vocab, words=token_texts)
+        highlighted_doc.ents = [
+            Span(
+                doc=highlighted_doc,
+                start=new_ent_idx[i][0],
+                end=new_ent_idx[i][1],
+                label=ent.label,
+                vector=ent.vector,
+                vector_norm=ent.vector_norm,
+                kb_id=ent.kb_id_,
+            )
+            for i, ent in enumerate(doc.ents)
+        ]
+
+        return highlighted_doc
+
+    @staticmethod
+    def unhighlight_ents_in_doc(doc: Doc) -> Doc:
+        """Remove entity highlighting (* wrapping)  in doc.
+        doc (Doc): Doc whose entities are to be highlighted.
+        RETURNS (Doc): Doc with highlighted entities.
+        """
+        highlight_idx: Set[int] = {ent.start - 1 for ent in doc.ents} | {
+            ent.end for ent in doc.ents
+        }
+        ent_idx = [
+            (ent.start - i * 2 - 1, ent.end - i * 2 - 1)
+            for i, ent in enumerate(doc.ents)
+        ]
+
+        # Create doc with new tokens and entities.
+        unhighlighted_doc = Doc(
+            doc.vocab,
+            words=[token.text for token in doc if token.i not in highlight_idx],
+        )
+        unhighlighted_doc.ents = [
+            Span(
+                doc=unhighlighted_doc,
+                start=ent_idx[i][0],
+                end=ent_idx[i][1],
+                label=ent.label,
+                vector=ent.vector,
+                vector_norm=ent.vector_norm,
+                kb_id=ent.kb_id_,
+            )
+            for i, ent in enumerate(doc.ents)
+        ]
+
+        return unhighlighted_doc
 
     def _require_candidate_selector(self) -> None:
         """Raises an error if candidate selector is not available."""
@@ -342,8 +379,8 @@ class EntityLinkerTask(BuiltinTask):
         return cand_entity_info, correct_ent_ids
 
     @property
-    def has_ent_cands(self) -> List[List[bool]]:
-        """Returns flags indicating whether documents' entities' have candidates in KB.
-        RETURNS (List[List[bool]]): Flags indicating whether documents' entities' have candidates in KB.
+    def has_ent_cands_by_shard(self) -> List[List[List[bool]]]:
+        """Returns flags indicating whether shards' entities' have candidates in KB.
+        RETURNS (List[List[List[bool]]]): Flags indicating whether shards' entities' have candidates in KB.
         """
-        return self._has_ent_cands_by_doc
+        return self._has_ent_cands_by_shard

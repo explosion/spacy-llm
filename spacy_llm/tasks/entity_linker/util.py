@@ -35,14 +35,7 @@ class ELExample(FewshotExample):
         """Returns stringified version of all mentions.
         RETURNS (str): Stringified version of all mentions.
         """
-        return ", ".join(
-            [
-                f"*{mention}*"
-                if not (mention.startswith("*") and mention.endswith("*"))
-                else mention
-                for mention in self.mentions
-            ]
-        )
+        return ", ".join([f"*{mention}*" for mention in self.mentions])
 
     @classmethod
     def generate(cls, example: Example, task: EntityLinkerTask) -> Optional[Self]:
@@ -68,7 +61,7 @@ class ELExample(FewshotExample):
         assert all([sol is not None for sol in solutions])
 
         return ELExample(
-            text=EntityLinkerTask.highlight_ents_in_text(example.reference),
+            text=EntityLinkerTask.highlight_ents_in_doc(example.reference).text,
             mentions=mentions,
             entity_descriptions=[
                 [ent.description for ent in ents] for ents in cands_ents

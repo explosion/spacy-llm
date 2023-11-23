@@ -21,7 +21,7 @@ MENTIONS: {{ example.mention_str }}
 ENTITIES:
 {%- for ent_descs in example.entity_descriptions -%}
 {% set mention_i = loop.index0 %}
-- For *{{ example.mentions[loop.index0] }}*:
+- For * {{ example.mentions[loop.index0] }} *:
 {%- for ent_desc in ent_descs -%}
     {# whitespace #}
     {{ example.entity_ids[mention_i][loop.index0] }}. {{ ent_desc }}
@@ -51,7 +51,7 @@ REASONING:
 SOLUTION:
 {%- for solution in example.solutions -%}
 {# whitespace #}
-*{{ example.mentions[loop.index0] }}* ::: <{{ solution }}>
+* {{ example.mentions[loop.index0] }} * ::: <{{ solution }}>
 {%- endfor -%}
 {# whitespace #}
 {# whitespace #}
@@ -69,7 +69,7 @@ MENTIONS: {{ mentions_str }}
 ENTITIES:
 {%- for ent_descs in entity_descriptions -%}
 {% set mention_i = loop.index0 %}
-- For *{{ mentions[loop.index0] }}*:
+- For * {{ mentions[loop.index0] }} *:
 {%- for ent_desc in ent_descs -%}
     {# whitespace #}
     {{ entity_ids[mention_i][loop.index0] }}. {{ ent_desc }}
