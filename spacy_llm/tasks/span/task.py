@@ -70,7 +70,9 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         if self._prompt_examples:
             self._prompt_examples = list(self._check_label_consistency(self))
 
-    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
         return {
             "description": self._description,
             "labels": list(self._label_dict.values()),

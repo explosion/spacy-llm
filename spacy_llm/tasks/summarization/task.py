@@ -84,7 +84,9 @@ class SummarizationTask(BuiltinTask):
                     f"LLM will likely produce responses that are too long."
                 )
 
-    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
         if self._check_example_summaries:
             self._check_prompt_example_summary_len()
             self._check_example_summaries = False

@@ -21,6 +21,7 @@ class NoOpModel(REST):
             max_tries=1,
             interval=1,
             max_request_time=1,
+            context_length=None,
         )
 
     @property

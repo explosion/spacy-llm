@@ -38,6 +38,7 @@ def anthropic_claude_2(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
 
 
@@ -72,6 +73,7 @@ def anthropic_claude_1(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
 
 
@@ -108,6 +110,7 @@ def anthropic_claude_instant_1(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
 
 
@@ -144,6 +147,7 @@ def anthropic_claude_instant_1_1(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
 
 
@@ -178,6 +182,7 @@ def anthropic_claude_1_0(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
 
 
@@ -212,6 +217,7 @@ def anthropic_claude_1_2(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
 
 
@@ -246,4 +252,5 @@ def anthropic_claude_1_3(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )

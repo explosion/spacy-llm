@@ -89,7 +89,9 @@ class TextCatTask(BuiltinTaskWithLabels):
             )
             self._exclusive_classes = True
 
-    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
         return {
             "labels": list(self._label_dict.values()),
             "label_definitions": self._label_definitions,

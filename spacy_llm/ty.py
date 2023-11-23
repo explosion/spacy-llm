@@ -25,8 +25,8 @@ ExamplesConfigType = Union[
 ]
 NTokenEstimator = Callable[[str], int]
 ShardMapper = Callable[
-    # Requires doc, context length and callable for rendering template from doc shard text.
-    [Doc, int, Callable[[Doc, int], str]],
+    # Requires doc, doc index, context length and callable for rendering template from doc shard text.
+    [Doc, int, int, Callable[[Doc, int, int, int], str]],
     # Returns each shard as a doc.
     Iterable[Doc],
 ]
@@ -92,16 +92,6 @@ class Scorer(Protocol):
         """
 
 
-# todo
-#   x change to llmtask
-#   x add llmtask
-#   x fix task typing structures
-#   x fix model data handling
-#   x don't expect doc back from nonsharding tasks
-#   x run tests with to sharding and non-sharding nooptask
-#   - fix inevitable typing check issues
-
-
 @runtime_checkable
 class ShardingLLMTask(Protocol):
     def generate_prompts(
@@ -130,7 +120,7 @@ class ShardingLLMTask(Protocol):
 
 
 @runtime_checkable
-class LLMTask(Protocol):
+class NonshardingLLMTask(Protocol):
     def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
@@ -148,14 +138,25 @@ class LLMTask(Protocol):
         """
 
 
-TaskContraT = TypeVar("TaskContraT", bound=ShardingLLMTask, contravariant=True)
+@runtime_checkable
+class LLMTask(Protocol):
+    generate_prompts: Callable[..., Iterable[Any]]
+    parse_responses: Callable[..., Iterable[Doc]]
+
+
+TaskContraT = TypeVar(
+    "TaskContraT", bound=Union[ShardingLLMTask, LLMTask], contravariant=True
+)
+ShardingTaskContraT = TypeVar(
+    "ShardingTaskContraT", bound=ShardingLLMTask, contravariant=True
+)
 
 
 @runtime_checkable
-class ShardReducer(Protocol[TaskContraT]):
+class ShardReducer(Protocol[ShardingTaskContraT]):
     """Generic protocol for tasks' shard reducer."""
 
-    def __call__(self, task: TaskContraT, shards: Iterable[Doc]) -> Doc:
+    def __call__(self, task: ShardingTaskContraT, shards: Iterable[Doc]) -> Doc:
         """Merges shard to single Doc."""
         ...
 

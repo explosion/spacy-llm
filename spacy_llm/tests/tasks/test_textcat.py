@@ -658,7 +658,8 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
 
         examples.append(Example(predicted, reference))
 
-    scores = nlp.evaluate(examples)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        scores = nlp.evaluate(examples)
 
     pos = n_insults / len(INSULTS)
 

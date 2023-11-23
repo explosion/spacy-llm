@@ -59,4 +59,5 @@ def azure_openai(
         max_request_time=max_request_time,
         api_version=api_version,
         model_type=model_type,
+        context_length=None,
     )

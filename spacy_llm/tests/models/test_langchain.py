@@ -23,7 +23,8 @@ def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
     nlp.add_pipe("llm", config=PIPE_CFG)
-    nlp("This is a test.")
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp("This is a test.")
 
 
 @pytest.mark.external
@@ -49,4 +50,5 @@ def test_initialization_azure_openai():
 
     nlp = spacy.blank("en")
     nlp.add_pipe("llm", config=_pipe_cfg)
-    nlp("This is a test.")
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp("This is a test.")

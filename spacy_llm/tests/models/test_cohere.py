@@ -18,6 +18,7 @@ def test_cohere_api_response_is_correct():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        context_length=None,
     )
     prompt = "Count the number of characters in this string: hello"
     num_prompts = 3  # arbitrary number to check multiple inputs
@@ -46,6 +47,7 @@ def test_cohere_api_response_n_generations():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        context_length=None,
     )
 
     prompt = "Count the number of characters in this string: hello"
@@ -73,6 +75,7 @@ def test_cohere_api_response_when_error():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            context_length=None,
         )
 
 
@@ -90,4 +93,5 @@ def test_cohere_error_unsupported_model():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            context_length=None,
         )

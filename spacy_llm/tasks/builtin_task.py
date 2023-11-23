@@ -67,36 +67,42 @@ class BuiltinTask(abc.ABC):
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
 
-        def render_template(shard: Doc, n_shards: int) -> str:
+        def render_template(shard: Doc, i_shard: int, i_doc: int, n_shards: int) -> str:
             """Renders template for a given doc (shard).
             shard (Doc): Doc shard. Note that if the prompt is small enough to fit within the model's context window,
                 there will only be one shard, which is identical to the original doc.
+            i_shard (int): Shard index (w.r.t. shard's Doc instance).
+            i_doc (int): Doc index.
             n_shards (int): Total number of shards.
             RETURNS (str): Rendered template.
             """
             return _template.render(
                 text=doc.text,
                 prompt_examples=self._prompt_examples,
-                **self._get_prompt_data(shard, n_shards),
+                **self._get_prompt_data(shard, i_shard, i_doc, n_shards),
             )
 
-        for doc in self._preprocess_docs_for_prompt(docs):
+        for i_doc, doc in enumerate(self._preprocess_docs_for_prompt(docs)):
             # If no context length provided (e. g. because models don't provide it): don't shard.
             shards = (
-                self._shard_mapper(doc, context_length, render_template)
+                self._shard_mapper(doc, i_doc, context_length, render_template)
                 if context_length is not None
                 else [doc]
             )
             shards_teed = tee(shards, 3)
             yield [
-                render_template(shard, len(list(shards_teed[0])))
-                for shard in shards_teed[1]
+                render_template(shard, i_shard, i_doc, len(list(shards_teed[0])))
+                for i_shard, shard in enumerate(shards_teed[1])
             ], shards_teed[2]
 
-    def _get_prompt_data(self, shard: Doc, n_shards: int) -> Dict[str, Any]:
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
         """Returns data injected into prompt template. No-op if not overridden by inheriting task class. The data
         returned by this might be static (i. e. the same for all doc shards) or dynamic (contingent on the doc shard).
         shard (Doc): Doc (shard) for which prompt data should be fetched.
+        i_shard (int): Shard index (w.r.t. shard's Doc instance).
+        i_doc (int): Doc index.
         n_shards (int): Total number of shards.
         RETURNS (Dict[str, Any]): Data injected into prompt template.
         """

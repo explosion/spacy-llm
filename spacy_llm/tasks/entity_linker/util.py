@@ -11,6 +11,7 @@ from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
 from spacy.pipeline import EntityLinker
 from spacy.scorer import Scorer
+from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
@@ -34,7 +35,14 @@ class ELExample(FewshotExample):
         """Returns stringified version of all mentions.
         RETURNS (str): Stringified version of all mentions.
         """
-        return ", ".join([f"*{mention}*" for mention in self.mentions])
+        return ", ".join(
+            [
+                f"*{mention}*"
+                if not (mention.startswith("*") and mention.endswith("*"))
+                else mention
+                for mention in self.mentions
+            ]
+        )
 
     @classmethod
     def generate(cls, example: Example, task: EntityLinkerTask) -> Optional[Self]:
@@ -196,3 +204,13 @@ class KBFileLoader(BaseInMemoryLookupKBLoader):
                 raise err
 
         return kb, {qid: entities[qid].get("desc") for qid in qids}
+
+
+def reduce_shards_to_doc(task: EntityLinkerTask, shards: Iterable[Doc]) -> Doc:
+    """Reduces shards to docs for LemmaTask.
+    task (EntityLinkerTask): Task.
+    shards (Iterable[Doc]): Shards to reduce to single doc instance.
+    RETURNS (Doc): Fused doc instance.
+    """
+    # Entities are additive, so we can just merge shards.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

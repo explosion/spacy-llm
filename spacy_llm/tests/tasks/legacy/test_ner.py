@@ -722,7 +722,8 @@ def test_ner_scoring(noop_config, n_detections):
 
         examples.append(Example(predicted, reference))
 
-    scores = nlp.evaluate(examples)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        scores = nlp.evaluate(examples)
 
     assert scores["ents_p"] == n_detections / 2
 

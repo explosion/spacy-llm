@@ -33,6 +33,7 @@ class REST(abc.ABC):
         max_tries: int,
         interval: float,
         max_request_time: float,
+        context_length: Optional[int],
     ):
         """Initializes new instance of REST-based model.
         name (str): Model name.
@@ -47,6 +48,8 @@ class REST(abc.ABC):
         interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential
             backoff at each retry.
         max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+        context_length (Optional[int]): Context length for this model. Only necessary for sharding and if no context
+            length natively provided by spacy-llm.
         """
         self._name = name
         self._endpoint = endpoint
@@ -56,6 +59,7 @@ class REST(abc.ABC):
         self._interval = interval
         self._max_request_time = max_request_time
         self._credentials = self.credentials
+        self._context_length = context_length
 
         assert self._max_tries >= 1
         assert self._interval > 0
@@ -78,12 +82,11 @@ class REST(abc.ABC):
         """
 
     @property
-    def context_length(self) -> int:
+    def context_length(self) -> Optional[int]:
         """Returns context length in number of tokens for this model.
-        RETURNS (int): Max. number of tokens in allowed in prompt for the current model.
+        RETURNS (Optional[int]): Max. number of tokens in allowed in prompt for the current model. None if unknown.
         """
-        # todo if context length not available in dict: accept param, otherwise fail?
-        return self._get_context_lengths()[self._name]
+        return self._get_context_lengths().get(self._name, self._context_length)
 
     @property
     @abc.abstractmethod

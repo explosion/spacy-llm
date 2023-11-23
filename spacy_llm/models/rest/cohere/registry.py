@@ -39,4 +39,5 @@ def cohere_command(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )

@@ -183,8 +183,8 @@ def test_type_checking_invalid(noop_config) -> None:
     assert len(record) == 2
     assert (
         str(record[0].message)
-        == "First type in `Iterable[Tuple[...]] returned from `task.generate_prompts()` (`typing.Iterable[int]`) "
-        "doesn't match type expected by `model` (`typing.Iterable[str]`)."
+        == "First type in value returned from `task.generate_prompts()` (`typing.Iterable[int]`) doesn't match type "
+        "expected by `model` (`typing.Iterable[str]`)."
     )
     assert (
         str(record[1].message)

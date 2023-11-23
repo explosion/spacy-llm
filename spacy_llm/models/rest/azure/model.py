@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized
+from typing import Any, Dict, Iterable, List, Optional, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -27,6 +27,7 @@ class AzureOpenAI(REST):
         interval: float,
         max_request_time: float,
         model_type: ModelType,
+        context_length: Optional[int],
         api_version: str = "2023-05-15",
     ):
         self._model_type = model_type
@@ -40,6 +41,7 @@ class AzureOpenAI(REST):
             max_tries=max_tries,
             interval=interval,
             max_request_time=max_request_time,
+            context_length=context_length,
         )
 
     @property

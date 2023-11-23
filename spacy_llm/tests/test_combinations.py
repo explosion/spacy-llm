@@ -49,7 +49,19 @@ def test_combinations(model: str, task: str, n_process: int):
     assert name == "llm"
     assert isinstance(component, LLMWrapper)
 
-    nlp("This is a test.")
-    list(
-        nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process)
-    )
+    if model.startswith("langchain"):
+        with pytest.warns(UserWarning, match="Task supports sharding"):
+            nlp("This is a test.")
+            list(
+                nlp.pipe(
+                    ["This is a second test", "This is a third test"],
+                    n_process=n_process,
+                )
+            )
+    else:
+        nlp("This is a test.")
+        list(
+            nlp.pipe(
+                ["This is a second test", "This is a third test"], n_process=n_process
+            )
+        )

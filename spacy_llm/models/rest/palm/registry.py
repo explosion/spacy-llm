@@ -27,7 +27,9 @@ def palm_bison(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Cohere instance for 'command' model using REST to prompt API.
+    context_length (Optional[int]): Context length for this model. Only necessary for sharding and if no context length
+        natively provided by spacy-llm.
+    RETURNS (PaLM): PaLM instance for Bison model.
     """
     return PaLM(
         name=name,
@@ -39,4 +41,5 @@ def palm_bison(
         max_tries=max_tries,
         interval=interval,
         max_request_time=max_request_time,
+        context_length=None,
     )
