@@ -230,6 +230,40 @@ def openai_gpt_3_5(
     )
 
 
+@registry.llm_models("spacy.Text-Davinci.v3")
+def openai_text_davinci_v3(
+    config: Dict[Any, Any] = SimpleFrozenDict(
+        max_tokens=1000, temperature=_DEFAULT_TEMPERATURE
+    ),
+    name: str = "text-davinci-003",
+    strict: bool = OpenAI.DEFAULT_STRICT,
+    max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
+    interval: float = OpenAI.DEFAULT_INTERVAL,
+    max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    context_length: Optional[int] = None,
+) -> OpenAI:
+    """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
+
+    config (Dict[Any, Any]): LLM config passed on to the model's initialization.
+    name (str): Name of model to use, e. g. "text-davinci-002" or "text-davinci-003".
+    context_length (Optional[int]): Context length for this model. Only necessary for sharding and if no context length
+        natively provided by spacy-llm.
+    RETURNS (OpenAI): OpenAI instance for 'text-davinci' model
+
+    DOCS: https://spacy.io/api/large-language-models#models
+    """
+    return OpenAI(
+        name=name,
+        endpoint=Endpoints.NON_CHAT.value,
+        config=config,
+        strict=strict,
+        max_tries=max_tries,
+        interval=interval,
+        max_request_time=max_request_time,
+        context_length=context_length,
+    )
+
+
 @registry.llm_models("spacy.Text-Davinci.v2")
 def openai_text_davinci_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(

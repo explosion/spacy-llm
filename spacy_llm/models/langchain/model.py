@@ -18,9 +18,9 @@ class LangChain:
         api: str,
         config: Dict[Any, Any],
         query: Callable[
-            ["langchain.llms.BaseLLM", Iterable[Iterable[Any]]],
-            Iterable[Iterable[Any]],
+            ["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]
         ],
+        context_length: Optional[int],
     ):
         """Initializes model instance for integration APIs.
         name (str): Name of LangChain model to instantiate.
@@ -28,9 +28,12 @@ class LangChain:
         config (Dict[Any, Any]): Config passed on to LangChain model.
         query (Callable[[langchain.llms.BaseLLM, Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing
             LLM prompts when supplied with the model instance.
+        context_length (Optional[int]): Context length for this model. Only necessary for sharding. If no no context
+            length provided, prompts can't be sharded.
         """
         self._langchain_model = LangChain._init_langchain_model(name, api, config)
         self.query = query
+        self._context_length = context_length
         self._check_installation()
 
     @classmethod
@@ -115,6 +118,7 @@ class LangChain:
                 ]
             ] = None,
             config: Dict[Any, Any] = SimpleFrozenDict(),
+            context_length: Optional[int] = None,
             langchain_class_id: str = class_id,
         ) -> Optional[Callable[[Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]]:
             try:
@@ -123,6 +127,7 @@ class LangChain:
                     api=langchain_class_id,
                     config=config,
                     query=query_langchain() if query is None else query,
+                    context_length=context_length,
                 )
             except ImportError as err:
                 raise ValueError(
@@ -131,6 +136,13 @@ class LangChain:
                 ) from err
 
         return langchain_model
+
+    @property
+    def context_length(self) -> Optional[int]:
+        """Returns context length in number of tokens for this model.
+        RETURNS (Optional[int]): Max. number of tokens in allowed in prompt for the current model. None if unknown.
+        """
+        return self._context_length
 
     @staticmethod
     def register_models() -> None:
