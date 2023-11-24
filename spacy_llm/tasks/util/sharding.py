@@ -61,6 +61,7 @@ def make_shard_mapper(
                 fits_in_context = False
                 shard: Optional[Doc] = None
                 end_idx = -1
+                n_tries = 0
 
                 while fits_in_context is False:
                     end_idx = start_idx + int(len(remaining_doc) * fraction)
@@ -75,6 +76,15 @@ def make_shard_mapper(
                         <= context_length
                     )
                     fraction /= 2
+                    n_tries += 1
+
+                    # If prompt is too large even with shard of a single token, raise error - we can't shard any more
+                    # than this. This is an edge case and will most likely never occur.
+                    if len(shard) == 1 and not fits_in_context:
+                        raise ValueError(
+                            "Prompt size doesn't allow for the inclusion for shard of length 1. Please "
+                            "review your prompt and reduce its size."
+                        )
 
                 assert shard is not None
                 shards.append(shard)

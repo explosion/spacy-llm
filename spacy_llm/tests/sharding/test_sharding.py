@@ -38,7 +38,9 @@ def test_with_count_task(config, model: str):
     config["components"]["llm"]["model"]["@llm_models"] = model
     nlp = assemble_from_config(config)
     # todo add tests for sharding correctness checks
-    nlp("This is a first shot.")
+    nlp(
+        "Do one thing every day that scares you. The only thing we have to fear is fear itself."
+    )
 
 
 @pytest.mark.parametrize("model", ("spacy.GPT-3.5.v3",))

@@ -77,22 +77,23 @@ class BuiltinTask(abc.ABC):
             RETURNS (str): Rendered template.
             """
             return _template.render(
-                text=doc.text,
+                text=shard.text,
                 prompt_examples=self._prompt_examples,
                 **self._get_prompt_data(shard, i_shard, i_doc, n_shards),
             )
 
-        for i_doc, doc in enumerate(self._preprocess_docs_for_prompt(docs)):
+        for _i_doc, _doc in enumerate(self._preprocess_docs_for_prompt(docs)):
             # If no context length provided (e. g. because models don't provide it): don't shard.
             shards = (
-                self._shard_mapper(doc, i_doc, context_length, render_template)
+                self._shard_mapper(_doc, _i_doc, context_length, render_template)
                 if context_length is not None
-                else [doc]
+                else [_doc]
             )
+            shards = list(shards)
             shards_teed = tee(shards, 3)
             yield [
-                render_template(shard, i_shard, i_doc, len(list(shards_teed[0])))
-                for i_shard, shard in enumerate(shards_teed[1])
+                render_template(_shard, _i_shard, _i_doc, len(list(shards_teed[0])))
+                for _i_shard, _shard in enumerate(shards_teed[1])
             ], shards_teed[2]
 
     def _get_prompt_data(

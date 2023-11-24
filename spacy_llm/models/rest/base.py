@@ -86,7 +86,11 @@ class REST(abc.ABC):
         """Returns context length in number of tokens for this model.
         RETURNS (Optional[int]): Max. number of tokens in allowed in prompt for the current model. None if unknown.
         """
-        return self._get_context_lengths().get(self._name, self._context_length)
+        return (
+            self._context_length
+            if self._context_length
+            else self._get_context_lengths().get(self._name, None)  # type: ignore[arg-type]
+        )
 
     @property
     @abc.abstractmethod
