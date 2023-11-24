@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from spacy import Language, Vocab
 from spacy.pipeline import EntityLinker
@@ -158,7 +158,11 @@ class EntityLinkerTask(BuiltinTask):
 
         return {
             "mentions_str": ", ".join(
-                [mention.text for hc, mention in zip(has_cands, shard.ents) if hc]
+                [
+                    f"*{mention.text}*"
+                    for hc, mention in zip(has_cands, shard.ents)
+                    if hc
+                ]
             ),
             "mentions": [ent.text for hc, ent in zip(has_cands, shard.ents) if hc],
             "entity_descriptions": [
@@ -263,26 +267,39 @@ class EntityLinkerTask(BuiltinTask):
         i_ent = 0
         new_ent_idx: List[Tuple[int, int]] = []
         token_texts: List[str] = []
+        spaces: List[bool] = []
         to_highlight = i_ent in ents_to_highlight_idx
         offset = 0
+
         for token in doc:
             if i_ent < len(ents_idx) and token.i == ents_idx[i_ent][1]:
                 if to_highlight:
                     token_texts.append("*")
+                    spaces.append(spaces[-1])
+                    spaces[-2] = False
                     offset += 1
                 i_ent += 1
                 to_highlight = i_ent in ents_to_highlight_idx
             if i_ent < len(ents_idx) and token.i == ents_idx[i_ent][0]:
                 if to_highlight:
                     token_texts.append("*")
+                    spaces.append(False)
                     offset += 1
                 new_ent_idx.append(
                     (ents_idx[i_ent][0] + offset, ents_idx[i_ent][1] + offset)
                 )
             token_texts.append(token.text)
+            spaces.append(token.whitespace_ != "")
+
+        # Cover edge case of doc ending with entity, in which case we need to close the * wrapping.
+        if len(ents_to_highlight_idx) and doc.ents[
+            ents_to_highlight_idx[-1]
+        ].end == len(doc):
+            token_texts.append("*")
+            spaces.append(False)
 
         # Create doc with new tokens and entities.
-        highlighted_doc = Doc(doc.vocab, words=token_texts)
+        highlighted_doc = Doc(doc.vocab, words=token_texts, spaces=spaces)
         highlighted_doc.ents = [
             Span(
                 doc=highlighted_doc,
@@ -304,19 +321,40 @@ class EntityLinkerTask(BuiltinTask):
         doc (Doc): Doc whose entities are to be highlighted.
         RETURNS (Doc): Doc with highlighted entities.
         """
-        highlight_idx: Set[int] = {ent.start - 1 for ent in doc.ents} | {
-            ent.end for ent in doc.ents
+        highlight_start_idx = {
+            ent.start - 1
+            for ent in doc.ents
+            if ent.start - 1 > 0 and doc[ent.start - 1].text == "*"
         }
-        ent_idx = [
-            (ent.start - i * 2 - 1, ent.end - i * 2 - 1)
-            for i, ent in enumerate(doc.ents)
-        ]
+        highlight_end_idx = {ent.end for ent in doc.ents if doc[ent.end].text == "*"}
+        highlight_idx = highlight_start_idx | highlight_end_idx
+
+        # Compute entity indices with removed highlights.
+        ent_idx: List[Tuple[int, int]] = []
+        offset = 0
+        for ent in doc.ents:
+            is_highlighted = ent.start - 1 in highlight_start_idx
+            ent_idx.append(
+                (ent.start + offset - is_highlighted, ent.end + offset - is_highlighted)
+            )
+            offset -= 2 * is_highlighted
 
         # Create doc with new tokens and entities.
+        tokens = [
+            token
+            for token in doc
+            if not (token.i in highlight_idx and token.text == "*")
+        ]
         unhighlighted_doc = Doc(
             doc.vocab,
-            words=[token.text for token in doc if token.i not in highlight_idx],
+            words=[token.text for token in tokens],
+            # Use original token space, if token doesn't appear after * highlight. If so, insert space unconditionally.
+            spaces=[
+                token.whitespace_ != "" or token.i + 1 in highlight_idx
+                for i, token in enumerate(tokens)
+            ],
         )
+
         unhighlighted_doc.ents = [
             Span(
                 doc=unhighlighted_doc,

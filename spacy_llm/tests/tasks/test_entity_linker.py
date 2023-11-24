@@ -352,7 +352,7 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
     nlp.components[0][1]._task._auto_nil = False
     doc = nlp(make_doc())
     assert (
-        f"- For * Foo *:n    {EntityLinker.NIL}. {UNAVAILABLE_ENTITY_DESC}"
+        f"- For *Foo*:n    {EntityLinker.NIL}. {UNAVAILABLE_ENTITY_DESC}"
         in doc.user_data["llm_io"]["llm"]["prompt"].replace("\\", "")
     )
     assert doc.ents[0].kb_id_ == EntityLinker.NIL
@@ -678,8 +678,15 @@ def test_ent_highlighting():
     ]
 
     assert (
-        EntityLinkerTask.highlight_ents_in_doc(doc)
+        EntityLinkerTask.highlight_ents_in_doc(doc).text
         == "Alice goes to *Boston* to see the *Boston Celtics* game."
+    )
+    assert (
+        EntityLinkerTask.unhighlight_ents_in_doc(
+            EntityLinkerTask.highlight_ents_in_doc(doc)
+        ).text
+        == doc.text
+        == text
     )
 
 
