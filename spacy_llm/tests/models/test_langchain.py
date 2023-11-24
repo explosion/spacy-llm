@@ -1,9 +1,11 @@
 import os
+from typing import List
 
 import pytest
 import spacy
 
 from spacy_llm.compat import has_langchain
+from spacy_llm.models.langchain import LangChain
 from spacy_llm.tests.compat import has_azure_openai_key
 
 PIPE_CFG = {
@@ -11,10 +13,17 @@ PIPE_CFG = {
         "@llm_models": "langchain.OpenAI.v1",
         "name": "ada",
         "config": {"temperature": 0.3},
-        "query": {"@llm_queries": "spacy.CallLangChain.v1"},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
+
+
+def langchain_model_reg_handles() -> List[str]:
+    """Returns a list of all LangChain model reg handles."""
+    return [
+        f"langchain.{cls.__name__}.v1"
+        for class_id, cls in LangChain.get_type_to_cls_dict().items()
+    ]
 
 
 @pytest.mark.external
