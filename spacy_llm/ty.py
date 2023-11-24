@@ -138,14 +138,14 @@ class NonshardingLLMTask(Protocol):
         """
 
 
-@runtime_checkable
-class LLMTask(Protocol):
-    generate_prompts: Callable[..., Iterable[Any]]
-    parse_responses: Callable[..., Iterable[Doc]]
+# @runtime_checkable
+# class LLMTask(Protocol):
+#     generate_prompts: Callable[..., Iterable[Any]]
+#     parse_responses: Callable[..., Iterable[Doc]]
 
 
 TaskContraT = TypeVar(
-    "TaskContraT", bound=Union[ShardingLLMTask, LLMTask], contravariant=True
+    "TaskContraT", bound=Union[ShardingLLMTask, NonshardingLLMTask], contravariant=True
 )
 ShardingTaskContraT = TypeVar(
     "ShardingTaskContraT", bound=ShardingLLMTask, contravariant=True
@@ -208,7 +208,9 @@ class LabeledTask(Protocol):
 class Cache(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    def initialize(self, vocab: Vocab, task: Union[LLMTask, ShardingLLMTask]) -> None:
+    def initialize(
+        self, vocab: Vocab, task: Union[NonshardingLLMTask, ShardingLLMTask]
+    ) -> None:
         """
         Initialize cache with data not available at construction time.
         vocab (Vocab): Vocab object.
@@ -325,7 +327,7 @@ def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
     return signature
 
 
-def supports_sharding(task: Union[LLMTask, ShardingLLMTask]) -> bool:
+def supports_sharding(task: Union[NonshardingLLMTask, ShardingLLMTask]) -> bool:
     """Determines task type, as isinstance(instance, Protocol) only checks for method names. This also considers
     argument and return types. Raises an exception if task is neither.
     Note that this is not as thorough as validate_type_consistency() and relies on clues to determine which task type
@@ -343,7 +345,7 @@ def supports_sharding(task: Union[LLMTask, ShardingLLMTask]) -> bool:
 
 
 def validate_type_consistency(
-    task: Union[LLMTask, ShardingLLMTask], model: PromptExecutorType
+    task: Union[NonshardingLLMTask, ShardingLLMTask], model: PromptExecutorType
 ) -> None:
     """Check whether the types of the task and model signatures match.
     task (ShardingLLMTask): Specified task.
@@ -351,7 +353,7 @@ def validate_type_consistency(
     """
     # Raises an error or prints a warning if something looks wrong/odd.
     # todo update error messages
-    if not isinstance(task, LLMTask):
+    if not isinstance(task, NonshardingLLMTask):
         raise ValueError(
             f"A task needs to adhere to the interface of either 'LLMTask' or 'ShardingLLMTask', but {type(task)} "
             f"doesn't."

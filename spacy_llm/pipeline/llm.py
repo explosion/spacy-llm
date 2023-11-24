@@ -16,7 +16,7 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LabeledTask, LLMTask, ModelWithContextLength
+from ..ty import Cache, LabeledTask, ModelWithContextLength, NonshardingLLMTask
 from ..ty import PromptExecutorType, ScorableTask, Serializable, ShardingLLMTask
 from ..ty import supports_sharding, validate_type_consistency
 
@@ -36,7 +36,7 @@ DEFAULT_CACHE_CONFIG = {
 
 DEFAULT_SAVE_IO = False
 DEFAULT_VALIDATE_TYPES = True
-_LLMTask = Union[LLMTask, ShardingLLMTask]
+_LLMTask = Union[NonshardingLLMTask, ShardingLLMTask]
 
 
 class CacheConfigType(TypedDict):
