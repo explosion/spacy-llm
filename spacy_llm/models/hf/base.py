@@ -24,7 +24,6 @@ class HuggingFace(abc.ABC):
         name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
-        inference_config (Dict[Any, Any]): HF config for model run.
         """
         self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
         default_cfg_init, default_cfg_run = self.compile_default_configs()

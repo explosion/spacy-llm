@@ -45,7 +45,9 @@ class ShardingCountExample(FewshotExample):
 
 @registry.llm_tasks("spacy.CountWithSharding.v1")
 class ShardingCountTask(BuiltinTask):
-    _PROMPT_TEMPLATE = "Reply with the number of characters in this string (and nothing else): '{{ text }}'"
+    _PROMPT_TEMPLATE = (
+        "Reply with the number of words in this string (and nothing else): '{{ text }}'"
+    )
 
     def __init__(self):
         assert isinstance(reduce_shards_to_doc, ShardReducer)
@@ -57,12 +59,6 @@ class ShardingCountTask(BuiltinTask):
             shard_mapper=make_shard_mapper(),
             shard_reducer=reduce_shards_to_doc,
         )
-
-    # def generate_prompts(
-    #     self, docs: Iterable[Doc], context_length: Optional[int] = None
-    # ) -> Iterable[Tuple[Iterable[Any], Iterable[Doc]]]:
-    #     x = super().generate_prompts(docs, context_length)
-    #     return x
 
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]

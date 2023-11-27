@@ -6,11 +6,13 @@ from spacy_llm.util import assemble_from_config
 
 from .util import ShardingCountTask  # noqa: F401
 
+_CONTEXT_LENGTH = 20
+
 
 @pytest.fixture
 def config():
     return Config().from_str(
-        """
+        f"""
             [nlp]
             lang = "en"
             pipeline = ["llm"]
@@ -19,13 +21,14 @@ def config():
 
             [components.llm]
             factory = "llm"
+            save_io = True
 
             [components.llm.task]
             @llm_tasks = "spacy.CountWithSharding.v1"
 
             [components.llm.model]
             @llm_models = "spacy.GPT-3-5.v3"
-            context_length = 20
+            context_length = {_CONTEXT_LENGTH}
         """
     )
 
@@ -37,14 +40,27 @@ def test_with_count_task(config, model: str):
     """Tests whether tasks shard data as expected."""
     config["components"]["llm"]["model"]["@llm_models"] = model
     nlp = assemble_from_config(config)
-    # todo add tests for sharding correctness checks
-    nlp(
+    doc = nlp(
         "Do one thing every day that scares you. The only thing we have to fear is fear itself."
     )
 
-
-@pytest.mark.parametrize("model", ("spacy.GPT-3.5.v3",))
-@pytest.mark.parametrize("task", ("spacy.Lemma.v1",))
-def test_with_all_tasks(config, model: str, task: str):
-    # todo add task-specific sharding tests in task test files?
-    pass
+    # With a context length of 20 we expect the doc to be split into five prompts.
+    prompts = [
+        pr.replace('"', "").strip()
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"][1:-1].split('",')
+    ]
+    prompt_texts = [pr[65:].replace("'", "").strip() for pr in prompts]
+    responses = [
+        int(r.replace("'", ""))
+        for r in doc.user_data["llm_io"]["llm"]["response"][1:-1].split("',")
+    ]
+    assert prompt_texts == [
+        "Do one thing every day",
+        "that scares you",
+        ". The only",
+        "thing we have to",
+        "fear is fear itself.",
+    ]
+    assert all(
+        [response == len(pr.split()) for response, pr in zip(responses, prompt_texts)]
+    )

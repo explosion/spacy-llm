@@ -25,9 +25,6 @@ batch_size = 128
 
 [components]
 
-[components.llm]
-factory = "llm"
-save_io = True
 
 [components.llm.task]
 @llm_tasks = "spacy.NoOp.v1"
