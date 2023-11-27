@@ -17,9 +17,15 @@ class Falcon(HuggingFace):
         name: MODEL_NAMES,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: int,
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        super().__init__(name=name, config_init=config_init, config_run=config_run)
+        super().__init__(
+            name=name,
+            config_init=config_init,
+            config_run=config_run,
+            context_length=context_length,
+        )
 
         assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)
         self._config_run["pad_token_id"] = self._tokenizer.pad_token_id
@@ -67,10 +73,6 @@ class Falcon(HuggingFace):
             default_cfg_run,
         )
 
-    @property
-    def context_length(self) -> int:
-        return 2048
-
 
 @registry.llm_models("spacy.Falcon.v1")
 def falcon_hf(
@@ -85,4 +87,6 @@ def falcon_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Falcon instance that can execute a set of prompts and return
         the raw responses.
     """
-    return Falcon(name=name, config_init=config_init, config_run=config_run)
+    return Falcon(
+        name=name, config_init=config_init, config_run=config_run, context_length=2048
+    )

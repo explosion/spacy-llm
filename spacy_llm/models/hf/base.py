@@ -17,6 +17,7 @@ class HuggingFace(abc.ABC):
         name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: int,
     ):
         """Initializes HF model instance.
         query (Callable[[Any, Iterable[Any]], Iterable[Any]): Callable executing LLM prompts when
@@ -24,8 +25,10 @@ class HuggingFace(abc.ABC):
         name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
+        context_length (int): Context length for this model. Necessary for sharding.
         """
         self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
+        self._context_length = context_length
         default_cfg_init, default_cfg_run = self.compile_default_configs()
         self._config_init, self._config_run = default_cfg_init, default_cfg_run
 
@@ -93,11 +96,11 @@ class HuggingFace(abc.ABC):
         return tuple(str(arg) for arg in cls.MODEL_NAMES.__args__)  # type: ignore[attr-defined]
 
     @property
-    @abc.abstractmethod
     def context_length(self) -> int:
         """Returns context length in number of tokens for this model.
         RETURNS (int): Max. number of tokens in allowed in prompt for the current model.
         """
+        return self._context_length
 
     @property
     @abc.abstractmethod

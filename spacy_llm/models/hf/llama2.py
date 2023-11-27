@@ -17,8 +17,14 @@ class Llama2(HuggingFace):
         name: MODEL_NAMES,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: int,
     ):
-        super().__init__(name=name, config_init=config_init, config_run=config_run)
+        super().__init__(
+            name=name,
+            config_init=config_init,
+            config_run=config_run,
+            context_length=context_length,
+        )
         # Instantiate GenerationConfig object from config dict.
         self._hf_config_run = transformers.GenerationConfig.from_pretrained(
             self._name,
@@ -54,10 +60,6 @@ class Llama2(HuggingFace):
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         return HuggingFace.compile_default_configs()
 
-    @property
-    def context_length(self) -> int:
-        return 4096
-
 
 @registry.llm_models("spacy.Llama2.v1")
 def llama2_hf(
@@ -72,4 +74,6 @@ def llama2_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Llama2 instance that can execute a set of prompts and return
         the raw responses.
     """
-    return Llama2(name=name, config_init=config_init, config_run=config_run)
+    return Llama2(
+        name=name, config_init=config_init, config_run=config_run, context_length=4096
+    )

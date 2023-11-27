@@ -20,9 +20,15 @@ class OpenLLaMA(HuggingFace):
         name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: int,
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        super().__init__(name=name, config_init=config_init, config_run=config_run)
+        super().__init__(
+            name=name,
+            config_init=config_init,
+            config_run=config_run,
+            context_length=context_length,
+        )
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
@@ -85,10 +91,6 @@ class OpenLLaMA(HuggingFace):
             {**default_cfg_run, "max_new_tokens": 32},
         )
 
-    @property
-    def context_length(self) -> int:
-        return 2048
-
 
 @registry.llm_models("spacy.OpenLLaMA.v1")
 def openllama_hf(
@@ -103,4 +105,6 @@ def openllama_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): OpenLLaMA instance that can execute a set of prompts and return
         the raw responses.
     """
-    return OpenLLaMA(name=name, config_init=config_init, config_run=config_run)
+    return OpenLLaMA(
+        name=name, config_init=config_init, config_run=config_run, context_length=2048
+    )

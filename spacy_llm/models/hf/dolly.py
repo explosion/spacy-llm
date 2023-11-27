@@ -50,10 +50,6 @@ class Dolly(HuggingFace):
             default_cfg_run,
         )
 
-    @property
-    def context_length(self) -> int:
-        return 2048
-
 
 @registry.llm_models("spacy.Dolly.v1")
 def dolly_hf(
@@ -68,4 +64,6 @@ def dolly_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Dolly instance that can execute a set of prompts and return
         the raw responses.
     """
-    return Dolly(name=name, config_init=config_init, config_run=config_run)
+    return Dolly(
+        name=name, config_init=config_init, config_run=config_run, context_length=2048
+    )

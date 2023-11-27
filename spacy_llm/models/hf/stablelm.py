@@ -39,10 +39,16 @@ class StableLM(HuggingFace):
         name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: int,
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_tuned = "tuned" in name
-        super().__init__(name=name, config_init=config_init, config_run=config_run)
+        super().__init__(
+            name=name,
+            config_init=config_init,
+            config_run=config_run,
+            context_length=context_length,
+        )
 
     def init_model(self) -> "transformers.AutoModelForCausalLM":
         """Sets up HF model and needed utilities.
@@ -115,10 +121,6 @@ class StableLM(HuggingFace):
             },
         )
 
-    @property
-    def context_length(self) -> int:
-        return 4096
-
 
 @registry.llm_models("spacy.StableLM.v1")
 def stablelm_hf(
@@ -138,7 +140,5 @@ def stablelm_hf(
             f"Expected one of {StableLM.get_model_names()}, but received {name}."
         )
     return StableLM(
-        name=name,
-        config_init=config_init,
-        config_run=config_run,
+        name=name, config_init=config_init, config_run=config_run, context_length=4096
     )

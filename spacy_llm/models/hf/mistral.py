@@ -15,10 +15,16 @@ class Mistral(HuggingFace):
         name: MODEL_NAMES,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: int,
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_instruct = "instruct" in name
-        super().__init__(name=name, config_init=config_init, config_run=config_run)
+        super().__init__(
+            name=name,
+            config_init=config_init,
+            config_run=config_run,
+            context_length=context_length,
+        )
 
         assert isinstance(self._tokenizer, transformers.PreTrainedTokenizerBase)
 
@@ -82,10 +88,6 @@ class Mistral(HuggingFace):
 
         return responses
 
-    @property
-    def context_length(self) -> int:
-        return 8000
-
 
 @registry.llm_models("spacy.Mistral.v1")
 def mistral_hf(
@@ -100,4 +102,6 @@ def mistral_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Falcon instance that can execute a set of prompts and return
         the raw responses.
     """
-    return Mistral(name=name, config_init=config_init, config_run=config_run)
+    return Mistral(
+        name=name, config_init=config_init, config_run=config_run, context_length=8000
+    )
