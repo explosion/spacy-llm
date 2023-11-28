@@ -278,10 +278,17 @@ class LLMWrapper(Pipe):
                     )
                     llm_io = doc.user_data["llm_io"][self._name]
                     next_prompt = next(prompts_iters[-1])
-                    llm_io["prompt"] = str(
-                        next_prompt[0] if has_shards else next_prompt
-                    )
-                    llm_io["response"] = str(next(responses_iters[-1]))
+                    if has_shards:
+                        llm_io["prompt"] = [
+                            str(shard_prompt) for shard_prompt in next_prompt[0]
+                        ]
+                        llm_io["response"] = [
+                            str(shard_response)
+                            for shard_response in next(responses_iters[-1])
+                        ]
+                    else:
+                        llm_io["prompt"] = str(next_prompt)
+                        llm_io["response"] = str(next(responses_iters[-1]))
 
                 self._cache.add(doc)
                 final_docs.append(doc)

@@ -36,7 +36,7 @@ def config():
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 @pytest.mark.parametrize("model", ("spacy.GPT-3-5.v3",))
-def test_with_count_task(config, model: str):
+def test_sharding_count(config, model: str):
     """Tests whether tasks shard data as expected."""
     config["components"]["llm"]["model"]["@llm_models"] = model
     nlp = assemble_from_config(config)
@@ -45,22 +45,54 @@ def test_with_count_task(config, model: str):
     )
 
     # With a context length of 20 we expect the doc to be split into five prompts.
+    marker = "(and nothing else): '"
     prompts = [
-        pr.replace('"', "").strip()
-        for pr in doc.user_data["llm_io"]["llm"]["prompt"][1:-1].split('",')
+        pr[pr.index(marker) + len(marker) : -1]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
     ]
-    prompt_texts = [pr[65:].replace("'", "").strip() for pr in prompts]
-    responses = [
-        int(r.replace("'", ""))
-        for r in doc.user_data["llm_io"]["llm"]["response"][1:-1].split("',")
-    ]
-    assert prompt_texts == [
-        "Do one thing every day",
+    responses = [int(r) for r in doc.user_data["llm_io"]["llm"]["response"]]
+    assert prompts == [
+        "Do one thing every day ",
         "that scares you",
-        ". The only",
-        "thing we have to",
+        ". The only ",
+        "thing we have to ",
         "fear is fear itself.",
     ]
     assert all(
-        [response == len(pr.split()) for response, pr in zip(responses, prompt_texts)]
+        [response == len(pr.split()) for response, pr in zip(responses, prompts)]
     )
+    assert sum(responses) == doc.user_data["count"]
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+@pytest.mark.parametrize("model", ("spacy.GPT-3-5.v3",))
+def test_sharding_lemma(config, model: str):
+    """Tests whether tasks shard data as expected."""
+    context_length = 120
+    config["components"]["llm"]["model"]["@llm_models"] = model
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {"@llm_tasks": "spacy.Lemma.v1"}
+
+    text = (
+        "Do one thing every day that scares you. The only thing we have to fear is fear itself. Do one thing every "
+        "day that scares you. The only thing we have to fear is fear itself. "
+    )
+    nlp = assemble_from_config(config)
+    doc = nlp(text)
+
+    # With a context length of 120 we expect the doc to be split into four prompts.
+    marker = "to be lemmatized:\n'''\n"
+    prompts = [
+        pr[pr.index(marker) + len(marker) : -4]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    # Make sure lemmas are set (somme might not be because the LLM didn't return parsable a response).
+    assert any([t.lemma != 0 for t in doc])
+    assert prompts == [
+        "Do one thing every day that scares you. The ",
+        "only thing we have to fear is ",
+        "fear itself. Do one thing every day that scares you",
+        ". The only thing we have to fear is fear itself. ",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 4

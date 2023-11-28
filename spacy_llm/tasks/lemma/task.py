@@ -58,6 +58,7 @@ class LemmaTask(BuiltinTask):
                 # match.
                 if len(tokens) != len(lemmas):
                     updated_shards_for_doc.append(shard)
+                    continue
 
                 # Assign lemmas.
                 for token, lemma_info in zip(tokens, lemmas):

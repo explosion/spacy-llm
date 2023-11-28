@@ -352,8 +352,8 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
     nlp.components[0][1]._task._auto_nil = False
     doc = nlp(make_doc())
     assert (
-        f"- For *Foo*:n    {EntityLinker.NIL}. {UNAVAILABLE_ENTITY_DESC}"
-        in doc.user_data["llm_io"]["llm"]["prompt"].replace("\\", "")
+        f"- For *Foo*:\n    {EntityLinker.NIL}. {UNAVAILABLE_ENTITY_DESC}"
+        in doc.user_data["llm_io"]["llm"]["prompt"][0]
     )
     assert doc.ents[0].kb_id_ == EntityLinker.NIL
     # Sometimes GPT-3.5 doesn't manage to include the NIL prediction, in which case all entities are set to NIL.
