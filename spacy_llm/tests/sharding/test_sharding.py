@@ -38,7 +38,7 @@ def config():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-def test_sharding_count(config, model: str):
+def test_sharding_count(config):
     """Tests whether task shards data as expected."""
     nlp = assemble_from_config(config)
 
@@ -154,6 +154,54 @@ def test_sharding_sentiment(config):
         for pr in doc.user_data["llm_io"]["llm"]["prompt"]
     ]
     assert hasattr(doc._, "sentiment") and isinstance(doc._.sentiment, numbers.Number)
+    assert prompts == [
+        "Do one thing every day that scares you. The ",
+        "only thing we have to fear is fear itself.",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_spancat(config):
+    context_length = 265
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {
+        "@llm_tasks": "spacy.SpanCat.v3",
+        "labels": ["LOCATION"],
+    }
+    nlp = assemble_from_config(config)
+
+    doc = nlp(_TEXT + " Paris is a city.")
+    marker = "Paragraph: "
+    prompts = [
+        pr[pr.rindex(marker) + len(marker) : pr.rindex("\nAnswer:")]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert len(doc.spans.data["sc"])
+    assert prompts == [
+        "Do one thing every day that ",
+        "scares you. The only thing we have to ",
+        "fear is fear itself. Paris is a city.",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 3
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_summary(config):
+    context_length = 50
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {"@llm_tasks": "spacy.Summarization.v1"}
+    nlp = assemble_from_config(config)
+
+    doc = nlp(_TEXT)
+    marker = "needs to be summarized:\n'''\n"
+    prompts = [
+        pr[pr.rindex(marker) + len(marker) : pr.rindex("\n'''\nSummary:")]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert hasattr(doc._, "summary") and doc._.summary
     assert prompts == [
         "Do one thing every day that scares you. The ",
         "only thing we have to fear is fear itself.",
