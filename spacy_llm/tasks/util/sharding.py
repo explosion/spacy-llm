@@ -56,6 +56,7 @@ def make_shard_mapper(
             remaining_doc: Optional[Doc] = doc.copy()
             fraction = 0.5
             start_idx = 0
+            n_shards = 1
 
             while remaining_doc is not None:
                 fits_in_context = False
@@ -67,11 +68,7 @@ def make_shard_mapper(
                     end_idx = start_idx + int(len(remaining_doc) * fraction)
                     shard = doc[start_idx:end_idx].as_doc(copy_user_data=True)
                     fits_in_context = (
-                        n_tok_est(
-                            render_template(
-                                shard, len(shards), i_doc, int(1 / fraction)
-                            )
-                        )
+                        n_tok_est(render_template(shard, len(shards), i_doc, n_shards))
                         * buffer_frac
                         <= context_length
                     )
@@ -89,6 +86,7 @@ def make_shard_mapper(
                 assert shard is not None
                 shards.append(shard)
                 fraction = 1
+                n_shards = max(len(shards) + round(1 / fraction), 1)
                 start_idx = end_idx
                 # Set remaining_doc to None if shard contains all of it, i. e. entire original doc has been processed.
                 remaining_doc = (

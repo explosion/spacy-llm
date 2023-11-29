@@ -90,11 +90,10 @@ class BuiltinTask(abc.ABC):
                 else [_doc]
             )
             shards = list(shards)
-            shards_teed = tee(shards, 3)
             yield [
-                render_template(_shard, _i_shard, _i_doc, len(list(shards_teed[0])))
-                for _i_shard, _shard in enumerate(shards_teed[1])
-            ], shards_teed[2]
+                render_template(_shard, _i_shard, _i_doc, len(shards))
+                for _i_shard, _shard in enumerate(shards)
+            ], shards
 
     def _get_prompt_data(
         self, shard: Doc, i_shard: int, i_doc: int, n_shards: int

@@ -53,6 +53,7 @@ class EntityLinkerTask(BuiltinTask):
         self._ents_cands_by_doc: List[List[List[Entity]]] = []
         self._has_ent_cands_by_shard: List[List[List[bool]]] = []
         self._ents_cands_by_shard: List[List[List[List[Entity]]]] = []
+        self._n_shards: Optional[int] = None
 
     def initialize(
         self,
@@ -103,6 +104,7 @@ class EntityLinkerTask(BuiltinTask):
         # update it here, as we don't know yet how the shards will look like.
         self._ents_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
         self._has_ent_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
+        self._n_shards = None
 
         return [
             EntityLinkerTask.highlight_ents_in_doc(doc, self._has_ent_cands_by_doc[i])
@@ -136,6 +138,13 @@ class EntityLinkerTask(BuiltinTask):
     def _get_prompt_data(
         self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
     ) -> Dict[str, Any]:
+        # n_shards changes before reset happens in _preprocess_docs() whenever sharding mechanism varies number of
+        # shards. In this case we have to reset task state as well.
+        if n_shards != self._n_shards:
+            self._n_shards = n_shards
+            self._ents_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
+            self._has_ent_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
+
         # It's not ideal that we have to run candidate selection again here - but due to (1) us wanting to know whether
         # all entities have candidates before sharding and, more importantly, (2) some entities maybe being split up in
         # the sharding process it's cleaner to look for candidates again.
@@ -151,8 +160,8 @@ class EntityLinkerTask(BuiltinTask):
 
         # Update shard-wise candidate info so it can be reused during parsing.
         if len(self._ents_cands_by_shard[i_doc]) == 0:
-            self._ents_cands_by_shard[i_doc] = [[] * n_shards]
-            self._has_ent_cands_by_shard[i_doc] = [[] * n_shards]
+            self._ents_cands_by_shard[i_doc] = [[] for _ in range(n_shards)]
+            self._has_ent_cands_by_shard[i_doc] = [[] for _ in range(n_shards)]
         self._ents_cands_by_shard[i_doc][i_shard] = ents_cands
         self._has_ent_cands_by_shard[i_doc][i_shard] = has_cands
 

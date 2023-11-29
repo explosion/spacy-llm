@@ -1,7 +1,10 @@
 import numbers
+from pathlib import Path
 
 import pytest
 from confection import Config
+from spacy.pipeline import EntityLinker
+from spacy.tokens import Span
 
 from spacy_llm.tests.compat import has_openai_key
 from spacy_llm.util import assemble_from_config
@@ -206,4 +209,76 @@ def test_sharding_summary(config):
         "Do one thing every day that scares you. The ",
         "only thing we have to fear is fear itself.",
     ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_textcat(config):
+    context_length = 100
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {
+        "@llm_tasks": "spacy.TextCat.v3",
+        "labels": "RECIPE",
+        "exclusive_classes": True,
+    }
+    nlp = assemble_from_config(config)
+
+    doc = nlp(
+        "Fry an egg in a pan. Scramble it. Add some salt, pepper and truffle oil."
+    )
+    marker = "Text:\n'''\n"
+    prompts = [
+        pr[pr.rindex(marker) + len(marker) : -4]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert len(doc.cats) == 1 and "RECIPE" in doc.cats
+    assert prompts == [
+        "Fry an egg in ",
+        "a pan. Scramble it. Add ",
+        "some salt, pepper and truffle oil.",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 3
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_entity_linker(config):
+    context_length = 290
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {"@llm_tasks": "spacy.EntityLinker.v1"}
+    config["initialize"] = {
+        "components": {
+            "llm": {
+                "candidate_selector": {
+                    "@llm_misc": "spacy.CandidateSelector.v1",
+                    "kb_loader": {
+                        "@llm_misc": "spacy.KBFileLoader.v1",
+                        "path": "${paths.el_kb}",
+                    },
+                }
+            }
+        }
+    }
+    config["paths"] = {
+        "el_kb": str(
+            Path(__file__).resolve().parent.parent / "tasks" / "misc" / "el_kb_data.yml"
+        )
+    }
+    nlp = assemble_from_config(config)
+
+    doc = nlp.make_doc("Alice goes to Boston to see the Boston Celtics game.")
+    doc.ents = [
+        Span(doc=doc, start=3, end=4, label="LOC"),  # Q100
+        Span(doc=doc, start=7, end=9, label="ORG"),  # Q131371
+    ]
+    doc = nlp(doc)
+    marker = "TEXT: \n'''\n"
+    prompts = [
+        pr[pr.rindex(marker) + len(marker) : pr.rindex("\n'''")]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert len(doc.ents) == 2
+    assert all([ent.kb_id_ != EntityLinker.NIL for ent in doc.ents])
+    assert prompts == ["Alice goes to *Boston* to ", "see the *Boston Celtics* game."]
     assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
