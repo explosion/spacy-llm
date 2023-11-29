@@ -1,3 +1,4 @@
+import re
 import warnings
 from typing import Iterable, List, Optional, Tuple
 
@@ -38,13 +39,12 @@ class RELExample(FewshotExample[RELTask]):
         field (str): Doc field to store relations in.
         RETURNS (Doc): Representation as doc.
         """
-        text = self.text
-        punct_chars = (",", ";", ":", ".", "!", "?")
-        for punct in punct_chars:
-            text = text.replace(punct, f" {punct} ")
+        punct_chars_pattern = r'[]!"$%&\'()*+,./:;=#@?[\\^_`{|}~-]+'
+        text = re.sub(punct_chars_pattern, r" \g<0> ", self.text)
         doc_words = text.split()
         doc_spaces = [
-            i < len(doc_words) - 1 and doc_words[i + 1] not in punct_chars
+            i < len(doc_words) - 1
+            and not re.match(punct_chars_pattern, doc_words[i + 1])
             for i, word in enumerate(doc_words)
         ]
         doc = Doc(words=doc_words, spaces=doc_spaces, vocab=Vocab(strings=doc_words))
