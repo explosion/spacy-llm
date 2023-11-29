@@ -1,7 +1,8 @@
 import warnings
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 
-from spacy.tokens import Doc
+from spacy import Vocab
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Self
@@ -31,6 +32,48 @@ class RELExample(FewshotExample[RELTask]):
             ents=entities,
             relations=example.reference._.rel,
         )
+
+    def to_doc(self) -> Doc:
+        """Returns Doc representation of example instance. Note that relations are in user_data["rel"].
+        field (str): Doc field to store relations in.
+        RETURNS (Doc): Representation as doc.
+        """
+        text = self.text
+        punct_chars = (",", ";", ":", ".", "!", "?")
+        for punct in punct_chars:
+            text = text.replace(punct, f" {punct} ")
+        doc_words = text.split()
+        doc_spaces = [
+            i < len(doc_words) - 1 and doc_words[i + 1] not in punct_chars
+            for i, word in enumerate(doc_words)
+        ]
+        doc = Doc(words=doc_words, spaces=doc_spaces, vocab=Vocab(strings=doc_words))
+
+        # Set entities after finding correct indices.
+        conv_ent_indices: List[Tuple[int, int]] = []
+        if len(self.ents):
+            ent_idx = 0
+            for token in doc:
+                if token.idx == self.ents[ent_idx].start_char:
+                    conv_ent_indices.append((token.i, -1))
+                if token.idx + len(token.text) == self.ents[ent_idx].end_char:
+                    conv_ent_indices[-1] = (conv_ent_indices[-1][0], token.i + 1)
+                    ent_idx += 1
+                if ent_idx == len(self.ents):
+                    break
+
+        doc.ents = [
+            Span(  # noqa: E731
+                doc=doc,
+                start=ent_idx[0],
+                end=ent_idx[1],
+                label=self.ents[i].label,
+            )
+            for i, ent_idx in enumerate(conv_ent_indices)
+        ]
+        doc.user_data["rel"] = self.relations
+
+        return doc
 
 
 def reduce_shards_to_doc(task: RELTask, shards: Iterable[Doc]) -> Doc:

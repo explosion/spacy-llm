@@ -83,6 +83,12 @@ class RELTask(BuiltinTaskWithLabels):
         spaces: List[bool] = [] if len(doc.ents) else [t.whitespace_ != "" for t in doc]
         ent_indices: List[Tuple[int, int]] = []
 
+        # Convert RELExample into Doc for easier subsequent processing.
+        # todo Solve import cycle so we can expect RELExample here.
+        if not isinstance(doc, Doc):
+            assert hasattr(doc, "to_doc") and callable(doc.to_doc)
+            doc = doc.to_doc()
+
         if not hasattr(doc, "ents"):
             raise ValueError(
                 "Prompt example type used in RELTask has to expose entities via an .ents attribute."
@@ -103,6 +109,7 @@ class RELTask(BuiltinTaskWithLabels):
             spaces.append(spaces[-1])
             spaces[-2] = False
             ent_indices.append((ent.start + i, ent.end + i))
+
             last_ent_end = ent.end
 
         # Include chars after last ent.
