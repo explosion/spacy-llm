@@ -73,8 +73,10 @@ def test_llm_pipe(noop_config: Dict[str, Any], n_process: int, shard: bool):
 
     for doc in docs:
         llm_io = doc.user_data["llm_io"]
-        assert llm_io["llm"]["prompt"] == [_NOOP_PROMPT] if shard else _NOOP_PROMPT
-        assert llm_io["llm"]["response"] == [_NOOP_RESPONSE]
+        assert llm_io["llm"]["prompt"] == ([_NOOP_PROMPT] if shard else _NOOP_PROMPT)
+        assert llm_io["llm"]["response"] == (
+            [_NOOP_RESPONSE] if shard else _NOOP_RESPONSE
+        )
 
 
 @pytest.mark.parametrize("n_process", [1, 2])

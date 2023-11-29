@@ -288,7 +288,10 @@ class LLMWrapper(Pipe):
                         ]
                     else:
                         llm_io["prompt"] = str(next_prompt)
-                        llm_io["response"] = str(next(responses_iters[-1]))
+                        # Models always return nested responses. For non-sharding tasks this will always be a 1-list.
+                        x = next(responses_iters[-1])[0]
+                        llm_io["response"] = str(x)
+                        x = 3
 
                 self._cache.add(doc)
                 final_docs.append(doc)
