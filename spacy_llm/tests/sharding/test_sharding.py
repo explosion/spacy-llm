@@ -1,3 +1,5 @@
+import numbers
+
 import pytest
 from confection import Config
 
@@ -36,10 +38,8 @@ def config():
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("model", ("spacy.GPT-3-5.v3",))
 def test_sharding_count(config, model: str):
     """Tests whether task shards data as expected."""
-    config["components"]["llm"]["model"]["@llm_models"] = model
     nlp = assemble_from_config(config)
 
     doc = nlp(_TEXT)
@@ -64,11 +64,8 @@ def test_sharding_count(config, model: str):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("model", ("spacy.GPT-3-5.v3",))
-def test_sharding_lemma(config, model: str):
-    """Tests whether task shards data as expected."""
+def test_sharding_lemma(config):
     context_length = 120
-    config["components"]["llm"]["model"]["@llm_models"] = model
     config["components"]["llm"]["model"]["context_length"] = context_length
     config["components"]["llm"]["task"] = {"@llm_tasks": "spacy.Lemma.v1"}
     nlp = assemble_from_config(config)
@@ -90,11 +87,8 @@ def test_sharding_lemma(config, model: str):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("model", ("spacy.GPT-3-5.v3",))
-def test_sharding_ner(config, model: str):
-    """Tests whether task shards data as expected."""
+def test_sharding_ner(config):
     context_length = 265
-    config["components"]["llm"]["model"]["@llm_models"] = model
     config["components"]["llm"]["model"]["context_length"] = context_length
     config["components"]["llm"]["task"] = {
         "@llm_tasks": "spacy.NER.v3",
@@ -112,5 +106,56 @@ def test_sharding_ner(config, model: str):
     assert prompts == [
         "Do one thing every day that scares you. The only thing ",
         "we have to fear is fear itself. Paris is a city.",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_rel(config):
+    context_length = 100
+    config["nlp"]["pipeline"] = ["ner", "llm"]
+    config["components"]["ner"] = {"source": "en_core_web_md"}
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {
+        "@llm_tasks": "spacy.REL.v1",
+        "labels": "LivesIn,Visits",
+    }
+    config["initialize"] = {"vectors": "en_core_web_md"}
+    nlp = assemble_from_config(config)
+
+    doc = nlp("Joey rents a place in New York City, which is in North America.")
+    marker = "Text:\n'''\n"
+    prompts = [
+        pr[pr.rindex(marker) + len(marker) : -4]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert len(doc.ents)
+    assert hasattr(doc._, "rel") and len(doc._.rel)
+    assert prompts == [
+        "Joey[ENT0:PERSON] rents a place in New York City",
+        "[ENT1:GPE], which is in North America[ENT2:LOC].",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_sentiment(config):
+    context_length = 50
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {"@llm_tasks": "spacy.Sentiment.v1"}
+    nlp = assemble_from_config(config)
+
+    doc = nlp(_TEXT)
+    marker = "Text:\n'''\n"
+    prompts = [
+        pr[pr.index(marker) + len(marker) : pr.rindex("\n'''\nAnswer:")]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert hasattr(doc._, "sentiment") and isinstance(doc._.sentiment, numbers.Number)
+    assert prompts == [
+        "Do one thing every day that scares you. The ",
+        "only thing we have to fear is fear itself.",
     ]
     assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2

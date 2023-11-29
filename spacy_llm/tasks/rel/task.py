@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from spacy.language import Language
 from spacy.tokens import Doc, Span
@@ -60,24 +60,7 @@ class RELTask(BuiltinTaskWithLabels):
         self._field = "rel"
 
     def _preprocess_docs_for_prompt(self, docs: Iterable[Doc]) -> Iterable[Doc]:
-        preprocessed_docs: List[Doc] = []
-
-        for doc in docs:
-            preprocessed_docs.append(
-                Doc(doc.vocab, words=RELTask._preannotate(doc).split())
-            )
-            preprocessed_docs[-1].ents = [
-                Span(
-                    preprocessed_docs[-1],
-                    ent.start,
-                    ent.end,
-                    label=ent.label_,
-                    kb_id=ent.kb_id_,
-                )
-                for ent in doc.ents
-            ]
-
-        return preprocessed_docs
+        return [RELTask._preannotate(doc, True) for doc in docs]
 
     def _get_prompt_data(
         self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
@@ -89,24 +72,61 @@ class RELTask(BuiltinTaskWithLabels):
         }
 
     @staticmethod
-    def _preannotate(doc: Union[Doc, FewshotExample]) -> str:
-        """Creates a text version of the document with annotated entities."""
-        offset = 0
-        text = doc.text
+    def _preannotate(
+        doc: Union[Doc, FewshotExample], return_as_doc: bool = False
+    ) -> Union[str, Doc]:
+        """Creates a text version of the document with annotated entities.
+        doc (Union[Doc, FewshotExample]): Doc to preannotate.
+        return_as_doc (bool): Whether to return as doc (by default returned as text).
+        """
+        words: List[str] = [] if len(doc.ents) else [t.text for t in doc]
+        spaces: List[bool] = [] if len(doc.ents) else [t.whitespace_ != "" for t in doc]
+        ent_indices: List[Tuple[int, int]] = []
 
         if not hasattr(doc, "ents"):
             raise ValueError(
                 "Prompt example type used in RELTask has to expose entities via an .ents attribute."
             )
 
+        # Update token information for doc reconstruction.
+        last_ent_end = -1
         for i, ent in enumerate(doc.ents):
-            end = ent.end_char
-            before, after = text[: end + offset], text[end + offset :]
             annotation = f"[ENT{i}:{ent.label_ if isinstance(doc, Doc) else ent.label}]"
-            offset += len(annotation)
-            text = f"{before}{annotation}{after}"
+            tokens_since_last_ent = [
+                *[t for t in doc if last_ent_end <= t.i < ent.start],
+                *[t for t in ent],
+            ]
+            words.extend([*[t.text for t in tokens_since_last_ent], annotation])
+            spaces.extend([t.whitespace_ != "" for t in tokens_since_last_ent])
 
-        return text
+            # Adjust spaces w.r.t. added annotations, which should appear directly after entity.
+            spaces.append(spaces[-1])
+            spaces[-2] = False
+            ent_indices.append((ent.start + i, ent.end + i))
+            last_ent_end = ent.end
+
+        # Include chars after last ent.
+        if len(doc.ents):
+            tokens_since_last_ent = [t for t in doc if last_ent_end <= t.i]
+            words.extend([t.text for t in tokens_since_last_ent])
+            spaces.extend([t.whitespace_ != "" for t in tokens_since_last_ent])
+
+        # Reconstruct doc.
+        annotated_doc = Doc(words=words, spaces=spaces, vocab=doc.vocab)
+        annotated_doc.ents = [
+            Span(  # noqa: E731
+                doc=annotated_doc,
+                start=ent_idx[0],
+                end=ent_idx[1],
+                label=doc.ents[i].label,
+                vector=doc.ents[i].vector,
+                vector_norm=doc.ents[i].vector_norm,
+                kb_id=doc.ents[i].kb_id_,
+            )
+            for i, ent_idx in enumerate(ent_indices)
+        ]
+
+        return annotated_doc.text if not return_as_doc else annotated_doc
 
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
