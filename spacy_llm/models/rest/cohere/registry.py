@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from confection import SimpleFrozenDict
 
@@ -17,6 +17,7 @@ def cohere_command(
     max_tries: int = Cohere.DEFAULT_MAX_TRIES,
     interval: float = Cohere.DEFAULT_INTERVAL,
     max_request_time: float = Cohere.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Cohere instance for 'command' model using REST to prompt API.
     name (Literal["command", "command-light", "command-light-nightly", "command-nightly"]): Model  to use.
@@ -29,11 +30,12 @@ def cohere_command(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (str): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Cohere instance for 'command' model using REST to prompt API.
     """
     return Cohere(
         name=name,
-        endpoint=Endpoints.COMPLETION.value,
+        endpoint=endpoint or Endpoints.COMPLETION.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
