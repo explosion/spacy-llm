@@ -197,8 +197,8 @@ class LLMWrapper(Pipe):
         """Process a batch of docs with the configured LLM model and task.
         If a cache is configured, only sends prompts to model for docs not found in cache.
 
-        docs (List[Doc]): Input batch of docs
-        RETURNS (List[Doc]): Processed batch of docs with task annotations set
+        docs (List[Doc]): Input batch of docs.
+        RETURNS (List[Doc]): Processed batch of docs with task annotations set.
         """
         has_shards = supports_sharding(self._task)
         is_cached = [doc in self._cache for doc in docs]
@@ -210,6 +210,7 @@ class LLMWrapper(Pipe):
                 len(noncached_doc_batch),
             )
 
+        # Process uncached docs.
         modified_docs: Iterator[Doc] = iter(())
         if len(noncached_doc_batch) > 0:
             n_iters = 3 if self._save_io else 2
@@ -261,6 +262,7 @@ class LLMWrapper(Pipe):
             )
             modified_docs = iter(resp)
 
+        noncached_doc_batch_iter = iter(noncached_doc_batch)
         final_docs: List[Doc] = []
         for i, doc in enumerate(docs):
             if is_cached[i]:
@@ -271,6 +273,18 @@ class LLMWrapper(Pipe):
             else:
                 doc = next(modified_docs)
 
+                # Merge with doc's prior custom data.
+                noncached_doc = next(noncached_doc_batch_iter)
+                for extension in dir(noncached_doc):
+                    if not Doc.has_extension(extension):
+                        Doc.set_extension(extension, default=None)
+                    # Don't overwrite any non-None extension values in new doc.
+                    if getattr(doc._, extension) is None:
+                        setattr(doc._, extension, getattr(noncached_doc._, extension))
+                doc.user_data = {**noncached_doc.user_data, **doc.user_data}
+                doc._context = noncached_doc._context
+
+                # Save raw IO (prompt and response), if save_io is True.
                 if self._save_io:
                     # Make sure the `llm_io` field is set
                     doc.user_data["llm_io"] = doc.user_data.get(

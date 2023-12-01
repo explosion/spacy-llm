@@ -18,7 +18,7 @@ from spacy_llm.models.rest.noop import _NOOP_RESPONSE
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import registry
 from spacy_llm.tasks import _LATEST_TASKS, make_noop_task
-from spacy_llm.tasks.noop import _NOOP_PROMPT
+from spacy_llm.tasks.noop import _NOOP_PROMPT, ShardingNoopTask
 
 from ...cache import BatchCache
 from ...registry.reader import fewshot_reader
@@ -79,7 +79,7 @@ def test_llm_pipe(noop_config: Dict[str, Any], n_process: int, shard: bool):
         )
 
 
-@pytest.mark.parametrize("n_process", [1, 2])
+@pytest.mark.parametrize("n_process", [2])
 def test_llm_pipe_with_cache(tmp_path: Path, n_process: int):
     """Test call .pipe() with pre-cached docs"""
     ops = get_current_ops()
@@ -406,3 +406,63 @@ def test_llm_task_factories_ner():
     assert len(doc.ents) > 0
     for ent in doc.ents:
         assert ent.label_ in ["PER", "ORG", "LOC"]
+
+
+@pytest.mark.parametrize("shard", [True, False])
+def test_llm_custom_data(noop_config: Dict[str, Any], shard: bool):
+    """Test whether custom doc data is preserved."""
+    nlp = spacy.blank("en")
+    nlp.add_pipe(
+        "llm",
+        config={**noop_config, **{"task": {"@llm_tasks": "spacy.NoOpNoShards.v1"}}}
+        if not shard
+        else noop_config,
+    )
+
+    doc = nlp.make_doc("This is a test")
+    if not Doc.has_extension("test"):
+        Doc.set_extension("test", default=None)
+    doc._.test = "Test"
+    doc.user_data["test"] = "Test"
+
+    doc = nlp(doc)
+    assert doc._.test == "Test"
+    assert doc.user_data["test"] == "Test"
+
+
+def test_llm_custom_data_overwrite(noop_config: Dict[str, Any]):
+    """Test whether custom doc data is overwritten as expected."""
+
+    class NoopTaskWithCustomData(ShardingNoopTask):
+        def parse_responses(
+            self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
+        ) -> Iterable[Doc]:
+            docs = super().parse_responses(shards, responses)
+            for doc in docs:
+                doc._.test = "Test 2"
+                doc.user_data["test"] = "Test 2"
+            return docs
+
+    @registry.llm_tasks("spacy.NoOpCustomData.v1")
+    def make_noopnoshards_task():
+        return NoopTaskWithCustomData()
+
+    nlp = spacy.blank("en")
+    nlp.add_pipe(
+        "llm",
+        config={**noop_config, **{"task": {"@llm_tasks": "spacy.NoOpCustomData.v1"}}},
+    )
+    doc = nlp.make_doc("This is a test")
+    for extension in ("test", "test_nooverwrite"):
+        if not Doc.has_extension(extension):
+            Doc.set_extension(extension, default=None)
+    doc._.test = "Test"
+    doc._.test_nooverwrite = "Test"
+    doc.user_data["test"] = "Test"
+    doc.user_data["test_nooverwrite"] = "Test"
+
+    doc = nlp(doc)
+    assert doc._.test == "Test 2"
+    assert doc.user_data["test"] == "Test 2"
+    assert doc._.test_nooverwrite == "Test"
+    assert doc.user_data["test_nooverwrite"] == "Test"

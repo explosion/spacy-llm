@@ -33,7 +33,7 @@ def reduce_shards_to_doc(task: SummarizationTask, shards: Iterable[Doc]) -> Doc:
         warnings.filterwarnings(
             "ignore",
             category=UserWarning,
-            message=f".*Skipping Doc custom extension '{task.field}' while merging docs.",
+            message=".*Skipping .* while merging docs.",
         )
         doc = Doc.from_docs(list(shards), ensure_whitespace=True)
 

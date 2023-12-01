@@ -1,3 +1,4 @@
+import warnings
 from typing import Iterable, Optional, Tuple
 
 from spacy.tokens import Doc
@@ -27,7 +28,17 @@ class ShardingNoopTask:
     def parse_responses(
         self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        return [list(shards_for_doc)[0] for shards_for_doc in shards]
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=UserWarning,
+                message=".*Skipping .* while merging docs.",
+            )
+            docs = [
+                Doc.from_docs(list(shards_for_doc), ensure_whitespace=True)
+                for shards_for_doc in shards
+            ]
+        return docs
 
     @property
     def prompt_template(self) -> str:
