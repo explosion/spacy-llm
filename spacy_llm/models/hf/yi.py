@@ -69,7 +69,6 @@ class Yi(HuggingFace):
         assert hasattr(self._model, "generate")
         assert hasattr(self._tokenizer, "apply_chat_template")
         assert self._tokenizer
-        # assert callable(self._tokenizer.apply_chat_template)  # type: ignore[union-attr]
 
         responses: List[List[str]] = []
 
@@ -77,7 +76,7 @@ class Yi(HuggingFace):
             prompts_for_doc = list(prompts_for_doc)
 
             tokenized_input_ids = [
-                self._tokenizer.apply_chat_template(  # type: ignore[union-attr]
+                self._tokenizer.apply_chat_template(
                     [{"role": "user", "content": prompt}],
                     tokenize=True,
                     add_generation_prompt=True,
