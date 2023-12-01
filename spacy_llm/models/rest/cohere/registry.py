@@ -30,7 +30,7 @@ def cohere_command(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    endpoint (str): Endpoint to use. Defaults to standard endpoint.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Cohere instance for 'command' model using REST to prompt API.
     """
     return Cohere(
