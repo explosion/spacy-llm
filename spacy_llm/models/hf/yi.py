@@ -66,15 +66,18 @@ class Yi(HuggingFace):
         return "01-ai"
 
     def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:  # type: ignore[override]
-        assert callable(self._tokenizer)
         assert hasattr(self._model, "generate")
+        assert hasattr(self._tokenizer, "apply_chat_template")
+        assert self._tokenizer
+        # assert callable(self._tokenizer.apply_chat_template)  # type: ignore[union-attr]
+
         responses: List[List[str]] = []
 
         for prompts_for_doc in prompts:
             prompts_for_doc = list(prompts_for_doc)
 
             tokenized_input_ids = [
-                self._model.tokenizer.apply_chat_template(
+                self._tokenizer.apply_chat_template(  # type: ignore[union-attr]
                     [{"role": "user", "content": prompt}],
                     tokenize=True,
                     add_generation_prompt=True,
@@ -104,20 +107,11 @@ class Yi(HuggingFace):
     @staticmethod
     def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
         default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
-        return {**default_cfg_init, **{"torch_dtype": "auto"}}, {
-            **default_cfg_run,
-            **{
-                "max_new_tokens": 256,
-                "do_sample": True,
-                "temperature": 0.7,
-                "top_k": 50,
-                "top_p": 0.95,
-            },
-        }
+        return {**default_cfg_init, **{"torch_dtype": "auto"}}, default_cfg_run
 
 
 @registry.llm_models("spacy.Yi.v1")
-def mistral_yi(
+def yi_hf(
     name: Yi.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),

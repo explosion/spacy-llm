@@ -44,7 +44,6 @@ class Zephyr(HuggingFace):
         return "HuggingFaceH4"
 
     def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:  # type: ignore[override]
-        assert hasattr(self._model, "generate")
         responses: List[List[str]] = []
 
         for prompts_for_doc in prompts:
