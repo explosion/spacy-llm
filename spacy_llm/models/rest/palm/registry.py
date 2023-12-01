@@ -31,12 +31,12 @@ def palm_bison(
     endpoint (str): Endpoint to use.. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Cohere instance for 'command' model using REST to prompt API.
     """
+    default_endpoint = (
+        Endpoints.TEXT.value if name in {"text-bison-001"} else Endpoints.MSG.value
+    )
     return PaLM(
         name=name,
-        endpoint=endpoint
-        or (
-            Endpoints.TEXT.value if name in {"text-bison-001"} else Endpoints.MSG.value
-        ),
+        endpoint=endpoint or default_endpoint,
         config=config,
         strict=strict,
         max_tries=max_tries,
