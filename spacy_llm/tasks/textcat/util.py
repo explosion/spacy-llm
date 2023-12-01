@@ -1,3 +1,4 @@
+import warnings
 from collections import defaultdict
 from typing import Any, DefaultDict, Dict, Iterable, Optional
 
@@ -66,7 +67,13 @@ def reduce_shards_to_doc(task: TextCatTask, shards: Iterable[Doc]) -> Doc:
         for cat, cat_score in shard.cats.items():
             all_cats[cat] += cat_score * weight
 
-    doc = Doc.from_docs(shards, ensure_whitespace=True)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=UserWarning,
+            message=".*Skipping .* while merging docs.",
+        )
+        doc = Doc.from_docs(shards, ensure_whitespace=True)
     doc.cats = all_cats
 
     return doc
