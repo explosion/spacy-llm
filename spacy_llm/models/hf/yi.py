@@ -10,12 +10,12 @@ from .base import HuggingFace
 class Yi(HuggingFace):
     MODEL_NAMES = Literal[  # noqa: F722
         "Yi-34B",
-        "Yi-34B-Chat-8bits",
-        "Yi-6B-Chat",
+        "Yi-34B-chat-8bits",
+        "Yi-6B-chat",
         "Yi-6B",
         "Yi-6B-200K",
-        "Yi-34B-Chat",
-        "Yi-34B-Chat-4bits",
+        "Yi-34B-chat",
+        "Yi-34B-chat-4bits",
         "Yi-34B-200K",
     ]
 
@@ -77,7 +77,7 @@ class Yi(HuggingFace):
 
             tokenized_input_ids = [
                 self._tokenizer.apply_chat_template(
-                    [{"role": "user", "content": prompt}],
+                    conversation=[{"role": "user", "content": prompt}],
                     tokenize=True,
                     add_generation_prompt=True,
                     return_tensors="pt",
@@ -88,7 +88,6 @@ class Yi(HuggingFace):
                 tp.to(self._model.device) for tp in tokenized_input_ids
             ]
 
-            # response = tokenizer.decode(output_ids[0][input_ids.shape[1]:], skip_special_tokens=True)
             responses.append(
                 [
                     self._tokenizer.decode(
@@ -96,7 +95,7 @@ class Yi(HuggingFace):
                             input_ids=tok_ii, generation_config=self._hf_config_run
                         )[:, tok_ii.shape[1] :][0],
                         skip_special_tokens=True,
-                    )
+                    ).strip("\n")
                     for tok_ii in tokenized_input_ids
                 ]
             )

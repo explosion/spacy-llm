@@ -51,7 +51,7 @@ class Zephyr(HuggingFace):
                 self._model.tokenizer.apply_chat_template(
                     [{"role": "user", "content": prompt}],
                     tokenize=False,
-                    add_generation_prompt=True,
+                    add_generation_prompt=False,
                 )
                 for prompt in prompts_for_doc
             ]
@@ -61,6 +61,8 @@ class Zephyr(HuggingFace):
                     self._model(prompt, generation_config=self._hf_config_run)[0][
                         "generated_text"
                     ]
+                    .replace("<|assistant|>", "")
+                    .strip("\n")
                     for prompt in formatted_prompts_for_doc
                 ]
             )
