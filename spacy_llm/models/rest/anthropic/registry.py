@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from confection import SimpleFrozenDict
 
@@ -49,6 +49,7 @@ def anthropic_claude_2(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-2' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -61,12 +62,13 @@ def anthropic_claude_2(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -83,6 +85,7 @@ def anthropic_claude_1(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-1' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -95,12 +98,13 @@ def anthropic_claude_1(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1' model using REST to
         prompt API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -119,6 +123,7 @@ def anthropic_claude_instant_1(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-instant-1' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -131,12 +136,13 @@ def anthropic_claude_instant_1(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-instant-1' model using REST to
         prompt API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -155,6 +161,7 @@ def anthropic_claude_instant_1_1(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-instant-1.1' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -167,12 +174,13 @@ def anthropic_claude_instant_1_1(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-instant-1.1' model using REST to
         prompt API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -189,6 +197,7 @@ def anthropic_claude_1_0(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-1.0' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -201,12 +210,13 @@ def anthropic_claude_1_0(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1.0' model using REST to prompt
         API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -223,6 +233,7 @@ def anthropic_claude_1_2(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-1.2' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -235,12 +246,13 @@ def anthropic_claude_1_2(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1.2' model using REST to prompt
         API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -257,6 +269,7 @@ def anthropic_claude_1_3(
     max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
     interval: float = Anthropic.DEFAULT_INTERVAL,
     max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns Anthropic instance for 'claude-1.3' model using REST to prompt API.
     config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
@@ -269,12 +282,13 @@ def anthropic_claude_1_3(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (Callable[[Iterable[str]], Iterable[str]]]): Anthropic instance for 'claude-1.3' model using REST to prompt
         API.
     """
     return Anthropic(
         name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
+        endpoint=endpoint or Endpoints.COMPLETIONS.value,
         config=config,
         strict=strict,
         max_tries=max_tries,

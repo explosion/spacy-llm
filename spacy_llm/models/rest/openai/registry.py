@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from confection import SimpleFrozenDict
 
@@ -18,6 +18,7 @@ Parameter explanations:
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to set. Defaults to standard endpoint.
 """
 
 
@@ -29,6 +30,7 @@ def openai_gpt_4_v3(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
@@ -41,7 +43,7 @@ def openai_gpt_4_v3(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value,
+        endpoint=endpoint or Endpoints.CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -60,6 +62,7 @@ def openai_gpt_4_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
@@ -71,7 +74,7 @@ def openai_gpt_4_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value,
+        endpoint=endpoint or Endpoints.CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -90,6 +93,7 @@ def openai_gpt_4(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
 
@@ -102,7 +106,7 @@ def openai_gpt_4(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value,
+        endpoint=endpoint or Endpoints.CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -119,6 +123,7 @@ def openai_gpt_3_5_v3(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
@@ -131,7 +136,7 @@ def openai_gpt_3_5_v3(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value
+        endpoint=endpoint or Endpoints.CHAT.value
         # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
         if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
         config=config,
@@ -156,6 +161,7 @@ def openai_gpt_3_5_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
@@ -169,7 +175,7 @@ def openai_gpt_3_5_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value
+        endpoint=endpoint or Endpoints.CHAT.value
         # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
         if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
         config=config,
@@ -194,6 +200,7 @@ def openai_gpt_3_5(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'gpt-3.5' model using REST to prompt API.
 
@@ -207,7 +214,7 @@ def openai_gpt_3_5(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.CHAT.value
+        endpoint=endpoint or Endpoints.CHAT.value
         # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
         if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
         config=config,
@@ -230,6 +237,7 @@ def openai_text_davinci_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
 
@@ -241,7 +249,7 @@ def openai_text_davinci_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -260,6 +268,7 @@ def openai_text_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-davinci' model using REST to prompt API.
 
@@ -271,7 +280,7 @@ def openai_text_davinci(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -290,6 +299,7 @@ def openai_code_davinci_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
 
@@ -301,7 +311,7 @@ def openai_code_davinci_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -318,6 +328,7 @@ def openai_code_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'code-davinci' model using REST to prompt API.
 
@@ -329,7 +340,7 @@ def openai_code_davinci(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -348,6 +359,7 @@ def openai_text_curie_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-curie' model using REST to prompt API.
 
@@ -359,7 +371,7 @@ def openai_text_curie_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -376,6 +388,7 @@ def openai_text_curie(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-curie' model using REST to prompt API.
 
@@ -387,7 +400,7 @@ def openai_text_curie(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -406,6 +419,7 @@ def openai_text_babbage_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-babbage' model using REST to prompt API.
 
@@ -417,7 +431,7 @@ def openai_text_babbage_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -434,6 +448,7 @@ def openai_text_babbage(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-babbage' model using REST to prompt API.
 
@@ -445,7 +460,7 @@ def openai_text_babbage(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -464,6 +479,7 @@ def openai_text_ada_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-ada' model using REST to prompt API.
 
@@ -475,7 +491,7 @@ def openai_text_ada_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -492,6 +508,7 @@ def openai_text_ada(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'text-ada' model using REST to prompt API.
 
@@ -503,7 +520,7 @@ def openai_text_ada(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -522,6 +539,7 @@ def openai_davinci_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'davinci' model using REST to prompt API.
 
@@ -533,7 +551,7 @@ def openai_davinci_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -550,6 +568,7 @@ def openai_davinci(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'davinci' model using REST to prompt API.
 
@@ -561,7 +580,7 @@ def openai_davinci(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -580,6 +599,7 @@ def openai_curie_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'curie' model using REST to prompt API.
 
@@ -591,7 +611,7 @@ def openai_curie_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -608,6 +628,7 @@ def openai_curie(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'curie' model using REST to prompt API.
 
@@ -619,7 +640,7 @@ def openai_curie(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -638,6 +659,7 @@ def openai_babbage_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'babbage' model using REST to prompt API.
 
@@ -649,7 +671,7 @@ def openai_babbage_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -666,6 +688,7 @@ def openai_babbage(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'babbage' model using REST to prompt API.
 
@@ -677,7 +700,7 @@ def openai_babbage(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -696,6 +719,7 @@ def openai_ada_v2(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'ada' model using REST to prompt API.
 
@@ -707,7 +731,7 @@ def openai_ada_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -724,6 +748,7 @@ def openai_ada(
     max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
     interval: float = OpenAI.DEFAULT_INTERVAL,
     max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> Callable[[Iterable[str]], Iterable[str]]:
     """Returns OpenAI instance for 'ada' model using REST to prompt API.
 
@@ -735,7 +760,7 @@ def openai_ada(
     """
     return OpenAI(
         name=name,
-        endpoint=Endpoints.NON_CHAT.value,
+        endpoint=endpoint or Endpoints.NON_CHAT.value,
         config=config,
         strict=strict,
         max_tries=max_tries,
