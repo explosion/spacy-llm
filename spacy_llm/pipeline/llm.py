@@ -275,7 +275,7 @@ class LLMWrapper(Pipe):
 
                 # Merge with doc's prior custom data.
                 noncached_doc = next(noncached_doc_batch_iter)
-                for extension in dir(noncached_doc):
+                for extension in dir(noncached_doc._):
                     if not Doc.has_extension(extension):
                         Doc.set_extension(extension, default=None)
                     # Don't overwrite any non-None extension values in new doc.
