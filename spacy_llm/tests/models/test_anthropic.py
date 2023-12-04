@@ -13,7 +13,7 @@ from ..compat import has_anthropic_key
 def test_anthropic_api_response_is_correct():
     """Check if we're getting the expected response and we're parsing it properly"""
     anthropic = Anthropic(
-        name="claude-instant-2-1",
+        name="claude-2.1",
         endpoint=Endpoints.COMPLETIONS.value,
         config={"max_tokens_to_sample": 10},
         strict=False,
