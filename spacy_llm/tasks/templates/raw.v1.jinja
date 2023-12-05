@@ -1,0 +1,20 @@
+Read the instructions provided after "Text:" and reply after "Reply:".
+{# whitespace #}
+{%- if prompt_examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{%- for example in prompt_examples -%}
+{# whitespace #}
+Text:
+{{ example.text }}
+Reply:
+{{ example.reply }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+Now follows the text you should read and reply to.
+Text:
+{{ text }}
+Reply:

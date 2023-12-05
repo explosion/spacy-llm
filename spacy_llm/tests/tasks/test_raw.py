@@ -3,15 +3,13 @@ from pathlib import Path
 import pytest
 import spacy
 from confection import Config
-from spacy.tokens import Doc
 from spacy.training import Example
 from spacy.util import make_tempdir
 
-from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.tasks.lemma import LemmaTask
+from spacy_llm.registry import file_reader
 from spacy_llm.util import assemble_from_config
 
-from ...tasks import make_lemma_task
+from ...tasks import RawTask, make_raw_task
 from ..compat import has_openai_key
 
 EXAMPLES_DIR = Path(__file__).parent / "examples"
@@ -24,7 +22,6 @@ def noop_config():
     [nlp]
     lang = "en"
     pipeline = ["llm"]
-    batch_size = 128
 
     [components]
 
@@ -32,7 +29,7 @@ def noop_config():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Raw.v1"
 
     [components.llm.model]
     @llm_models = "test.NoOpModel.v1"
@@ -53,10 +50,10 @@ def zeroshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Raw.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.GPT-3-5.v3"
     """
 
 
@@ -66,7 +63,6 @@ def fewshot_cfg_string():
     [nlp]
     lang = "en"
     pipeline = ["llm"]
-    batch_size = 128
 
     [components]
 
@@ -74,14 +70,14 @@ def fewshot_cfg_string():
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Raw.v1"
 
     [components.llm.task.examples]
     @misc = "spacy.FewShotReader.v1"
-    path = {str((Path(__file__).parent / "examples" / "lemma.yml"))}
+    path = {str((Path(__file__).parent / "examples" / "raw.yml"))}
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.GPT-3-5.v3"
     """
 
 
@@ -93,21 +89,20 @@ def ext_template_cfg_string():
     [nlp]
     lang = "en"
     pipeline = ["llm"]
-    batch_size = 128
 
     [components]
     [components.llm]
     factory = "llm"
 
     [components.llm.task]
-    @llm_tasks = "spacy.Lemma.v1"
+    @llm_tasks = "spacy.Raw.v1"
 
     [components.llm.task.template]
     @misc = "spacy.FileReader.v1"
-    path = {str((Path(__file__).parent / "templates" / "lemma.jinja2"))}
+    path = {str((Path(__file__).parent / "templates" / "raw.jinja2"))}
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.GPT-3-5.v3"
     """
 
 
@@ -121,7 +116,7 @@ def ext_template_cfg_string():
         "ext_template_cfg_string",
     ],
 )
-def test_lemma_config(cfg_string, request):
+def test_raw_config(cfg_string, request):
     cfg_string = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg_string)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
@@ -146,20 +141,14 @@ def test_lemma_config(cfg_string, request):
         "ext_template_cfg_string",
     ],
 )
-def test_lemma_predict(cfg_string, request):
+def test_raw_predict(cfg_string, request):
     """Use OpenAI to get zero-shot LEMMA results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
-    lemmas = [str(token.lemma_) for token in nlp("I've watered the plants.")]
-    # Compare lemmas for correctness, if we are not using the external dummy template.
-    if cfg_string != "ext_template_cfg_string":
-        assert lemmas in (
-            ["-PRON-", "have", "water", "the", "plant", "."],
-            ["I", "have", "water", "the", "plant", "."],
-        )
+    assert nlp("What's the weather like?")._.reply
 
 
 @pytest.mark.external
@@ -170,7 +159,7 @@ def test_lemma_predict(cfg_string, request):
         "fewshot_cfg_string",
     ],
 )
-def test_lemma_io(cfg_string, request):
+def test_raw_io(cfg_string, request):
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
@@ -180,12 +169,7 @@ def test_lemma_io(cfg_string, request):
         nlp.to_disk(tmpdir)
         nlp2 = spacy.load(tmpdir)
     assert nlp2.pipe_names == ["llm"]
-    lemmas = [str(token.lemma_) for token in nlp2("I've watered the plants.")]
-    if cfg_string != "ext_template_cfg_string":
-        assert lemmas in (
-            ["-PRON-", "have", "water", "the", "plant", "."],
-            ["I", "have", "water", "the", "plant", "."],
-        )
+    assert nlp2("I've watered the plants.")._.reply
 
 
 def test_jinja_template_rendering_without_examples():
@@ -195,30 +179,21 @@ def test_jinja_template_rendering_without_examples():
     with annoying newlines and spaces at the edge of the text.
     """
     nlp = spacy.blank("en")
-    text = "Alice and Bob went to the supermarket"
+    text = "How much wood would a woodchuck chuck if a woodchuck could chuck wood?"
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(examples=None)
-    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
+    raw_task = make_raw_task(examples=None)
+    prompt = list(raw_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
         == f"""
-You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
-Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
-Output each original word on a new line, followed by a colon and the word's lemma - like this:
-'''
-Word1: Lemma of Word1
-Word2: Lemma of Word2
-'''
-Include the final punctuation token in this list.
-Prefix with your output with "Lemmatized text".
+Read the instructions provided after "Text:" and reply after "Reply:".
 
-
-Here is the text that needs to be lemmatized:
-'''
+Now follows the text you should read and reply to.
+Text:
 {text}
-'''
+Reply:
 """.strip()
     )
 
@@ -226,9 +201,9 @@ Here is the text that needs to be lemmatized:
 @pytest.mark.parametrize(
     "examples_path",
     [
-        str(EXAMPLES_DIR / "lemma.json"),
-        str(EXAMPLES_DIR / "lemma.yml"),
-        str(EXAMPLES_DIR / "lemma.jsonl"),
+        str(EXAMPLES_DIR / "raw.json"),
+        str(EXAMPLES_DIR / "raw.yml"),
+        str(EXAMPLES_DIR / "raw.jsonl"),
     ],
 )
 def test_jinja_template_rendering_with_examples(examples_path):
@@ -238,132 +213,62 @@ def test_jinja_template_rendering_with_examples(examples_path):
     with annoying newlines and spaces at the edge of the text.
     """
     nlp = spacy.blank("en")
-    text = "Alice and Bob went to the supermarket."
+    text = "How much wood would a woodchuck chuck if a woodchuck could chuck wood?"
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
-    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
+    raw_task = make_raw_task(examples=None)
+    prompt = list(raw_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
         == f"""
-You are an expert lemmatization system. Your task is to accept Text as input and identify the lemma for every token in the Text.
-Consider that contractions represent multiple words. Each word in a contraction should be annotated with its lemma separately.
-Output each original word on a new line, followed by a colon and the word's lemma - like this:
-'''
-Word1: Lemma of Word1
-Word2: Lemma of Word2
-'''
-Include the final punctuation token in this list.
-Prefix with your output with "Lemmatized text".
+Read the instructions provided after "Text:" and reply after "Reply:".
 
-Below are some examples (only use these as a guide):
-
+Now follows the text you should read and reply to.
 Text:
-'''
-The arc of the moral universe is long, but it bends toward justice.
-'''
-Lemmas:
-'''
-The: The
-arc: arc
-of: of
-the: the
-moral: moral
-universe: universe
-is: be
-long: long
-,: ,
-but: but
-it: it
-bends: bend
-toward: toward
-justice: justice
-.: .
-'''
-
-Text:
-'''
-Life can only be understood backwards; but it must be lived forwards.
-'''
-Lemmas:
-'''
-Life: Life
-can: can
-only: only
-be: be
-understood: understand
-backwards: backwards
-;: ;
-but: but
-it: it
-must: must
-be: be
-lived: lived
-forwards: forwards
-.: .
-'''
-
-Text:
-'''
-I'm buying ice cream.
-'''
-Lemmas:
-'''
-I: I
-'m: be
-buying: buy
-ice: ice
-cream: cream
-.: .
-'''
-
-Here is the text that needs to be lemmatized:
-'''
 {text}
-'''
+Reply:
 """.strip()
     )
 
 
 def test_external_template_actually_loads():
-    template_path = str(TEMPLATES_DIR / "lemma.jinja2")
+    template_path = str(TEMPLATES_DIR / "raw.jinja2")
     template = file_reader(template_path)
-    text = "Alice and Bob went to the supermarket"
+    text = "How much wood would a woodchuck chuck if a woodchuck could chuck wood?"
     nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
 
-    lemma_task = make_lemma_task(template=template)
-    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
+    raw_task = make_raw_task(examples=None, template=template)
+    prompt = list(raw_task.generate_prompts([doc]))[0][0][0]
+
     assert (
         prompt.strip()
         == f"""
-This is a test LEMMA template.
+This is a test RAW template.
 Here is the text: {text}
 """.strip()
     )
 
 
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
-def test_lemma_init(noop_config, n_prompt_examples: int):
+def test_raw_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     nlp = assemble_from_config(config)
 
     examples = []
-    pred_words_1 = ["Alice", "works", "all", "evenings"]
-    gold_lemmas_1 = ["Alice", "work", "all", "evening"]
-    pred_1 = Doc(nlp.vocab, words=pred_words_1)
-    gold_1 = Doc(nlp.vocab, words=pred_words_1, lemmas=gold_lemmas_1)
-    examples.append(Example(pred_1, gold_1))
+    text = "How much wood would a woodchuck chuck if a woodchuck could chuck wood?"
+    gold_1 = nlp.make_doc(text)
+    gold_1._.reply = "Plenty"
+    examples.append(Example(nlp.make_doc(text), gold_1))
 
-    pred_words_2 = ["Bob", "loves", "living", "cities"]
-    gold_lemmas_2 = ["Bob", "love", "live", "city"]
-    pred_2 = Doc(nlp.vocab, words=pred_words_2)
-    gold_2 = Doc(nlp.vocab, words=pred_words_2, lemmas=gold_lemmas_2)
-    examples.append(Example(pred_2, gold_2))
+    text = "Who sells seashells by the seashore?"
+    gold_2 = nlp.make_doc(text)
+    gold_2._.reply = "Shelly"
+    examples.append(Example(nlp.make_doc(text), gold_2))
 
     _, llm = nlp.pipeline[0]
-    task: LemmaTask = llm._task
+    task: RawTask = llm._task
 
     assert not task._prompt_examples
 
