@@ -309,7 +309,7 @@ def test_llm_task_factories():
     """Test whether llm_TASK factories run successfully."""
     for task_handle in _LATEST_TASKS:
         # Separate test for EntityLinker in test_llm_task_factories_el().
-        if task_handle == "spacy.EntityLinker.v1":
+        if "EntityLinker" in task_handle:
             continue
 
         cfg_string = f"""
@@ -326,6 +326,10 @@ def test_llm_task_factories():
         @llm_models = "test.NoOpModel.v1"
         """
         config = Config().from_str(cfg_string)
+
+        if "Translation" in task_handle:
+            config["components"]["llm"]["task"] = {"target_lang": "Spanish"}
+
         assemble_from_config(config)
 
 
