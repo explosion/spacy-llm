@@ -282,3 +282,25 @@ def test_sharding_entity_linker(config):
     assert all([ent.kb_id_ != EntityLinker.NIL for ent in doc.ents])
     assert prompts == ["Alice goes to *Boston* to ", "see the *Boston Celtics* game."]
     assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_sharding_raw(config):
+    context_length = 40
+    config["components"]["llm"]["model"]["context_length"] = context_length
+    config["components"]["llm"]["task"] = {"@llm_tasks": "spacy.Raw.v1"}
+    nlp = assemble_from_config(config)
+
+    doc = nlp(_TEXT)
+    marker = "Text:\n"
+    prompts = [
+        pr[pr.rindex(marker) + len(marker) : pr.rindex("\nReply:")]
+        for pr in doc.user_data["llm_io"]["llm"]["prompt"]
+    ]
+    assert hasattr(doc._, "reply") and doc._.reply
+    assert prompts == [
+        "Do one thing every day that scares you. The ",
+        "only thing we have to fear is fear itself.",
+    ]
+    assert len(doc.user_data["llm_io"]["llm"]["response"]) == 2
