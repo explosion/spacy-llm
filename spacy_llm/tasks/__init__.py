@@ -17,7 +17,7 @@ from .textcat import TextCatTask, make_textcat_task
 _LATEST_TASKS = (
     "spacy.EntityLinker.v1",
     "spacy.NER.v3",
-    "spacy.Raw.v3",
+    "spacy.Raw.v1",
     "spacy.REL.v1",
     "spacy.Sentiment.v1",
     "spacy.SpanCat.v3",
