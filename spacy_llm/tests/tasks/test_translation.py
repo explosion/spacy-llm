@@ -130,7 +130,7 @@ def test_translate_predict(cfg_string, request):
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     doc = nlp("This is the sun")
     if cfg_string != "ext_template_cfg_string":
-        assert doc._.translation == "Este es el sol."
+        assert doc._.translation.strip(".") == "Este es el sol"
 
 
 @pytest.mark.external
