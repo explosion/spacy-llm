@@ -124,24 +124,26 @@ def test_llm_pipe_empty(nlp):
 
 
 def test_llm_serialize_bytes():
-    llm = LLMWrapper(
-        task=make_noop_task(),
-        save_io=False,
-        model=None,  # type: ignore
-        cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
-        vocab=None,  # type: ignore
-    )
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        llm = LLMWrapper(
+            task=make_noop_task(),
+            save_io=False,
+            model=None,  # type: ignore
+            cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
+            vocab=None,  # type: ignore
+        )
     llm.from_bytes(llm.to_bytes())
 
 
 def test_llm_serialize_disk():
-    llm = LLMWrapper(
-        task=make_noop_task(),
-        save_io=False,
-        model=None,  # type: ignore
-        cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
-        vocab=None,  # type: ignore
-    )
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        llm = LLMWrapper(
+            task=make_noop_task(),
+            save_io=False,
+            model=None,  # type: ignore
+            cache=BatchCache(path=None, batch_size=0, max_batches_in_mem=0),
+            vocab=None,  # type: ignore
+        )
 
     with spacy.util.make_tempdir() as tmp_dir:
         llm.to_disk(tmp_dir / "llm")
@@ -301,7 +303,8 @@ def test_pipe_labels():
 
     with spacy.util.make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir / "tst.nlp")
-        nlp = spacy.load(tmpdir / "tst.nlp")
+        with pytest.warns(UserWarning, match="Task supports sharding"):
+            nlp = spacy.load(tmpdir / "tst.nlp")
         assert nlp.pipe_labels["llm"] == ["COMPLIMENT", "INSULT"]
 
 
@@ -326,7 +329,8 @@ def test_llm_task_factories():
         @llm_models = "test.NoOpModel.v1"
         """
         config = Config().from_str(cfg_string)
-        assemble_from_config(config)
+        with pytest.warns(UserWarning, match="Task supports sharding"):
+            assemble_from_config(config)
 
 
 def test_llm_task_factories_el(tmp_path):
@@ -375,7 +379,8 @@ def test_llm_task_factories_el(tmp_path):
         },
     )
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        assemble_from_config(config)
 
 
 @pytest.mark.external

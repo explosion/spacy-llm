@@ -25,6 +25,8 @@ batch_size = 128
 
 [components]
 
+[components.llm]
+factory = "llm"
 
 [components.llm.task]
 @llm_tasks = "spacy.NoOp.v1"
@@ -44,8 +46,8 @@ def test_init():
     doc = nlp("This is a test.")
     nlp.get_pipe("llm")._model.get_model_names()
     torch.cuda.empty_cache()
-    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
-        doc.user_data["llm_io"]["llm"]["prompt"]
+    assert not doc.user_data["llm_io"]["llm"]["response"][0].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"][0]
     )
 
 

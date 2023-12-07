@@ -355,15 +355,17 @@ Here is the text: The atmosphere of Earth is the layer of gases, known collectiv
 
 def test_ner_serde(noop_config):
     config = Config().from_str(noop_config)
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
     nlp2.from_bytes(nlp1.to_bytes())
 
 
 def test_ner_to_disk(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     path = tmp_path / "model"
     nlp1.to_disk(path)

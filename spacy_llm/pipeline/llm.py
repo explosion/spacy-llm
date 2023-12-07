@@ -133,6 +133,20 @@ class LLMWrapper(Pipe):
         if isinstance(self._task, Initializable):
             self.initialize = self._task.initialize
 
+        self._check_sharding()
+
+    def _check_sharding(self):
+        context_length: Optional[int] = None
+        if isinstance(self._model, ModelWithContextLength):
+            context_length = self._model.context_length
+        if supports_sharding(self._task) and context_length is None:
+            warnings.warn(
+                "Task supports sharding, but model does not provide context length. Data won't be sharded, prompt "
+                "might exceed the model's context length. Set context length in your config. If you think spacy-llm"
+                " should provide the context length for this model automatically, report this to "
+                "https://github.com/explosion/spacy-llm/issues."
+            )
+
     @property
     def labels(self) -> Tuple[str, ...]:
         labels: Tuple[str, ...] = tuple()
@@ -216,13 +230,6 @@ class LLMWrapper(Pipe):
             context_length: Optional[int] = None
             if isinstance(self._model, ModelWithContextLength):
                 context_length = self._model.context_length
-            if support_sharding and context_length is None:
-                warnings.warn(
-                    "Task supports sharding, but model does not provide context length. Data won't be sharded, prompt "
-                    "might exceed the model's context length. Set context length in your config. If you think spacy-llm"
-                    " should provide the context length for this model automatically, report this to "
-                    "https://github.com/explosion/spacy-llm/issues."
-                )
 
             # Only pass context length if this is a sharding task.
             prompts_iters = tee(
