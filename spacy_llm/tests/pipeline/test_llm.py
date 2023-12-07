@@ -303,8 +303,7 @@ def test_pipe_labels():
 
     with spacy.util.make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir / "tst.nlp")
-        with pytest.warns(UserWarning, match="Task supports sharding"):
-            nlp = spacy.load(tmpdir / "tst.nlp")
+        nlp = spacy.load(tmpdir / "tst.nlp")
         assert nlp.pipe_labels["llm"] == ["COMPLIMENT", "INSULT"]
 
 

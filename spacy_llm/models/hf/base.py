@@ -25,7 +25,7 @@ class HuggingFace(abc.ABC):
         name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
-        context_length (int): Context length for this model. Necessary for sharding.
+        context_length (Optional[int]): Context length for this model. Necessary for sharding.
         """
         self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
         self._context_length = context_length
