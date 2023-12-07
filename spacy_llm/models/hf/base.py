@@ -17,7 +17,7 @@ class HuggingFace(abc.ABC):
         name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
-        context_length: int,
+        context_length: Optional[int],
     ):
         """Initializes HF model instance.
         query (Callable[[Any, Iterable[Any]], Iterable[Any]): Callable executing LLM prompts when
@@ -96,9 +96,9 @@ class HuggingFace(abc.ABC):
         return tuple(str(arg) for arg in cls.MODEL_NAMES.__args__)  # type: ignore[attr-defined]
 
     @property
-    def context_length(self) -> int:
+    def context_length(self) -> Optional[int]:
         """Returns context length in number of tokens for this model.
-        RETURNS (int): Max. number of tokens in allowed in prompt for the current model.
+        RETURNS (Optional[int]): Max. number of tokens in allowed in prompt for the current model.
         """
         return self._context_length
 
