@@ -221,7 +221,7 @@ class LLMWrapper(Pipe):
                 warnings.warn(
                     "Task supports sharding, but model does not provide context length. Data won't be sharded, prompt "
                     "might exceed the model's context length. Set context length in your config. If you think spacy-llm"
-                    " should provide the context length for this models automatically, report this to "
+                    " should provide the context length for this model automatically, report this to "
                     "https://github.com/explosion/spacy-llm/issues."
                 )
 
