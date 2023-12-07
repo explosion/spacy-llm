@@ -98,7 +98,7 @@ class HuggingFace(abc.ABC):
     @property
     def context_length(self) -> Optional[int]:
         """Returns context length in number of tokens for this model.
-        RETURNS (Optional[int]): Max. number of tokens in allowed in prompt for the current model.
+        RETURNS (Optional[int]): Max. number of tokens allowed in prompt for the current model.
         """
         return self._context_length
 
