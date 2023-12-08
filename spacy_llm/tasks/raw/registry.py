@@ -39,7 +39,6 @@ def make_raw_task(
         few-shot learning. If None is passed, then zero-shot learning will be used.
     shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
     shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
-    scorer (Optional[Scorer]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
     example_type = prompt_example_type or RawExample

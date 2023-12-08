@@ -33,7 +33,6 @@ class RawTask(BuiltinTask):
         field (str): Field to store responses in.
         shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
         shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
-        scorer (Scorer): Scorer function.
         """
         super().__init__(
             parse_responses=parse_responses,
