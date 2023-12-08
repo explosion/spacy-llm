@@ -148,7 +148,7 @@ def test_raw_predict(cfg_string, request):
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
-    assert nlp("What's the weather like?")._.reply
+    assert nlp("What's the weather like?")._.llm_reply
 
 
 @pytest.mark.external
@@ -169,7 +169,7 @@ def test_raw_io(cfg_string, request):
         nlp.to_disk(tmpdir)
         nlp2 = spacy.load(tmpdir)
     assert nlp2.pipe_names == ["llm"]
-    assert nlp2("I've watered the plants.")._.reply
+    assert nlp2("I've watered the plants.")._.llm_reply
 
 
 def test_jinja_template_rendering_without_examples():
@@ -188,8 +188,6 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == f"""
-Read the instructions provided after "Text:" and reply after "Reply:".
-
 Now follows the text you should read and reply to.
 Text:
 {text}
@@ -222,8 +220,6 @@ def test_jinja_template_rendering_with_examples(examples_path):
     assert (
         prompt.strip()
         == f"""
-Read the instructions provided after "Text:" and reply after "Reply:".
-
 Now follows the text you should read and reply to.
 Text:
 {text}
@@ -254,17 +250,18 @@ Here is the text: {text}
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_raw_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
     text = "How much wood would a woodchuck chuck if a woodchuck could chuck wood?"
     gold_1 = nlp.make_doc(text)
-    gold_1._.reply = "Plenty"
+    gold_1._.llm_reply = "Plenty"
     examples.append(Example(nlp.make_doc(text), gold_1))
 
     text = "Who sells seashells by the seashore?"
     gold_2 = nlp.make_doc(text)
-    gold_2._.reply = "Shelly"
+    gold_2._.llm_reply = "Shelly"
     examples.append(Example(nlp.make_doc(text), gold_2))
 
     _, llm = nlp.pipeline[0]

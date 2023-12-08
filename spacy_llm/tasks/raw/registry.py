@@ -22,7 +22,7 @@ def make_shard_reducer() -> ShardReducer:
 @registry.llm_tasks("spacy.Raw.v1")
 def make_raw_task(
     template: str = DEFAULT_RAW_TEMPLATE_V1,
-    field: str = "reply",
+    field: str = "llm_reply",
     parse_responses: Optional[TaskResponseParser[RawTask]] = None,
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
