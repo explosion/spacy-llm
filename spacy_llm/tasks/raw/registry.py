@@ -10,7 +10,7 @@ from .util import RawExample, reduce_shards_to_doc
 
 
 @registry.llm_misc("spacy.RawParser.v1")
-def make_lemma_parser() -> TaskResponseParser[RawTask]:
+def make_raw_parser() -> TaskResponseParser[RawTask]:
     return parse_responses_v1
 
 
