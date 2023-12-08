@@ -347,7 +347,8 @@ Here is the text: {text}
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_lemma_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
     pred_words_1 = ["Alice", "works", "all", "evenings"]

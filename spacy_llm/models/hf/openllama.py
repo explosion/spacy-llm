@@ -20,7 +20,7 @@ class OpenLLaMA(HuggingFace):
         name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
-        context_length: int,
+        context_length: Optional[int],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         super().__init__(

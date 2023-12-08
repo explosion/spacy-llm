@@ -620,7 +620,8 @@ def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
         },
     )
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 

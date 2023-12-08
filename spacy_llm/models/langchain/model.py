@@ -28,7 +28,7 @@ class LangChain:
         config (Dict[Any, Any]): Config passed on to LangChain model.
         query (Callable[[langchain.llms.BaseLLM, Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing
             LLM prompts when supplied with the model instance.
-        context_length (Optional[int]): Context length for this model. Only necessary for sharding. If no no context
+        context_length (Optional[int]): Context length for this model. Only necessary for sharding. If no context
             length provided, prompts can't be sharded.
         """
         self._langchain_model = LangChain._init_langchain_model(name, api, config)

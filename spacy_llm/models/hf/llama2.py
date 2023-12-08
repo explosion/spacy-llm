@@ -17,7 +17,7 @@ class Llama2(HuggingFace):
         name: MODEL_NAMES,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
-        context_length: int,
+        context_length: Optional[int],
     ):
         super().__init__(
             name=name,

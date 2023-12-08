@@ -707,7 +707,8 @@ def noop_config():
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_ner_scoring(noop_config, n_detections):
     config = Config().from_str(noop_config)
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -722,9 +723,7 @@ def test_ner_scoring(noop_config, n_detections):
 
         examples.append(Example(predicted, reference))
 
-    with pytest.warns(UserWarning, match="Task supports sharding"):
-        scores = nlp.evaluate(examples)
-
+    scores = nlp.evaluate(examples)
     assert scores["ents_p"] == n_detections / 2
 
 
@@ -733,7 +732,8 @@ def test_ner_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -777,9 +777,9 @@ def test_ner_init(noop_config, n_prompt_examples: int):
 def test_ner_serde(noop_config):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
-
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "per": "PER"}
 
@@ -802,8 +802,9 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "per": "PER"}
 
