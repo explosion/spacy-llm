@@ -188,7 +188,6 @@ def test_jinja_template_rendering_without_examples():
     assert (
         prompt.strip()
         == f"""
-Now follows the text you should read and reply to.
 Text:
 {text}
 Reply:
@@ -220,7 +219,6 @@ def test_jinja_template_rendering_with_examples(examples_path):
     assert (
         prompt.strip()
         == f"""
-Now follows the text you should read and reply to.
 Text:
 {text}
 Reply:
