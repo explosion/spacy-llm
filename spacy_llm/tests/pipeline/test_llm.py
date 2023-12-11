@@ -328,6 +328,11 @@ def test_llm_task_factories():
         @llm_models = "test.NoOpModel.v1"
         """
         config = Config().from_str(cfg_string)
+
+        # Translation task is expected to require a target language.
+        if "Translation" in task_handle:
+            config["components"]["llm"]["task"] = {"target_lang": "Spanish"}
+
         with pytest.warns(UserWarning, match="Task supports sharding"):
             assemble_from_config(config)
 
