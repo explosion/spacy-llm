@@ -138,11 +138,7 @@ class NonshardingLLMTask(Protocol):
         """
 
 
-# @runtime_checkable
-# class LLMTask(Protocol):
-#     generate_prompts: Callable[..., Iterable[Any]]
-#     parse_responses: Callable[..., Iterable[Doc]]
-
+LLMTask = Union[NonshardingLLMTask, ShardingLLMTask]
 
 TaskContraT = TypeVar(
     "TaskContraT", bound=Union[ShardingLLMTask, NonshardingLLMTask], contravariant=True

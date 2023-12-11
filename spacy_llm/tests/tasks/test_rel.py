@@ -157,7 +157,8 @@ def test_rel_init(noop_config, n_prompt_examples: int):
 
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -201,9 +202,10 @@ def test_rel_serde(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
-    nlp3 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
+        nlp3 = assemble_from_config(config)
 
     labels = {"livesin": "LivesIn", "visits": "Visits"}
 

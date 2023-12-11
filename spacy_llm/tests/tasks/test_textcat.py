@@ -645,7 +645,8 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
     config = Config().from_str(zeroshot_cfg_string)
     config["components"]["llm"]["model"] = {"@llm_models": "Dummy"}
     config["components"]["llm"]["task"]["labels"] = "Insult"
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -658,11 +659,8 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
 
         examples.append(Example(predicted, reference))
 
-    with pytest.warns(UserWarning, match="Task supports sharding"):
-        scores = nlp.evaluate(examples)
-
+    scores = nlp.evaluate(examples)
     pos = n_insults / len(INSULTS)
-
     assert scores["cats_micro_p"] == pos
     assert not n_insults or scores["cats_micro_r"] == 1
 
@@ -745,7 +743,8 @@ def test_textcat_init(
     config = Config().from_str(noop_config)
     if init_from_config:
         config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -789,10 +788,10 @@ def test_textcat_init(
 
 def test_textcat_serde(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
-
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
-    nlp3 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
+        nlp3 = assemble_from_config(config)
 
     labels = {"insult": "INSULT", "compliment": "COMPLIMENT"}
 

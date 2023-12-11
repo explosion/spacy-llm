@@ -559,7 +559,8 @@ def test_spancat_init(noop_config: str, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
     config["components"]["llm"]["task"]["labels"] = ["PER", "LOC", "DESTINATION"]
     config["components"]["llm"]["task"]["examples"] = []
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -603,9 +604,9 @@ def test_spancat_init(noop_config: str, n_prompt_examples: bool):
 
 def test_spancat_serde(noop_config):
     config = Config().from_str(noop_config)
-
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "per": "PER"}
 
