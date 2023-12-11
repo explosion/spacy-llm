@@ -114,8 +114,8 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         vocab (Vocab): Pipeline vocabulary.
-        task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses
-            into structured information and set that back on the docs.
+        task (LLMTask): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+            structured information and set that back on the docs.
         model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
         save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
