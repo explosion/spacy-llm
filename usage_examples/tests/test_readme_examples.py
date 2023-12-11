@@ -199,6 +199,6 @@ def test_example_5_custom_model():
         with open(tmpdir / "cfg", "w") as text_file:
             text_file.write(cfg_str)
 
-        nlp = assemble(tmpdir / "cfg")
         with pytest.warns(UserWarning, match="Task supports sharding"):
-            nlp("i'd like a large margherita pizza please")
+            nlp = assemble(tmpdir / "cfg")
+        nlp("i'd like a large margherita pizza please")

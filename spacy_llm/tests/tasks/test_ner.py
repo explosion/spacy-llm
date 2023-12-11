@@ -723,7 +723,8 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     config["components"]["llm"]["task"]["labels"] = ["PER", "LOC"]
     config["components"]["llm"]["task"]["examples"] = []
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
     for text in [
@@ -766,8 +767,9 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
 def test_ner_serde(noop_config: str):
     config = Config().from_str(noop_config)
 
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "per": "PER"}
 
@@ -789,9 +791,9 @@ def test_ner_serde(noop_config: str):
 
 def test_ner_to_disk(noop_config: str, tmp_path: Path):
     config = Config().from_str(noop_config)
-
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "org": "ORG", "per": "PER"}
 

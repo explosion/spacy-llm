@@ -16,9 +16,9 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LabeledTask, ModelWithContextLength, NonshardingLLMTask
-from ..ty import PromptExecutorType, ScorableTask, Serializable, ShardingLLMTask
-from ..ty import supports_sharding, validate_type_consistency
+from ..ty import Cache, LabeledTask, LLMTask, ModelWithContextLength
+from ..ty import PromptExecutorType, ScorableTask, Serializable, supports_sharding
+from ..ty import validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -36,7 +36,6 @@ DEFAULT_CACHE_CONFIG = {
 
 DEFAULT_SAVE_IO = False
 DEFAULT_VALIDATE_TYPES = True
-_LLMTask = Union[NonshardingLLMTask, ShardingLLMTask]
 
 
 class CacheConfigType(TypedDict):
@@ -60,7 +59,7 @@ class CacheConfigType(TypedDict):
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[_LLMTask],
+    task: Optional[LLMTask],
     model: PromptExecutorType,
     cache: Cache,
     save_io: bool,
@@ -104,7 +103,7 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         vocab: Vocab,
-        task: _LLMTask,
+        task: LLMTask,
         model: PromptExecutorType,
         cache: Cache,
         save_io: bool,
@@ -115,7 +114,7 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         vocab (Vocab): Pipeline vocabulary.
-        task (Optional[_LLMTask]): An _LLMTask can generate prompts for given docs, and can parse the LLM's responses
+        task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses
             into structured information and set that back on the docs.
         model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
@@ -133,6 +132,20 @@ class LLMWrapper(Pipe):
         # See https://github.com/explosion/spaCy/blob/master/spacy/schemas.py#L111
         if isinstance(self._task, Initializable):
             self.initialize = self._task.initialize
+
+        self._check_sharding()
+
+    def _check_sharding(self):
+        context_length: Optional[int] = None
+        if isinstance(self._model, ModelWithContextLength):
+            context_length = self._model.context_length
+        if supports_sharding(self._task) and context_length is None:
+            warnings.warn(
+                "Task supports sharding, but model does not provide context length. Data won't be sharded, prompt "
+                "might exceed the model's context length. Set context length in your config. If you think spacy-llm"
+                " should provide the context length for this model automatically, report this to "
+                "https://github.com/explosion/spacy-llm/issues."
+            )
 
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -152,7 +165,7 @@ class LLMWrapper(Pipe):
         return self._task.clear()
 
     @property
-    def task(self) -> _LLMTask:
+    def task(self) -> LLMTask:
         return self._task
 
     def __call__(self, doc: Doc) -> Doc:
@@ -200,7 +213,7 @@ class LLMWrapper(Pipe):
         docs (List[Doc]): Input batch of docs.
         RETURNS (List[Doc]): Processed batch of docs with task annotations set.
         """
-        has_shards = supports_sharding(self._task)
+        support_sharding = supports_sharding(self._task)
         is_cached = [doc in self._cache for doc in docs]
         noncached_doc_batch = [doc for i, doc in enumerate(docs) if not is_cached[i]]
         if len(noncached_doc_batch) < len(docs):
@@ -217,18 +230,11 @@ class LLMWrapper(Pipe):
             context_length: Optional[int] = None
             if isinstance(self._model, ModelWithContextLength):
                 context_length = self._model.context_length
-            if has_shards and context_length is None:
-                warnings.warn(
-                    "Task supports sharding, but model does not provide context length. Data won't be sharded, prompt "
-                    "might exceed the model's context length. Set context length in your config. If you think spacy-llm"
-                    " should provide the context length for this models automatically, report this to "
-                    "https://github.com/explosion/spacy-llm/issues."
-                )
 
             # Only pass context length if this is a sharding task.
             prompts_iters = tee(
                 self._task.generate_prompts(noncached_doc_batch, context_length)  # type: ignore[call-arg]
-                if has_shards
+                if support_sharding
                 else self._task.generate_prompts(noncached_doc_batch),
                 n_iters + 1,
             )
@@ -236,7 +242,10 @@ class LLMWrapper(Pipe):
                 self._model(
                     # Ensure that model receives Iterable[Iterable[Any]]. If task doesn't shard, its prompt is wrapped
                     # in a list to conform to the nested structure.
-                    (elem[0] if has_shards else [elem] for elem in prompts_iters[0])
+                    (
+                        elem[0] if support_sharding else [elem]
+                        for elem in prompts_iters[0]
+                    )
                 ),
                 n_iters,
             )
@@ -247,20 +256,19 @@ class LLMWrapper(Pipe):
                 logger.debug(
                     "Generated prompt for doc: %s\n%s",
                     doc.text,
-                    prompt_data[0] if has_shards else prompt_data,
+                    prompt_data[0] if support_sharding else prompt_data,
                 )
                 logger.debug("LLM response for doc: %s\n%s", doc.text, response)
 
-            resp = list(
+            modified_docs = iter(
                 self._task.parse_responses(
                     (
-                        elem[1] if has_shards else noncached_doc_batch[i]
+                        elem[1] if support_sharding else noncached_doc_batch[i]
                         for i, elem in enumerate(prompts_iters[2])
                     ),
                     responses_iters[1],
                 )
             )
-            modified_docs = iter(resp)
 
         noncached_doc_batch_iter = iter(noncached_doc_batch)
         final_docs: List[Doc] = []
@@ -275,7 +283,7 @@ class LLMWrapper(Pipe):
 
                 # Merge with doc's prior custom data.
                 noncached_doc = next(noncached_doc_batch_iter)
-                for extension in dir(noncached_doc):
+                for extension in dir(noncached_doc._):
                     if not Doc.has_extension(extension):
                         Doc.set_extension(extension, default=None)
                     # Don't overwrite any non-None extension values in new doc.
@@ -292,7 +300,7 @@ class LLMWrapper(Pipe):
                     )
                     llm_io = doc.user_data["llm_io"][self._name]
                     next_prompt = next(prompts_iters[-1])
-                    if has_shards:
+                    if support_sharding:
                         llm_io["prompt"] = [
                             str(shard_prompt) for shard_prompt in next_prompt[0]
                         ]

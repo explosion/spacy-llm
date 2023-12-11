@@ -200,10 +200,16 @@ class KBFileLoader(BaseInMemoryLookupKBLoader):
 
 
 def reduce_shards_to_doc(task: EntityLinkerTask, shards: Iterable[Doc]) -> Doc:
-    """Reduces shards to docs for LemmaTask.
+    """Reduces shards to docs for EntityLinkerTask.
     task (EntityLinkerTask): Task.
     shards (Iterable[Doc]): Shards to reduce to single doc instance.
     RETURNS (Doc): Fused doc instance.
     """
     # Entities are additive, so we can just merge shards.
-    return Doc.from_docs(list(shards), ensure_whitespace=True)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=UserWarning,
+            message=".*Skipping .* while merging docs.",
+        )
+        return Doc.from_docs(list(shards), ensure_whitespace=True)
