@@ -13,6 +13,7 @@ from .sentiment import SentimentTask, make_sentiment_task
 from .spancat import SpanCatTask, make_spancat_task_v3
 from .summarization import SummarizationTask, make_summarization_task
 from .textcat import TextCatTask, make_textcat_task
+from .translation import TranslationTask, make_translation_task
 
 _LATEST_TASKS = (
     "spacy.EntityLinker.v1",
@@ -23,6 +24,7 @@ _LATEST_TASKS = (
     "spacy.SpanCat.v3",
     "spacy.Summarization.v1",
     "spacy.TextCat.v3",
+    "spacy.Translation.v1",
 )
 
 # Register llm_TASK factories with default models.
@@ -51,6 +53,7 @@ __all__ = [
     "make_spancat_task_v3",
     "make_summarization_task",
     "make_textcat_task",
+    "make_translation_task",
     "BuiltinTask",
     "EntityLinkerTask",
     "LemmaTask",
@@ -63,4 +66,5 @@ __all__ = [
     "SpanCatTask",
     "SummarizationTask",
     "TextCatTask",
+    "TranslationTask",
 ]

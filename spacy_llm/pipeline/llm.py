@@ -114,8 +114,8 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         vocab (Vocab): Pipeline vocabulary.
-        task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses
-            into structured information and set that back on the docs.
+        task (LLMTask): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+            structured information and set that back on the docs.
         model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
         save_io (bool): Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom extension.
@@ -260,7 +260,7 @@ class LLMWrapper(Pipe):
                 )
                 logger.debug("LLM response for doc: %s\n%s", doc.text, response)
 
-            resp = list(
+            modified_docs = iter(
                 self._task.parse_responses(
                     (
                         elem[1] if support_sharding else noncached_doc_batch[i]
@@ -269,7 +269,6 @@ class LLMWrapper(Pipe):
                     responses_iters[1],
                 )
             )
-            modified_docs = iter(resp)
 
         noncached_doc_batch_iter = iter(noncached_doc_batch)
         final_docs: List[Doc] = []
