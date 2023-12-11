@@ -10,7 +10,7 @@ from ...compat import torch
 _PIPE_CFG = {
     "model": {
         "@llm_models": "spacy.Yi.v1",
-        "name": "Yi-6B",
+        "name": "Yi-6B-chat",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
