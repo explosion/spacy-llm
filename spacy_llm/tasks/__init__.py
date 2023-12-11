@@ -7,6 +7,7 @@ from .entity_linker import EntityLinkerTask, make_entitylinker_task
 from .lemma import LemmaTask, make_lemma_task
 from .ner import NERTask, make_ner_task_v3
 from .noop import NoopTask, ShardingNoopTask, make_noop_task, make_noopnoshards_task
+from .raw import RawTask, make_raw_task
 from .rel import RELTask, make_rel_task
 from .sentiment import SentimentTask, make_sentiment_task
 from .spancat import SpanCatTask, make_spancat_task_v3
@@ -17,6 +18,7 @@ from .translation import TranslationTask, make_translation_task
 _LATEST_TASKS = (
     "spacy.EntityLinker.v1",
     "spacy.NER.v3",
+    "spacy.Raw.v1",
     "spacy.REL.v1",
     "spacy.Sentiment.v1",
     "spacy.SpanCat.v3",
@@ -45,6 +47,7 @@ __all__ = [
     "make_ner_task_v3",
     "make_noop_task",
     "make_noopnoshards_task",
+    "make_raw_task",
     "make_rel_task",
     "make_sentiment_task",
     "make_spancat_task_v3",
@@ -56,6 +59,7 @@ __all__ = [
     "LemmaTask",
     "NERTask",
     "NoopTask",
+    "RawTask",
     "RELTask",
     "SentimentTask",
     "ShardingNoopTask",
