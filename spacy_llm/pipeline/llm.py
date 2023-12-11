@@ -16,9 +16,9 @@ from spacy.vocab import Vocab
 
 from .. import registry  # noqa: F401
 from ..compat import TypedDict
-from ..ty import Cache, LabeledTask, ModelWithContextLength, NonshardingLLMTask
-from ..ty import PromptExecutorType, ScorableTask, Serializable, ShardingLLMTask
-from ..ty import supports_sharding, validate_type_consistency
+from ..ty import Cache, LabeledTask, LLMTask, ModelWithContextLength
+from ..ty import PromptExecutorType, ScorableTask, Serializable, supports_sharding
+from ..ty import validate_type_consistency
 
 logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
@@ -36,7 +36,6 @@ DEFAULT_CACHE_CONFIG = {
 
 DEFAULT_SAVE_IO = False
 DEFAULT_VALIDATE_TYPES = True
-_LLMTask = Union[NonshardingLLMTask, ShardingLLMTask]
 
 
 class CacheConfigType(TypedDict):
@@ -60,7 +59,7 @@ class CacheConfigType(TypedDict):
 def make_llm(
     nlp: Language,
     name: str,
-    task: Optional[_LLMTask],
+    task: Optional[LLMTask],
     model: PromptExecutorType,
     cache: Cache,
     save_io: bool,
@@ -71,7 +70,7 @@ def make_llm(
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    task (Optional[_LLMTask]): An _LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+    task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
     model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).
@@ -104,7 +103,7 @@ class LLMWrapper(Pipe):
         name: str = "LLMWrapper",
         *,
         vocab: Vocab,
-        task: _LLMTask,
+        task: LLMTask,
         model: PromptExecutorType,
         cache: Cache,
         save_io: bool,
@@ -115,7 +114,7 @@ class LLMWrapper(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         vocab (Vocab): Pipeline vocabulary.
-        task (_LLMTask): An _LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+        task (LLMTask): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
             structured information and set that back on the docs.
         model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
         cache (Cache): Cache to use for caching prompts and responses per doc (batch).
@@ -166,7 +165,7 @@ class LLMWrapper(Pipe):
         return self._task.clear()
 
     @property
-    def task(self) -> _LLMTask:
+    def task(self) -> LLMTask:
         return self._task
 
     def __call__(self, doc: Doc) -> Doc:
