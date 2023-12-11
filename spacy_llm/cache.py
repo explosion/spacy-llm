@@ -72,7 +72,7 @@ class BatchCache:
         """
         Initialize cache with data not available at construction time.
         vocab (Vocab): Vocab object.
-        task (LLMTask): Task.
+        task (ShardingLLMTask): Task.
         """
         self._vocab = vocab
         if isinstance(task, PromptTemplateProvider):
