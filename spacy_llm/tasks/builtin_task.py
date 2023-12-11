@@ -1,4 +1,5 @@
 import abc
+from itertools import tee
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, cast
 
@@ -10,7 +11,7 @@ from spacy.training import Example
 
 from ..compat import Self
 from ..registry import lowercase_normalizer
-from ..ty import FewshotExample, TaskResponseParser
+from ..ty import FewshotExample, ShardMapper, ShardReducer, TaskResponseParser
 
 
 class BuiltinTask(abc.ABC):
@@ -22,10 +23,10 @@ class BuiltinTask(abc.ABC):
         - initializable (in line with other spaCy components)
         - (de-)serialization
 
-    On the relation of BuiltinTask to LLMTask: the latter specifies the minimal contract a task implementation
+    On the relation of BuiltinTask to ShardingLLMTask: the latter specifies the minimal contract a task implementation
     has to fulfill, whereas a BuiltinTask requires (and offers) functionality beyond that. The rationale behind that is
-    that built-in tasks should provide as smooth a usage experience as possible while still making it as easy as possible
-    for users to write their own, custom tasks.
+    that built-in tasks should provide as smooth a usage experience as possible while still making it as easy as
+    possible for users to write their own, custom tasks.
     """
 
     def __init__(
@@ -34,36 +35,75 @@ class BuiltinTask(abc.ABC):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
     ):
         """Initializes task.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         """
         self._parse_responses = parse_responses
         self._prompt_examples = prompt_examples or []
         self._template = template
         self._prompt_example_type = prompt_example_type
+        self._shard_mapper = shard_mapper
+        self._shard_reducer = shard_reducer
 
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]:
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[Tuple[Iterable[Any], Iterable[Doc]]]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
-        RETURNS (Iterable[Any]): Iterable with one prompt per doc.
+        ontext_length (int): Context length for model this task is executed with. Needed for sharding and fusing docs,
+            if the corresponding prompts exceed the context length. If None, context length is assumed to be infinite.
+        RETURNS (Iterable[Tuple[Iterable[Any], Iterable[Doc]]]): Iterable with one to n prompts per doc (multiple
+            prompts in case of multiple shards) and the corresponding shards. The relationship between shard and prompt
+            is 1:1.
         """
         environment = jinja2.Environment()
         _template = environment.from_string(self._template)
-        for doc in self._preprocess_docs_for_prompt(docs):
-            prompt = _template.render(
-                text=doc.text,
-                prompt_examples=self._prompt_examples,
-                **self._prompt_data,
-            )
-            yield prompt
 
-    @property
-    def _prompt_data(self) -> Dict[str, Any]:
-        """Returns data injected into prompt template. No-op if not overridden by inheriting task class.
+        def render_template(shard: Doc, i_shard: int, i_doc: int, n_shards: int) -> str:
+            """Renders template for a given doc (shard).
+            shard (Doc): Doc shard. Note that if the prompt is small enough to fit within the model's context window,
+                there will only be one shard, which is identical to the original doc.
+            i_shard (int): Shard index (w.r.t. shard's Doc instance).
+            i_doc (int): Doc index.
+            n_shards (int): Total number of shards.
+            RETURNS (str): Rendered template.
+            """
+            return _template.render(
+                text=shard.text,
+                prompt_examples=self._prompt_examples,
+                **self._get_prompt_data(shard, i_shard, i_doc, n_shards),
+            )
+
+        for _i_doc, _doc in enumerate(self._preprocess_docs_for_prompt(docs)):
+            # If no context length provided (e. g. because models don't provide it): don't shard.
+            shards = (
+                self._shard_mapper(_doc, _i_doc, context_length, render_template)
+                if context_length is not None
+                else [_doc]
+            )
+            shards = list(shards)
+            yield [
+                render_template(_shard, _i_shard, _i_doc, len(shards))
+                for _i_shard, _shard in enumerate(shards)
+            ], shards
+
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
+        """Returns data injected into prompt template. No-op if not overridden by inheriting task class. The data
+        returned by this might be static (i. e. the same for all doc shards) or dynamic (contingent on the doc shard).
+        shard (Doc): Doc (shard) for which prompt data should be fetched.
+        i_shard (int): Shard index (w.r.t. shard's Doc instance).
+        i_doc (int): Doc index.
+        n_shards (int): Total number of shards.
         RETURNS (Dict[str, Any]): Data injected into prompt template.
         """
         return {}
@@ -77,12 +117,12 @@ class BuiltinTask(abc.ABC):
 
     @abc.abstractmethod
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[Any]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[Any]]
     ) -> Iterable[Doc]:
         """
         Parses LLM responses.
-        docs (Iterable[Doc]): Docs to map responses into.
-        responses ([Iterable[Any]]): LLM responses.
+        shards (Iterable[Iterable[Doc]]): Doc shards to map responses into.
+        responses ([Iterable[Iterable[Any]]]): LLM responses per doc.
         RETURNS (Iterable[Doc]]): Updated docs.
         """
 
@@ -113,7 +153,6 @@ class BuiltinTask(abc.ABC):
 
     def set_cfg(self, cfg: Dict[str, Any]) -> None:
         """Deserialize the task's configuration attributes.
-
         cfg (Dict[str, Any]): dictionary containing configuration attributes.
         """
         for key, value in cfg.items():
@@ -126,7 +165,6 @@ class BuiltinTask(abc.ABC):
 
     def _set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
         """Set prompt examples.
-
         examples (List[Dict[str, Any]]): prompt examples.
         """
         self._prompt_examples = [
@@ -162,7 +200,6 @@ class BuiltinTask(abc.ABC):
         exclude (Tuple[str]): Names of properties to exclude from deserialization.
         RETURNS (BuiltinTask): Modified BuiltinTask instance.
         """
-
         deserialize = {
             "cfg": lambda b: self.set_cfg(srsly.json_loads(b)),
             "prompt_examples": lambda b: self._set_prompt_examples(
@@ -184,7 +221,6 @@ class BuiltinTask(abc.ABC):
         path (Path): A path (currently unused).
         exclude (Tuple): Names of properties to exclude from serialization.
         """
-
         serialize = {
             "cfg": lambda p: srsly.write_json(p, self.get_cfg()),
             "prompt_examples": lambda p: srsly.write_msgpack(
@@ -235,6 +271,18 @@ class BuiltinTask(abc.ABC):
         if not Doc.has_extension(extension):
             Doc.set_extension(extension, default=[])
 
+    @staticmethod
+    def _tee_2d_iterable(
+        data: Iterable[Iterable[Any]], n: int
+    ) -> Tuple[Iterable[List[Doc]], ...]:
+        """Tees two-dimensional Iterable. As Iterables in the nested iterables get consumed with the first access, we
+        need to materialize them - this is done by converting them to a list.
+        data (Iterable[Iterable[Any]]): Data to tee.
+        n (int): Number of tees to return.
+        RETURNS (Tuple[Iterable[List[Doc]], ...]): n-sized tuple of Iterables with inner Iterables converted to Lists.
+        """
+        return tee((list(inner_data) for inner_data in data), n)
+
 
 class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
     """Built-in tasks with labels."""
@@ -245,6 +293,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         prompt_example_type: Type[FewshotExample[Self]],
         template: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         labels: List[str],
         label_definitions: Optional[Dict[str, str]],
         normalizer: Optional[Callable[[str], str]],
@@ -255,6 +305,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         template (str): Prompt template passed to the model.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to (optionally) populate it at initialization time.
         label_definitions (Optional[Dict[str, str]]): Map of label -> description
@@ -268,6 +320,8 @@ class BuiltinTaskWithLabels(BuiltinTask, abc.ABC):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._normalizer = normalizer if normalizer else lowercase_normalizer()
         self._label_dict = {

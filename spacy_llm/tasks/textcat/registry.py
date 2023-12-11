@@ -1,12 +1,19 @@
 from typing import Callable, Dict, List, Optional, Type, Union
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ...util import split_labels
+from ..util.sharding import make_shard_mapper
 from .parser import parse_responses_v1_v2_v3
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V1, DEFAULT_TEXTCAT_TEMPLATE_V2
 from .task import DEFAULT_TEXTCAT_TEMPLATE_V3, TextCatTask
-from .util import TextCatExample, score
+from .util import TextCatExample, reduce_shards_to_doc, score
+
+
+@registry.llm_misc("spacy.TextCatShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc
 
 
 @registry.llm_tasks("spacy.TextCat.v1")
@@ -62,6 +69,8 @@ def make_textcat_task(
         labels=labels_list,
         template=DEFAULT_TEXTCAT_TEMPLATE_V1,
         prompt_examples=textcat_examples,
+        shard_mapper=make_shard_mapper(),
+        shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -128,6 +137,8 @@ def make_textcat_task_v2(
         labels=labels_list,
         template=template,
         prompt_examples=textcat_examples,
+        shard_mapper=make_shard_mapper(),
+        shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,
@@ -145,6 +156,8 @@ def make_textcat_task_v3(
     template: str = DEFAULT_TEXTCAT_TEMPLATE_V3,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     exclusive_classes: bool = False,
     allow_none: bool = True,
@@ -177,6 +190,8 @@ def make_textcat_task_v3(
         These descriptions are added to the prompt to help instruct the LLM on what to extract.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     normalizer (Optional[Callable[[str], str]]): Optional normalizer function.
     exclusive_classes (bool): If True, require the language model to suggest only one
         label per class. This is automatically set when using binary classification.
@@ -199,6 +214,8 @@ def make_textcat_task_v3(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=textcat_examples,
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         normalizer=normalizer,
         exclusive_classes=exclusive_classes,
         allow_none=allow_none,

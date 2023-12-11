@@ -8,7 +8,7 @@ from spacy.util import make_tempdir
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader
-from spacy_llm.ty import LLMTask
+from spacy_llm.ty import ShardingLLMTask
 from spacy_llm.util import assemble_from_config
 
 from ...tasks import make_summarization_task
@@ -152,7 +152,7 @@ def test_summarization_config(cfg_string, request):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
 
 @pytest.mark.external
@@ -253,7 +253,7 @@ def test_jinja_template_rendering_without_examples(example_text):
     doc = nlp.make_doc(example_text)
 
     llm_ner = make_summarization_task(examples=None, max_n_words=10)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -294,7 +294,7 @@ def test_jinja_template_rendering_with_examples(examples_path, example_text):
             "The provided example 'Life is a quality th...' has a summary of length 28, but `max_n_words` == 20."
         ),
     ):
-        prompt = list(llm_ner.generate_prompts([doc]))[0]
+        prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -343,7 +343,7 @@ def test_external_template_actually_loads(example_text):
     doc = nlp.make_doc(example_text)
 
     llm_ner = make_summarization_task(template=template)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -355,15 +355,17 @@ Here is the text: The atmosphere of Earth is the layer of gases, known collectiv
 
 def test_ner_serde(noop_config):
     config = Config().from_str(noop_config)
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
     nlp2.from_bytes(nlp1.to_bytes())
 
 
 def test_ner_to_disk(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     path = tmp_path / "model"
     nlp1.to_disk(path)

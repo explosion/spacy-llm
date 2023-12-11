@@ -8,36 +8,47 @@ from .task import EntityLinkerTask
 
 
 def parse_responses_v1(
-    task: EntityLinkerTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[List[Span]]:
+    task: EntityLinkerTask,
+    shards: Iterable[Iterable[Doc]],
+    responses: Iterable[Iterable[str]],
+) -> Iterable[List[List[Span]]]:
     """Parses LLM responses for spacy.EntityLinker.v1.
     task (EntityLinkerTask): Task instance.
-    docs (Iterable[Doc]): Corresponding Doc instances.
-    responses (Iterable[str]): LLM responses.
-    RETURNS (Iterable[List[Span]]): Entity spans per doc.
+    shards (Iterable[Iterable[Doc]]): Doc shards.
+    responses (Iterable[Iterable[str]]): LLM responses.
+    RETURNS (Iterable[List[List[Span]]): Entity spans per shard.
     """
 
-    for i_doc, (doc, prompt_response) in enumerate(zip(docs, responses)):
-        solutions = [
-            sol.replace("::: ", "")[1:-1]
-            for sol in re.findall(r"::: <.*>", prompt_response)
-        ]
+    for i_doc, (shards_for_doc, responses_for_doc) in enumerate(zip(shards, responses)):
+        results_for_doc: List[List[Span]] = []
+        for i_shard, (shard, response) in enumerate(
+            zip(shards_for_doc, responses_for_doc)
+        ):
+            solutions = [
+                sol.replace("::: ", "")[1:-1]
+                for sol in re.findall(r"::: <.*>", response)
+            ]
 
-        # Set ents anew by copying them and specifying the KB ID.
-        ents = [
-            ent
-            for i_ent, ent in enumerate(doc.ents)
-            if task.has_ent_cands[i_doc][i_ent]
-        ]
-        yield [
-            Span(
-                doc=doc,
-                start=ent.start,
-                end=ent.end,
-                label=ent.label,
-                vector=ent.vector,
-                vector_norm=ent.vector_norm,
-                kb_id=solution if solution != "NIL" else EntityLinker.NIL,
+            # Set ents anew by copying them and specifying the KB ID.
+            ents = [
+                ent
+                for i_ent, ent in enumerate(shard.ents)
+                if task.has_ent_cands_by_shard[i_doc][i_shard][i_ent]
+            ]
+
+            results_for_doc.append(
+                [
+                    Span(
+                        doc=shard,
+                        start=ent.start,
+                        end=ent.end,
+                        label=ent.label,
+                        vector=ent.vector,
+                        vector_norm=ent.vector_norm,
+                        kb_id=solution if solution != "NIL" else EntityLinker.NIL,
+                    )
+                    for ent, solution in zip(ents, solutions)
+                ]
             )
-            for ent, solution in zip(ents, solutions)
-        ]
+
+        yield results_for_doc

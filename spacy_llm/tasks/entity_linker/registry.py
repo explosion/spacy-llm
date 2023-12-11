@@ -5,12 +5,15 @@ from typing import Optional, Type, Union
 from spacy.scorer import Scorer
 
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
+from ..util.sharding import make_shard_mapper
 from .candidate_selector import KBCandidateSelector
 from .parser import parse_responses_v1
 from .task import DEFAULT_EL_TEMPLATE_V1, EntityLinkerTask
 from .ty import EntDescReader, InMemoryLookupKBLoader
-from .util import ELExample, KBFileLoader, KBObjectLoader, ent_desc_reader_csv, score
+from .util import ELExample, KBFileLoader, KBObjectLoader, ent_desc_reader_csv
+from .util import reduce_shards_to_doc, score
 
 
 @registry.llm_tasks("spacy.EntityLinker.v1")
@@ -19,6 +22,8 @@ def make_entitylinker_task(
     parse_responses: Optional[TaskResponseParser[EntityLinkerTask]] = None,
     prompt_example_type: Optional[Type[FewshotExample]] = None,
     examples: ExamplesConfigType = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     scorer: Optional[Scorer] = None,
 ):
     """EntityLinker.v1 task factory.
@@ -28,6 +33,8 @@ def make_entitylinker_task(
     prompt_example_type (Optional[Type[FewshotExample]]): Type to use for fewshot examples.
     examples (ExamplesConfigType): Optional callable that reads a file containing task examples for few-shot learning.
         If None is passed, then zero-shot learning will be used.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     scorer (Optional[Scorer]): Scorer function.
     """
     raw_examples = examples() if callable(examples) else examples
@@ -50,6 +57,8 @@ def make_entitylinker_task(
         parse_responses=parse_responses or parse_responses_v1,
         prompt_example_type=example_type,
         prompt_examples=examples,
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         scorer=scorer or score,
     )
 
@@ -114,3 +123,8 @@ def make_kb_file_loader(path: Union[str, Path]) -> KBFileLoader:
     RETURNS (KBFileLoader): Loader instance.
     """
     return KBFileLoader(path=path)
+
+
+@registry.llm_misc("spacy.EntityLinkerShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc

@@ -118,9 +118,10 @@ def test_ner_v3_openai():
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_ner_langchain_openai():
     """Test NER LangChain OpenAI usage example."""
-    ner_langchain_openai.run_pipeline(
-        "text", _USAGE_EXAMPLE_PATH / "ner_langchain_openai" / "ner.cfg", False
-    )
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        ner_langchain_openai.run_pipeline(
+            "text", _USAGE_EXAMPLE_PATH / "ner_langchain_openai" / "ner.cfg", False
+        )
 
 
 @pytest.mark.external

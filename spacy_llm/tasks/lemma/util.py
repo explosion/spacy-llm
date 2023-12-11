@@ -1,6 +1,7 @@
 from typing import Any, Dict, Iterable, List, Optional
 
 from spacy.scorer import Scorer
+from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
@@ -24,3 +25,13 @@ def score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): Dict with metric name -> score.
     """
     return Scorer.score_token_attr(examples, "lemma")
+
+
+def reduce_shards_to_doc(task: LemmaTask, shards: Iterable[Doc]) -> Doc:
+    """Reduces shards to docs for LemmaTask.
+    task (LemmaTask): Task.
+    shards (Iterable[Doc]): Shards to reduce to single doc instance.
+    RETURNS (Doc): Fused doc instance.
+    """
+    # Lemmas are token-specific, so we can just merge shards.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

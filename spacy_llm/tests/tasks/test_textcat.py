@@ -13,7 +13,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, file_reader, lowercase_normalizer
 from spacy_llm.registry import registry
 from spacy_llm.tasks.textcat import TextCatTask, make_textcat_task_v3
-from spacy_llm.ty import LabeledTask, LLMTask
+from spacy_llm.ty import LabeledTask, ShardingLLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -204,7 +204,7 @@ def test_textcat_config(task, cfg_string, request):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
     labels = split_labels(labels)
     task = pipe.task
@@ -318,7 +318,7 @@ def test_textcat_binary_labels_are_correct(text, response, expected_score):
 
     nlp = spacy.blank("en")
     doc = nlp(text)
-    pred = list(llm_textcat.parse_responses([doc], [response]))[0]
+    pred = list(llm_textcat.parse_responses([[doc]], [[response]]))[0]
     assert list(pred.cats.keys())[0] == label
     assert list(pred.cats.values())[0] == expected_score
 
@@ -350,7 +350,7 @@ def test_textcat_multilabel_labels_are_correct(
     )
     nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
-    pred = list(llm_textcat.parse_responses([doc], [response]))[0]
+    pred = list(llm_textcat.parse_responses([[doc]], [[response]]))[0]
     # Take only those that have scores
     pred_cats = [cat for cat, score in pred.cats.items() if score == 1.0]
     assert set(pred_cats) == set(expected)
@@ -380,7 +380,7 @@ def test_jinja_template_rendering_with_examples_for_binary(examples_path, binary
         examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -446,7 +446,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_exclusive(
         examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -513,7 +513,7 @@ def test_jinja_template_rendering_with_examples_for_multilabel_nonexclusive(
         examples=prompt_examples,
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -592,7 +592,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc("Combine 2 cloves of garlic with soy sauce")
 
     llm_textcat = make_textcat_task_v3(labels=labels, template=template)
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -636,16 +636,17 @@ INSULTS = [
 def test_textcat_scoring(zeroshot_cfg_string, n_insults):
     @registry.llm_models("Dummy")
     def factory():
-        def b(prompts: Iterable[str]) -> Iterable[str]:
+        def b(prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
             for _ in prompts:
-                yield "POS"
+                yield ["POS"]
 
         return b
 
     config = Config().from_str(zeroshot_cfg_string)
     config["components"]["llm"]["model"] = {"@llm_models": "Dummy"}
     config["components"]["llm"]["task"]["labels"] = "Insult"
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -659,9 +660,7 @@ def test_textcat_scoring(zeroshot_cfg_string, n_insults):
         examples.append(Example(predicted, reference))
 
     scores = nlp.evaluate(examples)
-
     pos = n_insults / len(INSULTS)
-
     assert scores["cats_micro_p"] == pos
     assert not n_insults or scores["cats_micro_r"] == 1
 
@@ -680,7 +679,7 @@ def test_jinja_template_rendering_with_label_definitions(multilabel_excl):
         },
         exclusive_classes=exclusive_classes,
     )
-    prompt = list(llm_textcat.generate_prompts([doc]))[0]
+    prompt = list(llm_textcat.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == """
@@ -744,7 +743,8 @@ def test_textcat_init(
     config = Config().from_str(noop_config)
     if init_from_config:
         config["initialize"] = {"components": {"llm": {"labels": ["Test"]}}}
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -788,10 +788,10 @@ def test_textcat_init(
 
 def test_textcat_serde(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
-
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
-    nlp3 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
+        nlp3 = assemble_from_config(config)
 
     labels = {"insult": "INSULT", "compliment": "COMPLIMENT"}
 

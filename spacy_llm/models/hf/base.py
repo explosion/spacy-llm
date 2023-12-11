@@ -17,6 +17,7 @@ class HuggingFace(abc.ABC):
         name: str,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: Optional[int],
     ):
         """Initializes HF model instance.
         query (Callable[[Any, Iterable[Any]], Iterable[Any]): Callable executing LLM prompts when
@@ -24,9 +25,10 @@ class HuggingFace(abc.ABC):
         name (str): Name of HF model to load (without account name).
         config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
         config_run (Optional[Dict[str, Any]]): HF config for running the model.
-        inference_config (Dict[Any, Any]): HF config for model run.
+        context_length (Optional[int]): Context length for this model. Necessary for sharding.
         """
         self._name = name if self.hf_account in name else f"{self.hf_account}/{name}"
+        self._context_length = context_length
         default_cfg_init, default_cfg_run = self.compile_default_configs()
         self._config_init, self._config_run = default_cfg_init, default_cfg_run
 
@@ -73,10 +75,10 @@ class HuggingFace(abc.ABC):
         self._model = self.init_model()
 
     @abc.abstractmethod
-    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
+    def __call__(self, prompts: Iterable[Iterable[Any]]) -> Iterable[Iterable[Any]]:
         """Executes prompts on specified API.
-        prompts (Iterable[Any]): Prompts to execute.
-        RETURNS (Iterable[Any]): API responses.
+        prompts (Iterable[Iterable[Any]]): Prompts to execute per doc.
+        RETURNS (Iterable[Iterable[Any]]): API responses per doc.
         """
 
     def _check_model(self) -> None:
@@ -92,6 +94,13 @@ class HuggingFace(abc.ABC):
         RETURNS (Tuple[str]): Names of supported models.
         """
         return tuple(str(arg) for arg in cls.MODEL_NAMES.__args__)  # type: ignore[attr-defined]
+
+    @property
+    def context_length(self) -> Optional[int]:
+        """Returns context length in number of tokens for this model.
+        RETURNS (Optional[int]): Max. number of tokens allowed in prompt for the current model.
+        """
+        return self._context_length
 
     @property
     @abc.abstractmethod

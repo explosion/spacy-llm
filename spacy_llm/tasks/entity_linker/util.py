@@ -11,6 +11,7 @@ from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
 from spacy.pipeline import EntityLinker
 from spacy.scorer import Scorer
+from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
@@ -60,7 +61,7 @@ class ELExample(FewshotExample):
         assert all([sol is not None for sol in solutions])
 
         return ELExample(
-            text=EntityLinkerTask.highlight_ents_in_text(example.reference),
+            text=EntityLinkerTask.highlight_ents_in_doc(example.reference).text,
             mentions=mentions,
             entity_descriptions=[
                 [ent.description for ent in ents] for ents in cands_ents
@@ -196,3 +197,13 @@ class KBFileLoader(BaseInMemoryLookupKBLoader):
                 raise err
 
         return kb, {qid: entities[qid].get("desc") for qid in qids}
+
+
+def reduce_shards_to_doc(task: EntityLinkerTask, shards: Iterable[Doc]) -> Doc:
+    """Reduces shards to docs for EntityLinkerTask.
+    task (EntityLinkerTask): Task.
+    shards (Iterable[Doc]): Shards to reduce to single doc instance.
+    RETURNS (Doc): Fused doc instance.
+    """
+    # Entities are additive, so we can just merge shards.
+    return Doc.from_docs(list(shards), ensure_whitespace=True)

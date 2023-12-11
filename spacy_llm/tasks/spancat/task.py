@@ -5,7 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal, Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, Scorer, ShardMapper, ShardReducer, TaskResponseParser
 from ..span import SpanTask
 from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
@@ -25,6 +25,8 @@ class SpanCatTask(SpanTask):
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
         prompt_examples: Optional[List[FewshotExample[Self]]],
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -46,6 +48,8 @@ class SpanCatTask(SpanTask):
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -62,6 +66,8 @@ class SpanCatTask(SpanTask):
             template=template,
             label_definitions=label_definitions,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,

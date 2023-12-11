@@ -353,7 +353,7 @@ def test_entity_linker_predict_no_candidates(request, tmp_path):
     doc = nlp(make_doc())
     assert (
         f"- For *Foo*:\n    {EntityLinker.NIL}. {UNAVAILABLE_ENTITY_DESC}"
-        in doc.user_data["llm_io"]["llm"]["prompt"]
+        in doc.user_data["llm_io"]["llm"]["prompt"][0]
     )
     assert doc.ents[0].kb_id_ == EntityLinker.NIL
     # Sometimes GPT-3.5 doesn't manage to include the NIL prediction, in which case all entities are set to NIL.
@@ -427,7 +427,7 @@ def test_jinja_template_rendering_without_examples(tmp_path):
         )
     )
     el_task._candidate_selector.initialize(spacy.load(tmp_path).vocab)
-    prompt = list(el_task.generate_prompts([doc]))[0]
+    prompt = list(el_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip().replace(" \n", "\n")
@@ -497,7 +497,7 @@ def test_jinja_template_rendering_with_examples(examples_path, tmp_path):
         )
     )
     el_task._candidate_selector.initialize(spacy.load(tmp_path).vocab)
-    prompt = list(el_task.generate_prompts([doc]))[0]
+    prompt = list(el_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip().replace(" \n", "\n")
@@ -601,7 +601,7 @@ def test_external_template_actually_loads(tmp_path):
     el_task._candidate_selector.initialize(spacy.load(tmp_path).vocab)
 
     assert (
-        list(el_task.generate_prompts([doc]))[0].strip()
+        list(el_task.generate_prompts([doc]))[0][0][0].strip()
         == f"""
 This is a test entity linking template.
 Here is the text: {text}
@@ -620,7 +620,8 @@ def test_el_init(noop_config, n_prompt_examples: int, tmp_path):
         },
     )
     build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -678,8 +679,15 @@ def test_ent_highlighting():
     ]
 
     assert (
-        EntityLinkerTask.highlight_ents_in_text(doc)
+        EntityLinkerTask.highlight_ents_in_doc(doc).text
         == "Alice goes to *Boston* to see the *Boston Celtics* game."
+    )
+    assert (
+        EntityLinkerTask.unhighlight_ents_in_doc(
+            EntityLinkerTask.highlight_ents_in_doc(doc)
+        ).text
+        == doc.text
+        == text
     )
 
 

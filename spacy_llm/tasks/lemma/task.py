@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, Scorer, ShardMapper, ShardReducer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -19,6 +19,8 @@ class LemmaTask(BuiltinTask):
         prompt_example_type: Type[FewshotExample[Self]],
         prompt_examples: Optional[List[FewshotExample[Self]]],
         template: str,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         scorer: Scorer,
     ):
         """Default lemmatization task.
@@ -27,6 +29,8 @@ class LemmaTask(BuiltinTask):
         prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         template (str): Prompt template passed to the model.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         scorer (Scorer): Scorer function.
         """
         super().__init__(
@@ -34,25 +38,36 @@ class LemmaTask(BuiltinTask):
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._scorer = scorer
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        for doc, lemmas in zip(docs, self._parse_responses(self, docs, responses)):
-            tokens = [token for token in doc]
-            # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
-            # match.
-            if len(tokens) != len(lemmas):
-                yield doc
+        shards_teed = self._tee_2d_iterable(shards, 2)
+        for shards_for_doc, lemmas_for_doc in zip(
+            shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
+        ):
+            updated_shards_for_doc: List[Doc] = []
 
-            # Assign lemmas.
-            for token, lemma_info in zip(tokens, lemmas):
-                if len(lemma_info) > 0:
-                    token.lemma_ = lemma_info[1]
+            for shard, lemmas in zip(shards_for_doc, lemmas_for_doc):
+                tokens = [token for token in shard]
+                # If numbers of tokens recognized by spaCy and returned by LLM don't match, we don't attempt a partial
+                # match.
+                if len(tokens) != len(lemmas):
+                    updated_shards_for_doc.append(shard)
+                    continue
 
-            yield doc
+                # Assign lemmas.
+                for token, lemma_info in zip(tokens, lemmas):
+                    if len(lemma_info) > 0:
+                        token.lemma_ = lemma_info[1]
+
+                updated_shards_for_doc.append(shard)
+
+            yield self._shard_reducer(self, updated_shards_for_doc)  # type: ignore[arg-type]
 
     def initialize(
         self,
