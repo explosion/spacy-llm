@@ -70,7 +70,7 @@ def make_llm(
     nlp (Language): Pipeline.
     name (str): The component instance name, used to add entries to the
         losses during training.
-    task (Optional[_LLMTask]): An _LLMTask can generate prompts for given docs, and can parse the LLM's responses into
+    task (Optional[LLMTask]): An LLMTask can generate prompts for given docs, and can parse the LLM's responses into
         structured information and set that back on the docs.
     model (Callable[[Iterable[Any]], Iterable[Any]]]): Callable querying the specified LLM API.
     cache (Cache): Cache to use for caching prompts and responses per doc (batch).

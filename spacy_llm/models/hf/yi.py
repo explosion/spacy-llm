@@ -115,7 +115,7 @@ def yi_hf(
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Yi:
     """Generates Yi instance that can execute a set of prompts and return the raw responses.
-    name (Literal): Name of the Mistral model. Has to be one of Mistral.get_model_names().
+    name (Literal): Name of the Yi model. Has to be one of Yi.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
     RETURNS (Yi): Yi instance that can execute a set of prompts and return the raw responses.
