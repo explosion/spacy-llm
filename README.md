@@ -24,6 +24,8 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[OpenLLaMA](https://huggingface.co/openlm-research)**
   - **[StableLM](https://huggingface.co/stabilityai)**
   - **[Mistral](https://huggingface.co/mistralai)**
+  - **[Zephyr](https://huggingface.co/HuggingFaceH4)**
+  - **[Yi](https://huggingface.co/01-ai)**
 - Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`
 - Tasks available out of the box:
   - Named Entity Recognition
