@@ -19,7 +19,8 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[OpenAI](https://platform.openai.com/docs/api-reference/)**
   - **[Cohere](https://docs.cohere.com/reference/generate)**
   - **[Anthropic](https://docs.anthropic.com/claude/reference/)**
-  - **[PaLM](https://ai.google/discover/palm2/)**
+  - **[Google PaLM](https://ai.google/discover/palm2/)**
+  - **[Microsoft Azure AI](https://azure.microsoft.com/en-us/solutions/ai)**
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
