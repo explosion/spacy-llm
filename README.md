@@ -1,8 +1,10 @@
-<a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
-<a href="https://explosion.ai"><img src="assets/logo.png" width="125" height="125" align="left" style="margin-right:30px" /></a>
+<a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="145" height="145" align="right" /></a>
+<a href="https://explosion.ai"><img src="assets/logo.png" width="145" height="145" align="left" style="margin-right:30px" /></a>
 
-# spacy-llm: Structured NLP with LLMs
-
+<h1 align="center">
+<span style="font: bold 38pt'Courier New';">spacy-llm</span>
+<br>Structured NLP with LLMs
+</h1>
 <br>
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/test.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/test.yml)
