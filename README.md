@@ -1,7 +1,7 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 <a href="https://explosion.ai"><img src="assets/logo.png" width="125" height="125" align="left" style="margin-right:30px" /></a>
 
-# spacy-llm:  Integrating LLMs into structured NLP pipelines
+# spacy-llm: Structured NLP with LLMs
 
 <br>
 
