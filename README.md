@@ -39,10 +39,13 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - Sentiment analysis
   - Span categorization
   - Summarization
+  - Entity linking
+  - Translation
+  - Raw prompt execution for maximum flexibility
   - Soon:
-    - Entity linking
     - Semantic role labeling
 - Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
+- Map-reduce approach for splitting prompts too long for LLM's context window and fusing the results back together
 
 ## 🧠 Motivation
 
