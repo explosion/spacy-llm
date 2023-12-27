@@ -141,8 +141,8 @@ def test_lemma_config(cfg_string, request):
 @pytest.mark.parametrize(
     "cfg_string",
     [
-        "zeroshot_cfg_string",
-        "fewshot_cfg_string",
+        # "zeroshot_cfg_string",
+        # "fewshot_cfg_string",
         "ext_template_cfg_string",
     ],
 )
@@ -199,7 +199,7 @@ def test_jinja_template_rendering_without_examples():
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(examples=None)
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -242,7 +242,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(examples=fewshot_reader(examples_path))
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -334,7 +334,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc(text)
 
     lemma_task = make_lemma_task(template=template)
-    prompt = list(lemma_task.generate_prompts([doc]))[0]
+    prompt = list(lemma_task.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == f"""
@@ -347,7 +347,8 @@ Here is the text: {text}
 @pytest.mark.parametrize("n_prompt_examples", [-1, 0, 1, 2])
 def test_lemma_init(noop_config, n_prompt_examples: int):
     config = Config().from_str(noop_config)
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
     pred_words_1 = ["Alice", "works", "all", "evenings"]

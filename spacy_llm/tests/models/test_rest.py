@@ -1,7 +1,7 @@
 # mypy: ignore-errors
 import copy
 import re
-from typing import Iterable
+from typing import Iterable, Optional, Tuple
 
 import pytest
 import spacy
@@ -22,14 +22,17 @@ PIPE_CFG = {
 class _CountTask:
     _PROMPT_TEMPLATE = "Count the number of characters in this string: '{text}'."
 
-    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[Tuple[Iterable[str], Iterable[Doc]]]:
         for doc in docs:
-            yield _CountTask._PROMPT_TEMPLATE.format(text=doc.text)
+            yield [_CountTask._PROMPT_TEMPLATE.format(text=doc.text)], [doc]
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        return docs
+        # Grab the first shard per doc
+        return [list(shards_for_doc)[0] for shards_for_doc in shards]
 
     @property
     def prompt_template(self) -> str:
@@ -120,7 +123,8 @@ def test_azure_openai(deployment_name: str):
             "@llm_models": "spacy.Azure.v1",
             "base_url": "https://explosion.openai.azure.com/",
             "model_type": "completions",
-            "name": deployment_name,
+            "deployment_name": deployment_name,
+            "name": deployment_name.replace("35", "3.5"),
         },
         "task": {"@llm_tasks": "spacy.NoOp.v1"},
         "save_io": True,

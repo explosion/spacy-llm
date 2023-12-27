@@ -35,35 +35,40 @@ def _format_response(
 
 
 def parse_responses(
-    task: SpanTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[List[Span]]:
+    task: SpanTask, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
+) -> Iterable[Iterable[List[Span]]]:
     """Parses LLM responses for Span tasks.
     task (SpanTask): Task instance.
-    docs (Iterable[Doc]): Corresponding Doc instances.
-    responses (Iterable[str]): LLM responses.
-    RETURNS (Iterable[Span]): Parsed spans per doc/response.
+    shards (Iterable[Iterable[Doc]]): Doc shards.
+    responses (Iterable[Iterable[str]]): LLM responses.
+    RETURNS (Iterable[Iterable[List[Span]]]): Parsed spans per shard/response.
     """
-    for doc, prompt_response in zip(docs, responses):
-        spans = []
-        for label, phrases in _format_response(
-            prompt_response, task._normalizer, task._label_dict
-        ):
-            # For each phrase, find the substrings in the text
-            # and create a Span
-            offsets = find_substrings(
-                doc.text,
-                phrases,
-                case_sensitive=task._case_sensitive_matching,
-                single_match=task._single_match,
-            )
-            for start, end in offsets:
-                span = doc.char_span(
-                    start, end, alignment_mode=task._alignment_mode, label=label
-                )
-                if span is not None:
-                    spans.append(span)
+    for responses_for_doc, shards_for_doc in zip(responses, shards):
+        results_for_doc: List[List[Span]] = []
 
-        yield spans
+        for shard, response in zip(shards_for_doc, responses_for_doc):
+            spans = []
+            for label, phrases in _format_response(
+                response, task._normalizer, task._label_dict
+            ):
+                # For each phrase, find the substrings in the text
+                # and create a Span
+                offsets = find_substrings(
+                    shard.text,
+                    phrases,
+                    case_sensitive=task._case_sensitive_matching,
+                    single_match=task._single_match,
+                )
+                for start, end in offsets:
+                    span = shard.char_span(
+                        start, end, alignment_mode=task._alignment_mode, label=label
+                    )
+                    if span is not None:
+                        spans.append(span)
+
+            results_for_doc.append(spans)
+
+        yield results_for_doc
 
 
 def _extract_span_reasons_cot(task: SpanTask, response: str) -> List[SpanReason]:
@@ -152,19 +157,23 @@ def _find_spans_cot(
 
 
 def parse_responses_cot(
-    task: SpanTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[List[Span]]:
+    task: SpanTask, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
+) -> Iterable[Iterable[List[Span]]]:
     """Since we provide entities in a numbered list, we expect the LLM to
     output entities in the order they occur in the text. This parse
     function now incrementally finds substrings in the text and tracks the
     last found span's start character to ensure we don't overwrite
     previously found spans.
     task (SpanTask): Task instance.
-    docs (Iterable[Doc]): Corresponding Doc instances.
-    responses (Iterable[str]): LLM responses.
-    RETURNS (Iterable[List[Span]]): Spans to assign per doc.
+    shards (Iterable[Iterable[Doc]]): Doc shards.
+    responses (Iterable[Iterable[str]]): LLM responses.
+    RETURNS (Iterable[Iterable[List[Span]]]): Spans to assign per shard.
     """
-    for doc, llm_response in zip(docs, responses):
-        span_reasons = _extract_span_reasons_cot(task, llm_response)
-        spans = _find_spans_cot(task, doc, span_reasons)
-        yield spans
+    for responses_for_doc, shards_for_doc in zip(responses, shards):
+        results_for_doc: List[List[Span]] = []
+
+        for shard, response in zip(shards_for_doc, responses_for_doc):
+            span_reasons = _extract_span_reasons_cot(task, response)
+            results_for_doc.append(_find_spans_cot(task, shard, span_reasons))
+
+        yield results_for_doc
