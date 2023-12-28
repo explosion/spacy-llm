@@ -35,7 +35,7 @@ class AzureOpenAI(REST):
         self._deployment_name = deployment_name
         super().__init__(
             name=name,
-            endpoint=endpoint,
+            endpoint=endpoint or endpoint,
             config=config,
             strict=strict,
             max_tries=max_tries,
