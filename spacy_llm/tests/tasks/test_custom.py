@@ -1,9 +1,27 @@
 from typing import Iterable
 
+from confection import Config
 from spacy.tokens import Doc
 
 from spacy_llm.registry import registry
-from spacy_llm.util import assemble
+from spacy_llm.util import assemble_from_config
+
+config = """[nlp]
+lang = "en"
+pipeline = ["llm"]
+
+[components]
+
+[components.llm]
+factory = "llm"
+save_io = True
+
+[components.llm.task]
+@llm_tasks = "my_namespace.MyTask.v1"
+
+[components.llm.model]
+@llm_models = "spacy.NoOp.v1"
+"""
 
 
 @registry.llm_tasks("my_namespace.MyTask.v1")
@@ -26,5 +44,5 @@ class MyTask:
 
 
 def test_custom_task():
-    nlp = assemble("custom.cfg")
+    nlp = assemble_from_config(Config().from_str(config))
     nlp("This is a test.")
