@@ -84,7 +84,7 @@ class TextCatTask(BuiltinTaskWithLabels):
 
         if self._use_binary and not self._exclusive_classes:
             msg.info(
-                "Binary classification should always be exclusive. Setting "
+                "Detected binary classification: setting "
                 "the `exclusive_classes` parameter to True."
             )
             self._exclusive_classes = True

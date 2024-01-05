@@ -54,6 +54,7 @@ def palm_bison(
     max_tries: int = PaLM.DEFAULT_MAX_TRIES,
     interval: float = PaLM.DEFAULT_INTERVAL,
     max_request_time: float = PaLM.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
 ) -> PaLM:
     """Returns Google instance for PaLM Bison model using REST to prompt API.
     name (Literal["chat-bison-001", "text-bison-001"]): Model  to use.
@@ -66,13 +67,15 @@ def palm_bison(
     interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
         at each retry.
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
+    endpoint (Optional[str]): Endpoint to use. Defaults to standard endpoint.
     RETURNS (PaLM): PaLM instance for Bison model.
     """
+    default_endpoint = (
+        Endpoints.TEXT.value if name in {"text-bison-001"} else Endpoints.MSG.value
+    )
     return PaLM(
         name=name,
-        endpoint=Endpoints.TEXT.value
-        if name in {"text-bison-001"}
-        else Endpoints.MSG.value,
+        endpoint=endpoint or default_endpoint,
         config=config,
         strict=strict,
         max_tries=max_tries,
