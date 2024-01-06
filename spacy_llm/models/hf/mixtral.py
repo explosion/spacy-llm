@@ -7,8 +7,10 @@ from ...registry.util import registry
 from .base import HuggingFace
 
 
-class Mistral(HuggingFace):
-    MODEL_NAMES = Literal["Mistral-7B-v0.1", "Mistral-7B-Instruct-v0.1"]  # noqa: F722
+class Mixtral(HuggingFace):
+    MODEL_NAMES = Literal[
+        "Mixtral-8x7B-v0.1", "Mixtral-8x7B-Instruct-v0.1"
+    ]  # noqa: F722
 
     def __init__(
         self,
@@ -89,18 +91,18 @@ class Mistral(HuggingFace):
         return responses
 
 
-@registry.llm_models("spacy.Mistral.v1")
-def mistral_hf(
-    name: Mistral.MODEL_NAMES,
+@registry.llm_models("spacy.Mixtral.v1")
+def mixtral_hf(
+    name: Mixtral.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
-    """Generates Mistral instance that can execute a set of prompts and return the raw responses.
-    name (Literal): Name of the Mistral model. Has to be one of Falcon.get_model_names().
+    """Generates Mixtral instance that can execute a set of prompts and return the raw responses.
+    name (Literal): Name of the Mixtral model. Has to be one of Mixtral.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Mistral): Mistral instance that can execute a set of prompts and return the raw responses.
+    RETURNS (Mixtral): Mixtral instance that can execute a set of prompts and return the raw responses.
     """
-    return Mistral(
+    return Mixtral(
         name=name, config_init=config_init, config_run=config_run, context_length=8000
     )
