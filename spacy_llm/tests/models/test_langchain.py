@@ -10,8 +10,8 @@ from spacy_llm.tests.compat import has_azure_openai_key
 
 PIPE_CFG = {
     "model": {
-        "@llm_models": "langchain.OpenAI.v1",
-        "name": "ada",
+        "@llm_models": "langchain.OpenAIChat.v1",
+        "name": "gpt-3.5-turbo",
         "config": {"temperature": 0.3},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
