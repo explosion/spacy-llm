@@ -10,8 +10,8 @@ from spacy_llm.tests.compat import has_azure_openai_key
 
 PIPE_CFG = {
     "model": {
-        "@llm_models": "langchain.OpenAI.v1",
-        "name": "ada",
+        "@llm_models": "langchain.OpenAIChat.v1",
+        "name": "gpt-3.5-turbo",
         "config": {"temperature": 0.3},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -31,7 +31,8 @@ def langchain_model_reg_handles() -> List[str]:
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=PIPE_CFG)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp.add_pipe("llm", config=PIPE_CFG)
     nlp("This is a test.")
 
 
@@ -57,5 +58,6 @@ def test_initialization_azure_openai():
     }
 
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=_pipe_cfg)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp.add_pipe("llm", config=_pipe_cfg)
     nlp("This is a test.")

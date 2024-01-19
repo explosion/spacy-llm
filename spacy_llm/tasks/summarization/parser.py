@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, List
 
 from spacy.tokens import Doc
 
@@ -6,13 +6,19 @@ from .task import SummarizationTask
 
 
 def parse_responses_v1(
-    task: SummarizationTask, docs: Iterable[Doc], responses: Iterable[str]
-) -> Iterable[str]:
+    task: SummarizationTask,
+    shards: Iterable[Iterable[Doc]],
+    responses: Iterable[Iterable[str]],
+) -> Iterable[Iterable[str]]:
     """Parses LLM responses for spacy.Summarization.v1.
     task (SummarizationTask): Task instance.
-    docs (Iterable[Doc]): Corresponding Doc instances.
-    responses (Iterable[str]): LLM responses.
-    RETURNS (Iterable[str]): Summary per doc/response.
+    docs (Iterable[Iterable[Doc]]): Doc shards.
+    responses (Iterable[Iterable[str]]): LLM responses.
+    RETURNS (Iterable[Iterable[str]]): Summary per shard/response.
     """
-    for prompt_response in responses:
-        yield prompt_response.replace("'''", "").strip()
+    for responses_for_doc in responses:
+        results_for_doc: List[str] = []
+        for response in responses_for_doc:
+            results_for_doc.append(response.replace("'''", "").strip())
+
+        yield responses_for_doc

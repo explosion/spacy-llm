@@ -131,9 +131,9 @@ def test_sentiment_predict(cfg_string, request):
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     if cfg_string != "ext_template_cfg_string":
-        assert nlp("This is horrible.")._.sentiment == 0
+        assert nlp("This is horrible.")._.sentiment == 0.0
         assert 0 < nlp("This is meh.")._.sentiment <= 0.5
-        assert nlp("This is perfect.")._.sentiment == 1
+        assert nlp("This is perfect.")._.sentiment == 1.0
 
 
 @pytest.mark.external
@@ -146,7 +146,7 @@ def test_sentiment_predict(cfg_string, request):
         ("zeroshot_cfg_string", "sentiment_x"),
     ],
 )
-def test_lemma_io(cfg_string_field, request):
+def test_sentiment_io(cfg_string_field, request):
     cfg_string, field = cfg_string_field
     cfg = request.getfixturevalue(cfg_string)
     orig_config = Config().from_str(cfg)
@@ -175,7 +175,7 @@ def test_jinja_template_rendering_without_examples():
     doc = nlp.make_doc(text)
 
     sentiment_task = make_sentiment_task(examples=None)
-    prompt = list(sentiment_task.generate_prompts([doc]))[0]
+    prompt = list(sentiment_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -209,7 +209,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
     doc = nlp.make_doc(text)
 
     sentiment_task = make_sentiment_task(examples=fewshot_reader(examples_path))
-    prompt = list(sentiment_task.generate_prompts([doc]))[0]
+    prompt = list(sentiment_task.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -257,7 +257,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc(text)
 
     sentiment_task = make_sentiment_task(template=template)
-    prompt = list(sentiment_task.generate_prompts([doc]))[0]
+    prompt = list(sentiment_task.generate_prompts([doc]))[0][0][0]
     assert (
         prompt.strip()
         == f"""

@@ -17,17 +17,23 @@ class LangChain:
         name: str,
         api: str,
         config: Dict[Any, Any],
-        query: Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]],
+        query: Callable[
+            ["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]
+        ],
+        context_length: Optional[int],
     ):
         """Initializes model instance for integration APIs.
         name (str): Name of LangChain model to instantiate.
         api (str): Name of class/API.
         config (Dict[Any, Any]): Config passed on to LangChain model.
-        query (Callable[[langchain.llms.BaseLLM, Iterable[Any]], Iterable[Any]]): Callable executing LLM prompts when
-            supplied with the `integration` object.
+        query (Callable[[langchain.llms.BaseLLM, Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing
+            LLM prompts when supplied with the model instance.
+        context_length (Optional[int]): Context length for this model. Only necessary for sharding. If no context
+            length provided, prompts can't be sharded.
         """
         self._langchain_model = LangChain._init_langchain_model(name, api, config)
         self.query = query
+        self._context_length = context_length
         self._check_installation()
 
     @classmethod
@@ -71,25 +77,28 @@ class LangChain:
         """Returns langchain.llms.type_to_cls_dict.
         RETURNS (Dict[str, Type[langchain.llms.BaseLLM]]): langchain.llms.type_to_cls_dict.
         """
-        return getattr(langchain.llms, "type_to_cls_dict")
+        return {
+            llm_id: getattr(langchain.llms, llm_id) for llm_id in langchain.llms.__all__
+        }
 
-    def __call__(self, prompts: Iterable[Any]) -> Iterable[Any]:
+    def __call__(self, prompts: Iterable[Iterable[Any]]) -> Iterable[Iterable[Any]]:
         """Executes prompts on specified API.
-        prompts (Iterable[Any]): Prompts to execute.
-        RETURNS (Iterable[Any]): API responses.
+        prompts (Iterable[Iterable[Any]]): Prompts to execute.
+        RETURNS (Iterable[Iterable[Any]]): API responses.
         """
         return self.query(self._langchain_model, prompts)
 
     @staticmethod
     def query_langchain(
-        model: "langchain.llms.BaseLLM", prompts: Iterable[Any]
-    ) -> Iterable[Any]:
+        model: "langchain.llms.BaseLLM", prompts: Iterable[Iterable[Any]]
+    ) -> Iterable[Iterable[Any]]:
         """Query LangChain model naively.
         model (langchain.llms.BaseLLM): LangChain model.
-        prompts (Iterable[Any]): Prompts to execute.
-        RETURNS (Iterable[Any]): LLM responses.
+        prompts (Iterable[Iterable[Any]]): Prompts to execute.
+        RETURNS (Iterable[Iterable[Any]]): LLM responses.
         """
-        return [model(pr) for pr in prompts]
+        assert callable(model)
+        return [[model(pr) for pr in prompts_for_doc] for prompts_for_doc in prompts]
 
     @staticmethod
     def _check_installation() -> None:
@@ -105,17 +114,22 @@ class LangChain:
         def langchain_model(
             name: str,
             query: Optional[
-                Callable[["langchain.llms.BaseLLM", Iterable[str]], Iterable[str]]
+                Callable[
+                    ["langchain.llms.BaseLLM", Iterable[Iterable[str]]],
+                    Iterable[Iterable[str]],
+                ]
             ] = None,
             config: Dict[Any, Any] = SimpleFrozenDict(),
+            context_length: Optional[int] = None,
             langchain_class_id: str = class_id,
-        ) -> Optional[Callable[[Iterable[Any]], Iterable[Any]]]:
+        ) -> Optional[Callable[[Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]]:
             try:
                 return LangChain(
                     name=name,
                     api=langchain_class_id,
                     config=config,
                     query=query_langchain() if query is None else query,
+                    context_length=context_length,
                 )
             except ImportError as err:
                 raise ValueError(
@@ -124,6 +138,13 @@ class LangChain:
                 ) from err
 
         return langchain_model
+
+    @property
+    def context_length(self) -> Optional[int]:
+        """Returns context length in number of tokens for this model.
+        RETURNS (Optional[int]): Max. number of tokens in allowed in prompt for the current model. None if unknown.
+        """
+        return self._context_length
 
     @staticmethod
     def register_models() -> None:
@@ -148,10 +169,12 @@ class LangChain:
 
 @registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> (
-    Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]
+    Callable[
+        ["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]
+    ]
 ):
     """Returns query Callable for LangChain.
-    RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]:): Callable executing simple prompts on
-        the specified LangChain model.
+    RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing
+        simple prompts on the specified LangChain model.
     """
     return LangChain.query_langchain

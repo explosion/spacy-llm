@@ -12,7 +12,7 @@ from spacy_llm.pipeline import LLMWrapper
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["langchain.OpenAI.v1", "spacy.GPT-3-5.v3", "spacy.GPT-4.v3"],
+    ["langchain.OpenAIChat.v1", "spacy.GPT-3-5.v3", "spacy.GPT-4.v3"],
     ids=["langchain", "rest-openai", "rest-openai"],
 )
 @pytest.mark.parametrize(
@@ -20,7 +20,7 @@ from spacy_llm.pipeline import LLMWrapper
     ["spacy.NER.v1", "spacy.NER.v3", "spacy.TextCat.v1"],
     ids=["ner.v1", "ner.v3", "textcat"],
 )
-@pytest.mark.parametrize("n_process", [1])  # , 2
+@pytest.mark.parametrize("n_process", [1, 2])
 def test_combinations(model: str, task: str, n_process: int):
     """Randomly test combinations of models and tasks."""
     ops = get_current_ops()
@@ -35,7 +35,7 @@ def test_combinations(model: str, task: str, n_process: int):
         "task": {"@llm_tasks": task},
     }
     if model.startswith("langchain"):
-        config["model"]["name"] = "ada"
+        config["model"]["name"] = "gpt-3.5-turbo"
     # Configure task-specific settings.
     if task.startswith("spacy.NER"):
         config["task"]["labels"] = "PER,ORG,LOC"
@@ -44,12 +44,20 @@ def test_combinations(model: str, task: str, n_process: int):
         config["task"]["exclusive_classes"] = True
 
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=config)
+    if model.startswith("langchain"):
+        with pytest.warns(UserWarning, match="Task supports sharding"):
+            nlp.add_pipe("llm", config=config)
+    else:
+        nlp.add_pipe("llm", config=config)
+
     name, component = nlp.pipeline[0]
     assert name == "llm"
     assert isinstance(component, LLMWrapper)
 
     nlp("This is a test.")
     list(
-        nlp.pipe(["This is a second test", "This is a third test"], n_process=n_process)
+        nlp.pipe(
+            ["This is a second test", "This is a third test"],
+            n_process=n_process,
+        )
     )

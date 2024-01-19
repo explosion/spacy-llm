@@ -18,12 +18,15 @@ def test_cohere_api_response_is_correct():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        context_length=None,
     )
     prompt = "Count the number of characters in this string: hello"
     num_prompts = 3  # arbitrary number to check multiple inputs
-    responses = cohere(prompts=[prompt] * num_prompts)
+    responses = cohere(prompts=[[prompt]] * num_prompts)
     for response in responses:
-        assert isinstance(response, str)
+        assert isinstance(response, list)
+        assert len(response) == 1
+        assert isinstance(response[0], str)
 
 
 @pytest.mark.external
@@ -44,13 +47,16 @@ def test_cohere_api_response_n_generations():
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        context_length=None,
     )
 
     prompt = "Count the number of characters in this string: hello"
     num_prompts = 3
-    responses = cohere(prompts=[prompt] * num_prompts)
+    responses = cohere(prompts=[[prompt]] * num_prompts)
     for response in responses:
-        assert isinstance(response, str)
+        assert isinstance(response, list)
+        assert len(response) == 1
+        assert isinstance(response[0], str)
 
 
 @pytest.mark.external
@@ -69,6 +75,7 @@ def test_cohere_api_response_when_error():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            context_length=None,
         )
 
 
@@ -77,9 +84,7 @@ def test_cohere_api_response_when_error():
 def test_cohere_error_unsupported_model():
     """Ensure graceful handling of error when model is not supported"""
     incorrect_model = "x-gpt-3.5-turbo"
-    with pytest.raises(
-        ValueError, match="finetuned model x-gpt-3.5-turbo is not valid"
-    ):
+    with pytest.raises(ValueError, match="model not found"):
         Cohere(
             name=incorrect_model,
             config={},
@@ -88,4 +93,5 @@ def test_cohere_error_unsupported_model():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            context_length=None,
         )

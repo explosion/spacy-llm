@@ -2,15 +2,22 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Type, Union
 
 from ...compat import Literal
 from ...registry import registry
-from ...ty import ExamplesConfigType, FewshotExample, Scorer, TaskResponseParser
+from ...ty import ExamplesConfigType, FewshotExample, Scorer, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ...util import split_labels
 from ..span import parse_responses as parse_span_responses
 from ..span import parse_responses_cot as parse_span_responses_cot
 from ..span.util import check_label_consistency as check_labels
 from ..span.util import check_label_consistency_cot as check_labels_cot
+from ..util.sharding import make_shard_mapper
 from .task import DEFAULT_SPANCAT_TEMPLATE_V1, DEFAULT_SPANCAT_TEMPLATE_V2
 from .task import DEFAULT_SPANCAT_TEMPLATE_V3, SpanCatTask
-from .util import SpanCatCoTExample, SpanCatExample, score
+from .util import SpanCatCoTExample, SpanCatExample, reduce_shards_to_doc, score
+
+
+@registry.llm_misc("spacy.SpanCatShardReducer.v1")
+def make_shard_reducer() -> ShardReducer:
+    return reduce_shards_to_doc
 
 
 @registry.llm_tasks("spacy.SpanCat.v1")
@@ -55,6 +62,8 @@ def make_spancat_task(
         prompt_example_type=example_type,
         template=DEFAULT_SPANCAT_TEMPLATE_V1,
         prompt_examples=span_examples,
+        shard_mapper=make_shard_mapper(),
+        shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -95,7 +104,7 @@ def make_spancat_task_v2(
         of the label to help the language model output the entities wanted.
         It is usually easier to provide these definitions rather than
         full examples, although both can be provided.
-    examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
+    examples (ExamplesConfigType): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
@@ -119,6 +128,8 @@ def make_spancat_task_v2(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=span_examples,
+        shard_mapper=make_shard_mapper(),
+        shard_reducer=make_shard_reducer(),
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,
@@ -139,6 +150,8 @@ def make_spancat_task_v3(
     description: Optional[str] = None,
     label_definitions: Optional[Dict[str, str]] = None,
     examples: ExamplesConfigType = None,
+    shard_mapper: Optional[ShardMapper] = None,
+    shard_reducer: Optional[ShardReducer] = None,
     normalizer: Optional[Callable[[str], str]] = None,
     alignment_mode: Literal["strict", "contract", "expand"] = "contract",
     case_sensitive_matching: bool = False,
@@ -161,6 +174,8 @@ def make_spancat_task_v3(
         full examples, although both can be provided.
     examples (Optional[Callable[[], Iterable[Any]]]): Optional callable that reads a file containing task examples for
         few-shot learning. If None is passed, then zero-shot learning will be used.
+    shard_mapper (Optional[ShardMapper]): Maps docs to shards if they don't fit into the model context.
+    shard_reducer (Optional[ShardReducer]): Reduces doc shards back into one doc instance.
     normalizer (Optional[Callable[[str], str]]): optional normalizer function.
     alignment_mode (str): "strict", "contract" or "expand".
     case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -181,6 +196,8 @@ def make_spancat_task_v3(
         template=template,
         label_definitions=label_definitions,
         prompt_examples=span_examples,
+        shard_mapper=shard_mapper or make_shard_mapper(),
+        shard_reducer=shard_reducer or make_shard_reducer(),
         normalizer=normalizer,
         alignment_mode=alignment_mode,
         case_sensitive_matching=case_sensitive_matching,

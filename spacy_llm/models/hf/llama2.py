@@ -17,8 +17,14 @@ class Llama2(HuggingFace):
         name: MODEL_NAMES,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
+        context_length: Optional[int],
     ):
-        super().__init__(name=name, config_init=config_init, config_run=config_run)
+        super().__init__(
+            name=name,
+            config_init=config_init,
+            config_run=config_run,
+            context_length=context_length,
+        )
         # Instantiate GenerationConfig object from config dict.
         self._hf_config_run = transformers.GenerationConfig.from_pretrained(
             self._name,
@@ -39,10 +45,15 @@ class Llama2(HuggingFace):
     def hf_account(self) -> str:
         return "meta-llama"
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:  # type: ignore[override]
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:  # type: ignore[override]
         return [
-            self._model(pr, generation_config=self._hf_config_run)[0]["generated_text"]
-            for pr in prompts
+            [
+                self._model(pr, generation_config=self._hf_config_run)[0][
+                    "generated_text"
+                ]
+                for pr in prompts_for_doc
+            ]
+            for prompts_for_doc in prompts
         ]
 
     @staticmethod
@@ -55,7 +66,7 @@ def llama2_hf(
     name: Llama2.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-) -> Callable[[Iterable[str]], Iterable[str]]:
+) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Generates Llama 2 instance that can execute a set of prompts and return the raw responses.
     name (Literal): Name of the Llama 2 model. Has to be one of Llama2.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
@@ -63,4 +74,6 @@ def llama2_hf(
     RETURNS (Callable[[Iterable[str]], Iterable[str]]): Llama2 instance that can execute a set of prompts and return
         the raw responses.
     """
-    return Llama2(name=name, config_init=config_init, config_run=config_run)
+    return Llama2(
+        name=name, config_init=config_init, config_run=config_run, context_length=4096
+    )

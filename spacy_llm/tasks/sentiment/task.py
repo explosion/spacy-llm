@@ -4,10 +4,10 @@ from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
-from ...ty import FewshotExample, Scorer, Self, TaskResponseParser
+from ...ty import FewshotExample, Scorer, Self, ShardMapper, ShardReducer
+from ...ty import TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
-from .util import SentimentExample
 
 DEFAULT_SENTIMENT_TEMPLATE_V1 = read_template("sentiment.v1")
 
@@ -17,24 +17,31 @@ class SentimentTask(BuiltinTask):
         self,
         template: str,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         field: str,
-        prompt_examples: Optional[List[SentimentExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         scorer: Scorer,
     ):
         """Sentiment analysis task.
 
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         field (str): The name of the doc extension in which to store the sentiment score.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in
+            prompts.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         """
         super().__init__(
             parse_responses=parse_responses,
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._field = field
         self._scorer = scorer
@@ -63,23 +70,23 @@ class SentimentTask(BuiltinTask):
             get_examples=get_examples, nlp=nlp, n_prompt_examples=n_prompt_examples
         )
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
-        return super().generate_prompts(docs=docs)
-
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
         self._check_doc_extension()
+        shards_teed = self._tee_2d_iterable(shards, 2)
 
-        for doc, sentiment_score in zip(
-            docs, self._parse_responses(self, docs, responses)
+        for shards_for_doc, scores_for_doc in zip(
+            shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
         ):
-            try:
-                setattr(doc._, self._field, sentiment_score)
-            except ValueError:
-                setattr(doc._, self._field, None)
+            shards_for_doc = list(shards_for_doc)
+            for shard, score in zip(shards_for_doc, scores_for_doc):
+                try:
+                    setattr(shard._, self._field, score)
+                except ValueError:
+                    setattr(shard._, self._field, None)
 
-            yield doc
+            yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
 
     def scorer(self, examples: Iterable[Example]) -> Dict[str, Any]:
         return self._scorer(examples, field=self._field)

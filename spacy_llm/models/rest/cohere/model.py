@@ -29,7 +29,7 @@ class Cohere(REST):
 
     def _verify_auth(self) -> None:
         try:
-            self(["test"])
+            self([["test"]])
         except ValueError as err:
             if "invalid api token" in str(err):
                 warnings.warn(
@@ -39,15 +39,17 @@ class Cohere(REST):
             else:
                 raise err
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         headers = {
             **self._credentials,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+        all_api_responses: List[List[str]] = []
 
-        api_responses: List[str] = []
-        prompts = list(prompts)
+        for prompts_for_doc in prompts:
+            api_responses: List[str] = []
+            prompts_for_doc = list(prompts_for_doc)
 
         def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
             r = self.retry(
@@ -88,15 +90,18 @@ class Cohere(REST):
                 if self._strict:
                     raise ValueError(f"API call failed: {response}.")
                 else:
-                    assert isinstance(prompts, Sized)
-                    return {"error": [srsly.json_dumps(response)] * len(prompts)}
+                    assert isinstance(prompts_for_doc, Sized)
+                    return {
+                        "error": [srsly.json_dumps(response)] * len(prompts_for_doc)
+                    }
+
             return response
 
         # Cohere API currently doesn't accept batch prompts, so we're making
         # a request for each iteration. This approach can be prone to rate limit
         # errors. In practice, you can adjust _max_request_time so that the
         # timeout is larger.
-        responses = [_request({"prompt": prompt}) for prompt in prompts]
+        responses = [_request({"prompt": prompt}) for prompt in prompts_for_doc]
         for response in responses:
             if "generations" in response:
                 for result in response["generations"]:
@@ -110,4 +115,16 @@ class Cohere(REST):
                         api_responses.append(srsly.json_dumps(response))
             else:
                 api_responses.append(srsly.json_dumps(response))
-        return api_responses
+
+        all_api_responses.append(api_responses)
+
+        return all_api_responses
+
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
+            "command": 4096,
+            "command-light": 4096,
+            "command-light-nightly": 4096,
+            "command-nightly": 4096,
+        }

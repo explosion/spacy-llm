@@ -42,7 +42,7 @@ def pytest_collection_modifyitems(config, items):
 
 @registry.llm_models("test.NoOpModel.v1")
 def noop_factory(output: str = ""):
-    def noop(prompts: Iterable[str]) -> Iterable[str]:
-        return [output] * len(list(prompts))
+    def noop(prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
+        return [[output]] * len(list(prompts))
 
     return noop

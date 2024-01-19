@@ -1,6 +1,11 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
+<a href="https://explosion.ai"><img src="assets/logo.png" width="125" height="125" align="left" style="margin-right:30px" /></a>
 
-# spacy-llm: Integrating LLMs into structured NLP pipelines
+<h1 align="center">
+<span style="font: bold 38pt'Courier New';">spacy-llm</span>
+<br>Structured NLP with LLMs
+</h1>
+<br><br>
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/test.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/test.yml)
 [![pypi Version](https://img.shields.io/pypi/v/spacy-llm.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy-llm/)
@@ -16,7 +21,8 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[OpenAI](https://platform.openai.com/docs/api-reference/)**
   - **[Cohere](https://docs.cohere.com/reference/generate)**
   - **[Anthropic](https://docs.anthropic.com/claude/reference/)**
-  - **[PaLM](https://ai.google/discover/palm2/)**
+  - **[Google PaLM](https://ai.google/discover/palm2/)**
+  - **[Microsoft Azure AI](https://azure.microsoft.com/en-us/solutions/ai)**
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
@@ -33,10 +39,13 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - Sentiment analysis
   - Span categorization
   - Summarization
+  - Entity linking
+  - Translation
+  - Raw prompt execution for maximum flexibility
   - Soon:
-    - Entity linking
     - Semantic role labeling
 - Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
+- Map-reduce approach for splitting prompts too long for LLM's context window and fusing the results back together
 
 ## 🧠 Motivation
 
