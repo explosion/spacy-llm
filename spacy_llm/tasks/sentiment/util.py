@@ -42,7 +42,12 @@ def reduce_shards_to_doc(task: SentimentTask, shards: Iterable[Doc]) -> Doc:
     setattr(
         doc._,
         task.field,
-        sum([score * weight for score, weight in zip(sent_scores, weights)]),
+        sum(
+            [
+                (score if score else 0) * weight
+                for score, weight in zip(sent_scores, weights)
+            ]
+        ),
     )
 
     return doc

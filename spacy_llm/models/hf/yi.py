@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from confection import SimpleFrozenDict
 
@@ -7,15 +7,24 @@ from ...registry.util import registry
 from .base import HuggingFace
 
 
-class Mistral(HuggingFace):
-    MODEL_NAMES = Literal["Mistral-7B-v0.1", "Mistral-7B-Instruct-v0.1"]  # noqa: F722
+class Yi(HuggingFace):
+    MODEL_NAMES = Literal[  # noqa: F722
+        "Yi-34B",
+        "Yi-34B-chat-8bits",
+        "Yi-6B-chat",
+        "Yi-6B",
+        "Yi-6B-200K",
+        "Yi-34B-chat",
+        "Yi-34B-chat-4bits",
+        "Yi-34B-200K",
+    ]
 
     def __init__(
         self,
         name: MODEL_NAMES,
         config_init: Optional[Dict[str, Any]],
         config_run: Optional[Dict[str, Any]],
-        context_length: Optional[int],
+        context_length: int,
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
         self._is_instruct = "instruct" in name
@@ -36,7 +45,9 @@ class Mistral(HuggingFace):
         self._hf_config_run.max_new_tokens = self._hf_config_run.max_length
 
     def init_model(self) -> Any:
-        self._tokenizer = transformers.AutoTokenizer.from_pretrained(self._name)
+        self._tokenizer = transformers.AutoTokenizer.from_pretrained(
+            self._name, use_fast=False
+        )
         init_cfg = self._config_init
         device: Optional[str] = None
         if "device" in init_cfg:
@@ -44,7 +55,7 @@ class Mistral(HuggingFace):
 
         model = transformers.AutoModelForCausalLM.from_pretrained(
             self._name, **init_cfg, resume_download=True
-        )
+        ).eval()
         if device:
             model.to(device)
 
@@ -52,22 +63,25 @@ class Mistral(HuggingFace):
 
     @property
     def hf_account(self) -> str:
-        return "mistralai"
+        return "01-ai"
 
     def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:  # type: ignore[override]
-        assert callable(self._tokenizer)
         assert hasattr(self._model, "generate")
-        assert hasattr(self._tokenizer, "batch_decode")
+        assert hasattr(self._tokenizer, "apply_chat_template")
+        assert self._tokenizer
+
         responses: List[List[str]] = []
 
         for prompts_for_doc in prompts:
             prompts_for_doc = list(prompts_for_doc)
 
             tokenized_input_ids = [
-                self._tokenizer(
-                    prompt if not self._is_instruct else f"<s>[INST] {prompt} [/INST]",
+                self._tokenizer.apply_chat_template(
+                    conversation=[{"role": "user", "content": prompt}],
+                    tokenize=True,
+                    add_generation_prompt=True,
                     return_tensors="pt",
-                ).input_ids
+                )
                 for prompt in prompts_for_doc
             ]
             tokenized_input_ids = [
@@ -81,26 +95,34 @@ class Mistral(HuggingFace):
                             input_ids=tok_ii, generation_config=self._hf_config_run
                         )[:, tok_ii.shape[1] :][0],
                         skip_special_tokens=True,
-                    )
+                    ).strip("\n")
                     for tok_ii in tokenized_input_ids
                 ]
             )
 
         return responses
 
+    @staticmethod
+    def compile_default_configs() -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        default_cfg_init, default_cfg_run = HuggingFace.compile_default_configs()
+        return {**default_cfg_init, **{"torch_dtype": "auto"}}, default_cfg_run
 
-@registry.llm_models("spacy.Mistral.v1")
-def mistral_hf(
-    name: Mistral.MODEL_NAMES,
+
+@registry.llm_models("spacy.Yi.v1")
+def yi_hf(
+    name: Yi.MODEL_NAMES,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-) -> Mistral:
-    """Generates Mistral instance that can execute a set of prompts and return the raw responses.
-    name (Literal): Name of the Mistral model. Has to be one of Mistral.get_model_names().
+) -> Yi:
+    """Generates Yi instance that can execute a set of prompts and return the raw responses.
+    name (Literal): Name of the Yi model. Has to be one of Yi.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Mistral): Mistral instance that can execute a set of prompts and return the raw responses.
+    RETURNS (Yi): Yi instance that can execute a set of prompts and return the raw responses.
     """
-    return Mistral(
-        name=name, config_init=config_init, config_run=config_run, context_length=8000
+    return Yi(
+        name=name,
+        config_init=config_init,
+        config_run=config_run,
+        context_length=200000 if "200K" in name else 32000,
     )
