@@ -12,7 +12,7 @@ from spacy_llm.pipeline import LLMWrapper
 @pytest.mark.skipif(has_langchain is False, reason="LangChain is not installed")
 @pytest.mark.parametrize(
     "model",
-    ["langchain.OpenAI.v1", "spacy.GPT-3-5.v3", "spacy.GPT-4.v3"],
+    ["langchain.OpenAIChat.v1", "spacy.GPT-3-5.v3", "spacy.GPT-4.v3"],
     ids=["langchain", "rest-openai", "rest-openai"],
 )
 @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ def test_combinations(model: str, task: str, n_process: int):
         "task": {"@llm_tasks": task},
     }
     if model.startswith("langchain"):
-        config["model"]["name"] = "ada"
+        config["model"]["name"] = "gpt-3.5-turbo"
     # Configure task-specific settings.
     if task.startswith("spacy.NER"):
         config["task"]["labels"] = "PER,ORG,LOC"

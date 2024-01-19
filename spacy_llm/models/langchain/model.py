@@ -77,7 +77,9 @@ class LangChain:
         """Returns langchain.llms.type_to_cls_dict.
         RETURNS (Dict[str, Type[langchain.llms.BaseLLM]]): langchain.llms.type_to_cls_dict.
         """
-        return getattr(langchain.llms, "type_to_cls_dict")
+        return {
+            llm_id: getattr(langchain.llms, llm_id) for llm_id in langchain.llms.__all__
+        }
 
     def __call__(self, prompts: Iterable[Iterable[Any]]) -> Iterable[Iterable[Any]]:
         """Executes prompts on specified API.
