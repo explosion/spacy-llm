@@ -38,7 +38,7 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - [Relationship extraction](https://spacy.io/api/large-language-models#rel)
   - [Sentiment analysis](https://spacy.io/api/large-language-models#sentiment)
   - [Span categorization](https://spacy.io/api/large-language-models#spancat)
-  - [Summarization] (https://spacy.io/api/large-language-models#summarization)
+  - [Summarization](https://spacy.io/api/large-language-models#summarization)
   - [Entity linking](https://spacy.io/api/large-language-models#nel)
   - [Translation](https://spacy.io/api/large-language-models#translation)
   - [Raw prompt execution for maximum flexibility](https://spacy.io/api/large-language-models#raw)
