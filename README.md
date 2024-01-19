@@ -32,20 +32,20 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[Mistral](https://huggingface.co/mistralai)**
 - Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`
 - Tasks available out of the box:
-  - Named Entity Recognition
-  - Text classification
-  - Lemmatization
-  - Relationship extraction
-  - Sentiment analysis
-  - Span categorization
-  - Summarization
-  - Entity linking
-  - Translation
-  - Raw prompt execution for maximum flexibility
+  - [Named Entity Recognition](https://spacy.io/api/large-language-models#ner)
+  - [Text classification](https://spacy.io/api/large-language-models#textcat)
+  - [Lemmatization](https://spacy.io/api/large-language-models#lemma)
+  - [Relationship extraction](https://spacy.io/api/large-language-models#rel)
+  - [Sentiment analysis](https://spacy.io/api/large-language-models#sentiment)
+  - [Span categorization](https://spacy.io/api/large-language-models#spancat)
+  - [Summarization] (https://spacy.io/api/large-language-models#summarization)
+  - [Entity linking](https://spacy.io/api/large-language-models#nel)
+  - [Translation](https://spacy.io/api/large-language-models#translation)
+  - [Raw prompt execution for maximum flexibility](https://spacy.io/api/large-language-models#raw)
   - Soon:
     - Semantic role labeling
-- Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
-- Map-reduce approach for splitting prompts too long for LLM's context window and fusing the results back together
+- Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations. For an example, see [here](https://spacy.io/usage/large-language-models#example-4).
+- [Map-reduce approach](https://spacy.io/api/large-language-models#task-sharding) for splitting prompts too long for LLM's context window and fusing the results back together
 
 ## 🧠 Motivation
 
