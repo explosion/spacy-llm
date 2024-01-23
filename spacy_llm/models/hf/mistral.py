@@ -96,10 +96,10 @@ def mistral_hf(
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
 ) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
     """Generates Mistral instance that can execute a set of prompts and return the raw responses.
-    name (Literal): Name of the Falcon model. Has to be one of Falcon.get_model_names().
+    name (Literal): Name of the Mistral model. Has to be one of Mistral.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Falcon instance that can execute a set of prompts and return
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Mistral instance that can execute a set of prompts and return
         the raw responses.
     """
     return Mistral(
