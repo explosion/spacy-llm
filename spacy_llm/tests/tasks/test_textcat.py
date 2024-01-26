@@ -44,7 +44,8 @@ def zeroshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -74,7 +75,8 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -106,7 +108,8 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -135,7 +138,8 @@ def zeroshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     """
 
 

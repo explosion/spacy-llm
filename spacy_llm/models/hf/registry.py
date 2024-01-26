@@ -34,7 +34,8 @@ def huggingface_v1(
     }
 
     for model_cls, context_length in model_context_lengths.items():
-        if name in getattr(model_cls, "MODEL_NAMES", {}):
+        model_names = getattr(model_cls, "MODEL_NAMES")
+        if model_names and name in model_names.__args__:
             return model_cls(
                 name=name,
                 config_init=config_init,
@@ -43,5 +44,6 @@ def huggingface_v1(
             )
 
     raise ValueError(
-        f"Name {name} could not be associated with any of the supported models. Please check https://spacy.io/api/large-language-models#models-hf to ensure the specified model name is correct."
+        f"Name {name} could not be associated with any of the supported models. Please check "
+        f"https://spacy.io/api/large-language-models#models-hf to ensure the specified model name is correct."
     )

@@ -9,7 +9,7 @@ from .model import Endpoints, OpenAI
 _DEFAULT_TEMPERATURE = 0.0
 
 
-@registry.llm_models("spacy.OpenAI.v")
+@registry.llm_models("spacy.OpenAI.v1")
 def openai_v1(
     name: str,
     config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
