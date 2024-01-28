@@ -683,12 +683,33 @@ def test_ent_highlighting():
         == "Alice goes to *Boston* to see the *Boston Celtics* game."
     )
 
-@pytest.mark.parametrize("text,ents,include_ents", [("Alice goes to Boston to see the Boston Celtics game.",[{"start":3, "end":4, "label":"LOC"},{"start":7, "end":9, "label":"ORG"}],[True,True]),("I went to see Boston in concert yesterday",[{"start":4, "end":5, "label":"GPE"},{"start":7, "end":8,"label":"DATE"}],[True,False])])
+
+@pytest.mark.parametrize(
+    "text,ents,include_ents",
+    [
+        (
+            "Alice goes to Boston to see the Boston Celtics game.",
+            [
+                {"start": 3, "end": 4, "label": "LOC"},
+                {"start": 7, "end": 9, "label": "ORG"},
+            ],
+            [True, True],
+        ),
+        (
+            "I went to see Boston in concert yesterday",
+            [
+                {"start": 4, "end": 5, "label": "GPE"},
+                {"start": 7, "end": 8, "label": "DATE"},
+            ],
+            [True, False],
+        ),
+    ],
+)
 def test_ent_unhighlighting(text, ents, include_ents):
     """Tests unhighlighting of entities in text."""
     nlp = spacy.blank("en")
     doc = nlp.make_doc(text)
-    doc.ents = [Span(doc=doc,**ents[0]), Span(doc=doc,**ents[1])]
+    doc.ents = [Span(doc=doc, **ents[0]), Span(doc=doc, **ents[1])]
 
     assert (
         EntityLinkerTask.unhighlight_ents_in_doc(

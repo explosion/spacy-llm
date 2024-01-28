@@ -334,7 +334,11 @@ class EntityLinkerTask(BuiltinTask):
             for ent in doc.ents
             if ent.start - 1 > 0 and doc[ent.start - 1].text == "*"
         }
-        highlight_end_idx = {ent.end for ent in doc.ents if ent.end < len(doc) and doc[ent.end].text == "*"}
+        highlight_end_idx = {
+            ent.end
+            for ent in doc.ents
+            if ent.end < len(doc) and doc[ent.end].text == "*"
+        }
         highlight_idx = highlight_start_idx | highlight_end_idx
 
         # Compute entity indices with removed highlights.
