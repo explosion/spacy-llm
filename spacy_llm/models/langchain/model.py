@@ -2,11 +2,11 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from confection import SimpleFrozenDict
 
-from ...compat import ExtraError, ValidationError, has_langchain, langchain
+from ...compat import ExtraError, ValidationError, has_langchain, langchain_community
 from ...registry import registry
 
 try:
-    from langchain import llms  # noqa: F401
+    from langchain_community import llms  # noqa: F401
 except (ImportError, AttributeError):
     llms = None
 
@@ -18,7 +18,8 @@ class LangChain:
         api: str,
         config: Dict[Any, Any],
         query: Callable[
-            ["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]
+            ["langchain_community.llms.BaseLLM", Iterable[Iterable[Any]]],
+            Iterable[Iterable[Any]],
         ],
         context_length: Optional[int],
     ):
@@ -26,8 +27,8 @@ class LangChain:
         name (str): Name of LangChain model to instantiate.
         api (str): Name of class/API.
         config (Dict[Any, Any]): Config passed on to LangChain model.
-        query (Callable[[langchain.llms.BaseLLM, Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing
-            LLM prompts when supplied with the model instance.
+        query (Callable[[langchain_community.llms.BaseLLM, Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable
+            executing LLM prompts when supplied with the model instance.
         context_length (Optional[int]): Context length for this model. Only necessary for sharding. If no context
             length provided, prompts can't be sharded.
         """
@@ -39,7 +40,7 @@ class LangChain:
     @classmethod
     def _init_langchain_model(
         cls, name: str, api: str, config: Dict[Any, Any]
-    ) -> "langchain.llms.BaseLLM":
+    ) -> "langchain_community.llms.BaseLLM":
         """Initializes langchain model. langchain expects a range of different model ID argument names, depending on the
         model class. There doesn't seem to be a clean way to determine those from the outset, we'll fail our way through
         them.
@@ -73,12 +74,13 @@ class LangChain:
                     raise err
 
     @staticmethod
-    def get_type_to_cls_dict() -> Dict[str, Type["langchain.llms.BaseLLM"]]:
-        """Returns langchain.llms.type_to_cls_dict.
-        RETURNS (Dict[str, Type[langchain.llms.BaseLLM]]): langchain.llms.type_to_cls_dict.
+    def get_type_to_cls_dict() -> Dict[str, Type["langchain_community.llms.BaseLLM"]]:
+        """Returns langchain_community.llms.type_to_cls_dict.
+        RETURNS (Dict[str, Type[langchain_community.llms.BaseLLM]]): langchain_community.llms.type_to_cls_dict.
         """
         return {
-            llm_id: getattr(langchain.llms, llm_id) for llm_id in langchain.llms.__all__
+            llm_id: getattr(langchain_community.llms, llm_id)
+            for llm_id in langchain_community.llms.__all__
         }
 
     def __call__(self, prompts: Iterable[Iterable[Any]]) -> Iterable[Iterable[Any]]:
@@ -90,15 +92,16 @@ class LangChain:
 
     @staticmethod
     def query_langchain(
-        model: "langchain.llms.BaseLLM", prompts: Iterable[Iterable[Any]]
+        model: "langchain_community.llms.BaseLLM", prompts: Iterable[Iterable[Any]]
     ) -> Iterable[Iterable[Any]]:
         """Query LangChain model naively.
-        model (langchain.llms.BaseLLM): LangChain model.
+        model (langchain_community.llms.BaseLLM): LangChain model.
         prompts (Iterable[Iterable[Any]]): Prompts to execute.
         RETURNS (Iterable[Iterable[Any]]): LLM responses.
         """
-        assert callable(model)
-        return [[model(pr) for pr in prompts_for_doc] for prompts_for_doc in prompts]
+        return [
+            [model.invoke(pr) for pr in prompts_for_doc] for prompts_for_doc in prompts
+        ]
 
     @staticmethod
     def _check_installation() -> None:
@@ -115,7 +118,7 @@ class LangChain:
             name: str,
             query: Optional[
                 Callable[
-                    ["langchain.llms.BaseLLM", Iterable[Iterable[str]]],
+                    ["langchain_community.llms.BaseLLM", Iterable[Iterable[str]]],
                     Iterable[Iterable[str]],
                 ]
             ] = None,
@@ -170,11 +173,12 @@ class LangChain:
 @registry.llm_queries("spacy.CallLangChain.v1")
 def query_langchain() -> (
     Callable[
-        ["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]
+        ["langchain_community.llms.BaseLLM", Iterable[Iterable[Any]]],
+        Iterable[Iterable[Any]],
     ]
 ):
     """Returns query Callable for LangChain.
-    RETURNS (Callable[["langchain.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable executing
-        simple prompts on the specified LangChain model.
+    RETURNS (Callable[["langchain_community.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable
+        executing simple prompts on the specified LangChain model.
     """
     return LangChain.query_langchain

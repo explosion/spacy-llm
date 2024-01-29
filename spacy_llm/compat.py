@@ -19,10 +19,12 @@ else:
 
 try:
     import langchain
+    import langchain_community
 
     has_langchain = True
 except (ImportError, AttributeError):
     langchain = None
+    langchain_community = None
     has_langchain = False
 
 try:
