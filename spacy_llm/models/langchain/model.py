@@ -97,8 +97,9 @@ class LangChain:
         prompts (Iterable[Iterable[Any]]): Prompts to execute.
         RETURNS (Iterable[Iterable[Any]]): LLM responses.
         """
-        assert callable(model)
-        return [[model(pr) for pr in prompts_for_doc] for prompts_for_doc in prompts]
+        return [
+            [model.invoke(pr) for pr in prompts_for_doc] for prompts_for_doc in prompts
+        ]
 
     @staticmethod
     def _check_installation() -> None:
