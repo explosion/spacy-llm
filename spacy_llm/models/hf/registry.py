@@ -11,6 +11,7 @@ from .openllama import OpenLLaMA
 from .stablelm import StableLM
 
 
+@registry.llm_models("spacy.HF.v1")
 @registry.llm_models("spacy.HuggingFace.v1")
 def huggingface_v1(
     name: str,
