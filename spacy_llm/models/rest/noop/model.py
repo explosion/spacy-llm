@@ -1,5 +1,6 @@
+import sys
 import time
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable
 
 from ..base import REST
 
@@ -20,6 +21,7 @@ class NoOpModel(REST):
             max_tries=1,
             interval=1,
             max_request_time=1,
+            context_length=None,
         )
 
     @property
@@ -29,11 +31,11 @@ class NoOpModel(REST):
     def _verify_auth(self) -> None:
         pass
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         # Assume time penalty for API calls.
         time.sleep(NoOpModel._CALL_TIMEOUT)
-        return [_NOOP_RESPONSE] * len(list(prompts))
+        return [[_NOOP_RESPONSE]] * len(list(prompts))
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return ("NoOp",)
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {"NoOp": sys.maxsize}

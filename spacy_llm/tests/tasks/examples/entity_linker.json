@@ -1,0 +1,42 @@
+[
+  {
+    "text": "Alice goes to *New York* to see the *New York Knicks* game.",
+    "mentions_str": "*New York*, *New York Knicks*",
+    "mentions": [
+      "New York", "New York Knicks"
+    ],
+    "entity_descriptions": [
+      ["most populous city in the United States", "U.S. state"],
+      ["most populous city in the United States", "National Basketball Association team in New York City"]
+    ],
+    "entity_ids": [
+      ["Q60", "Q1384"],
+      ["Q60", "Q131364"]
+    ],
+    "solutions": ["Q60", "Q131364"],
+    "reasons": []
+  },
+  {
+    "text": "*New York* is called the *Big Apple*. It also has *Apple* stores.",
+    "mentions_str": "*New York*, *Big Apple*, *Apple*",
+    "mentions": [
+      "New York", "Big Apple", "Apple"
+    ],
+    "entity_descriptions": [
+      ["most populous city in the United States", "U.S. state"],
+      ["nickname for New York City", "fruit of the apple tree"],
+      ["fruit of the apple tree", "American multinational technology company"]
+    ],
+    "entity_ids": [
+      ["Q60", "Q1384"],
+      ["Q14435", "Q89"],
+      ["Q89", "Q312"]
+    ],
+    "solutions": ["Q60", "Q14435", "Q312"],
+    "reasons": [
+      "The mention of \"Big Apple\" in the same context clarifies that this is about the city New York.",
+      "Big Apple is a well-known nickname of New York.",
+      "The context of \"stores\" indicates that this is about the technology company Apple, which operates \"Apple stores\"."
+    ]
+  }
+]

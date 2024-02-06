@@ -1,20 +1,29 @@
 import os
+from typing import List
 
 import pytest
 import spacy
 
 from spacy_llm.compat import has_langchain
+from spacy_llm.models.langchain import LangChain
 from spacy_llm.tests.compat import has_azure_openai_key
 
 PIPE_CFG = {
     "model": {
-        "@llm_models": "langchain.OpenAI.v1",
-        "name": "ada",
+        "@llm_models": "langchain.OpenAIChat.v1",
+        "name": "gpt-3.5-turbo",
         "config": {"temperature": 0.3},
-        "query": {"@llm_queries": "spacy.CallLangChain.v1"},
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
 }
+
+
+def langchain_model_reg_handles() -> List[str]:
+    """Returns a list of all LangChain model reg handles."""
+    return [
+        f"langchain.{cls.__name__}.v1"
+        for class_id, cls in LangChain.get_type_to_cls_dict().items()
+    ]
 
 
 @pytest.mark.external
@@ -22,7 +31,8 @@ PIPE_CFG = {
 def test_initialization():
     """Test initialization and simple run"""
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=PIPE_CFG)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp.add_pipe("llm", config=PIPE_CFG)
     nlp("This is a test.")
 
 
@@ -48,5 +58,6 @@ def test_initialization_azure_openai():
     }
 
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=_pipe_cfg)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp.add_pipe("llm", config=_pipe_cfg)
     nlp("This is a test.")

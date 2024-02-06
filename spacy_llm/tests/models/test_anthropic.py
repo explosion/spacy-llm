@@ -13,20 +13,23 @@ from ..compat import has_anthropic_key
 def test_anthropic_api_response_is_correct():
     """Check if we're getting the expected response and we're parsing it properly"""
     anthropic = Anthropic(
-        name="claude-instant-1",
+        name="claude-2.1",
         endpoint=Endpoints.COMPLETIONS.value,
         config={"max_tokens_to_sample": 10},
         strict=False,
         max_tries=10,
         interval=5.0,
         max_request_time=20,
+        context_length=None,
     )
 
     prompt = "Count the number of characters in this string: hello"
     num_prompts = 3
-    responses = anthropic(prompts=[prompt] * num_prompts)
+    responses = anthropic(prompts=[[prompt]] * num_prompts)
     for response in responses:
-        assert isinstance(response, str)
+        assert isinstance(response, list)
+        assert len(response) == 1
+        assert isinstance(response[0], str)
 
 
 @pytest.mark.external
@@ -47,6 +50,7 @@ def test_anthropic_api_response_when_error():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            context_length=None,
         )
 
 
@@ -56,7 +60,10 @@ def test_anthropic_error_unsupported_model():
     """Ensure graceful handling of error when model is not supported"""
     incorrect_model = "x-gpt-3.5-turbo"
     with pytest.raises(
-        ValueError, match=re.escape("Model 'x-gpt-3.5-turbo' is not supported")
+        ValueError,
+        match=re.escape(
+            "Ensure that the selected model (x-gpt-3.5-turbo) is supported by the API"
+        ),
     ):
         Anthropic(
             name=incorrect_model,
@@ -66,4 +73,5 @@ def test_anthropic_error_unsupported_model():
             max_tries=10,
             interval=5.0,
             max_request_time=20,
+            context_length=None,
         )

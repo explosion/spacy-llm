@@ -1,0 +1,24 @@
+{%- if source_lang -%}
+Translate the text after "Text:" from {{ source_lang }} to {{ target_lang }}.
+{% else %}
+Translate the text after "Text:" to {{ target_lang }}.
+{% endif %}
+Respond after "Translation:" with nothing but the translated text.
+{# whitespace #}
+{%- if prompt_examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{%- for example in prompt_examples -%}
+{# whitespace #}
+Text:
+{{ example.text }}
+Translation:
+{{ example.translation }}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{%- endif -%}
+{# whitespace #}
+Text:
+{{ text }}
+Translation:

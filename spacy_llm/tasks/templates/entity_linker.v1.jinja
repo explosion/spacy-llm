@@ -1,0 +1,78 @@
+For each of the MENTIONS in the TEXT, resolve the MENTION to the correct entity listed in ENTITIES.
+Each of the ENTITIES is prefixed by its ENTITY ID. Each of the MENTIONS in the TEXT is surrounded by *.
+For each of the MENTIONS appearing in the text, output the ID of the description fitting them best.
+This ID has to be surrounded by single <>, for example <1>. Make sure you make a choice for each MENTION. If no
+candidate seems plausible, respond with <NIL> instead of an ENTITY ID.
+Output "REASONING:". Describe, step by step, which MENTION should be linked to which ENTITY ID.
+Output "SOLUTION:". After that, list the correct ENTITY ID (or NIL) per MENTION. Wrap the ENTITY ID in <>. Each ENTITY ID
+should be in a new line, prefixed by the corresponding MENTION and " ::: ".
+
+{# whitespace #}
+{%- if prompt_examples -%}
+Below are some examples (only use these as a guide):
+{# whitespace #}
+{%- for example in prompt_examples -%}
+{# whitespace #}
+TEXT:
+'''
+{{ example.text }}
+'''
+MENTIONS: {{ example.mention_str }}
+ENTITIES:
+{%- for ent_descs in example.entity_descriptions -%}
+{% set mention_i = loop.index0 %}
+- For *{{ example.mentions[loop.index0] }}*:
+{%- for ent_desc in ent_descs -%}
+    {# whitespace #}
+    {{ example.entity_ids[mention_i][loop.index0] }}. {{ ent_desc }}
+{%- endfor -%}
+{%- endfor -%}
+{# whitespace #}
+REASONING:
+{%- if example.reasons|length -%}
+{# whitespace #}
+{# whitespace #}
+    {%- for reason in example.reasons -%}
+        {%- if reason|length -%}
+- {{ reason }}
+        {%- else -%}
+- The description of the chosen entity {{ example.solutions[loop.index0] }} fits the presented mention *{{ example.mentions[loop.index0] }}* best.
+        {%- endif -%}
+{# whitespace #}
+{# whitespace #}
+    {%- endfor -%}
+{% else %}
+    {%- for reason in example.mentions -%}
+        {# whitespace #}
+- The description of the chosen entity {{ example.solutions[loop.index0] }} fits the presented mention *{{ example.mentions[loop.index0] }}* best.
+    {%- endfor -%}
+{%- endif -%}
+{# whitespace #}
+SOLUTION:
+{%- for solution in example.solutions -%}
+{# whitespace #}
+*{{ example.mentions[loop.index0] }}* ::: <{{ solution }}>
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+{%- endfor -%}
+{# whitespace #}
+{# whitespace #}
+End of examples.
+{%- endif -%}
+
+TEXT: 
+'''
+{{ text }}
+'''
+MENTIONS: {{ mentions_str }}
+ENTITIES:
+{%- for ent_descs in entity_descriptions -%}
+{% set mention_i = loop.index0 %}
+- For *{{ mentions[loop.index0] }}*:
+{%- for ent_desc in ent_descs -%}
+    {# whitespace #}
+    {{ entity_ids[mention_i][loop.index0] }}. {{ ent_desc }}
+{%- endfor -%}
+{%- endfor -%}
+{# whitespace #}

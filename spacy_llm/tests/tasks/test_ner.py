@@ -20,7 +20,7 @@ from spacy_llm.tasks.ner import NERTask, make_ner_task_v3
 from spacy_llm.tasks.span import SpanReason
 from spacy_llm.tasks.span.parser import _extract_span_reasons_cot
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import LabeledTask, LLMTask
+from spacy_llm.ty import LabeledTask, ShardingLLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ..compat import has_openai_key
@@ -205,7 +205,7 @@ def test_ner_config(config: Config):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
     labels = config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
@@ -395,7 +395,7 @@ def test_ner_labels(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([[doc_in]], [[response]]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -451,7 +451,7 @@ def test_ner_alignment(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([[doc_in]], [[response]]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -502,7 +502,7 @@ def test_ner_matching(
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_ner.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_ner.parse_responses([[doc_in]], [[response]]))[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc_out.ents]
     assert pred_ents == gold_ents
 
@@ -517,7 +517,7 @@ def test_jinja_template_rendering_without_examples():
     nlp = spacy.blank("en")
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     llm_ner = make_ner_task_v3(labels=labels)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -562,7 +562,7 @@ def test_jinja_template_rendering_with_examples(examples_dir: Path, examples_fil
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
     examples = fewshot_reader(examples_dir / examples_file)
     llm_ner = make_ner_task_v3(examples=examples, labels=labels)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -609,7 +609,7 @@ def test_jinja_template_rendering_with_label_definitions(
             "LOC": "Location definition",
         },
     )
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -690,7 +690,7 @@ def test_external_template_actually_loads():
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_ner = make_ner_task_v3(examples=[], labels=labels, template=template)
-    prompt = list(llm_ner.generate_prompts([doc]))[0]
+    prompt = list(llm_ner.generate_prompts([doc]))[0][0][0]
     assert prompt.strip().startswith("Here's the test template for the tests and stuff")
 
 
@@ -723,7 +723,8 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
     config = Config().from_str(noop_config)
     config["components"]["llm"]["task"]["labels"] = ["PER", "LOC"]
     config["components"]["llm"]["task"]["examples"] = []
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
     for text in [
@@ -766,8 +767,9 @@ def test_ner_init(noop_config: str, n_prompt_examples: int):
 def test_ner_serde(noop_config: str):
     config = Config().from_str(noop_config)
 
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "per": "PER"}
 
@@ -789,9 +791,9 @@ def test_ner_serde(noop_config: str):
 
 def test_ner_to_disk(noop_config: str, tmp_path: Path):
     config = Config().from_str(noop_config)
-
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "org": "ORG", "per": "PER"}
 
@@ -818,6 +820,7 @@ def test_ner_to_disk(noop_config: str, tmp_path: Path):
     assert task1._label_dict == task2._label_dict == labels
 
 
+@pytest.mark.filterwarnings("ignore:Task supports sharding")
 def test_label_inconsistency():
     """Test whether inconsistency between specified labels and labels in examples is detected."""
     cfg = f"""
@@ -935,7 +938,7 @@ def test_regression_span_task_response_parse(
     span_reasons = _extract_span_reasons_cot(ner_task, response)
     assert len(span_reasons) == len(gold_ents)
 
-    docs = list(ner_task.parse_responses([example_doc], [response]))
+    docs = list(ner_task.parse_responses([[example_doc]], [[response]]))
     assert len(docs) == 1
 
     doc = docs[0]
@@ -964,7 +967,7 @@ def test_regression_span_task_comma(
     ner_task = make_ner_task_v3(examples=[], labels=["ORG", "LOC"])
     span_reasons = _extract_span_reasons_cot(ner_task, response)
     assert len(span_reasons) == len(gold_ents)
-    docs = list(ner_task.parse_responses([example_doc], [response]))
+    docs = list(ner_task.parse_responses([[example_doc]], [[response]]))
     assert len(docs) == 1
     doc = docs[0]
     pred_ents = [(ent.text, ent.label_) for ent in doc.ents]
@@ -992,7 +995,42 @@ def test_add_label():
     doc = nlp(text)
     assert len(doc.ents) == 0
 
+    for label, definition in [
+        ("PERSON", "Every person with the name Jack"),
+        ("LOCATION", "A geographical location, like a country or a city"),
+        ("COMPANY", None),
+    ]:
+        llm.add_label(label, definition)
+    doc = nlp(text)
+    assert len(doc.ents) > 1
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_clear_label():
+    nlp = spacy.blank("en")
+    llm = nlp.add_pipe(
+        "llm",
+        config={
+            "task": {
+                "@llm_tasks": "spacy.NER.v3",
+            },
+            "model": {
+                "@llm_models": "spacy.GPT-3-5.v1",
+            },
+        },
+    )
+
+    nlp.initialize()
+    text = "Jack and Jill visited France."
+    doc = nlp(text)
+
     for label in ["PERSON", "LOCATION"]:
         llm.add_label(label)
     doc = nlp(text)
     assert len(doc.ents) == 3
+
+    llm.clear()
+
+    doc = nlp(text)
+    assert len(doc.ents) == 0

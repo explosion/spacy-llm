@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -18,6 +18,7 @@ class ModelType(str, Enum):
 class AzureOpenAI(REST):
     def __init__(
         self,
+        deployment_name: str,
         name: str,
         endpoint: str,
         config: Dict[Any, Any],
@@ -26,10 +27,12 @@ class AzureOpenAI(REST):
         interval: float,
         max_request_time: float,
         model_type: ModelType,
+        context_length: Optional[int],
         api_version: str = "2023-05-15",
     ):
         self._model_type = model_type
         self._api_version = api_version
+        self._deployment_name = deployment_name
         super().__init__(
             name=name,
             endpoint=endpoint,
@@ -38,6 +41,7 @@ class AzureOpenAI(REST):
             max_tries=max_tries,
             interval=interval,
             max_request_time=max_request_time,
+            context_length=context_length,
         )
 
     @property
@@ -48,7 +52,8 @@ class AzureOpenAI(REST):
         return (
             self._endpoint
             + ("" if self._endpoint.endswith("/") else "/")
-            + f"openai/deployments/{self._name}/{self._model_type.value}"
+            + f"openai/deployments/{self._deployment_name}/{'' if self._model_type == ModelType.COMPLETION else 'chat/'}"
+            f"completions"
         )
 
     @property
@@ -70,88 +75,108 @@ class AzureOpenAI(REST):
 
     def _verify_auth(self) -> None:
         try:
-            self(["test"])
+            self([["test"]])
         except ValueError as err:
             raise err
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         headers = {
             **self._credentials,
             "Content-Type": "application/json",
         }
-        api_responses: List[str] = []
-        prompts = list(prompts)
+        all_api_responses: List[List[str]] = []
 
-        def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
-            r = self.retry(
-                call_method=requests.post,
-                url=self.endpoint,
-                headers=headers,
-                json={**json_data, **self._config},
-                timeout=self._max_request_time,
-                params={"api-version": self._api_version},
-            )
-            try:
-                r.raise_for_status()
-            except HTTPError as ex:
-                res_content = srsly.json_loads(r.content.decode("utf-8"))
-                # Include specific error message in exception.
-                raise ValueError(
-                    f"Request to Azure OpenAI API failed: "
-                    f"{res_content.get('error', {}).get('message', str(res_content))}"
-                ) from ex
-            responses = r.json()
+        for prompts_for_doc in prompts:
+            api_responses: List[str] = []
+            prompts_for_doc = list(prompts_for_doc)
 
-            # todo check if this is the same
-            if "error" in responses:
-                if self._strict:
-                    raise ValueError(f"API call failed: {responses}.")
-                else:
-                    assert isinstance(prompts, Sized)
-                    return {"error": [srsly.json_dumps(responses)] * len(prompts)}
-
-            return responses
-
-        # The (Azure) OpenAI API doesn't support batching yet, so we have to send individual requests.
-        # https://learn.microsoft.com/en-us/answers/questions/1334800/batching-requests-in-azure-openai
-
-        if self._model_type == ModelType.CHAT:
-            # Note: this is yet (2023-10-05) untested, as Azure doesn't seem to allow the deployment of a chat model
-            # yet.
-            for prompt in prompts:
-                responses = _request(
-                    {"messages": [{"role": "user", "content": prompt}]}
+            def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
+                r = self.retry(
+                    call_method=requests.post,
+                    url=self.endpoint,
+                    headers=headers,
+                    json={**json_data, **self._config},
+                    timeout=self._max_request_time,
+                    params={"api-version": self._api_version},
                 )
-                if "error" in responses:
-                    return responses["error"]
+                try:
+                    r.raise_for_status()
+                except HTTPError as ex:
+                    res_content = srsly.json_loads(r.content.decode("utf-8"))
+                    # Include specific error message in exception.
+                    raise ValueError(
+                        f"Request to Azure OpenAI API failed: "
+                        f"{res_content.get('error', {}).get('message', str(res_content))}"
+                    ) from ex
+                responses = r.json()
 
-                # Process responses.
-                assert len(responses["choices"]) == 1
-                response = responses["choices"][0]
-                api_responses.append(
-                    response.get("message", {}).get(
-                        "content", srsly.json_dumps(response)
+                if "error" in responses:
+                    if self._strict:
+                        raise ValueError(f"API call failed: {responses}.")
+                    else:
+                        assert isinstance(prompts_for_doc, Sized)
+                        return {
+                            "error": [srsly.json_dumps(responses)]
+                            * len(prompts_for_doc)
+                        }
+
+                return responses
+
+            # The (Azure) OpenAI API doesn't support batching yet, so we have to send individual requests.
+            # https://learn.microsoft.com/en-us/answers/questions/1334800/batching-requests-in-azure-openai
+
+            if self._model_type == ModelType.CHAT:
+                # Note: this is yet (2023-10-05) untested, as Azure doesn't seem to allow the deployment of a chat model
+                # yet.
+                for prompt in prompts_for_doc:
+                    responses = _request(
+                        {"messages": [{"role": "user", "content": prompt}]}
                     )
-                )
+                    if "error" in responses:
+                        return responses["error"]
 
-        elif self._model_type == ModelType.COMPLETION:
-            for prompt in prompts:
-                responses = _request({"prompt": prompt})
-                if "error" in responses:
-                    return responses["error"]
+                    # Process responses.
+                    assert len(responses["choices"]) == 1
+                    response = responses["choices"][0]
+                    api_responses.append(
+                        response.get("message", {}).get(
+                            "content", srsly.json_dumps(response)
+                        )
+                    )
 
-                # Process responses.
-                assert len(responses["choices"]) == 1
-                response = responses["choices"][0]
-                api_responses.append(response.get("text", srsly.json_dumps(response)))
+            elif self._model_type == ModelType.COMPLETION:
+                for prompt in prompts_for_doc:
+                    responses = _request({"prompt": prompt})
+                    if "error" in responses:
+                        return responses["error"]
 
-        return api_responses
+                    # Process responses.
+                    assert len(responses["choices"]) == 1
+                    response = responses["choices"][0]
+                    api_responses.append(
+                        response.get("text", srsly.json_dumps(response))
+                    )
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        # We treat the deployment name as "model name", hence it can be arbitrary.
-        return ("",)
+            all_api_responses.append(api_responses)
 
-    def _check_model(self) -> None:
-        # We treat the deployment name as "model name", hence it can be arbitrary.
-        pass
+        return all_api_responses
+
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
+            # gpt-4
+            "gpt-4": 8192,
+            "gpt-4-32k": 32768,
+            # gpt-3.5
+            "gpt-3.5-turbo": 4097,
+            "gpt-3.5-turbo-16k": 16385,
+            "gpt-3.5-turbo-instruct": 4097,
+            # text-davinci
+            "text-davinci-002": 4097,
+            "text-davinci-003": 4097,
+            # others
+            "code-davinci-002": 8001,
+            "text-curie-001": 2049,
+            "text-babbage-001": 2049,
+            "text-ada-001": 2049,
+        }

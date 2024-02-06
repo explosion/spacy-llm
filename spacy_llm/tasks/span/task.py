@@ -1,23 +1,22 @@
 import abc
-import typing
-from typing import Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
+from typing import cast
 
 from spacy.tokens import Doc, Span
 
 from ...compat import Literal, Protocol, Self
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import FewshotExample, ShardMapper, ShardReducer, TaskResponseParser
 from ..builtin_task import BuiltinTaskWithLabels
-from .examples import SpanCoTExample, SpanExample
+from . import SpanExample
+from .examples import SpanCoTExample
 
-_SpanTaskContraT = typing.TypeVar(
-    "_SpanTaskContraT", bound="SpanTask", contravariant=True
-)
+SpanTaskContraT = TypeVar("SpanTaskContraT", bound="SpanTask", contravariant=True)
 
 
-class SpanTaskLabelCheck(Protocol[_SpanTaskContraT]):
+class SpanTaskLabelCheck(Protocol[SpanTaskContraT]):
     """Generic protocol for checking label consistency of SpanTask."""
 
-    def __call__(self, task: _SpanTaskContraT) -> Iterable[FewshotExample]:
+    def __call__(self, task: SpanTaskContraT) -> Iterable[FewshotExample]:
         ...
 
 
@@ -27,31 +26,38 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[Union[SpanExample[Self], SpanCoTExample[Self]]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[
+            Union[List[SpanExample[Self]], List[SpanCoTExample[Self]]]
+        ],
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         description: Optional[str],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],  # noqa: F821
         case_sensitive_matching: bool,
         allow_overlap: bool,
         single_match: bool,
-        check_label_consistency: SpanTaskLabelCheck,
+        check_label_consistency: SpanTaskLabelCheck[Self],
     ):
         super().__init__(
             parse_responses=parse_responses,
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             labels=labels,
             label_definitions=label_definitions,
             normalizer=normalizer,
         )
 
-        self._prompt_example_type = typing.cast(
-            Type[SpanExample], self._prompt_example_type
+        self._prompt_example_type = cast(
+            Type[Union[SpanExample[Self], SpanCoTExample[Self]]],
+            self._prompt_example_type,
         )
         self._validate_alignment(alignment_mode)
         self._alignment_mode = alignment_mode
@@ -64,16 +70,16 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         if self._prompt_examples:
             self._prompt_examples = list(self._check_label_consistency(self))
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
-        return super().generate_prompts(
-            docs=docs,
-            description=self._description,
-            labels=list(self._label_dict.values()),
-            label_definitions=self._label_definitions,
-            examples=self._prompt_examples,
-            allow_overlap=self._allow_overlap,
-            **kwargs,
-        )
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
+        return {
+            "description": self._description,
+            "labels": list(self._label_dict.values()),
+            "label_definitions": self._label_definitions,
+            "examples": self._prompt_examples,
+            "allow_overlap": self._allow_overlap,
+        }
 
     @staticmethod
     def _validate_alignment(alignment_mode: str):
@@ -96,11 +102,18 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         raise NotImplementedError()
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        for doc, spans in zip(docs, self._parse_responses(self, docs, responses)):
-            self.assign_spans(doc, spans)
-            yield doc
+        shards_teed = self._tee_2d_iterable(shards, 2)
+
+        for shards_for_doc, spans_for_doc in zip(
+            shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
+        ):
+            shards_for_doc = list(shards_for_doc)
+            for shard, spans in zip(shards_for_doc, spans_for_doc):
+                self.assign_spans(shard, spans)
+
+            yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
 
     @property
     def _cfg_keys(self) -> List[str]:
@@ -129,7 +142,9 @@ class SpanTask(BuiltinTaskWithLabels, abc.ABC):
         return self._prompt_examples
 
     @property
-    def prompt_example_type(self) -> Union[Type[SpanExample], Type[SpanCoTExample]]:
+    def prompt_example_type(
+        self,
+    ) -> Type[Union[SpanExample[Self], SpanCoTExample[Self]]]:
         return self._prompt_example_type
 
     @property

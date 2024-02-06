@@ -3,23 +3,32 @@ import inspect
 import typing
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
-from typing import Union, cast
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Tuple, Type
+from typing import TypeVar, Union, cast
 
 from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import BaseModel, Protocol, Self, runtime_checkable
+from .compat import GenericModel, Protocol, Self, runtime_checkable
 from .models import langchain
 
 _PromptType = Any
 _ResponseType = Any
 _ParsedResponseType = Any
 
-PromptExecutorType = Callable[[Iterable[_PromptType]], Iterable[_ResponseType]]
+PromptExecutorType = Callable[
+    [Iterable[Iterable[_PromptType]]], Iterable[_ResponseType]
+]
 ExamplesConfigType = Union[
     Iterable[Dict[str, Any]], Callable[[], Iterable[Dict[str, Any]]], None
+]
+NTokenEstimator = Callable[[str], int]
+ShardMapper = Callable[
+    # Requires doc, doc index, context length and callable for rendering template from doc shard text.
+    [Doc, int, int, Callable[[Doc, int, int, int], str]],
+    # Returns each shard as a doc.
+    Iterable[Doc],
 ]
 
 
@@ -57,15 +66,6 @@ class Serializable(Protocol):
         ...
 
 
-class FewshotExample(abc.ABC, BaseModel):
-    @classmethod
-    @abc.abstractmethod
-    def generate(cls, example: Example, **kwargs) -> Self:
-        """Create a fewshot example from a spaCy example.
-        example (Example): spaCy example.
-        """
-
-
 @runtime_checkable
 class ScorableTask(Protocol):
     """Differs from Scorable in that it describes an object with a scorer() function, i. e. a scorable
@@ -93,8 +93,35 @@ class Scorer(Protocol):
 
 
 @runtime_checkable
-class LLMTask(Protocol):
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[_PromptType]:
+class ShardingLLMTask(Protocol):
+    def generate_prompts(
+        self, docs: Iterable[Doc], context_length: Optional[int] = None
+    ) -> Iterable[Tuple[Iterable[_PromptType], Iterable[Doc]]]:
+        """Generate prompts from docs.
+        docs (Iterable[Doc]): Docs to generate prompts from.
+        context_length (int): Context length for model this task is executed with. Needed for sharding and fusing docs,
+            if the corresponding prompts exceed the context length. If None, context length is assumed to be infinite.
+        RETURNS (Iterable[Tuple[Iterable[_PromptType], Iterable[Doc]]]): Iterable with one to n prompts per doc
+            (multiple prompts in case of multiple shards) and the corresponding shards. The relationship between shard
+            and prompt is 1:1.
+        """
+
+    def parse_responses(
+        self,
+        shards: Iterable[Iterable[Doc]],
+        responses: Iterable[Iterable[_ResponseType]],
+    ) -> Iterable[Doc]:
+        """
+        Parses LLM responses.
+        docs (Iterable[Iterable[Doc]]): Doc shards to map responses into.
+        responses ([Iterable[Iterable[_ResponseType]]]): LLM responses.
+        RETURNS (Iterable[Doc]]): Updated (and fused) docs.
+        """
+
+
+@runtime_checkable
+class NonshardingLLMTask(Protocol):
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[_PromptType]:
         """Generate prompts from docs.
         docs (Iterable[Doc]): Docs to generate prompts from.
         RETURNS (Iterable[_PromptType]): Iterable with one prompt per doc.
@@ -111,15 +138,45 @@ class LLMTask(Protocol):
         """
 
 
-_TaskContraT = TypeVar("_TaskContraT", bound=LLMTask, contravariant=True)
+LLMTask = Union[NonshardingLLMTask, ShardingLLMTask]
+
+TaskContraT = TypeVar(
+    "TaskContraT", bound=Union[ShardingLLMTask, NonshardingLLMTask], contravariant=True
+)
+ShardingTaskContraT = TypeVar(
+    "ShardingTaskContraT", bound=ShardingLLMTask, contravariant=True
+)
 
 
-class TaskResponseParser(Protocol[_TaskContraT]):
+@runtime_checkable
+class ShardReducer(Protocol[ShardingTaskContraT]):
+    """Generic protocol for tasks' shard reducer."""
+
+    def __call__(self, task: ShardingTaskContraT, shards: Iterable[Doc]) -> Doc:
+        """Merges shard to single Doc."""
+        ...
+
+
+class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):
+    @classmethod
+    @abc.abstractmethod
+    def generate(cls, example: Example, task: TaskContraT) -> Optional[Self]:
+        """Create a fewshot example from a spaCy example.
+        example (Example): spaCy example.
+        task (TaskContraT): Task for which to generate examples.
+        RETURNS (Optional[Self]): Generated example. None, if example couldn't be generated.
+        """
+
+
+class TaskResponseParser(Protocol[TaskContraT]):
     """Generic protocol for parsing functions with specific tasks."""
 
     def __call__(
-        self, task: _TaskContraT, docs: Iterable[Doc], responses: Iterable[Any]
-    ) -> Iterable[Any]:
+        self,
+        task: TaskContraT,
+        shards: Iterable[Iterable[Doc]],
+        responses: Iterable[Iterable[Any]],
+    ) -> Iterable[Iterable[Any]]:
         ...
 
 
@@ -136,7 +193,10 @@ class LabeledTask(Protocol):
     def labels(self) -> Tuple[str, ...]:
         ...
 
-    def add_label(self, label: str) -> int:
+    def add_label(self, label: str, label_definition: Optional[str] = None) -> int:
+        ...
+
+    def clear(self) -> None:
         ...
 
 
@@ -144,11 +204,13 @@ class LabeledTask(Protocol):
 class Cache(Protocol):
     """Defines minimal set of operations a cache implementiation needs to support."""
 
-    def initialize(self, vocab: Vocab, task: LLMTask) -> None:
+    def initialize(
+        self, vocab: Vocab, task: Union[NonshardingLLMTask, ShardingLLMTask]
+    ) -> None:
         """
         Initialize cache with data not available at construction time.
         vocab (Vocab): Vocab object.
-        task (LLMTask): Task.
+        task (Union[LLMTask, ShardingLLMTask]): Task.
         """
 
     def add(self, doc: Doc) -> None:
@@ -181,25 +243,46 @@ class Cache(Protocol):
         """
 
 
-def _do_args_match(out_arg: Iterable, in_arg: Iterable) -> bool:
+@runtime_checkable
+class ModelWithContextLength(Protocol):
+    @property
+    def context_length(self) -> int:
+        """Provides context length for the corresponding model.
+        RETURNS (int): Context length for the corresponding model.
+        """
+
+
+def _do_args_match(out_arg: Iterable, in_arg: Iterable, nesting_level: int) -> bool:
     """Compares argument type of Iterables for compatibility.
     in_arg (Iterable): Input argument.
     out_arg (Iterable): Output argument.
+    nesting_level (int): Expected level of nesting in types. E. g. Iterable[Iterable[Any]] has a level of 2,
+        Iterable[Any] of 1. Note that this is assumed for all sub-types in out_arg and in_arg, as this is sufficient for
+        the current use case of checking the compatibility of task-to-model and model-to-parser communication flow.
     RETURNS (bool): True if type variables are of the same length and if type variables in out_arg are a subclass
         of (or the same class as) the type variables in in_arg.
     """
     assert hasattr(out_arg, "__args__") and hasattr(in_arg, "__args__")
-    # Replace Any with object to make issubclass() check work.
-    out_type_vars = [arg if arg != Any else object for arg in out_arg.__args__]
-    in_type_vars = [arg if arg != Any else object for arg in in_arg.__args__]
 
-    if len(out_type_vars) != len(in_type_vars):
+    out_types, in_types = out_arg, in_arg
+    for level in range(nesting_level):
+        out_types = (
+            out_types.__args__[0] if level < (nesting_level - 1) else out_types.__args__  # type: ignore[attr-defined]
+        )
+        in_types = (
+            in_types.__args__[0] if level < (nesting_level - 1) else in_types.__args__  # type: ignore[attr-defined]
+        )
+    # Replace Any with object to make issubclass() check work.
+    out_types = [arg if arg != Any else object for arg in out_types]
+    in_types = [arg if arg != Any else object for arg in in_types]
+
+    if len(out_types) != len(in_types):
         return False
 
     return all(
         [
             issubclass(out_tv, in_tv) or issubclass(in_tv, out_tv)
-            for out_tv, in_tv in zip(out_type_vars, in_type_vars)
+            for out_tv, in_tv in zip(out_types, in_types)
         ]
     )
 
@@ -240,24 +323,46 @@ def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
     return signature
 
 
-def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
+def supports_sharding(task: Union[NonshardingLLMTask, ShardingLLMTask]) -> bool:
+    """Determines task type, as isinstance(instance, Protocol) only checks for method names. This also considers
+    argument and return types. Raises an exception if task is neither.
+    Note that this is not as thorough as validate_type_consistency() and relies on clues to determine which task type
+    a given, type-validated task type is. This doesn't guarantee that a task has valid typing. This method should only
+    be in conjunction with validate_type_consistency().
+    task (Union[LLMTask, ShardingLLMTask]): Task to check.
+    RETURNS (bool): True if task supports sharding, False if not.
+    """
+    prompt_ret_type = typing.get_type_hints(task.generate_prompts)["return"].__args__[0]
+    return (
+        hasattr(prompt_ret_type, "_name")
+        and prompt_ret_type._name == "Tuple"
+        and len(prompt_ret_type.__args__) == 2
+    )
+
+
+def validate_type_consistency(
+    task: Union[NonshardingLLMTask, ShardingLLMTask], model: PromptExecutorType
+) -> None:
     """Check whether the types of the task and model signatures match.
-    task (LLMTask): Specified task.
+    task (ShardingLLMTask): Specified task.
     model (PromptExecutor): Specified model.
     """
     # Raises an error or prints a warning if something looks wrong/odd.
-    if not isinstance(task, LLMTask):
+    # todo update error messages
+    if not isinstance(task, NonshardingLLMTask):
         raise ValueError(
-            f"A task needs to be of type 'LLMTask' but found {type(task)} instead"
+            f"A task needs to adhere to the interface of either 'LLMTask' or 'ShardingLLMTask', but {type(task)} "
+            f"doesn't."
         )
     if not hasattr(task, "generate_prompts"):
         raise ValueError(
-            "A task needs to have the following method: generate_prompts(self, docs: Iterable[Doc]) -> Iterable[Any]"
+            "A task needs to have the following method: generate_prompts(self, docs: Iterable[Doc]) -> "
+            "Iterable[Tuple[Iterable[Any], Iterable[Doc]]]"
         )
     if not hasattr(task, "parse_responses"):
         raise ValueError(
             "A task needs to have the following method: "
-            "parse_responses(self, docs: Iterable[Doc], responses: Iterable[Any]) -> Iterable[Doc]"
+            "parse_responses(self, docs: Iterable[Doc], responses: Iterable[Iterable[Any]]) -> Iterable[Doc]"
         )
 
     type_hints = {
@@ -266,9 +371,9 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         "model": _extract_model_call_signature(model),
     }
 
-    parse_input: Optional[Type] = None
-    model_input: Optional[Type] = None
-    model_output: Optional[Type] = None
+    parse_in: Optional[Type] = None
+    model_in: Optional[Type] = None
+    model_out: Optional[Type] = None
 
     # Validate the 'model' object
     if not (len(type_hints["model"]) == 2 and "return" in type_hints["model"]):
@@ -277,9 +382,9 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         )
     for k in type_hints["model"]:
         if k == "return":
-            model_output = type_hints["model"][k]
+            model_out = type_hints["model"][k]
         else:
-            model_input = type_hints["model"][k]
+            model_in = type_hints["model"][k]
 
     # validate the 'parse' object
     if not (len(type_hints["parse"]) == 3 and "return" in type_hints["parse"]):
@@ -290,36 +395,53 @@ def validate_type_consistency(task: LLMTask, model: PromptExecutorType) -> None:
         # find the 'prompt_responses' var without assuming its name
         type_k = type_hints["parse"][k]
         if type_k != typing.Iterable[Doc]:
-            parse_input = type_hints["parse"][k]
+            parse_in = type_hints["parse"][k]
 
-    template_output = type_hints["template"]["return"]
+    template_out = type_hints["template"]["return"]
 
     # Check that all variables are Iterables.
     for var, msg in (
-        (template_output, "`task.generate_prompts()` needs to return an `Iterable`."),
+        (template_out, "`task.generate_prompts()` needs to return an `Iterable`."),
         (
-            model_input,
+            model_in,
             "The prompts variable in the 'model' needs to be an `Iterable`.",
         ),
-        (model_output, "The `model` function needs to return an `Iterable`."),
+        (model_out, "The `model` function needs to return an `Iterable`."),
         (
-            parse_input,
+            parse_in,
             "`responses` in `task.parse_responses()` needs to be an `Iterable`.",
         ),
     ):
-        if not var != Iterable:
+        if not (hasattr(var, "_name") and var._name == "Iterable"):
             raise ValueError(msg)
 
+    # Ensure that template/prompt generator output is Iterable of 2-Tuple, the second of which fits doc shards type.
+    template_out_type = template_out.__args__[0]
+    if (
+        hasattr(template_out_type, "_name")
+        and template_out_type._name == "Tuple"
+        and len(template_out_type.__args__) == 2
+    ):
+        has_shards = True
+        template_out_type = template_out_type.__args__[0]
+    else:
+        has_shards = False
+
     # Ensure that the template returns the same type as expected by the model
-    if not _do_args_match(template_output, model_input):  # type: ignore[arg-type]
+    assert model_in is not None
+    if not _do_args_match(
+        template_out_type if has_shards else typing.Iterable[template_out_type],  # type: ignore[valid-type]
+        model_in.__args__[0],
+        1,
+    ):  # type: ignore[arg-type]
         warnings.warn(
-            f"Type returned from `task.generate_prompts()` (`{template_output}`) doesn't match type expected by "
-            f"`model` (`{model_input}`)."
+            f"First type in value returned from `task.generate_prompts()` (`{template_out_type}`) doesn't match type "
+            f"expected by `model` (`{model_in.__args__[0]}`)."
         )
 
     # Ensure that the parser expects the same type as returned by the model
-    if not _do_args_match(model_output, parse_input):  # type: ignore[arg-type]
+    if not _do_args_match(model_out, parse_in if has_shards else typing.Iterable[parse_in], 2):  # type: ignore[arg-type,valid-type]
         warnings.warn(
-            f"Type returned from `model` (`{model_output}`) doesn't match type expected by "
-            f"`task.parse_responses()` (`{parse_input}`)."
+            f"Type returned from `model` (`{model_out}`) doesn't match type expected by "
+            f"`task.parse_responses()` (`{parse_in}`)."
         )

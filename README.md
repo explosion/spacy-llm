@@ -1,6 +1,11 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
+<a href="https://explosion.ai"><img src="assets/logo.png" width="125" height="125" align="left" style="margin-right:30px" /></a>
 
-# spacy-llm: Integrating LLMs into structured NLP pipelines
+<h1 align="center">
+<span style="font: bold 38pt'Courier New';">spacy-llm</span>
+<br>Structured NLP with LLMs
+</h1>
+<br><br>
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/explosion/spacy-llm/test.yml?branch=main)](https://github.com/explosion/spacy-llm/actions/workflows/test.yml)
 [![pypi Version](https://img.shields.io/pypi/v/spacy-llm.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy-llm/)
@@ -16,7 +21,8 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[OpenAI](https://platform.openai.com/docs/api-reference/)**
   - **[Cohere](https://docs.cohere.com/reference/generate)**
   - **[Anthropic](https://docs.anthropic.com/claude/reference/)**
-  - **[PaLM](https://ai.google/discover/palm2/)**
+  - **[Google PaLM](https://ai.google/discover/palm2/)**
+  - **[Microsoft Azure AI](https://azure.microsoft.com/en-us/solutions/ai)**
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
@@ -26,17 +32,20 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[Mistral](https://huggingface.co/mistralai)**
 - Integration with [LangChain](https://github.com/hwchase17/langchain) 🦜️🔗 - all `langchain` models and features can be used in `spacy-llm`
 - Tasks available out of the box:
-  - Named Entity Recognition
-  - Text classification
-  - Lemmatization
-  - Relationship extraction
-  - Sentiment analysis
-  - Span categorization
-  - Summarization
+  - [Named Entity Recognition](https://spacy.io/api/large-language-models#ner)
+  - [Text classification](https://spacy.io/api/large-language-models#textcat)
+  - [Lemmatization](https://spacy.io/api/large-language-models#lemma)
+  - [Relationship extraction](https://spacy.io/api/large-language-models#rel)
+  - [Sentiment analysis](https://spacy.io/api/large-language-models#sentiment)
+  - [Span categorization](https://spacy.io/api/large-language-models#spancat)
+  - [Summarization](https://spacy.io/api/large-language-models#summarization)
+  - [Entity linking](https://spacy.io/api/large-language-models#nel)
+  - [Translation](https://spacy.io/api/large-language-models#translation)
+  - [Raw prompt execution for maximum flexibility](https://spacy.io/api/large-language-models#raw)
   - Soon:
-    - Entity linking
     - Semantic role labeling
-- Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations
+- Easy implementation of **your own functions** via [spaCy's registry](https://spacy.io/api/top-level#registry) for custom prompting, parsing and model integrations. For an example, see [here](https://spacy.io/usage/large-language-models#example-4).
+- [Map-reduce approach](https://spacy.io/api/large-language-models#task-sharding) for splitting prompts too long for LLM's context window and fusing the results back together
 
 ## 🧠 Motivation
 

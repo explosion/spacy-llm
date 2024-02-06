@@ -12,7 +12,7 @@ from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.registry import fewshot_reader, lowercase_normalizer, strip_normalizer
 from spacy_llm.tasks.spancat import SpanCatTask, make_spancat_task_v2
 from spacy_llm.tasks.util import find_substrings
-from spacy_llm.ty import LabeledTask, LLMTask
+from spacy_llm.ty import LabeledTask, ShardingLLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ...compat import has_openai_key
@@ -85,7 +85,7 @@ def test_spancat_config(cfg_string, request):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
     labels = orig_config["components"]["llm"]["task"]["labels"]
     labels = split_labels(labels)
@@ -201,7 +201,7 @@ def test_spancat_zero_shot_task(text, response, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list so we get what's inside
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -260,7 +260,7 @@ def test_spancat_labels(response, normalizer, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -309,7 +309,7 @@ def test_spancat_alignment(response, alignment_mode, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -360,7 +360,7 @@ def test_spancat_matching(response, case_sensitive, single_match, gold_spans):
     doc_in = nlp.make_doc(text)
     # Pass to the parser
     # Note: parser() returns a list
-    doc_out = list(llm_spancat.parse_responses([doc_in], [response]))[0]
+    doc_out = list(llm_spancat.parse_responses([[doc_in]], [[response]]))[0]
     pred_spans = [(span.text, span.label_) for span in doc_out.spans["sc"]]
     assert pred_spans == gold_spans
 
@@ -376,7 +376,7 @@ def test_jinja_template_rendering_without_examples():
     doc = nlp.make_doc("Alice and Bob went to the supermarket")
 
     llm_spancat = make_spancat_task_v2(labels=labels, examples=None)
-    prompt = list(llm_spancat.generate_prompts([doc]))[0]
+    prompt = list(llm_spancat.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -420,7 +420,7 @@ def test_jinja_template_rendering_with_examples(examples_path):
 
     examples = fewshot_reader(examples_path)
     llm_spancat = make_spancat_task_v2(labels=labels, examples=examples)
-    prompt = list(llm_spancat.generate_prompts([doc]))[0]
+    prompt = list(llm_spancat.generate_prompts([doc]))[0][0][0]
 
     assert (
         prompt.strip()
@@ -513,7 +513,8 @@ def noop_config():
 @pytest.mark.parametrize("n_detections", [0, 1, 2])
 def test_spancat_scoring(noop_config, n_detections):
     config = Config().from_str(noop_config)
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -529,7 +530,6 @@ def test_spancat_scoring(noop_config, n_detections):
         examples.append(Example(predicted, reference))
 
     scores = nlp.evaluate(examples)
-
     assert scores["spans_sc_p"] == n_detections / 2
 
 
@@ -537,7 +537,8 @@ def test_spancat_scoring(noop_config, n_detections):
 def test_spancat_init(noop_config, n_prompt_examples: bool):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -583,8 +584,9 @@ def test_spancat_serde(noop_config):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
 
     labels = {"loc": "LOC", "per": "PER"}
 

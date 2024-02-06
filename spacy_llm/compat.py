@@ -19,10 +19,12 @@ else:
 
 try:
     import langchain
+    import langchain_community
 
     has_langchain = True
 except (ImportError, AttributeError):
     langchain = None
+    langchain_community = None
     has_langchain = False
 
 try:
@@ -55,6 +57,9 @@ from pydantic import VERSION
 PYDANTIC_V2 = VERSION.startswith("2.")
 
 if PYDANTIC_V2:
-    from pydantic.v1 import BaseModel, ValidationError, validator  # noqa: F401
+    from pydantic.v1 import BaseModel, ExtraError, ValidationError  # noqa: F401
+    from pydantic.v1 import validator
+    from pydantic.v1.generics import GenericModel  # noqa: F401
 else:
-    from pydantic import BaseModel, ValidationError, validator  # noqa: F401
+    from pydantic import BaseModel, ExtraError, ValidationError, validator  # noqa: F401
+    from pydantic.generics import GenericModel  # noqa: F401

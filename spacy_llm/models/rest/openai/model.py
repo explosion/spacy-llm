@@ -1,7 +1,7 @@
 import os
 import warnings
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
 import srsly  # type: ignore[import]
@@ -36,12 +36,6 @@ class OpenAI(REST):
         if api_org:
             headers["OpenAI-Organization"] = api_org
 
-        # Ensure endpoint is supported.
-        if self._endpoint not in (Endpoints.NON_CHAT, Endpoints.CHAT):
-            raise ValueError(
-                f"Endpoint {self._endpoint} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
-            )
-
         return headers
 
     def _verify_auth(self) -> None:
@@ -74,97 +68,106 @@ class OpenAI(REST):
                 f"The specified model '{self._name}' is not available. Choices are: {sorted(set(models))}"
             )
 
-    def __call__(self, prompts: Iterable[str]) -> Iterable[str]:
+    def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         headers = {
             **self._credentials,
             "Content-Type": "application/json",
         }
-        api_responses: List[str] = []
-        prompts = list(prompts)
+        all_api_responses: List[List[str]] = []
 
-        def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
-            r = self.retry(
-                call_method=requests.post,
-                url=self._endpoint,
-                headers=headers,
-                json={**json_data, **self._config, "model": self._name},
-                timeout=self._max_request_time,
-            )
-            try:
-                r.raise_for_status()
-            except HTTPError as ex:
-                res_content = srsly.json_loads(r.content.decode("utf-8"))
-                # Include specific error message in exception.
-                raise ValueError(
-                    f"Request to OpenAI API failed: {res_content.get('error', {}).get('message', str(res_content))}"
-                ) from ex
-            responses = r.json()
+        for prompts_for_doc in prompts:
+            api_responses: List[str] = []
+            prompts_for_doc = list(prompts_for_doc)
 
-            if "error" in responses:
-                if self._strict:
-                    raise ValueError(f"API call failed: {responses}.")
-                else:
-                    assert isinstance(prompts, Sized)
-                    return {"error": [srsly.json_dumps(responses)] * len(prompts)}
-
-            return responses
-
-        if self._endpoint == Endpoints.CHAT:
-            # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
-            for prompt in prompts:
-                responses = _request(
-                    {"messages": [{"role": "user", "content": prompt}]}
+            def _request(json_data: Dict[str, Any]) -> Dict[str, Any]:
+                r = self.retry(
+                    call_method=requests.post,
+                    url=self._endpoint,
+                    headers=headers,
+                    json={**json_data, **self._config, "model": self._name},
+                    timeout=self._max_request_time,
                 )
+                try:
+                    r.raise_for_status()
+                except HTTPError as ex:
+                    res_content = srsly.json_loads(r.content.decode("utf-8"))
+                    # Include specific error message in exception.
+                    raise ValueError(
+                        f"Request to OpenAI API failed: {res_content.get('error', {}).get('message', str(res_content))}"
+                    ) from ex
+                responses = r.json()
+
+                if "error" in responses:
+                    if self._strict:
+                        raise ValueError(f"API call failed: {responses}.")
+                    else:
+                        assert isinstance(prompts_for_doc, Sized)
+                        return {
+                            "error": [srsly.json_dumps(responses)]
+                            * len(prompts_for_doc)
+                        }
+
+                return responses
+
+            # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
+
+            if self._endpoint == Endpoints.NON_CHAT:
+                responses = _request({"prompt": prompts_for_doc})
                 if "error" in responses:
                     return responses["error"]
+                assert len(responses["choices"]) == len(prompts_for_doc)
 
-                # Process responses.
-                assert len(responses["choices"]) == 1
-                response = responses["choices"][0]
-                api_responses.append(
-                    response.get("message", {}).get(
-                        "content", srsly.json_dumps(response)
+                for response in responses["choices"]:
+                    if "text" in response:
+                        api_responses.append(response["text"])
+                    else:
+                        api_responses.append(srsly.json_dumps(response))
+
+            else:
+                for prompt in prompts_for_doc:
+                    responses = _request(
+                        {"messages": [{"role": "user", "content": prompt}]}
                     )
-                )
+                    if "error" in responses:
+                        return responses["error"]
 
-        elif self._endpoint == Endpoints.NON_CHAT:
-            responses = _request({"prompt": prompts})
-            if "error" in responses:
-                return responses["error"]
-            assert len(responses["choices"]) == len(prompts)
+                    # Process responses.
+                    assert len(responses["choices"]) == 1
+                    response = responses["choices"][0]
+                    api_responses.append(
+                        response.get("message", {}).get(
+                            "content", srsly.json_dumps(response)
+                        )
+                    )
 
-            for response in responses["choices"]:
-                if "text" in response:
-                    api_responses.append(response["text"])
-                else:
-                    api_responses.append(srsly.json_dumps(response))
+            all_api_responses.append(api_responses)
 
-        return api_responses
+        return all_api_responses
 
-    @classmethod
-    def get_model_names(cls) -> Tuple[str, ...]:
-        return (
+    @staticmethod
+    def _get_context_lengths() -> Dict[str, int]:
+        return {
             # gpt-4
-            "gpt-4",
-            "gpt-4-0314",
-            "gpt-4-32k",
-            "gpt-4-32k-0314",
+            "gpt-4": 8192,
+            "gpt-4-0314": 8192,
+            "gpt-4-32k": 32768,
+            "gpt-4-32k-0314": 32768,
             # gpt-3.5
-            "gpt-3.5-turbo",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo-0613",
-            "gpt-3.5-turbo-0613-16k",
-            "gpt-3.5-turbo-instruct",
+            "gpt-3.5-turbo": 4097,
+            "gpt-3.5-turbo-16k": 16385,
+            "gpt-3.5-turbo-0613": 4097,
+            "gpt-3.5-turbo-0613-16k": 16385,
+            "gpt-3.5-turbo-instruct": 4097,
             # text-davinci
-            "text-davinci-002",
-            "text-davinci-003",
+            "text-davinci-002": 4097,
+            "text-davinci-003": 4097,
             # others
-            "code-davinci-002",
-            "text-curie-001",
-            "text-babbage-001",
-            "text-ada-001",
-            "davinci",
-            "curie",
-            "babbage",
-            "ada",
-        )
+            "code-davinci-002": 8001,
+            "text-curie-001": 2049,
+            "text-babbage-001": 2049,
+            "text-ada-001": 2049,
+            "davinci": 2049,
+            "curie": 2049,
+            "babbage": 2049,
+            "ada": 2049,
+        }

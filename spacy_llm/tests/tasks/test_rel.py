@@ -10,7 +10,7 @@ from spacy.util import get_lang_class
 
 from spacy_llm.pipeline import LLMWrapper
 from spacy_llm.tasks.rel import DEFAULT_REL_TEMPLATE, RelationItem, RELTask
-from spacy_llm.ty import LabeledTask, LLMTask
+from spacy_llm.ty import LabeledTask, ShardingLLMTask
 from spacy_llm.util import assemble_from_config, split_labels
 
 from ...tasks import make_rel_task
@@ -122,7 +122,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
     pipe = nlp.get_pipe("llm")
     assert isinstance(pipe, LLMWrapper)
-    assert isinstance(pipe.task, LLMTask)
+    assert isinstance(pipe.task, ShardingLLMTask)
 
     task = pipe.task
     labels = orig_config["components"]["llm"]["task"]["labels"]
@@ -135,7 +135,7 @@ def test_rel_config(cfg_string, request: FixtureRequest):
 
 @pytest.mark.external
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
-@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string"])  # "zeroshot_cfg_string",
+@pytest.mark.parametrize("cfg_string", ["fewshot_cfg_string"])
 def test_rel_predict(task, cfg_string, request):
     """Use OpenAI to get REL results.
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
@@ -157,7 +157,8 @@ def test_rel_init(noop_config, n_prompt_examples: int):
 
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
-    nlp = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp = assemble_from_config(config)
 
     examples = []
 
@@ -201,9 +202,10 @@ def test_rel_serde(noop_config, tmp_path: Path):
     config = Config().from_str(noop_config)
     del config["components"]["llm"]["task"]["labels"]
 
-    nlp1 = assemble_from_config(config)
-    nlp2 = assemble_from_config(config)
-    nlp3 = assemble_from_config(config)
+    with pytest.warns(UserWarning, match="Task supports sharding"):
+        nlp1 = assemble_from_config(config)
+        nlp2 = assemble_from_config(config)
+        nlp3 = assemble_from_config(config)
 
     labels = {"livesin": "LivesIn", "visits": "Visits"}
 
@@ -250,9 +252,9 @@ def test_incorrect_indexing():
         len(
             list(
                 task._parse_responses(
-                    task, [doc], ['{"dep": 0, "dest": 0, "relation": "LivesIn"}']
+                    task, [[doc]], [['{"dep": 0, "dest": 0, "relation": "LivesIn"}']]
                 )
-            )[0]
+            )[0][0]
         )
         == 1
     )
@@ -260,9 +262,29 @@ def test_incorrect_indexing():
         len(
             list(
                 task._parse_responses(
-                    task, [doc], ['{"dep": 0, "dest": 1, "relation": "LivesIn"}']
+                    task, [[doc]], [['{"dep": 0, "dest": 1, "relation": "LivesIn"}']]
                 )
-            )[0]
+            )[0][0]
         )
         == 0
+    )
+
+
+@pytest.mark.external
+@pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
+def test_labels_in_prompt(request: FixtureRequest):
+    """See https://github.com/explosion/spacy-llm/issues/366."""
+    config = Config().from_str(request.getfixturevalue("zeroshot_cfg_string"))
+    config["components"].pop("ner")
+    config.pop("initialize")
+    config["nlp"]["pipeline"] = ["llm"]
+    config["components"]["llm"]["task"]["labels"] = ["A", "B", "C"]
+    nlp = assemble_from_config(config)
+
+    doc = Doc(get_lang_class("en")().vocab, words=["Well", "hello", "there"])
+    doc.ents = [Span(doc, 0, 1, "A"), Span(doc, 1, 2, "B"), Span(doc, 2, 3, "C")]
+
+    assert (
+        "Well[ENT0:A] hello[ENT1:B] there[ENT2:C]"
+        in list(nlp.get_pipe("llm")._task.generate_prompts([doc]))[0][0][0]
     )

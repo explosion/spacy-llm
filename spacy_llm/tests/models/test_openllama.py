@@ -45,8 +45,8 @@ def test_init():
     nlp.add_pipe("llm", config=_PIPE_CFG)
     doc = nlp("This is a test.")
     torch.cuda.empty_cache()
-    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
-        doc.user_data["llm_io"]["llm"]["prompt"]
+    assert not doc.user_data["llm_io"]["llm"]["response"][0].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"][0]
     )
 
 
@@ -60,8 +60,8 @@ def test_init_with_set_config():
     nlp.add_pipe("llm", config=cfg)
     doc = nlp("This is a test.")
     torch.cuda.empty_cache()
-    assert not doc.user_data["llm_io"]["llm"]["response"].startswith(
-        doc.user_data["llm_io"]["llm"]["prompt"]
+    assert not doc.user_data["llm_io"]["llm"]["response"][0].startswith(
+        doc.user_data["llm_io"]["llm"]["prompt"][0]
     )
 
 

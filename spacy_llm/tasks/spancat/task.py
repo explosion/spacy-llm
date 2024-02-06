@@ -5,7 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.training import Example
 
 from ...compat import Literal, Self
-from ...ty import FewshotExample, Scorer, TaskResponseParser
+from ...ty import FewshotExample, Scorer, ShardMapper, ShardReducer, TaskResponseParser
 from ..span import SpanTask
 from ..span.task import SpanTaskLabelCheck
 from ..templates import read_template
@@ -19,12 +19,14 @@ class SpanCatTask(SpanTask):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         labels: List[str],
         template: str,
         label_definitions: Optional[Dict[str, str]],
         spans_key: str,
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         normalizer: Optional[Callable[[str], str]],
         alignment_mode: Literal["strict", "contract", "expand"],
         case_sensitive_matching: bool,
@@ -35,8 +37,8 @@ class SpanCatTask(SpanTask):
     ):
         """Default SpanCat task.
 
-        parse_responses (TaskResponseParser): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
         labels (List[str]): List of labels to pass to the template.
             Leave empty to populate it at initialization time (only if examples are provided).
         template (str): Prompt template passed to the model.
@@ -45,7 +47,9 @@ class SpanCatTask(SpanTask):
             It is usually easier to provide these definitions rather than
             full examples, although both can be provided.
         spans_key (str): Key of the `Doc.spans` dict to save under.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         normalizer (Optional[Callable[[str], str]]): optional normalizer function.
         alignment_mode (str): "strict", "contract" or "expand".
         case_sensitive_matching (bool): Whether to search without case sensitivity.
@@ -62,6 +66,8 @@ class SpanCatTask(SpanTask):
             template=template,
             label_definitions=label_definitions,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
             normalizer=normalizer,
             alignment_mode=alignment_mode,
             case_sensitive_matching=case_sensitive_matching,

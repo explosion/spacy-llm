@@ -1,12 +1,12 @@
 import warnings
-from typing import Callable, Iterable, List, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type
 
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
-from ...ty import FewshotExample, TaskResponseParser
+from ...ty import FewshotExample, ShardMapper, ShardReducer, TaskResponseParser
 from ..builtin_task import BuiltinTask
 from ..templates import read_template
 
@@ -17,26 +17,32 @@ class SummarizationTask(BuiltinTask):
     def __init__(
         self,
         parse_responses: TaskResponseParser[Self],
-        prompt_example_type: Type[FewshotExample],
+        prompt_example_type: Type[FewshotExample[Self]],
         template: str,
+        shard_mapper: ShardMapper,
+        shard_reducer: ShardReducer[Self],
         max_n_words: Optional[int],
         field: str,
-        prompt_examples: Optional[List[FewshotExample]],
+        prompt_examples: Optional[List[FewshotExample[Self]]],
     ):
         """Default summarization task.
 
         template (str): Prompt template passed to the model.
         parse_responses (TaskResponseParser[Self]): Callable for parsing LLM responses for this task.
-        prompt_example_type (Type[FewshotExample]): Type to use for fewshot examples.
+        prompt_example_type (Type[FewshotExample[Self]): Type to use for fewshot examples.
+        shard_mapper (ShardMapper): Maps docs to shards if they don't fit into the model context.
+        shard_reducer (ShardReducer[Self]): Reduces doc shards back into one doc instance.
         max_n_words (Optional[int]): Max. number of words to use in summary.
         field (str): The name of the doc extension in which to store the summary.
-        prompt_examples (Optional[List[FewshotExample]]): Optional list of few-shot examples to include in prompts.
+        prompt_examples (Optional[List[FewshotExample[Self]]]): Optional list of few-shot examples to include in prompts.
         """
         super().__init__(
             parse_responses=parse_responses,
             prompt_example_type=prompt_example_type,
             template=template,
             prompt_examples=prompt_examples,
+            shard_mapper=shard_mapper,
+            shard_reducer=shard_reducer,
         )
         self._max_n_words = max_n_words
         self._field = field
@@ -78,19 +84,32 @@ class SummarizationTask(BuiltinTask):
                     f"LLM will likely produce responses that are too long."
                 )
 
-    def generate_prompts(self, docs: Iterable[Doc], **kwargs) -> Iterable[str]:
+    def _get_prompt_data(
+        self, shard: Doc, i_shard: int, i_doc: int, n_shards: int
+    ) -> Dict[str, Any]:
         if self._check_example_summaries:
             self._check_prompt_example_summary_len()
             self._check_example_summaries = False
 
-        return super().generate_prompts(docs=docs, max_n_words=self._max_n_words)
+        return {
+            "max_n_words": int(self._max_n_words / n_shards)
+            if self._max_n_words is not None
+            else None
+        }
 
     def parse_responses(
-        self, docs: Iterable[Doc], responses: Iterable[str]
+        self, shards: Iterable[Iterable[Doc]], responses: Iterable[Iterable[str]]
     ) -> Iterable[Doc]:
-        for doc, summary in zip(docs, self._parse_responses(self, docs, responses)):
-            setattr(doc._, self._field, summary)
-            yield doc
+        shards_teed = self._tee_2d_iterable(shards, 2)
+
+        for shards_for_doc, summaries_for_doc in zip(
+            shards_teed[0], self._parse_responses(self, shards_teed[1], responses)
+        ):
+            shards_for_doc = list(shards_for_doc)
+            for shard, summary in zip(shards_for_doc, summaries_for_doc):
+                setattr(shard._, self._field, summary)
+
+            yield self._shard_reducer(self, shards_for_doc)  # type: ignore[arg-type]
 
     @property
     def _cfg_keys(self) -> List[str]:
