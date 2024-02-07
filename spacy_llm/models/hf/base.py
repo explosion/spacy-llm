@@ -69,6 +69,14 @@ class HuggingFace(abc.ABC):
                     f"Double-check you specified a valid dtype."
                 ) from ex
 
+        # Recognize boolean attributes.
+        for key, value in self._config_init.items():
+            if value in ("True", "False"):
+                self._config_init[key] = False if value == "False" else True
+        for key, value in self._config_run.items():
+            if value in ("True", "False"):
+                self._config_run[key] = False if value == "False" else True
+
         # Init HF model.
         HuggingFace.check_installation()
         self._check_model()
