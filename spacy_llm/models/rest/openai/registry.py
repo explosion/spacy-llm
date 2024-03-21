@@ -36,8 +36,6 @@ def openai_v1(
     context_length (Optional[int]): Context length for this model. Only necessary for sharding and if no context length
         natively provided by spacy-llm.
     RETURNS (OpenAI): OpenAI model instance.
-
-    DOCS: https://spacy.io/api/large-language-models#models
     """
     return OpenAI(
         name=name,
