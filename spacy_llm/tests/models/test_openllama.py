@@ -80,6 +80,6 @@ def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)
     config = copy.deepcopy(orig_config)
     config["components"]["llm"]["model"]["name"] = "anything-else"
-    with pytest.raises(ValueError, match="unexpected value; permitted"):
+    with pytest.raises(ValueError, match="could not be associated"):
         spacy.util.load_model_from_config(config, auto_fill=True)
     torch.cuda.empty_cache()
