@@ -135,7 +135,8 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.EntityLinker.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     config = {"temperature": 0}
 
     [initialize]
@@ -179,7 +180,8 @@ def fewshot_cfg_string():
     path = {str((Path(__file__).parent / "examples" / "entity_linker.yml"))}
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     config = {{"temperature": 0}}
 
     [initialize]
@@ -224,7 +226,8 @@ def ext_template_cfg_string():
     path = {str((Path(__file__).parent / "templates" / "entity_linker.jinja2"))}
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v1"
+    @llm_models = "spacy.OpenAI.v1"
+    name = "gpt-3.5-turbo"
     config = {{"temperature": 0}}
 
     [initialize]
