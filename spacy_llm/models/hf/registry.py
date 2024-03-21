@@ -1,8 +1,9 @@
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Dict, Optional
 
 from confection import SimpleFrozenDict
 
 from ...registry import registry
+from .base import HuggingFace
 from .dolly import Dolly
 from .falcon import Falcon
 from .llama2 import Llama2
@@ -17,7 +18,7 @@ def huggingface_v1(
     name: str,
     config_init: Optional[Dict[str, Any]] = SimpleFrozenDict(),
     config_run: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-) -> Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]:
+) -> HuggingFace:
     """Returns HuggingFace model instance.
     name (str): Name of model to use.
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
