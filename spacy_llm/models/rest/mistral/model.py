@@ -3,6 +3,9 @@ import os
 from typing import Iterable, Optional, Any, Dict
 from ..base import REST
 
+from mistralai.client import MistralClient
+from mistralai.models.chat_completion import ChatMessage
+
 
 class AzureMistral(REST):
     def __init__(
@@ -29,13 +32,10 @@ class AzureMistral(REST):
 
     def __call__(self, prompts: Iterable[Iterable[str]]) -> Iterable[Iterable[str]]:
         all_resps = []
+        api_key = self._credentials.get("api-key")
         for prompts_doc in prompts:
             doc_resps = []
             for prompt in prompts_doc:
-                from mistralai.client import MistralClient
-                from mistralai.models.chat_completion import ChatMessage
-
-                api_key = self._credentials.get("api-key")
                 client = MistralClient(endpoint=self._endpoint, api_key=api_key)
 
                 chat_response = client.chat(
