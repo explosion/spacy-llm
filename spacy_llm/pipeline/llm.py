@@ -24,7 +24,7 @@ logger = logging.getLogger("spacy_llm")
 logger.addHandler(logging.NullHandler())
 
 DEFAULT_MODEL_CONFIG = {
-    "@llm_models": "spacy.GPT-3-5.v2",
+    "@llm_models": "spacy.GPT-4.v3",
     "strict": True,
 }
 DEFAULT_CACHE_CONFIG = {
@@ -238,6 +238,7 @@ class LLMWrapper(Pipe):
                 else self._task.generate_prompts(noncached_doc_batch),
                 n_iters + 1,
             )
+
             responses_iters = tee(
                 self._model(
                     # Ensure that model receives Iterable[Iterable[Any]]. If task doesn't shard, its prompt is wrapped
@@ -251,7 +252,7 @@ class LLMWrapper(Pipe):
             )
 
             for prompt_data, response, doc in zip(
-                prompts_iters[1], responses_iters[0], noncached_doc_batch
+                prompts_iters[1], list(responses_iters[0]), noncached_doc_batch
             ):
                 logger.debug(
                     "Generated prompt for doc: %s\n%s",
@@ -266,7 +267,7 @@ class LLMWrapper(Pipe):
                         elem[1] if support_sharding else noncached_doc_batch[i]
                         for i, elem in enumerate(prompts_iters[2])
                     ),
-                    responses_iters[1],
+                    list(responses_iters[1]),
                 )
             )
 

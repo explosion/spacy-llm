@@ -102,7 +102,7 @@ def fewshot_cfg_string_v3_lds():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    name = "gpt-4"
     """
 
 
@@ -132,7 +132,7 @@ def fewshot_cfg_string_v3():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.GPT-4.v3"
     """
 
 
@@ -167,7 +167,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v2"
+    @llm_models = "spacy.GPT-4.v3"
     """
 
 
@@ -848,13 +848,17 @@ def test_label_inconsistency():
     config = Config().from_str(cfg)
     with pytest.warns(
         UserWarning,
-        match=re.escape(
-            "Examples contain labels that are not specified in the task configuration. The latter contains the "
-            "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
-            "['TECH']. Please ensure your label specification and example labels are consistent."
-        ),
+        match="Task supports sharding, but model does not provide context length."
     ):
-        nlp = assemble_from_config(config)
+        with pytest.warns(
+            UserWarning,
+            match=re.escape(
+                "Examples contain labels that are not specified in the task configuration. The latter contains the "
+                "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
+                "['TECH']. Please ensure your label specification and example labels are consistent."
+            ),
+        ):
+            nlp = assemble_from_config(config)
 
     prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
     assert len(prompt_examples) == 2
@@ -985,7 +989,7 @@ def test_add_label():
                 "@llm_tasks": "spacy.NER.v3",
             },
             "model": {
-                "@llm_models": "spacy.GPT-3-5.v1",
+                "@llm_models": "spacy.GPT-4.v3",
             },
         },
     )
@@ -1016,7 +1020,7 @@ def test_clear_label():
                 "@llm_tasks": "spacy.NER.v3",
             },
             "model": {
-                "@llm_models": "spacy.GPT-3-5.v1",
+                "@llm_models": "spacy.GPT-4.v3",
             },
         },
     )

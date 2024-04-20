@@ -34,7 +34,7 @@ def test_combinations(model: str, task: str, n_process: int):
         },
         "task": {"@llm_tasks": task},
     }
-    config["model"]["name"] = "gpt-3.5-turbo"
+    config["model"]["name"] = "gpt-4"
     # Configure task-specific settings.
     if task.startswith("spacy.NER"):
         config["task"]["labels"] = "PER,ORG,LOC"

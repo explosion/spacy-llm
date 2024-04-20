@@ -60,7 +60,8 @@ def test_sharding_count(config):
         "fear is fear itself.",
     ]
     assert all(
-        [response == len(pr.split()) for response, pr in zip(responses, prompts)]
+        # GPT-3.5 count of words can be off, hence we're allowing for some tolerance.
+        [response - 1 <= len(pr.split()) <= response + 1 for response, pr in zip(responses, prompts)]
     )
     assert sum(responses) == doc.user_data["count"]
 

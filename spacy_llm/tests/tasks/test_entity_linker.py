@@ -756,6 +756,7 @@ def test_init_with_code():
     llm._task.set_candidate_selector(candidate_selector, nlp.vocab)
     nlp.initialize()
 
+    doc = nlp("Thibeau Courtois plays for the Red Devils in New York")
     assert (
         nlp("Thibeau Courtois plays for the Red Devils in New York").ents[2].kb_id_
         == "Q60"
