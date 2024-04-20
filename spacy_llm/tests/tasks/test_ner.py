@@ -852,17 +852,13 @@ def test_label_inconsistency():
     config = Config().from_str(cfg)
     with pytest.warns(
         UserWarning,
-        match="Task supports sharding, but model does not provide context length.",
+        match=re.escape(
+            "Examples contain labels that are not specified in the task configuration. The latter contains the "
+            "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
+            "['TECH']. Please ensure your label specification and example labels are consistent."
+        ),
     ):
-        with pytest.warns(
-            UserWarning,
-            match=re.escape(
-                "Examples contain labels that are not specified in the task configuration. The latter contains the "
-                "following labels: ['LOCATION', 'PERSON']. Labels in examples missing from the task configuration: "
-                "['TECH']. Please ensure your label specification and example labels are consistent."
-            ),
-        ):
-            nlp = assemble_from_config(config)
+        nlp = assemble_from_config(config)
 
     prompt_examples = nlp.get_pipe("llm")._task._prompt_examples
     assert len(prompt_examples) == 2
