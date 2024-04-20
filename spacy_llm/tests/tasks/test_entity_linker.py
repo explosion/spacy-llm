@@ -405,7 +405,7 @@ def test_el_io(cfg_string, request, tmp_path):
         # Should be Q100, but mileage may vary depending on model
         assert doc.ents[0].kb_id_ in ("Q100", "Q131371")
         # Should be Q131371, but mileage may vary depending on model
-        assert doc.ents[1].kb_id_ == ("Q131371", "Q100")
+        assert doc.ents[1].kb_id_ in ("Q131371", "Q100")
 
 
 def test_jinja_template_rendering_without_examples(tmp_path):
