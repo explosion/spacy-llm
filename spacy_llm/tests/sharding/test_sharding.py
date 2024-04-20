@@ -61,7 +61,10 @@ def test_sharding_count(config):
     ]
     assert all(
         # GPT-3.5 count of words can be off, hence we're allowing for some tolerance.
-        [response - 1 <= len(pr.split()) <= response + 1 for response, pr in zip(responses, prompts)]
+        [
+            response - 1 <= len(pr.split()) <= response + 1
+            for response, pr in zip(responses, prompts)
+        ]
     )
     assert sum(responses) == doc.user_data["count"]
 

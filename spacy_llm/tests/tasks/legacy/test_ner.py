@@ -858,8 +858,8 @@ def test_label_inconsistency():
 
     config = Config().from_str(cfg)
     with pytest.warns(
-            UserWarning,
-            match="Task supports sharding, but model does not provide context length.",
+        UserWarning,
+        match="Task supports sharding, but model does not provide context length.",
     ):
         with pytest.warns(
             UserWarning,

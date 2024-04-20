@@ -749,7 +749,9 @@ def test_init_with_code():
     )
     nlp = spacy.blank("en")
     # Test case doesn't work with gpt-3.5-turbo.
-    llm_ner = nlp.add_pipe("llm_ner", config={"model": {"@llm_models": "spacy.OpenAI.v1", "name": "gpt-4"}})
+    llm_ner = nlp.add_pipe(
+        "llm_ner", config={"model": {"@llm_models": "spacy.OpenAI.v1", "name": "gpt-4"}}
+    )
     for label in ("PERSON", "ORGANISATION", "LOCATION", "SPORTS TEAM"):
         llm_ner.add_label(label)
 
@@ -757,7 +759,6 @@ def test_init_with_code():
     llm._task.set_candidate_selector(candidate_selector, nlp.vocab)
     nlp.initialize()
 
-    doc = nlp("Thibeau Courtois plays for the Red Devils in New York")
     assert (
         nlp("Thibeau Courtois plays for the Red Devils in New York").ents[2].kb_id_
         == "Q60"

@@ -266,7 +266,9 @@ def test_llm_ner_predict(text, gold_ents):
     """
     nlp = spacy.blank("en")
     # Test case doesn't work with gpt-3.5-turbo.
-    llm = nlp.add_pipe("llm_ner", config={"model": {"@llm_models": "spacy.OpenAI.v1", "name": "gpt-4"}})
+    llm = nlp.add_pipe(
+        "llm_ner", config={"model": {"@llm_models": "spacy.OpenAI.v1", "name": "gpt-4"}}
+    )
     for ent_str, ent_label in gold_ents:
         llm.add_label(ent_label)
     doc = nlp(text)
@@ -849,7 +851,7 @@ def test_label_inconsistency():
     config = Config().from_str(cfg)
     with pytest.warns(
         UserWarning,
-        match="Task supports sharding, but model does not provide context length."
+        match="Task supports sharding, but model does not provide context length.",
     ):
         with pytest.warns(
             UserWarning,
@@ -1023,7 +1025,7 @@ def test_clear_label():
             "model": {
                 "@llm_models": "spacy.OpenAI.v1",
                 # Test case doesn't work with gpt-3.5-turbo.
-                "name": "gpt-4"
+                "name": "gpt-4",
             },
         },
     )
