@@ -41,7 +41,7 @@ def zeroshot_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-4"
+    name = "gpt-3.5-turbo"
 
     [initialize]
     vectors = "en_core_web_md"
@@ -74,7 +74,7 @@ def fewshot_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-4"
+    name = "gpt-3.5-turbo"
 
     [initialize]
     vectors = "en_core_web_md"

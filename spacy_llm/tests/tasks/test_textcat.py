@@ -45,7 +45,7 @@ def zeroshot_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-4"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -76,7 +76,7 @@ def fewshot_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-4"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -109,7 +109,7 @@ def ext_template_cfg_string():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-4"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -139,7 +139,7 @@ def zeroshot_cfg_string_v3_lds():
 
     [components.llm.model]
     @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-4"
+    name = "gpt-3.5-turbo"
     """
 
 
@@ -837,7 +837,7 @@ def test_add_label():
                 "@llm_tasks": "spacy.TextCat.v3",
             },
             "model": {
-                "@llm_models": "spacy.GPT-4.v3",
+                "@llm_models": "spacy.GPT-3-5.v3",
             },
         },
     )

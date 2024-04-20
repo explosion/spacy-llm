@@ -80,7 +80,7 @@ def test_doc_length_error_handling():
     with pytest.raises(
         ValueError,
         match=re.escape(
-            "Request to OpenAI API failed: This model's maximum context length is 8192 tokens. However, your messages "
+            "Request to OpenAI API failed: This model's maximum context length is 16385 tokens. However, your messages "
             "resulted in 40018 tokens. Please reduce the length of the messages."
         ),
     ):
