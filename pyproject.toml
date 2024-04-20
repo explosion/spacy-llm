@@ -27,7 +27,8 @@ filterwarnings = [
     "ignore:^.*The `construct` method is deprecated.*",
     "ignore:^.*Skipping device Apple Paravirtual device that does not support Metal 2.0.*",
     "ignore:^.*Pydantic V1 style `@validator` validators are deprecated.*",
-    "ignore:^.*was deprecated in langchain-community.*"
+    "ignore:^.*was deprecated in langchain-community.*",
+    "ignore:^.*was deprecated in LangChain 0.0.1.*"
 ]
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API",

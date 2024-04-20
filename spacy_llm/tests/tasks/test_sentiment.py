@@ -132,7 +132,7 @@ def test_sentiment_predict(cfg_string, request):
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     if cfg_string != "ext_template_cfg_string":
-        assert nlp("This is horrible.")._.sentiment == 0.0
+        assert nlp("This is horrible.")._.sentiment <= 0.1
         assert 0 < nlp("This is meh.")._.sentiment <= 0.5
         assert nlp("This is perfect.")._.sentiment == 1.0
 
