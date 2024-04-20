@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import pytest
 import spacy
@@ -42,7 +43,9 @@ name = "dolly-v2-3b"
 def test_init():
     """Test initialization and simple run."""
     nlp = spacy.blank("en")
-    nlp.add_pipe("llm", config=_PIPE_CFG)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        nlp.add_pipe("llm", config=_PIPE_CFG)
     doc = nlp("This is a test.")
     nlp.get_pipe("llm")._model.get_model_names()
     torch.cuda.empty_cache()
@@ -53,6 +56,7 @@ def test_init():
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+@pytest.mark.filterwarnings("ignore:the load_module() method is deprecated")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)

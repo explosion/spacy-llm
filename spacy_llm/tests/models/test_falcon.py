@@ -39,6 +39,7 @@ name = "falcon-rw-1b"
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+@pytest.mark.filterwarnings("ignore:the load_module() method is deprecated")
 def test_init():
     """Test initialization and simple run."""
     nlp = spacy.blank("en")
@@ -53,6 +54,7 @@ def test_init():
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
+@pytest.mark.filterwarnings("ignore:the load_module() method is deprecated")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
