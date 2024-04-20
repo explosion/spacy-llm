@@ -172,6 +172,9 @@ def test_sharding_sentiment(config):
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_sharding_spancat(config):
     context_length = 265
+    config["components"]["llm"]["model"]["@llm_models"] = "spacy.OpenAI.v1"
+    # Spancat (not sharding) aspect of test case doesn't work with gpt-3.5.
+    config["components"]["llm"]["model"]["name"] = "gpt-4"
     config["components"]["llm"]["model"]["context_length"] = context_length
     config["components"]["llm"]["task"] = {
         "@llm_tasks": "spacy.SpanCat.v3",
