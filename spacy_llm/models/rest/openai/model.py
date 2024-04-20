@@ -36,12 +36,6 @@ class OpenAI(REST):
         if api_org:
             headers["OpenAI-Organization"] = api_org
 
-        # Ensure endpoint is supported.
-        if self._endpoint not in (Endpoints.NON_CHAT, Endpoints.CHAT):
-            raise ValueError(
-                f"Endpoint {self._endpoint} isn't supported. Please use one of: {Endpoints.CHAT}, {Endpoints.NON_CHAT}."
-            )
-
         return headers
 
     def _verify_auth(self) -> None:
@@ -115,9 +109,21 @@ class OpenAI(REST):
 
                 return responses
 
-            if self._endpoint == Endpoints.CHAT:
-                # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual
-                # requests.
+            # The OpenAI API doesn't support batching for /chat/completions yet, so we have to send individual requests.
+
+            if self._endpoint == Endpoints.NON_CHAT:
+                responses = _request({"prompt": prompts_for_doc})
+                if "error" in responses:
+                    return responses["error"]
+                assert len(responses["choices"]) == len(prompts_for_doc)
+
+                for response in responses["choices"]:
+                    if "text" in response:
+                        api_responses.append(response["text"])
+                    else:
+                        api_responses.append(srsly.json_dumps(response))
+
+            else:
                 for prompt in prompts_for_doc:
                     responses = _request(
                         {"messages": [{"role": "user", "content": prompt}]}
@@ -133,18 +139,6 @@ class OpenAI(REST):
                             "content", srsly.json_dumps(response)
                         )
                     )
-
-            elif self._endpoint == Endpoints.NON_CHAT:
-                responses = _request({"prompt": prompts_for_doc})
-                if "error" in responses:
-                    return responses["error"]
-                assert len(responses["choices"]) == len(prompts_for_doc)
-
-                for response in responses["choices"]:
-                    if "text" in response:
-                        api_responses.append(response["text"])
-                    else:
-                        api_responses.append(srsly.json_dumps(response))
 
             all_api_responses.append(api_responses)
 

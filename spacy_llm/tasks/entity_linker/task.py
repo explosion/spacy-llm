@@ -105,7 +105,6 @@ class EntityLinkerTask(BuiltinTask):
         self._ents_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
         self._has_ent_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
         self._n_shards = None
-
         return [
             EntityLinkerTask.highlight_ents_in_doc(doc, self._has_ent_cands_by_doc[i])
             for i, doc in enumerate(docs)
@@ -335,7 +334,11 @@ class EntityLinkerTask(BuiltinTask):
             for ent in doc.ents
             if ent.start - 1 > 0 and doc[ent.start - 1].text == "*"
         }
-        highlight_end_idx = {ent.end for ent in doc.ents if doc[ent.end].text == "*"}
+        highlight_end_idx = {
+            ent.end
+            for ent in doc.ents
+            if ent.end < len(doc) and doc[ent.end].text == "*"
+        }
         highlight_idx = highlight_start_idx | highlight_end_idx
 
         # Compute entity indices with removed highlights.

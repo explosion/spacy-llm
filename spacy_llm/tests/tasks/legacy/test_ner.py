@@ -832,6 +832,7 @@ def test_ner_to_disk(noop_config, tmp_path: Path):
     assert task1._label_dict == task2._label_dict == labels
 
 
+@pytest.mark.filterwarnings("ignore:Task supports sharding")
 def test_label_inconsistency():
     """Test whether inconsistency between specified labels and labels in examples is detected."""
     cfg = f"""
