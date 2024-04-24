@@ -3,6 +3,7 @@ import pytest
 
 from spacy_llm.models.rest.palm import palm_bison
 
+from ...models.rest.palm.registry import google_v1
 from ..compat import has_palm_key
 
 
@@ -11,7 +12,7 @@ from ..compat import has_palm_key
 @pytest.mark.parametrize("name", ("text-bison-001", "chat-bison-001"))
 def test_palm_api_response_is_correct(name: str):
     """Check if we're getting the response from the correct structure"""
-    model = palm_bison(name=name)
+    model = google_v1(name=name)
     prompt = "The number of stars in the universe is"
     num_prompts = 3  # arbitrary number to check multiple inputs
     responses = list(model([prompt] * num_prompts))
@@ -30,7 +31,7 @@ def test_palm_api_response_n_generations():
     the very first output.
     """
     candidate_count = 3
-    model = palm_bison(config={"candidate_count": candidate_count})
+    model = google_v1(config={"candidate_count": candidate_count})
 
     prompt = "The number of stars in the universe is"
     num_prompts = 3
@@ -57,4 +58,4 @@ def test_palm_error_unsupported_model():
     """Ensure graceful handling of error when model is not supported"""
     incorrect_model = "x-gpt-3.5-turbo"
     with pytest.raises(ValueError, match="Model 'x-gpt-3.5-turbo' is not supported"):
-        palm_bison(name=incorrect_model)
+        google_v1(name=incorrect_model)
