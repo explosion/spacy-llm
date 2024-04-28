@@ -1,4 +1,4 @@
-from . import anthropic, azure, base, cohere, noop, openai
+from . import anthropic, azure, base, cohere, noop, openai, ollama
 
 __all__ = [
     "anthropic",
@@ -7,4 +7,5 @@ __all__ = [
     "cohere",
     "openai",
     "noop",
+    "ollama",
 ]
