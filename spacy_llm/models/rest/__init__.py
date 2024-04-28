@@ -5,7 +5,7 @@ __all__ = [
     "azure",
     "base",
     "cohere",
+    "ollama",
     "openai",
     "noop",
-    "ollama",
 ]
