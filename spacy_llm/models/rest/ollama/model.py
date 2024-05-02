@@ -1,10 +1,7 @@
-import os
-import warnings
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Sized
 
 import requests  # type: ignore[import]
-import srsly  # type: ignore[import]
 from requests import HTTPError
 
 from ..base import REST
@@ -15,12 +12,13 @@ class Endpoints(str, Enum):
     EMBEDDINGS = "http://localhost:11434/api/embeddings"
     TAGS = "http://localhost:11434/api/tags"
 
+
 class Ollama(REST):
     @property
     def credentials(self) -> Dict[str, str]:
         # No credentials needed for local Ollama server
         return {}
-    
+
     def _verify_auth(self) -> None:
         # Healthcheck: Verify connectivity to Ollama server
         try:
@@ -46,7 +44,12 @@ class Ollama(REST):
                     call_method=requests.post,
                     url=self._endpoint,
                     headers=headers,
-                    json={**json_data, **self._config, "model": self._name, "stream": False},
+                    json={
+                        **json_data,
+                        **self._config,
+                        "model": self._name,
+                        "stream": False,
+                    },
                     timeout=self._max_request_time,
                 )
                 try:
@@ -57,7 +60,7 @@ class Ollama(REST):
                     raise ValueError(
                         f"Request to Ollama API failed: {res_content}"
                     ) from ex
-                
+
                 response = r.json()
 
                 if "error" in response:
@@ -65,7 +68,7 @@ class Ollama(REST):
                         raise ValueError(f"API call failed: {response['error']}.")
                     else:
                         assert isinstance(prompts_for_doc, Sized)
-                        return {"error": [response['error']] * len(prompts_for_doc)}
+                        return {"error": [response["error"]] * len(prompts_for_doc)}
 
                 return response
 
@@ -163,5 +166,5 @@ class Ollama(REST):
             "duckdb-nsql": 4096,
             "alfred": 4096,
             "notus": 4096,
-            "snowflake-arctic-embed": 4096
+            "snowflake-arctic-embed": 4096,
         }

@@ -76,9 +76,9 @@ def palm_bison_v2(
     """
     return PaLM(
         name=name,
-        endpoint=Endpoints.TEXT.value
-        if name in {"text-bison-001"}
-        else Endpoints.MSG.value,
+        endpoint=(
+            Endpoints.TEXT.value if name in {"text-bison-001"} else Endpoints.MSG.value
+        ),
         config=config,
         strict=strict,
         max_tries=max_tries,

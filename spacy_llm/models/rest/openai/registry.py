@@ -186,9 +186,12 @@ def openai_gpt_3_5_v3(
     """
     return OpenAI(
         name=name,
-        endpoint=endpoint or Endpoints.CHAT.value
-        # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
-        if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
+        endpoint=(
+            endpoint or Endpoints.CHAT.value
+            # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
+            if name != "gpt-3.5-turbo-instruct"
+            else Endpoints.NON_CHAT.value
+        ),
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -226,9 +229,12 @@ def openai_gpt_3_5_v2(
     """
     return OpenAI(
         name=name,
-        endpoint=endpoint or Endpoints.CHAT.value
-        # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
-        if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
+        endpoint=(
+            endpoint or Endpoints.CHAT.value
+            # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
+            if name != "gpt-3.5-turbo-instruct"
+            else Endpoints.NON_CHAT.value
+        ),
         config=config,
         strict=strict,
         max_tries=max_tries,
@@ -266,9 +272,12 @@ def openai_gpt_3_5(
     """
     return OpenAI(
         name=name,
-        endpoint=endpoint or Endpoints.CHAT.value
-        # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
-        if name != "gpt-3.5-turbo-instruct" else Endpoints.NON_CHAT.value,
+        endpoint=(
+            endpoint or Endpoints.CHAT.value
+            # gpt-3.5-turbo-instruct runs on the non-chat endpoint, so we use that one by default to allow batching.
+            if name != "gpt-3.5-turbo-instruct"
+            else Endpoints.NON_CHAT.value
+        ),
         config=config,
         strict=strict,
         max_tries=max_tries,
