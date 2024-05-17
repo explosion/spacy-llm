@@ -2,11 +2,11 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from confection import SimpleFrozenDict
 
-from ...compat import Literal, has_transformers, torch, transformers
+from ...compat import Literal, has_torch, has_transformers, torch, transformers
 from ...registry.util import registry
 from .base import HuggingFace
 
-if has_transformers:
+if has_transformers and has_torch:
 
     class _StopOnTokens(transformers.StoppingCriteria):
         def __call__(
