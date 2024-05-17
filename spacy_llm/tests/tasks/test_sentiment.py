@@ -33,8 +33,7 @@ def zeroshot_cfg_string():
     @llm_tasks = "spacy.Sentiment.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -59,7 +58,7 @@ def fewshot_cfg_string():
     path = {str((Path(__file__).parent / "examples" / "sentiment.yml"))}
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v3"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -85,7 +84,7 @@ def ext_template_cfg_string():
     path = {str((Path(__file__).parent / "templates" / "sentiment.jinja2"))}
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v3"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -132,7 +131,7 @@ def test_sentiment_predict(cfg_string, request):
     orig_config = Config().from_str(cfg)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
     if cfg_string != "ext_template_cfg_string":
-        assert nlp("This is horrible.")._.sentiment <= 0.1
+        assert nlp("This is horrible.")._.sentiment == 0.0
         assert 0 < nlp("This is meh.")._.sentiment <= 0.5
         assert nlp("This is perfect.")._.sentiment == 1.0
 

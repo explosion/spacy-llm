@@ -119,8 +119,7 @@ factory = "llm"
 labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.model]
-@llm_models = "spacy.OpenAI.v1"
-name = "gpt-4"
+@llm_models = "spacy.GPT-4.v2"
 ```
 
 Now run:

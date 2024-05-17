@@ -32,8 +32,7 @@ def zeroshot_cfg_string():
     target_lang = "Spanish"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v3"
     """
 
 
@@ -59,8 +58,7 @@ def fewshot_cfg_string():
     path = {str((Path(__file__).parent / "examples" / "translation.yml"))}
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v3"
     """
 
 
@@ -87,8 +85,7 @@ def ext_template_cfg_string():
     path = {str((Path(__file__).parent / "templates" / "translation.jinja2"))}
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v3"
     """
 
 

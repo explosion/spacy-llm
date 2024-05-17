@@ -18,14 +18,14 @@ _PIPE_CFG = {
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-@pytest.mark.parametrize("model", ("dolly-v2-3b", "Llama-2-7b-hf"))
+@pytest.mark.parametrize(
+    "model", (("spacy.Dolly.v1", "dolly-v2-3b"), ("spacy.Llama2.v1", "Llama-2-7b-hf"))
+)
 def test_device_config_conflict(model: Tuple[str, str]):
     """Test device configuration."""
     nlp = spacy.blank("en")
-    cfg = {
-        **_PIPE_CFG,
-        **{"model": {"@llm_models": "spacy.HuggingFace.v1", "name": model}},
-    }
+    model, name = model
+    cfg = {**_PIPE_CFG, **{"model": {"@llm_models": model, "name": name}}}
 
     # Set device only.
     cfg["model"]["config_init"] = {"device": "cpu"}  # type: ignore[index]
@@ -58,7 +58,7 @@ def test_torch_dtype():
     nlp = spacy.blank("en")
     cfg = {
         **_PIPE_CFG,
-        **{"model": {"@llm_models": "spacy.HuggingFace.v1", "name": "dolly-v2-3b"}},
+        **{"model": {"@llm_models": "spacy.Dolly.v1", "name": "dolly-v2-3b"}},
     }
 
     # Should be converted to torch.float16.

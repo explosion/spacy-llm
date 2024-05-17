@@ -101,8 +101,7 @@ def fewshot_cfg_string_v3_lds():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -132,7 +131,7 @@ def fewshot_cfg_string_v3():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v3"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -167,7 +166,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v3"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -265,10 +264,7 @@ def test_llm_ner_predict(text, gold_ents):
     Note that this test may fail randomly, as the LLM's output is unguaranteed to be consistent/predictable
     """
     nlp = spacy.blank("en")
-    # Test case doesn't work with gpt-3.5-turbo.
-    llm = nlp.add_pipe(
-        "llm_ner", config={"model": {"@llm_models": "spacy.OpenAI.v1", "name": "gpt-4"}}
-    )
+    llm = nlp.add_pipe("llm_ner")
     for ent_str, ent_label in gold_ents:
         llm.add_label(ent_label)
     doc = nlp(text)
@@ -989,7 +985,7 @@ def test_add_label():
                 "@llm_tasks": "spacy.NER.v3",
             },
             "model": {
-                "@llm_models": "spacy.GPT-3-5.v3",
+                "@llm_models": "spacy.GPT-3-5.v1",
             },
         },
     )
@@ -1020,9 +1016,7 @@ def test_clear_label():
                 "@llm_tasks": "spacy.NER.v3",
             },
             "model": {
-                "@llm_models": "spacy.OpenAI.v1",
-                # Test case doesn't work with gpt-3.5-turbo.
-                "name": "gpt-4",
+                "@llm_models": "spacy.GPT-3-5.v1",
             },
         },
     )

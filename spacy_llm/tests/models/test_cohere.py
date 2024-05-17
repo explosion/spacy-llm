@@ -84,7 +84,7 @@ def test_cohere_api_response_when_error():
 def test_cohere_error_unsupported_model():
     """Ensure graceful handling of error when model is not supported"""
     incorrect_model = "x-gpt-3.5-turbo"
-    with pytest.raises(ValueError, match="Request to Cohere API failed"):
+    with pytest.raises(ValueError, match="model not found"):
         Cohere(
             name=incorrect_model,
             config={},

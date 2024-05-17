@@ -99,7 +99,8 @@ def mistral_hf(
     name (Literal): Name of the Mistral model. Has to be one of Mistral.get_model_names().
     config_init (Optional[Dict[str, Any]]): HF config for initializing the model.
     config_run (Optional[Dict[str, Any]]): HF config for running the model.
-    RETURNS (Mistral): Mistral instance that can execute a set of prompts and return the raw responses.
+    RETURNS (Callable[[Iterable[str]], Iterable[str]]): Mistral instance that can execute a set of prompts and return
+        the raw responses.
     """
     return Mistral(
         name=name, config_init=config_init, config_run=config_run, context_length=8000

@@ -9,7 +9,7 @@ from ...compat import torch
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.HuggingFace.v1",
+        "@llm_models": "spacy.Llama2.v1",
         "name": "Llama-2-7b-hf",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -32,7 +32,7 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = "spacy.HuggingFace.v1"
+@llm_models = "spacy.Llama2.v1"
 name = "Llama-2-7b-hf"
 """
 
