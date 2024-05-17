@@ -405,7 +405,7 @@ def test_llm_task_factories_ner():
     labels = PER,ORG,LOC
 
     [components.llm.model]
-    @llm_models = "spacy.GPT-3-5.v3"
+    @llm_models = "spacy.GPT-3-5.v1"
     """
     config = Config().from_str(cfg_string)
     nlp = assemble_from_config(config)

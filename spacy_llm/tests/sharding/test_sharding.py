@@ -60,11 +60,7 @@ def test_sharding_count(config):
         "fear is fear itself.",
     ]
     assert all(
-        # GPT-3.5 count of words can be off, hence we're allowing for some tolerance.
-        [
-            response - 1 <= len(pr.split()) <= response + 1
-            for response, pr in zip(responses, prompts)
-        ]
+        [response == len(pr.split()) for response, pr in zip(responses, prompts)]
     )
     assert sum(responses) == doc.user_data["count"]
 
@@ -172,9 +168,6 @@ def test_sharding_sentiment(config):
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
 def test_sharding_spancat(config):
     context_length = 265
-    config["components"]["llm"]["model"]["@llm_models"] = "spacy.OpenAI.v1"
-    # Spancat (not sharding) aspect of test case doesn't work with gpt-3.5.
-    config["components"]["llm"]["model"]["name"] = "gpt-4"
     config["components"]["llm"]["model"]["context_length"] = context_length
     config["components"]["llm"]["task"] = {
         "@llm_tasks": "spacy.SpanCat.v3",

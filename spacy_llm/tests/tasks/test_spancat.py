@@ -83,8 +83,7 @@ def fewshot_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 
@@ -119,8 +118,7 @@ def ext_template_cfg_string():
     @misc = "spacy.LowercaseNormalizer.v1"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v2"
     """
 
 

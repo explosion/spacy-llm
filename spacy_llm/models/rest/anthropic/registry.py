@@ -7,43 +7,6 @@ from ....registry import registry
 from .model import Anthropic, Endpoints
 
 
-@registry.llm_models("spacy.Anthropic.v1")
-def anthropic_v1(
-    name: str,
-    config: Dict[Any, Any] = SimpleFrozenDict(),
-    strict: bool = Anthropic.DEFAULT_STRICT,
-    max_tries: int = Anthropic.DEFAULT_MAX_TRIES,
-    interval: float = Anthropic.DEFAULT_INTERVAL,
-    max_request_time: float = Anthropic.DEFAULT_MAX_REQUEST_TIME,
-    context_length: Optional[int] = None,
-) -> Anthropic:
-    """Returns Anthropic model instance using REST to prompt API.
-    config (Dict[Any, Any]): LLM config arguments passed on to the initialization of the model instance.
-    name (str): Name of model to use.
-    strict (bool): If True, ValueError is raised if the LLM API returns a malformed response (i. e. any kind of JSON
-        or other response object that does not conform to the expectation of how a well-formed response object from
-        this API should look like). If False, the API error responses are returned by __call__(), but no error will
-        be raised.
-    max_tries (int): Max. number of tries for API request.
-    interval (float): Time interval (in seconds) for API retries in seconds. We implement a base 2 exponential backoff
-        at each retry.
-    max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
-    context_length (Optional[int]): Context length for this model. Only necessary for sharding and if no context length
-        natively provided by spacy-llm.
-    RETURNS (Anthropic): Instance of Anthropic model.
-    """
-    return Anthropic(
-        name=name,
-        endpoint=Endpoints.COMPLETIONS.value,
-        config=config,
-        strict=strict,
-        max_tries=max_tries,
-        interval=interval,
-        max_request_time=max_request_time,
-        context_length=context_length,
-    )
-
-
 @registry.llm_models("spacy.Claude-2.v2")
 def anthropic_claude_2_v2(
     config: Dict[Any, Any] = SimpleFrozenDict(),

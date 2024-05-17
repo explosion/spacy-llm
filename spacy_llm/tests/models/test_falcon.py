@@ -9,7 +9,7 @@ from ...compat import torch
 
 _PIPE_CFG = {
     "model": {
-        "@llm_models": "spacy.HuggingFace.v1",
+        "@llm_models": "spacy.Falcon.v1",
         "name": "falcon-rw-1b",
     },
     "task": {"@llm_tasks": "spacy.NoOp.v1"},
@@ -32,14 +32,13 @@ factory = "llm"
 @llm_tasks = "spacy.NoOp.v1"
 
 [components.llm.model]
-@llm_models = "spacy.HuggingFace.v1"
+@llm_models = "spacy.Falcon.v1"
 name = "falcon-rw-1b"
 """
 
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-@pytest.mark.filterwarnings("ignore:the load_module() method is deprecated")
 def test_init():
     """Test initialization and simple run."""
     nlp = spacy.blank("en")
@@ -54,7 +53,6 @@ def test_init():
 
 @pytest.mark.gpu
 @pytest.mark.skipif(not has_torch_cuda_gpu, reason="needs GPU & CUDA")
-@pytest.mark.filterwarnings("ignore:the load_module() method is deprecated")
 def test_init_from_config():
     orig_config = Config().from_str(_NLP_CONFIG)
     nlp = spacy.util.load_model_from_config(orig_config, auto_fill=True)
@@ -68,6 +66,6 @@ def test_invalid_model():
     orig_config = Config().from_str(_NLP_CONFIG)
     config = copy.deepcopy(orig_config)
     config["components"]["llm"]["model"]["name"] = "x"
-    with pytest.raises(ValueError, match="could not be associated"):
+    with pytest.raises(ValueError, match="unexpected value; permitted"):
         spacy.util.load_model_from_config(config, auto_fill=True)
     torch.cuda.empty_cache()

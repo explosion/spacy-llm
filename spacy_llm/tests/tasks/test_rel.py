@@ -40,8 +40,7 @@ def zeroshot_cfg_string():
     labels = "LivesIn,Visits"
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v2"
 
     [initialize]
     vectors = "en_core_web_md"
@@ -73,8 +72,7 @@ def fewshot_cfg_string():
     path = {str(EXAMPLES_DIR / "rel.jsonl")}
 
     [components.llm.model]
-    @llm_models = "spacy.OpenAI.v1"
-    name = "gpt-3.5-turbo"
+    @llm_models = "spacy.GPT-3-5.v2"
 
     [initialize]
     vectors = "en_core_web_md"

@@ -13,8 +13,7 @@ langchain>=0.1,<0.2; python_version>="3.9"
 openai>=0.27,<=0.28.1; python_version>="3.9"
 
 # Necessary for running all local models on GPU.
-# TODO: transformers > 4.38 causes bug in model handling due to unknown factors. To be investigated.
-transformers[sentencepiece]>=4.0.0,<=4.38
+transformers[sentencepiece]>=4.0.0
 torch
 einops>=0.4
 
