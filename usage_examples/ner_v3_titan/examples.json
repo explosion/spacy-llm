@@ -1,0 +1,36 @@
+[
+  {
+    "text": "You can't get a great chocolate flavor with carob.",
+    "spans": [
+      {
+        "text": "chocolate",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "is a flavor in this context, not an ingredient"
+      },
+      {
+        "text": "carob",
+        "is_entity": true,
+        "label": "INGREDIENT",
+        "reason": "is an ingredient to add chocolate flavor"
+      }
+    ]
+  },
+  {
+    "text": "You can probably sand-blast it if it's an anodized aluminum pan",
+    "spans": [
+      {
+        "text": "sand-blast",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "is a cleaning technique, not some kind of equipment"
+      },
+      {
+        "text": "anodized aluminum pan",
+        "is_entity": true,
+        "label": "EQUIPMENT",
+        "reason": "is a piece of cooking equipment, anodized is included since it describes the type of pan"
+      }
+    ]
+  }
+]
