@@ -1,7 +1,7 @@
 import abc
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, List, Iterable, Optional
 
 import requests  # type: ignore
 from requests import ConnectTimeout, ReadTimeout
@@ -34,6 +34,7 @@ class REST(abc.ABC):
         interval: float,
         max_request_time: float,
         context_length: Optional[int],
+        conversational_history: Optional[List[Dict[str,str]]]
     ):
         """Initializes new instance of REST-based model.
         name (str): Model name.
@@ -60,6 +61,7 @@ class REST(abc.ABC):
         self._max_request_time = max_request_time
         self._credentials = self.credentials
         self._context_length = context_length
+        self._conversational_history = conversational_history
 
         assert self._max_tries >= 1
         assert self._interval > 0

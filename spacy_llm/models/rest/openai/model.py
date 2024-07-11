@@ -125,8 +125,9 @@ class OpenAI(REST):
 
             else:
                 for prompt in prompts_for_doc:
+                    user_message = [{"role": "user", "content": prompt}]
                     responses = _request(
-                        {"messages": [{"role": "user", "content": prompt}]}
+                        {"messages": self._conversational_history + user_message if self._conversational_history else user_message}
                     )
                     if "error" in responses:
                         return responses["error"]
