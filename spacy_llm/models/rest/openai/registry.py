@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from confection import SimpleFrozenDict
 
@@ -20,6 +20,41 @@ Parameter explanations:
     max_request_time (float): Max. time (in seconds) to wait for request to terminate before raising an exception.
     endpoint (Optional[str]): Endpoint to set. Defaults to standard endpoint.
 """
+
+@registry.llm_models("spacy.GPT-4.v4")
+def openai_gpt_4_v3(
+    config: Dict[Any, Any] = SimpleFrozenDict(temperature=_DEFAULT_TEMPERATURE),
+    name: str = "gpt-4",
+    strict: bool = OpenAI.DEFAULT_STRICT,
+    max_tries: int = OpenAI.DEFAULT_MAX_TRIES,
+    interval: float = OpenAI.DEFAULT_INTERVAL,
+    max_request_time: float = OpenAI.DEFAULT_MAX_REQUEST_TIME,
+    endpoint: Optional[str] = None,
+    context_length: Optional[int] = None,
+    conversational_history: Optional[List[Dict[str,str]]] = None
+) -> OpenAI:
+    """Returns OpenAI instance for 'gpt-4' model using REST to prompt API.
+
+    config (Dict[Any, Any]): LLM config passed on to the model's initialization.
+    name (str): Model name to use. Can be any model name supported by the OpenAI API - e. g. 'gpt-4',
+        "gpt-4-1106-preview", ....
+    conversational_history ( Optional[List[Dict[str,str]]]): Optional conversational history to be provided in the ChatML approach,
+    with the User/Assistant streams to be appended before main prompt request
+    RETURNS (OpenAI): OpenAI instance for 'gpt-4' model.
+
+    DOCS: https://spacy.io/api/large-language-models#models
+    """
+    return OpenAI(
+        name=name,
+        endpoint=endpoint or Endpoints.CHAT.value,
+        config=config,
+        strict=strict,
+        max_tries=max_tries,
+        interval=interval,
+        max_request_time=max_request_time,
+        context_length=context_length,
+        conversational_history=conversational_history
+    )
 
 
 @registry.llm_models("spacy.GPT-4.v3")
