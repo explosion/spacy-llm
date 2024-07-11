@@ -34,7 +34,7 @@ class REST(abc.ABC):
         interval: float,
         max_request_time: float,
         context_length: Optional[int],
-        conversational_history: Optional[List[Dict[str,str]]]
+        conversational_history: Optional[List[Dict[str,str]]] = None
     ):
         """Initializes new instance of REST-based model.
         name (str): Model name.
