@@ -12,7 +12,7 @@ from ..base import REST
 
 class Endpoints(str, Enum):
     CHAT = "https://api.groq.com/openai/v1/chat/completions"
-    # NON_CHAT = "https://api.groq.com/openai/v1/completions" # Completion endpoints are not available 
+    NON_CHAT = CHAT # Completion endpoints are not available 
 
 
 class Groq(REST):
@@ -112,16 +112,21 @@ class Groq(REST):
             # The Groq API doesn't support NON_CHAT (yet), so we have to send individual requests.
 
             if self._endpoint == Endpoints.NON_CHAT:
-                responses = _request({"prompt": prompts_for_doc})
-                if "error" in responses:
-                    return responses["error"]
-                assert len(responses["choices"]) == len(prompts_for_doc)
+                for prompt in prompts_for_doc:
+                    responses = _request(
+                        {"messages": [{"role": "user", "content": prompt}]}
+                    )
+                    if "error" in responses:
+                        return responses["error"]
 
-                for response in responses["choices"]:
-                    if "text" in response:
-                        api_responses.append(response["text"])
-                    else:
-                        api_responses.append(srsly.json_dumps(response))
+                    # Process responses.
+                    assert len(responses["choices"]) == 1
+                    response = responses["choices"][0]
+                    api_responses.append(
+                        response.get("message", {}).get(
+                            "content", srsly.json_dumps(response)
+                        )
+                    )
 
             else:
                 for prompt in prompts_for_doc:

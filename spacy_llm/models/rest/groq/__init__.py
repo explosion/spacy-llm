@@ -1,4 +1,4 @@
-from .model import Endpoints, OpenAI
+from .model import Endpoints, Groq
 from .registry import groq
 
 __all__ = [
