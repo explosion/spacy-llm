@@ -12,7 +12,7 @@ from ..base import REST
 
 class Endpoints(str, Enum):
     CHAT = "https://api.groq.com/openai/v1/chat/completions"
-    NON_CHAT = CHAT # Completion endpoints are not available 
+    NON_CHAT = CHAT  # Completion endpoints are not available
 
 
 class Groq(REST):
@@ -20,7 +20,7 @@ class Groq(REST):
     def credentials(self) -> Dict[str, str]:
         # Fetch and check the key
         api_key = os.getenv("GROQ_API_KEY")
-        # api_org = os.getenv("OPENAI_API_ORG")
+
         if api_key is None:
             warnings.warn(
                 "Could not find the API key to access the OpenAI API. Ensure you have an API key "
@@ -33,8 +33,6 @@ class Groq(REST):
         headers = {
             "Authorization": f"Bearer {api_key}",
         }
-        # if api_org:
-        #     headers["OpenAI-Organization"] = api_org
 
         return headers
 
@@ -162,6 +160,5 @@ class Groq(REST):
             "llama3-groq-8b-8192-tool-use-preview": 8192,
             "llama-guard-3-8b": 8192,
             "mixtral-8x7b-32768": 32768,
-            "whisper-large-v3": 1500
+            "whisper-large-v3": 1500,
         }
-
