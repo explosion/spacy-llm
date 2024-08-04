@@ -23,6 +23,7 @@ This package integrates Large Language Models (LLMs) into [spaCy](https://spacy.
   - **[Anthropic](https://docs.anthropic.com/claude/reference/)**
   - **[Google PaLM](https://ai.google/discover/palm2/)**
   - **[Microsoft Azure AI](https://azure.microsoft.com/en-us/solutions/ai)**
+  - **[Groq](https://groq.com/)**
 - Supports open-source LLMs hosted on Hugging Face 🤗:
   - **[Falcon](https://huggingface.co/tiiuae)**
   - **[Dolly](https://huggingface.co/databricks)**
