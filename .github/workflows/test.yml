@@ -25,9 +25,9 @@ jobs:
         python_version: ["3.12"]
         include:
           - os: windows-latest
-            python_version: "3.7"
+            python_version: "3.9"
           - os: macos-latest
-            python_version: "3.8"
+            python_version: "3.9"
           - os: ubuntu-latest
             python_version: "3.9"
           - os: windows-latest
