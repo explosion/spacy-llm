@@ -64,7 +64,7 @@ class BuiltinTask(abc.ABC):
             prompts in case of multiple shards) and the corresponding shards. The relationship between shard and prompt
             is 1:1.
         """
-        environment = jinja2.Environment()
+        environment = jinja2.SandboxedEnvironment()
         _template = environment.from_string(self._template)
 
         def render_template(shard: Doc, i_shard: int, i_doc: int, n_shards: int) -> str:
