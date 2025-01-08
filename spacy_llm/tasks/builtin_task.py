@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, cast
 
 import jinja2
+import jinja2.sandbox
 import srsly
 from spacy import Errors, Language, util
 from spacy.tokens import Doc
@@ -64,7 +65,7 @@ class BuiltinTask(abc.ABC):
             prompts in case of multiple shards) and the corresponding shards. The relationship between shard and prompt
             is 1:1.
         """
-        environment = jinja2.Environment()
+        environment = jinja2.sandbox.SandboxedEnvironment()
         _template = environment.from_string(self._template)
 
         def render_template(shard: Doc, i_shard: int, i_doc: int, n_shards: int) -> str:
