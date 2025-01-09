@@ -95,9 +95,11 @@ class PaLM(REST):
             responses = [
                 _request(
                     {
-                        "prompt": {"text": prompt}
-                        if not uses_chat
-                        else {"messages": [{"content": prompt}]}
+                        "prompt": (
+                            {"text": prompt}
+                            if not uses_chat
+                            else {"messages": [{"content": prompt}]}
+                        )
                     }
                 )
                 for prompt in prompts_for_doc

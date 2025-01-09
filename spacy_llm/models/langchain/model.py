@@ -171,12 +171,10 @@ class LangChain:
 
 
 @registry.llm_queries("spacy.CallLangChain.v1")
-def query_langchain() -> (
-    Callable[
-        ["langchain_community.llms.BaseLLM", Iterable[Iterable[Any]]],
-        Iterable[Iterable[Any]],
-    ]
-):
+def query_langchain() -> Callable[
+    ["langchain_community.llms.BaseLLM", Iterable[Iterable[Any]]],
+    Iterable[Iterable[Any]],
+]:
     """Returns query Callable for LangChain.
     RETURNS (Callable[["langchain_community.llms.BaseLLM", Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]): Callable
         executing simple prompts on the specified LangChain model.
