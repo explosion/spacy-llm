@@ -1,9 +1,10 @@
-from . import anthropic, azure, base, cohere, noop, openai
+from . import anthropic, azure, base, bedrock, cohere, noop, openai
 
 __all__ = [
     "anthropic",
     "azure",
     "base",
+    "bedrock",
     "cohere",
     "openai",
     "noop",
