@@ -65,7 +65,7 @@ class Mistral(HuggingFace):
 
             tokenized_input_ids = [
                 self._tokenizer(
-                    prompt if not self._is_instruct else f"<s>[INST] {prompt} [/INST]",
+                    prompt if not self._is_instruct else f"[INST] {prompt} [/INST]",
                     return_tensors="pt",
                 ).input_ids
                 for prompt in prompts_for_doc
