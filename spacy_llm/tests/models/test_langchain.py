@@ -5,11 +5,8 @@ import pytest
 import spacy
 
 from spacy_llm.compat import has_langchain
+from spacy_llm.models.langchain import LangChain
 from spacy_llm.tests.compat import has_azure_openai_key
-
-pytest.importorskip("langchain_community")
-
-from spacy_llm.models.langchain import LangChain  # noqa: E402
 
 PIPE_CFG = {
     "model": {
