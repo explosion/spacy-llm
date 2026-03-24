@@ -21,7 +21,8 @@ filterwarnings = [
     "ignore:^.*Xformers is not installed correctly.*:",
     "ignore:^.*The 'warn' method is deprecated, use 'warning' instead.*:DeprecationWarning",
     "ignore:^.*Skipping device Apple Paravirtual device that does not support Metal 2.0.*",
-    "ignore:^.*was deprecated in langchain-community.*"
+    "ignore:^.*was deprecated in langchain-community.*",
+    "ignore::pydantic.warnings.PydanticDeprecatedSince20"
 ]
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API",
