@@ -11,7 +11,6 @@ from spacy.training.example import Example
 from spacy.vocab import Vocab
 
 from .compat import BaseModel, Protocol, Self, runtime_checkable
-from .models import langchain
 
 _PromptType = Any
 _ResponseType = Any
@@ -300,7 +299,9 @@ def _extract_model_call_signature(model: PromptExecutorType) -> Dict[str, Any]:
 
     # Assume that __call__() has the necessary type info - except in the case of integration.Model, for which
     # we know this is not the case.
-    if not isinstance(model, langchain.LangChain):
+    from .models.langchain.model import LangChain
+
+    if not isinstance(model, LangChain):
         return typing.get_type_hints(model.__call__)
 
     # If this is an instance of integrations.Model: read type information from .query() instead, only keep
