@@ -1,4 +1,4 @@
-from ...compat import BaseModel, validator
+from ...compat import BaseModel, field_validator
 
 
 class RelationItem(BaseModel):
@@ -6,7 +6,8 @@ class RelationItem(BaseModel):
     dest: int
     relation: str
 
-    @validator("dep", "dest", pre=True)
+    @field_validator("dep", "dest", mode="before")
+    @classmethod
     def clean_ent(cls, value):
         if isinstance(value, str):
             value = value.strip("ENT")

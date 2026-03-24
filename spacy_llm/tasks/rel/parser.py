@@ -23,7 +23,7 @@ def parse_responses_v1(
             relations: List[RelationItem] = []
             for line in response.strip().split("\n"):
                 try:
-                    rel_item = RelationItem.parse_raw(line)
+                    rel_item = RelationItem.model_validate_json(line)
                     if 0 <= rel_item.dep < len(shard.ents) and 0 <= rel_item.dest < len(
                         shard.ents
                     ):

@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 from confection import SimpleFrozenDict
 
-from ...compat import ExtraError, ValidationError, has_langchain, langchain_community
+from ...compat import ValidationError, has_langchain, langchain_community
 from ...registry import registry
 
 try:
@@ -59,12 +59,10 @@ class LangChain:
                 if model_init_arg == model_init_args[-1]:
                     # If init error indicates that model ID arg is extraneous: raise error with hint on how to proceed.
                     if any(
-                        [
-                            rerr
-                            for rerr in err.raw_errors
-                            if isinstance(rerr.exc, ExtraError)
-                            and model_init_arg in rerr.loc_tuple()
-                        ]
+                        e
+                        for e in err.errors()
+                        if e.get("type") == "extra_forbidden"
+                        and model_init_arg in (e.get("loc") or ())
                     ):
                         raise ValueError(
                             "Couldn't initialize LangChain model with known model ID arguments. Please report this to "

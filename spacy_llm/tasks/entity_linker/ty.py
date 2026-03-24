@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Tuple, Union
 
-from pydantic import BaseModel
+from ...compat import BaseModel
 from spacy import Vocab
 from spacy.kb import InMemoryLookupKB
 from spacy.tokens import Span

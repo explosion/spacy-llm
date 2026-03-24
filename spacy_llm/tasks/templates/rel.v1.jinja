@@ -40,7 +40,7 @@ Text:
 {# whitespace #}
 {%- for item in example.relations -%}
 {# whitespace #}
-{{ item.json() }}
+{{ item.model_dump_json() }}
 {%- endfor -%}
 {# whitespace #}
 {# whitespace #}

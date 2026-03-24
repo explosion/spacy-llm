@@ -3,7 +3,7 @@ from typing import Dict, Generic, Iterable, List
 
 from spacy.tokens import Span
 
-from ...compat import BaseModel, Self
+from ...compat import BaseModel, ConfigDict, Self
 from ...ty import FewshotExample, TaskContraT
 
 
@@ -78,8 +78,7 @@ class SpanCoTExample(FewshotExample[TaskContraT], abc.ABC, Generic[TaskContraT])
     text: str
     spans: List[SpanReason]
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @staticmethod
     def _extract_span_reasons(spans: Iterable[Span]) -> List[SpanReason]:

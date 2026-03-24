@@ -10,7 +10,7 @@ from spacy.tokens import Doc
 from spacy.training.example import Example
 from spacy.vocab import Vocab
 
-from .compat import GenericModel, Protocol, Self, runtime_checkable
+from .compat import BaseModel, Protocol, Self, runtime_checkable
 from .models import langchain
 
 _PromptType = Any
@@ -157,7 +157,7 @@ class ShardReducer(Protocol[ShardingTaskContraT]):
         ...
 
 
-class FewshotExample(GenericModel, abc.ABC, Generic[TaskContraT]):
+class FewshotExample(BaseModel, abc.ABC, Generic[TaskContraT]):
     @classmethod
     @abc.abstractmethod
     def generate(cls, example: Example, task: TaskContraT) -> Optional[Self]:

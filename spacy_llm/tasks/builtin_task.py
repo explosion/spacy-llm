@@ -161,7 +161,7 @@ class BuiltinTask(abc.ABC):
 
     def _get_prompt_examples(self) -> List[Dict[str, Any]]:
         """Serialize examples."""
-        examples = [eg.dict() for eg in self._prompt_examples]
+        examples = [eg.model_dump() for eg in self._prompt_examples]
         return examples
 
     def _set_prompt_examples(self, examples: List[Dict[str, Any]]) -> None:
@@ -169,7 +169,7 @@ class BuiltinTask(abc.ABC):
         examples (List[Dict[str, Any]]): prompt examples.
         """
         self._prompt_examples = [
-            self._prompt_example_type.parse_obj(eg) for eg in examples
+            self._prompt_example_type.model_validate(eg) for eg in examples
         ]
 
     def to_bytes(
