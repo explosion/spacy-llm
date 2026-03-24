@@ -22,7 +22,8 @@ filterwarnings = [
     "ignore:^.*The 'warn' method is deprecated, use 'warning' instead.*:DeprecationWarning",
     "ignore:^.*Skipping device Apple Paravirtual device that does not support Metal 2.0.*",
     "ignore:^.*was deprecated in langchain-community.*",
-    "ignore::pydantic.warnings.PydanticDeprecatedSince20"
+    "ignore::pydantic.warnings.PydanticDeprecatedSince20",
+    "ignore:Core Pydantic V1 functionality:UserWarning"
 ]
 markers = [
     "external: interacts with a (potentially cost-incurring) third-party API",
