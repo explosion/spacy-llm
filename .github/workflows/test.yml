@@ -36,6 +36,8 @@ jobs:
             python_version: "3.13"
           - os: ubuntu-latest
             python_version: "3.13"
+          - os: ubuntu-latest
+            python_version: "3.14"
 
     runs-on: ${{ matrix.os }}
 
