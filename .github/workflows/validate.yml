@@ -6,9 +6,9 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
@@ -23,7 +23,7 @@ jobs:
           echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
           echo "PRECOMMIT=$(pip list | grep pre-commit)" >> $GITHUB_ENV
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PY }}|${{ env.PRECOMMIT }}|${{ hashFiles('.pre-commit-config.yaml') }}

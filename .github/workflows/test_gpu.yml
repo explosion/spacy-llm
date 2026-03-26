@@ -17,7 +17,7 @@ jobs:
     steps:
 
       - name: Trigger buildkite build
-        uses: buildkite/trigger-pipeline-action@v1.2.0
+        uses: buildkite/trigger-pipeline-action@d03b6f2760252274dc019e1298095c3b61baeaf8 # v1.2.0
         env:
           PIPELINE: explosion-ai/spacy-llm-gpu-tests
           BRANCH: main
