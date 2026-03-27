@@ -9,9 +9,6 @@ on:
 
 env:
   MODULE_NAME: "spacy_llm"
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-  CO_API_KEY: ${{ secrets.CO_API_KEY }}
   TEST_EXTERNAL: 1
 
 jobs:
@@ -57,10 +54,18 @@ jobs:
       - name: Run tests
         shell: bash
         run: python -m pytest --pyargs $MODULE_NAME -x
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CO_API_KEY: ${{ secrets.CO_API_KEY }}
 
       - name: Run usage tests
         shell: bash
         run: python -m pytest --pyargs usage_examples -x
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CO_API_KEY: ${{ secrets.CO_API_KEY }}
 
 #      - name: Report Status
 #        if: always()
