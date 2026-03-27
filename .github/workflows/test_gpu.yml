@@ -9,6 +9,8 @@ on:
   pull_request:
     types: [ labeled, opened, synchronize, reopened ]
 
+permissions:
+  contents: read
 jobs:
   run:
     if: "github.repository_owner == 'explosion' && (contains(github.event.pull_request.labels.*.name, 'Test GPU') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')"

@@ -12,6 +12,8 @@ on:
       - "*.md"
   workflow_dispatch:
 
+permissions:
+  contents: read
 env:
   MODULE_NAME: 'spacy_llm'
   RUN_MYPY: 'false'

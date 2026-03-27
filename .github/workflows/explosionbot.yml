@@ -28,3 +28,5 @@ jobs:
           INPUT_BK_TOKEN: ${{ secrets.BUILDKITE_SECRET }}
           ENABLED_COMMANDS: "test_gpu,test_llm_external"
           ALLOWED_TEAMS: "spaCy"
+
+permissions: {}
