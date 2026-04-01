@@ -102,8 +102,8 @@ class EntityLinkerTask(BuiltinTask):
         ) = self._find_entity_candidates(docs)
         # Reset shard-wise candidate info. Will be set for each shard individually in _get_prompt_data(). We cannot
         # update it here, as we don't know yet how the shards will look like.
-        self._ents_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
-        self._has_ent_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
+        self._ents_cands_by_shard = [[]] * len(self._ents_cands_by_doc)
+        self._has_ent_cands_by_shard = [[]] * len(self._ents_cands_by_doc)
         self._n_shards = None
         return [
             EntityLinkerTask.highlight_ents_in_doc(doc, self._has_ent_cands_by_doc[i])
@@ -141,8 +141,8 @@ class EntityLinkerTask(BuiltinTask):
         # shards. In this case we have to reset task state as well.
         if n_shards != self._n_shards:
             self._n_shards = n_shards
-            self._ents_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
-            self._has_ent_cands_by_shard = [[] * len(self._ents_cands_by_doc)]
+            self._ents_cands_by_shard = [[]] * len(self._ents_cands_by_doc)
+            self._has_ent_cands_by_shard = [[]] * len(self._ents_cands_by_doc)
 
         # It's not ideal that we have to run candidate selection again here - but due to (1) us wanting to know whether
         # all entities have candidates before sharding and, more importantly, (2) some entities maybe being split up in

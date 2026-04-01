@@ -792,3 +792,28 @@ def test_init_with_code():
     nlp.add_pipe("llm_entitylinker")
     with pytest.raises(ValueError, match="candidate_selector has to be provided"):
         nlp.initialize()
+
+
+def test_entity_linker_on_splitted_chunks(zeroshot_cfg_string, tmp_path):
+    config = Config().from_str(
+        zeroshot_cfg_string,
+        overrides={
+            "paths.el_nlp": str(tmp_path),
+            "paths.el_kb": str(tmp_path / "entity_linker" / "kb"),
+            "paths.el_desc": str(tmp_path / "desc.csv"),
+        },
+    )
+    build_el_pipeline(nlp_path=tmp_path, desc_path=tmp_path / "desc.csv")
+    nlp = assemble_from_config(config)
+    nlp_ner = spacy.load("en_core_web_md")
+    docs = [nlp_ner(text) for text in [
+        'Alice goes to Boston to see the Boston Celtics game.',
+        'Alice goes to New York to see the New York Knicks game.',
+        'I went to see Boston in concert yesterday',
+        'Thibeau Courtois plays for the Red Devils in New York',
+    ]]
+    docs = [doc for doc in nlp.pipe(docs, batch_size=50)]
+    data = [[(ent.text, ent.label_, ent.kb_id_) for ent in doc.ents] for doc in docs]
+    assert len(docs) == 4
+    assert docs[0].ents[1].text == 'Boston'
+    assert docs[0].ents[1].kb_id_ == 'Q100'
