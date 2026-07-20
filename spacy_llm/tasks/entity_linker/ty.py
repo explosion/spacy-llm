@@ -28,7 +28,7 @@ class CandidateSelector(Protocol):
         """Returns entity description for entity ID. If none found, a warning is emitted and
         spacy_llm.tasks.entity_linker.util.UNAVAILABLE_ENTITY_DES is returned.
         entity_id (str): Entity whose ID should be looked up.
-        RETURNS (str): Entity description for entity with specfied ID. If no description found, returned string equals
+        RETURNS (str): Entity description for entity with specified ID. If no description found, returned string equals
             spacy_llm.tasks.entity_linker.util.UNAVAILABLE_ENTITY_DESC.
         """
 
