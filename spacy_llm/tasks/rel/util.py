@@ -1,9 +1,9 @@
 import re
 import warnings
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 
 from spacy import Vocab
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc
 from spacy.training import Example
 
 from ...compat import Self
@@ -48,32 +48,43 @@ class RELExample(FewshotExample[RELTask]):
             for i, word in enumerate(doc_words)
         ]
         doc = Doc(words=doc_words, spaces=doc_spaces, vocab=Vocab(strings=doc_words))
+        char_offsets = _map_char_offsets(self.text, doc.text)
 
-        # Set entities after finding correct indices.
-        conv_ent_indices: List[Tuple[int, int]] = []
-        if len(self.ents):
-            ent_idx = 0
-            for token in doc:
-                if token.idx == self.ents[ent_idx].start_char:
-                    conv_ent_indices.append((token.i, -1))
-                if token.idx + len(token.text) == self.ents[ent_idx].end_char:
-                    conv_ent_indices[-1] = (conv_ent_indices[-1][0], token.i + 1)
-                    ent_idx += 1
-                if ent_idx == len(self.ents):
-                    break
-
+        # Set entities using offsets from the original, unnormalized text.
         doc.ents = [
-            Span(  # noqa: E731
-                doc=doc,
-                start=ent_idx[0],
-                end=ent_idx[1],
-                label=self.ents[i].label,
+            doc.char_span(
+                char_offsets[entity.start_char],
+                char_offsets[entity.end_char],
+                label=entity.label,
             )
-            for i, ent_idx in enumerate(conv_ent_indices)
+            for entity in self.ents
         ]
         doc.user_data["rel"] = self.relations
 
         return doc
+
+
+def _map_char_offsets(source: str, target: str) -> List[int]:
+    """Map source character boundaries to a target with inserted spaces."""
+    offsets = [0] * (len(source) + 1)
+    source_index = 0
+    target_index = 0
+
+    while source_index < len(source):
+        while (
+            target_index < len(target)
+            and target[target_index] == " "
+            and target[target_index] != source[source_index]
+        ):
+            target_index += 1
+        if target_index >= len(target) or target[target_index] != source[source_index]:
+            raise ValueError("Unable to map normalized text offsets")
+        offsets[source_index] = target_index
+        source_index += 1
+        target_index += 1
+
+    offsets[len(source)] = target_index
+    return offsets
 
 
 def reduce_shards_to_doc(task: RELTask, shards: Iterable[Doc]) -> Doc:
