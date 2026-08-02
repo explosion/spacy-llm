@@ -96,6 +96,10 @@ print(doc.cats)
 By using the `llm_textcat` factory, the latest version of the built-in textcat task is used, 
 as well as the default GPT-3-5 model from OpenAI.
 
+The built-in OpenAI models also accept a custom `endpoint` (full
+`.../v1/chat/completions` URL) for OpenAI-compatible gateways — see
+[`usage_examples/textcat_openai`](usage_examples/textcat_openai).
+
 ### Using a config file
 
 To control the various parameters of the `llm` pipeline, we can use 
