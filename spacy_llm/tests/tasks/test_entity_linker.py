@@ -35,6 +35,10 @@ def build_el_pipeline(nlp_path: Path, desc_path: Path) -> None:
     nlp_path (Path): Path to store pipeline under.
     desc_path (Path): Path to store descriptions file under.
     """
+    # The medium English pipeline is an optional test dependency. Skip the
+    # tests that build this fixture when it is not installed instead of
+    # failing with an unrelated model lookup error.
+    pytest.importorskip("en_core_web_md")
     nlp = spacy.load("en_core_web_md")
     nlp.add_pipe("entity_linker")
     kb = InMemoryLookupKB(
