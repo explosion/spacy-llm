@@ -59,13 +59,15 @@ class AzureOpenAI(REST):
     @property
     def credentials(self) -> Dict[str, str]:
         # Fetch and check the key
-        api_key = os.getenv("AZURE_OPENAI_KEY")
+        # Keep supporting the legacy name while accepting the name used by
+        # Azure's current documentation.
+        api_key = os.getenv("AZURE_OPENAI_KEY") or os.getenv("AZURE_OPENAI_API_KEY")
         if api_key is None:
             warnings.warn(
                 "Could not find the API key to access the Azure OpenAI API. Ensure you have an API key "
                 "set up (see "
                 "https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?pivots=rest-api&tabs=bash#set-up"
-                ", then make it available as an environment variable 'AZURE_OPENAI_KEY'."
+                ", then make it available as an environment variable 'AZURE_OPENAI_KEY' or 'AZURE_OPENAI_API_KEY'."
             )
 
         # Check the access and get a list of available models to verify the model argument (if not None)

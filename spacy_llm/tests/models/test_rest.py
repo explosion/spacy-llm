@@ -8,6 +8,7 @@ import spacy
 from spacy.tokens import Doc
 
 from ...registry import registry
+from ...models.rest.azure.model import AzureOpenAI
 from ..compat import has_azure_openai_key, has_openai_key
 
 PIPE_CFG = {
@@ -46,6 +47,22 @@ def test_initialization():
     cfg["model"] = {"@llm_models": "spacy.NoOp.v1"}
     nlp.add_pipe("llm", config=cfg)
     nlp("This is a test.")
+
+
+def test_azure_openai_credentials_accept_current_environment_variable(monkeypatch):
+    model = object.__new__(AzureOpenAI)
+    monkeypatch.delenv("AZURE_OPENAI_KEY", raising=False)
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "api-key")
+
+    assert model.credentials == {"api-key": "api-key"}
+
+
+def test_azure_openai_credentials_prefer_legacy_environment_variable(monkeypatch):
+    model = object.__new__(AzureOpenAI)
+    monkeypatch.setenv("AZURE_OPENAI_KEY", "legacy-key")
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "current-key")
+
+    assert model.credentials == {"api-key": "legacy-key"}
 
 
 @pytest.mark.skipif(has_openai_key is False, reason="OpenAI API key not available")
