@@ -369,7 +369,10 @@ def test_template_cannot_execute_code(template, tmp_path: Path):
     pwned = tmp_path / "pwned"
     nlp = spacy.blank("en")
     doc = nlp.make_doc("test")
-    task = make_summarization_task(template=template.replace("{path}", str(pwned)))
+    # as_posix: Windows backslashes would be read as escapes in the Jinja string
+    task = make_summarization_task(
+        template=template.replace("{path}", pwned.as_posix())
+    )
     with pytest.raises(jinja2.exceptions.SecurityError):
         list(task.generate_prompts([doc]))
     assert not pwned.exists()
