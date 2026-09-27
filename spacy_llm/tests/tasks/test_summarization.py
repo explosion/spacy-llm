@@ -353,6 +353,31 @@ Here is the text: The atmosphere of Earth is the layer of gases, known collectiv
     )
 
 
+@pytest.mark.parametrize(
+    "template",
+    [
+        "{{self.__init__.__globals__.__builtins__.__import__('os').popen('touch {path}').read()}}",
+        "{{ ''.__class__.__mro__[1].__subclasses__() }}",
+        "{{ cycler.__init__.__globals__.os.popen('touch {path}').read() }}",
+    ],
+)
+def test_template_cannot_execute_code(template, tmp_path: Path):
+    """Templates come from configs, which may be untrusted, so they must be
+    rendered in a sandbox (#492)."""
+    import jinja2.exceptions
+
+    pwned = tmp_path / "pwned"
+    nlp = spacy.blank("en")
+    doc = nlp.make_doc("test")
+    # as_posix: Windows backslashes would be read as escapes in the Jinja string
+    task = make_summarization_task(
+        template=template.replace("{path}", pwned.as_posix())
+    )
+    with pytest.raises(jinja2.exceptions.SecurityError):
+        list(task.generate_prompts([doc]))
+    assert not pwned.exists()
+
+
 def test_ner_serde(noop_config):
     config = Config().from_str(noop_config)
     with pytest.warns(UserWarning, match="Task supports sharding"):
