@@ -22,6 +22,7 @@ filterwarnings = [
     "ignore:^.*The 'warn' method is deprecated, use 'warning' instead.*:DeprecationWarning",
     "ignore:^.*Skipping device Apple Paravirtual device that does not support Metal 2.0.*",
     "ignore:^.*was deprecated in langchain-community.*",
+    "ignore:^.*`langchain-community` is being sunset.*:DeprecationWarning",
     "ignore::pydantic.warnings.PydanticDeprecatedSince20",
     "ignore:Core Pydantic V1 functionality:UserWarning"
 ]
