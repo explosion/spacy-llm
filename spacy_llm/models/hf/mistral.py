@@ -18,7 +18,7 @@ class Mistral(HuggingFace):
         context_length: Optional[int],
     ):
         self._tokenizer: Optional["transformers.AutoTokenizer"] = None
-        self._is_instruct = "instruct" in name
+        self._is_instruct = "instruct" in name.lower()
         super().__init__(
             name=name,
             config_init=config_init,
